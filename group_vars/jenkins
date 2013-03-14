@@ -1,0 +1,30 @@
+---
+j_packages:
+  - jenkins
+  - build-essential
+  - python-dev
+  - subversion
+  - libfreetype6-dev
+  - libpng12-dev
+  - python2.4
+  - python2.5
+  - python2.6
+  - python2.4-dev
+  - python2.5-dev
+  - python2.6-dev
+  - libmysqlclient-dev
+  - libsqlite3-dev
+  - python-virtualenv 
+j_jobs:
+  - gc3pie-2.0_py2.4
+  - gc3pie-2.0_py2.5
+  - gc3pie-2.0_py2.6
+  - gc3pie-2.0_py2.7
+  - gc3pie-2.1_py2.4
+  - gc3pie-2.1_py2.5
+  - gc3pie-2.1_py2.6
+  - gc3pie-2.1_py2.7
+  - gc3pie-trunk_py2.4
+  - gc3pie-trunk_py2.5
+  - gc3pie-trunk_py2.6
+  - gc3pie-trunk_py2.7

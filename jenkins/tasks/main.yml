@@ -1,0 +1,28 @@
+---
+- name: configure apt key for jenkins repository
+  action: apt_key url=http://pkg.jenkins-ci.org/debian/jenkins-ci.org.key state=present
+- name: add jenkins repository
+  action: apt_repository repo='deb http://pkg.jenkins-ci.org/debian binary/' state=present
+- name: remove non-existing src apt repository
+  action: apt_repository repo='deb-src http://pkg.jenkins-ci.org/debian binary/' state=absent
+- name: add old-python apt repository
+  action: apt_repository repo=ppa:fkrull/deadsnakes state=present
+
+- name: install jenkins
+  action: apt pkg=$item update_cache=yes force=yes state=latest
+  with_items: $j_packages
+
+- name: configure jenkins for GC3Pie
+  action: template src=jenkins/templates/config.xml.j2 dest=/var/lib/jenkins/config.xml owner=jenkins
+  notify:
+    - restart jenkins
+
+- name: create jenkins directory job
+  action: file path=/var/lib/jenkins/jobs/$item owner=jenkins state=directory
+  with_items: $j_jobs
+
+- name: configure jenkins job
+  action: copy src=jenkins/files/jobs/$item/config.xml dest=/var/lib/jenkins/jobs/$item/config.xml owner=jenkins
+  with_items: $j_jobs
+  notify:
+    - restart jenkins
