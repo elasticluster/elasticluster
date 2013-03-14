@@ -1,8 +1,10 @@
 ---
 - name: configure apt key for jenkins repository
   action: apt_key url=http://pkg.jenkins-ci.org/debian/jenkins-ci.org.key state=present
+
 - name: add jenkins repository
   action: apt_repository repo='deb http://pkg.jenkins-ci.org/debian binary/' state=present
+
 - name: remove non-existing src apt repository
   action: apt_repository repo='deb-src http://pkg.jenkins-ci.org/debian binary/' state=absent
 - name: add old-python apt repository
