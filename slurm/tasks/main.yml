@@ -1,0 +1,32 @@
+---
+- name: configure /etc/hosts file
+  action: template src=slurm/templates/hosts.j2 dest=/etc/hosts owner=root group=root
+
+- name: install slurm/munge packages
+  action: apt pkg=$item update_cache=yes force=yes state=latest
+  with_items: $packages
+
+- name: configure slurm
+  action: template src=slurm/templates/slurm.conf.j2 dest=/etc/slurm-llnl/slurm.conf owner=root group=root mode=0644
+  notify: restart slurm
+  tags: 
+    - slurm
+
+- name: munge service
+  action: service name=munge state=started
+  tags: 
+    - munge
+
+- name: configure munge
+  action: copy src=slurm/files/munge.key dest=/etc/munge/munge.key owner=munge group=munge mode=0400
+  notify: restart munge
+  tags: 
+    - munge
+
+- name: slurm service
+  action: service name=slurm-llnl state=started
+  tags: 
+    - slurm
+
+- name: set hostname
+  action: command hostname $ansible_hostname

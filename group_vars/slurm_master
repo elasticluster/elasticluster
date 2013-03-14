@@ -1,0 +1,4 @@
+---
+packages:
+  - slurm-llnl
+  - munge
