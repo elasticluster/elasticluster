@@ -1,0 +1,17 @@
+---
+- name: install nfs client
+  action: apt pkg=nfs-common state=latest
+  tags:
+    -nfs
+
+- name: configure /etc/fstab on clients
+  action: mount name=/home src=${groups.slurm_master[0]}:/home fstype=nfs opts=rw,sync state=mounted
+  tags:
+    - nfs
+  
+# - name: configure /etc/fstab on clients
+#   action: lineinfile dest=/etc/fstab regexp=.*/home.* line="${groups.slurm_master[0]}:/home /home nfs defaults 0 0"
+#   tags:
+#     - nfs
+#   notify:
+#     - mount home

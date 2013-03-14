@@ -4,3 +4,10 @@
 
 - name: restart munge
   action: service name=munge state=restarted
+
+- name: reload nfs exports
+  action: shell exportfs -r
+  when_string: group
+
+- name: mount home
+  action: shell mount /home

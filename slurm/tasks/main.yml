@@ -11,4 +11,3 @@
 
 - include: slurm/tasks/slurm.yml
 - include: slurm/tasks/munge.yml
-

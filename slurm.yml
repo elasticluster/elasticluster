@@ -1,11 +1,21 @@
 ---
 - hosts: 
     - slurm_master
+  sudo: yes
+  tasks: 
+    - include: common/tasks/main.yml
+    - include: slurm/tasks/main.yml
+    - include: slurm/tasks/nfs.yml
+  handlers:
+    - include: slurm/handlers/main.yml
+
+- hosts: 
     - slurm_clients
   sudo: yes
   tasks: 
     - include: common/tasks/main.yml
     - include: slurm/tasks/main.yml
+    - include: slurm/tasks/nfs-clients.yml
   handlers:
     - include: slurm/handlers/main.yml
 

@@ -1,0 +1,17 @@
+---
+- name: install nfs server
+  action: apt pkg=nfs-kernel-server state=latest
+  tags:
+    -nfs
+
+- name: install nfs client
+  action: apt pkg=nfs-common state=latest
+  tags:
+    -nfs
+
+- name: set /etc/exports
+  action: template src=slurm/templates/exports.j2 dest=/etc/exports
+  notify: reload nfs exports
+  tags:
+    - nfs
+
