@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Run ansible
+
+ansible-playbook -c local /etc/ansible/src/site.yml

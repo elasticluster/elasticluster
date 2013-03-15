@@ -1,0 +1,18 @@
+---
+- name: install pip
+  action: apt pkg=python-pip state=present
+
+- name: install ansible
+  action: command pip install ansible
+
+- name: configure inventory file
+  action: template src=common/templates/inventory_file.j2 dest=/etc/ansible/hosts
+
+- name: install git
+  action: apt pkg=git state=present
+
+- name: download ansible playbook
+  action: git repo=git://github.com/arcimboldo/ansible-gc3-pb.git dest=/etc/ansible/src
+
+- name: setup cron
+  action: copy src=common/files/ansible.cron dest=/etc/cron.hourly/ansible mode=0755 owner=root group=root

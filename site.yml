@@ -1,0 +1,3 @@
+---
+- include: slurm.yml
+- include: jenkins.yml
