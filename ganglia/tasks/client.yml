@@ -1,0 +1,5 @@
+---
+- name: install ganglia server
+  action: apt pkg=$item state=latest
+  with_items:
+    - ganglia-monitor

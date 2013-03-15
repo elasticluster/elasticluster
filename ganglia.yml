@@ -1,0 +1,14 @@
+---
+- hosts: ganglia_master
+  sudo: yes
+  tasks:
+    - include: ganglia/tasks/server.yml
+  tags:
+    - ganglia
+
+- hosts: ganglia_monitor
+  sudo: yes
+  tasks:
+    - include: ganglia/tasks/client.yml
+  tags:
+    - ganglia
