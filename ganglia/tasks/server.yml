@@ -4,3 +4,18 @@
   with_items:
     - ganglia-monitor
     - ganglia-webfrontend
+    - gmetad
+  tags:
+    - ganglia
+
+- name: configure apache link
+  action: file src=/etc/ganglia-webfrontend/apache.conf dest=/etc/apache2/conf.d/ganglia.conf state=link
+  notify: restart apache
+  tags:
+    - ganglia
+
+- name: configure gemetad
+  action: template src=ganglia/templates/gmetad.conf.j2 dest=/etc/ganglia/gmetad.conf
+  notify: restart gmetad
+  tags:
+    - ganglia

@@ -3,3 +3,13 @@
   action: apt pkg=$item state=latest
   with_items:
     - ganglia-monitor
+  tags:
+    - ganglia
+
+- name: configure gmond
+  action: template src=ganglia/templates/gmond.conf.j2 dest=/etc/ganglia/gmond.conf
+  notify:
+    - restart gmond
+  tags:
+    - ganglia
+    - gmond

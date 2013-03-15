@@ -5,10 +5,14 @@
     - include: ganglia/tasks/server.yml
   tags:
     - ganglia
+  handlers:
+    - include: ganglia/handlers/main.yml
 
 - hosts: ganglia_monitor
   sudo: yes
   tasks:
     - include: ganglia/tasks/client.yml
+  handlers:
+    - include: ganglia/handlers/main.yml
   tags:
     - ganglia

@@ -1,0 +1,11 @@
+---
+- name: restart apache
+  action: service name=apache2 state=restarted
+
+# gmetad and ganglia-monitor init scripts does not support `status`
+# argument.
+- name: restart gmond
+  action: command service ganglia-monitor restart
+
+- name: restart gmetad
+  action: command service gmetad restart
