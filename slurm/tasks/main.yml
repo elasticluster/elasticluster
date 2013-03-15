@@ -3,7 +3,7 @@
   action: template src=slurm/templates/hosts.j2 dest=/etc/hosts owner=root group=root
 
 - name: set hostname
-  action: command hostname $ansible_hostname
+  action: command hostname $inventory_hostname
 
 - name: install packages
   action: apt pkg=$item update_cache=yes force=yes state=latest

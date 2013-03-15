@@ -45,7 +45,7 @@ udp_send_channel {
   ttl = 1 
 } 
 
-{% if ansible_hostname in groups['ganglia_master'] %}
+{% if inventory_hostname in groups['ganglia_master'] %}
 
 /* You can specify as many udp_recv_channels as you like as well. */ 
 udp_recv_channel { 

@@ -11,7 +11,10 @@
 
 - name: set /etc/exports
   action: template src=slurm/templates/exports.j2 dest=/etc/exports
-  notify: reload nfs exports
   tags:
     - nfs
 
+- name: reload nfs exports
+  action: shell exportfs -r
+  tags:
+    - nfs
