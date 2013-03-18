@@ -1,5 +1,6 @@
 ---
-- hosts: all
+- name: Collecting facts
+  hosts: all
   gather_facts: yes
 
 - include: slurm.yml

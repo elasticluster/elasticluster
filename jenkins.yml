@@ -1,5 +1,6 @@
 ---
-- hosts: jenkins
+- name: Jenkins CIS Playbook
+  hosts: jenkins
   sudo: yes
   tasks: 
     - include: common/tasks/main.yml

@@ -1,6 +1,6 @@
 ---
-- hosts: 
-    - slurm_master
+- name: Slurm master Playbook
+  hosts: slurm_master
   sudo: yes
   tasks: 
     - include: common/tasks/main.yml
@@ -9,8 +9,8 @@
   handlers:
     - include: slurm/handlers/main.yml
 
-- hosts: 
-    - slurm_clients
+- name: Slurm worker nodes Playbook
+  hosts: slurm_clients
   sudo: yes
   tasks: 
     - include: common/tasks/main.yml
