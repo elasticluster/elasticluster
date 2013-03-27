@@ -1,0 +1,17 @@
+# THIS FILE IS CONTROLLED BY ANSIBLE,
+# any local modifications will be overwritten!
+# If you want to make changes, please edit the
+# master file.
+
+
+[GC3]
+name=GC3 public repository
+baseurl=http://www.gc3.uzh.ch/packages/CentOS/{{ centos_base_version_cmd.stdout }}/gc3/$basearch
+# note that this repository is _not_ signed!
+gpgcheck=0
+
+[GC3private]
+name=GC3 private repository
+baseurl=http://www.gc3.uzh.ch/packages/private/CentOS/{{ centos_base_version_cmd.stdout }}/gc3/$basearch
+# note that this repository is _not_ signed!
+gpgcheck=0
