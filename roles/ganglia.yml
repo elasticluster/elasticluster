@@ -1,7 +1,6 @@
 ---
 - name: Ganglia frontend/collector Playbook
   hosts: ganglia_master
-  sudo: yes
   tasks:
     - include: ganglia/tasks/server.yml
   tags:
@@ -11,7 +10,6 @@
 
 - name: Ganglia monitor Playbook
   hosts: ganglia_monitor
-  sudo: yes
   tasks:
     - include: ganglia/tasks/client.yml
   handlers:

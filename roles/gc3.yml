@@ -1,0 +1,5 @@
+---
+- name: GC3 master playbook
+  hosts: gc3
+  tasks:
+    - include: common/tasks/main.yml
