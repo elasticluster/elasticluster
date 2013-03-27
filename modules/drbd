@@ -1,0 +1,177 @@
+#!/bin/bash
+#
+# DRBD module for ansible
+#
+# module: drdb
+# short_description: This module will configure a drbd resource
+# description:
+#     - This module will configure a drbd resource by creating a file in /etc/drbd.d/
+# version_added: 1.0
+# author: Antonio Messina <antonio.s.messina@gmail.com>
+# notes:
+#     - none
+# requirements:
+#     - This module does not install the `drbd-utils` package, so you
+#     - have to install it by yourself.
+# options:
+#     name:
+#         description:
+#             - Name to use for the resource
+#         required: true
+#     dest:
+#         description:
+#             - Destination file.
+#         required: false
+#         default: /etc/drbd.d/$name.res
+#     address0:
+#         description:
+#             - Address to use for the first peer
+#             - in the form A.B.C.D:port
+#         required: true
+#     address0:
+#         description:
+#             - Address to use for the first peer
+#             - in the form A.B.C.D:port
+#         required: true
+#     disk:
+#         description:
+#             - Default disk to use (e.g. /dev/sda7)
+#         required: false
+#     device:
+#         description:
+#             - Default device to use (e.g. /dev/drbd1)
+#         required: false
+#     metadisk:
+#         description:
+#             - Metadisk to use
+#         required: false
+#         default: internal
+#     disk0:
+#         description:
+#             - Disk to use for `peer0`
+#         required: false
+#         default: disk
+#     device0:
+#         description:
+#             - Device to use for `peer0`
+#         required: false
+#         default: device
+#     metadisk0:
+#         description:
+#             - Metadisk to use for `peer0`
+#         required: false
+#         default: internal
+#     peer0:
+#         description:
+#             - Name of the first peer
+#         required: false
+#         default: address0
+#     disk1:
+#         description:
+#             - Disk to use for `peer1`
+#         required: false
+#         default: disk
+#     device1:
+#         description:
+#             - Device to use for `peer1`
+#         required: false
+#         default: device
+#     metadisk1:
+#         description:
+#             - Metadisk to use for `peer1`
+#         required: false
+#         default: internal
+#     peer1:
+#         description:
+#             - Name of the first peer
+#         required: false
+#         default: address1
+# examples:
+#     - code: drbd name=myresource disk=/dev/sdb device=/dev/drbd1 address0=10.0.0.1:7789 address1=10.0.0.2:7789
+
+function missing_argument(){
+    cat <<EOF
+{
+  "failed" : true,
+  "msg" : "Missing required arguments '$1'"
+}
+EOF
+    exit 1
+}
+
+[ -f $1 ] && source $1 || eval $*
+
+
+
+[ -z "$device0" ] && device0=$device
+[ -z "$device1" ] && device1=$device
+[ -z "$disk0" ] && disk0=$disk
+[ -z "$disk1" ] && disk1=$disk
+
+[ -z "$dest" ] && dest=/etc/drdb.d/$name.res
+[ -z "$peer0" ] && peer0=$address0
+[ -z "$peer1" ] && peer1=$address1
+
+[ -z "$metadisk" ] && metadisk=internal
+[ -z "$metadisk0" ] && metadisk0=$metadisk
+[ -z "$metadisk1" ] && metadisk1=$metadisk
+
+
+
+[ -z "$name" ] && missing_argument name
+[ -z "$disk0" ] && missing_argument disk0
+[ -z "$disk1" ] && missing_argument disk1
+[ -z "$device0" ] && missing_argument device0
+[ -z "$device1" ] && missing_argument device1
+[ -z "$address0" ] && missing_argument address0
+[ -z "$address1" ] && missing_argument address1
+
+tmp=$(tempfile)
+cat > $tmp <<EOF
+resource $name {
+  on $peer0 {
+    address $address0;
+    device  $device0;
+    disk    $disk0;
+    meta-disk $metadisk0;
+  }
+  on $peer1 {
+    address $address1;
+    device  $device1;
+    disk    $disk1;
+    meta-disk $metadisk1;
+  }
+}
+EOF
+
+cmp -s $tmp $dest
+if [ $? -eq 0 ]
+then
+    cat <<EOF
+{
+    "changed": false,
+    "ok": true
+}
+EOF
+else
+    cp -f $tmp $dest
+    rm -f $tmp
+    cat <<EOF
+{
+  "ok": true,
+  "changed": true,
+  "failed": false
+}
+EOF
+fi
+
+# - failed=True, indicating that the action failed
+# - skipped=True, indicating a pre-condition for running the task was already
+#   met
+# - changed=True/False, indicating the task changed/didn't change something,
+#   used to trigger notifiers and coloring of the output.
+# - ansible_facts=<dict>, containing custom facts that will be usable as
+#   variables in following tasks
+# - stdout=<str>, containing text output. Will be split into lines that can be
+#   used if register'd
+# - msg, used for e.g. failure messages
