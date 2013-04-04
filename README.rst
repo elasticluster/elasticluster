@@ -3,6 +3,17 @@ Ansible GC3 playbooks
 
 List of playbooks usable for ansible
 
+GC3-specific configuration
+--------------------------
+
+Some playbooks, like the one to configure the GC3 repository, only
+work for hosts in the `gc3` group. You can either assign an host to
+that group, or you can set a variable `gc3group` equals to `gc3`
+(either from the inventory file or from the command line by using the
+`-e` option), and the ``site.yml`` playbook will assign the host to
+the `gc3` group.
+
+
 SLURM configuration
 -------------------
 
@@ -18,7 +29,7 @@ In order to configure a slurm cluster, create an hosts file with::
 
 then run::
 
-    ansible-playbook -i <hostfile> slurm.yml
+    ansible-playbook -i <hostfile> site.yml
 
 
 Jenkins
@@ -31,7 +42,7 @@ To configure jenkins, use an hostfile containing::
 
 then run::
 
-    ansible-playbook -i <hostfile> jenkins.yml
+    ansible-playbook -i <hostfile> site.yml
 
 Please note that by default this will create jobs to test gc3pie. If
 you want to modify it, just check the variable `j_jobs` in
