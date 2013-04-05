@@ -19,10 +19,11 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 
 import cli.app
-from cmd import Start
-from cmd import Stop
-from cmd import AbstractCommand
-from conf import Configuration
+import sys
+from elasticluster.cmd import Start
+from elasticluster.cmd import Stop
+from elasticluster.cmd import AbstractCommand
+from elasticluster.conf import Configuration
 
 class ElasticCloud(cli.app.CommandLineApp):        
         
@@ -39,6 +40,7 @@ class ElasticCloud(cli.app.CommandLineApp):
         # global parameters
         self.add_param('-c', '--cluster', help='name of the cluster', required=True)
         self.add_param('-v', '--verbose', action='count')
+        self.add_param('-s', '--storage', help="storage folder, default is" + AbstractCommand.default_storage_dir, default=AbstractCommand.default_storage_dir)
         self.add_param('--config', help='configuration file, default is ' + AbstractCommand.default_configuration_file, default=AbstractCommand.default_configuration_file)
         
 
@@ -58,14 +60,12 @@ class ElasticCloud(cli.app.CommandLineApp):
         
         # initialize configuration singleton with given global parameters
         try:
-            if self.params.config:
-                Configuration.Instance().file_path = self.params.config
-            else:
-                Configuration.Instance().file_path = AbstractCommand.default_configuration_file
+            Configuration.Instance().file_path = self.params.config
             Configuration.Instance().cluster_name = self.params.cluster
+            Configuration.Instance().storage_path = self.params.storage
         except Exception as ex:
-            print ex
             print "please specify a valid configuration file"
+            sys.exit()
         
         # call the subcommand function (ususally execute)
         return self.params.func()

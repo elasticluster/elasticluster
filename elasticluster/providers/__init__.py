@@ -23,10 +23,7 @@ class AbstractCloudProvider:
     """
     TODO: document
     """
-    def __init__(self):
-        pass
-    
-    def start_instance(self, cluster_name, node_type):
+    def start_instance(self, key_name, key_path, security_group, flavor, image_name):
         pass
     
     

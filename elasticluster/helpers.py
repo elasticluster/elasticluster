@@ -18,6 +18,8 @@
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 
+import ntpath
+
 class Singleton(object):
     """
     see: http://stackoverflow.com/a/7346105
@@ -57,3 +59,10 @@ class Singleton(object):
 
     def __instancecheck__(self, inst):
         return isinstance(inst, self._decorated)
+    
+    
+
+
+def find_filename(self, path):
+    head, tail = ntpath.split(path)
+    return tail or ntpath.basename(head)

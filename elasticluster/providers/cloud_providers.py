@@ -15,17 +15,17 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import elasticluster
+from elasticluster.providers import AbstractCloudProvider
+from boto import ec2
+import boto
+import os
+import urllib
+from elasticluster.exceptions import SecurityGroupError, KeypairError,\
+    InstanceError
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
-import time
-import boto
-import boto.ec2
-import urllib
-import unicodedata
-from conf import Configuration
-from providers import AbstractCloudProvider
 
-debuglevel=0
 
 class BotoCloudProvider(AbstractCloudProvider):
     """
@@ -33,32 +33,114 @@ class BotoCloudProvider(AbstractCloudProvider):
     the virtual instances
     """
     
-    def __init__(self):
+    def __init__(self, url, region_name, access_key, secret_key):
+        self._url = url
+        self._region_name = region_name
+        self._access_key = access_key
+        self._secret_key = secret_key
+        
+        # read all parameters from url
+        t, opaqueurl = urllib.splittype(url)
+        self._host, self._ec2path = urllib.splithost(opaqueurl)
+        self._ec2host, port = urllib.splitport(self._host)
+        self._ec2port = int(port)
+        
+        if str(t).startswith("https"):
+            self._secure = True
+        else:
+            self._secure = False
+        
         # will be initialized upon first connect
         self._connection = None
         self._region = None
+        self._instances = {}
         
-        #AbstractCloudProvider.__init__(self)
         
-    def _connect(self, cloud_options):
+    def _connect(self):
         """
-        Connects to the ec2 cloud provider with the given cloud options (dictionary from configuration file)
+        Connects to the ec2 cloud provider
         """
         # check for existing connection
         if self._connection:
-            return
+            return self._connection
         
-        # read all parameters from url
-        t, opaqueurl = urllib.splittype(cloud_options['ec2_url'])
-        host, ec2path = urllib.splithost(opaqueurl)
-        ec2host, port = urllib.splitport(host)
-        ec2port = int(port)
-        
+        region = ec2.regioninfo.RegionInfo(name=self._region_name, endpoint=self._ec2host)
         # connect to webservice
-        region = boto.ec2.regioninfo.RegionInfo(name=cloud_options['region'], endpoint=ec2host)
-        self._connection = boto.connect_ec2(aws_access_key_id=cloud_options['ec2_access_key'], aws_secret_access_key=cloud_options['ec2_secret_key'], is_secure=False, port=ec2port, host=ec2host, path=ec2path, region=region, debug=debuglevel)
+        self._connection = boto.connect_ec2(aws_access_key_id=self._access_key, aws_secret_access_key=self._secret_key, is_secure=self._secure, port=self._ec2port, host=self._ec2host, path=self._ec2path, region=region)
         
+        return self._connection
+
         
+    def start_instance(self, key_name, key_path, security_group, flavor, image_name):
+        """
+        Starts an instance in the cloud on the specified cloud provider (configuration option)
+        and returns the id of the started instance.
+        """ 
+        connection = self._connect()
+         
+        self._check_keypair(key_name, key_path)
+        self._check_security_group(security_group)
+        image_id = self._find_image_id(image_name)
+        
+        reservation = connection.run_instances(image_id, key_name=key_name, security_groups=[security_group], instance_type=flavor)
+        vm = reservation.instances[-1]
+        
+        # cache instance object locally for faster access later on
+        self._instances[vm.id] = vm
+        
+        return vm.id
+    
+        
+    def is_instance_running(self, instance_id):
+        if instance_id not in self._instances:
+            reservations = self._connection.conn.get_all_instances()
+            for res in reservations:
+                for instance in res.instances:
+                    if instance.id == instance_id:
+                        self._instances[instance_id] = instance
+            
+        if instance_id not in self._instances:
+            raise InstanceError("the given instance `%s` was not found on the coud" % instance_id)
+        
+        instance = self._instances[instance_id]
+        
+        # TODO: this might not be enough, since we need an instance with available ip address
+        if instance.update() == "running":
+            return True
+        else:
+            return False
+        
+    def _check_keypair(self, name, path):
+        connection = self._connect()
+        keypairs = connection.get_all_key_pairs()
+        keypairs = dict((k.name, k) for k in keypairs)
+        
+        # create keys that don't exist yet
+        if name not in keypairs:
+            elasticluster.log.warning("keypair not found on cloud, creating a new one")
+            with open(os.path.expanduser(path)) as f:
+                key_material = f.read()
+                try:
+                    connection.import_key_pair(name, key_material)
+                except:
+                    connection.delete_key_pair(name)
+                    raise KeypairError("could not create keypair `%s`" % name)
+
+        
+    def _check_security_group(self, name):
+        """
+        Checks if the security group exists.
+        TODO: include security group options in config and compare these here to create a new on if not exists
+        """
+        connection = self._connect()
+        security_groups = connection.get_all_security_groups()
+        security_groups = dict((s.name, s) for s in security_groups)
+        
+        if name not in security_groups:
+            raise SecurityGroupError("the specified security group %s does not exist" % name)
+
+    
+    
     def _find_image_id(self, name):
         """
         Finds an image id to a given name. This only works if a connection is already established and will return
@@ -66,35 +148,11 @@ class BotoCloudProvider(AbstractCloudProvider):
         """
         if self._connection:
             images = self._connection.get_all_images()
-            images = dict((unicodedata.normalize('NFC', i.name), i) for i in images)
             
-            if name in images:
-                return images[name].id
-            
+            for i in images:
+                if i.name == name:
+                    return i.id            
         
         return None
-        
-        
-    def start_instance(self, cluster_name, node_type):
-        """
-        Starts an instance in the cloud on the specified cloud provider (configuration option)
-        """
-        try:
-            instance_options = Configuration.Instance().read_cluster_node_section(cluster_name, node_type)            
-            cloud_options = Configuration.Instance().read_cloud_section(instance_options['cloud'])
-            
-            self._connect(cloud_options)
-            image_id = self._find_image_id(instance_options['image'])
-            
-            reservation = self._connection.run_instances(image_id, key_name=cloud_options['key_name'], security_groups=[instance_options['security_group']], instance_type=instance_options['flavor'])
-            vm = reservation.instances[-1]
-            
-            while vm.update() == 'pending':
-                print 'Vm in pending state. Sleeping 5 seconds...'
-                time.sleep(5)
-            
-            print "vm started :) "
-            
-        except Exception as e:
-            print e
-        
+    
+    

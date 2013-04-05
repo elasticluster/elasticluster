@@ -15,9 +15,10 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+from elasticluster.conf import Configurator
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
-from cluster import Cluster
+from elasticluster.cluster import Cluster
 import os
 
 
@@ -27,6 +28,7 @@ class AbstractCommand():
     by the arguments list and executed afterwards.
     """
     default_configuration_file = os.getenv("HOME") + os.sep + ".elasticluster" + os.sep + "config.cfg"
+    default_storage_dir = os.getenv("HOME") + os.sep + ".elasticluster" + os.sep + "storage"
     
     def __init__(self, params):
         """
@@ -72,8 +74,11 @@ class Start(AbstractCommand):
         AbstractCommand.execute(self)
         
         cluster_name = self.params.cluster
-        cluster = Cluster(cluster_name)
+        
+        cluster = Configurator().create_cluster(cluster_name)
         cluster.start()
+        
+        
         
         
 class Stop(AbstractCommand):

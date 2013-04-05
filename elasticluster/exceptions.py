@@ -15,10 +15,20 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""
+TODO document
+"""
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
+class ConfigurationError(Exception):
+    pass
 
-import logging
-import logging.config
-logging.basicConfig()
-log = logging.getLogger("gc3.elasticluster")
+
+class SecurityGroupError(Exception):
+    pass
+
+class KeypairError(Exception):
+    pass
+
+class InstanceError(Exception):
+    pass
