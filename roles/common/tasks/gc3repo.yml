@@ -3,6 +3,10 @@
   action: apt_key url=http://www.gc3.uzh.ch/packages/public.gpg state=present
   only_if: $is_ubuntu
 
+- name: Install required package for apt_repository. BUG!
+  action: apt pkg=python-software-properties state=present
+  only_if: $is_ubuntu
+
 - name: add GC3 apt public repository
   action: apt_repository repo='deb http://www.gc3.uzh.ch/packages/ubuntu precise main' state=present
   only_if: $is_ubuntu
