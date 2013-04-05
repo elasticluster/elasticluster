@@ -1,5 +1,9 @@
 #!/bin/bash
 
-# Run ansible
+cd /srv/ansible/playbooks
 
-ansible-playbook -c local /etc/ansible/src/site.yml
+# Update repository
+git pull
+
+# Run ansible
+ansible-playbook -c local -i hosts site.yml
