@@ -10,11 +10,12 @@
 - name: Create a virtualenv and install ansible in it
   action: pip name=ansible virtualenv=/srv/ansible/venv state=present
 
-- name: Configure inventory file
-  action: template src=common/templates/inventory_file.j2 dest=/srv/ansible/hosts
+# - name: Configure inventory file
+#   action: template src=common/templates/inventory_file.j2 dest=/srv/ansible/playbooks/hosts
+
 
 - name: download ansible playbook
   action: git repo=git://github.com/gc3-uzh-ch/ansible-playbooks.git dest=/srv/ansible/playbooks
 
 - name: setup cron
-  action: copy src=common/files/ansible.cron dest=/etc/cron.hourly/ansible mode=0755 owner=root group=root
+  action: template src=common/templates/ansible.cron.j2 dest=/etc/cron.hourly/ansible mode=0755 owner=root group=root
