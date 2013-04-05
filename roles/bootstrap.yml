@@ -1,4 +1,5 @@
 ---
 - hosts: gc3
+  connection: local
   tasks:
     - include: common/tasks/cron_ansible.yml
