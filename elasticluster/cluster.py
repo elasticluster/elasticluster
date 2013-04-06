@@ -101,8 +101,10 @@ class Node(object):
         
         if running:
             elasticluster.log.info("node `%s` is up and running" % self.instance_id)
+            return True
         else:
-            elasticluster.log.debug("waiting for node `%s` to start")
+            elasticluster.log.debug("waiting for node `%s` to start" % self.instance_id)
+            return False
     
         
 
