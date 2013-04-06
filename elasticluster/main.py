@@ -82,8 +82,12 @@ class ElasticCloud(cli.app.CommandLineApp):
         
         # call the subcommand function (ususally execute)
         return self.params.func()
-        
-        
-if __name__ == "__main__":
+
+
+def main():
     app = ElasticCloud()
     app.run()
+
+
+if __name__ == "__main__":
+    main()
