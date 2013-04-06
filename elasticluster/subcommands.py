@@ -71,6 +71,8 @@ class Start(AbstractCommand):
         """
         Starts a new Cluster with the given configuration file.
         """
+        # ANTONIO: No need to call parent's `execute` method since
+        # it's a noop.
         AbstractCommand.execute(self)
         
         cluster_name = self.params.cluster
