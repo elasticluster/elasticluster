@@ -29,6 +29,8 @@ from elasticluster import log
 from elasticluster.subcommands import Start
 from elasticluster.subcommands import Stop
 from elasticluster.subcommands import AbstractCommand
+from elasticluster.subcommands import ListClusters
+from elasticluster.subcommands import ListNodes
 from elasticluster.conf import Configuration
 
 class ElasticCloud(cli.app.CommandLineApp):        
