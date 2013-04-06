@@ -56,7 +56,7 @@ class Cluster(object):
         """
         node = self._configurator.create_node(self.name, node_type)
         if node_type == Node.frontend_type:
-            self.compute_nodes.append(node)
+            self.frontend_nodes.append(node)
         else:
             self.compute_nodes.append(node)
         
@@ -78,7 +78,10 @@ class Cluster(object):
         # TODO: add some sort of timeout here, otherwise you know...
         starting_nodes = self.compute_nodes + self.frontend_nodes
         while starting_nodes:
+            # ANTONIO: This is dangerous: the exit condition could never be
+            # condition from this loop!
             starting_nodes = [n for n in starting_nodes if not n.is_alive()]
+            # ANTONIO: You should put some call to sleep() here...
             
             
     def stop(self):

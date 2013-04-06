@@ -38,12 +38,15 @@ class BotoCloudProvider(AbstractCloudProvider):
         self._secret_key = secret_key
         
         # read all parameters from url
-        t, opaqueurl = urllib.splittype(url)
+        proto, opaqueurl = urllib.splittype(url)
         self._host, self._ec2path = urllib.splithost(opaqueurl)
         self._ec2host, port = urllib.splitport(self._host)
-        self._ec2port = int(port)
         
-        if str(t).startswith("https"):
+        if port:
+            port = int(port)
+        self._ec2port = port
+
+        if proto == "https":
             self._secure = True
         else:
             self._secure = False
@@ -62,6 +65,9 @@ class BotoCloudProvider(AbstractCloudProvider):
             return self._connection
         
         region = ec2.regioninfo.RegionInfo(name=self._region_name, endpoint=self._ec2host)
+
+        # connect to webservice
+        # ANTONIO: You need to check if this method fails!
         self._connection = boto.connect_ec2(aws_access_key_id=self._access_key, aws_secret_access_key=self._secret_key, is_secure=self._secure, port=self._ec2port, host=self._ec2host, path=self._ec2path, region=region)
         
         return self._connection
@@ -137,16 +143,49 @@ class BotoCloudProvider(AbstractCloudProvider):
         keypairs = connection.get_all_key_pairs()
         keypairs = dict((k.name, k) for k in keypairs)
         
-        # try to create keys that don't exist yet
+
+        # create keys that don't exist yet
+        #
+        # ANTONIO: Please remember to call strip('"').strip("'") on
+        # the name string: quotes and double quotes are invalid chars
+        # for boto, and it's quite common error to wrap strings
+        # between quotes in configuration file even if they are not
+        # needed.
         if name not in keypairs:
+            # ANTONIO: Better to specify where the keypair was not found, and the name as well.
+            # something on the lien "Keypair `%s` not found on resource `%s`. Creating a new one" % (name, ec2endpoint)
             elasticluster.log.warning("keypair not found on cloud, creating a new one")
             with open(os.path.expanduser(path)) as f:
                 key_material = f.read()
                 try:
                     connection.import_key_pair(name, key_material)
-                except:
+                except Exception, ex:
+                    # ANTONIO: This is probably an error:
+                    # 
+                    # * If you cannot import a *new* key, there is no
+                    #   key to delete.
+                    #
+                    # * However, if you get an error because the key
+                    #   already exists (shouldn't but could happen,
+                    #   because of a race condition) you are deleting
+                    #   a valid key.
+                    #
+                    # (I know, the example I gave you have the same bug :))
+                    # 
+                    # Moreover: one of the error you can get here is
+                    # that the configuration file defines a *private*
+                    # key, while you want to upload a public key. You
+                    # should add some check (sooner or later) to work
+                    # around this kind of mistake, knowing that
+                    # usually the public key has the same name of the
+                    # private key but with extension `.pub`.
+                    # 
+                    # One more thing: change the name of the
+                    # configuration file meaningful: `user_key` could
+                    # either be the private or the public key. Call it
+                    # `public_key` or `private_key`.
                     connection.delete_key_pair(name)
-                    raise KeypairError("could not create keypair `%s`" % name)
+                    raise KeypairError("could not create keypair `%s`: %s" % (name, ex))
 
         
     def _check_security_group(self, name):
@@ -158,9 +197,11 @@ class BotoCloudProvider(AbstractCloudProvider):
         security_groups = connection.get_all_security_groups()
         security_groups = dict((s.name, s) for s in security_groups)
         
+        # TODO: if the configuration file specify some rules, ensure
+        # that the security group has those rules, and if the security
+        # group does not exists, create it.
         if name not in security_groups:
             raise SecurityGroupError("the specified security group %s does not exist" % name)
-
     
     
     def _find_image_id(self, name):
@@ -170,6 +211,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         connection = self._connect()
         images = connection.get_all_images()
         
+        # ANTONIO: this is a method you may want to cache
         for i in images:
             if i.name == name:
                 return i.id            

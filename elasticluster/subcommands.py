@@ -71,6 +71,8 @@ class Start(AbstractCommand):
         """
         Starts a new cluster.
         """
+        # ANTONIO: No need to call parent's `execute` method since
+        # it's a noop.
         AbstractCommand.execute(self)
         
         cluster_name = self.params.cluster
@@ -149,6 +151,3 @@ class ListNodes(AbstractCommand):
         print "\ncompute nodes:"
         for node in cluster.compute_nodes:
             print "id=`%s`, public_ip=`%s`, private_ip=`%s`" % (node.instance_id, node.ip_public, node.ip_private)
-            
-            
-            

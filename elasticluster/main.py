@@ -17,12 +17,18 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
-
-import cli.app
+# System imports
+import logging
 import sys
-from elasticluster.cmd import Start, ListClusters, ListNodes
-from elasticluster.cmd import Stop
-from elasticluster.cmd import AbstractCommand
+
+# External modules
+import cli.app
+
+# Elasticluster imports
+from elasticluster import log
+from elasticluster.subcommands import Start
+from elasticluster.subcommands import Stop
+from elasticluster.subcommands import AbstractCommand
 from elasticluster.conf import Configuration
 
 class ElasticCloud(cli.app.CommandLineApp):        
@@ -41,7 +47,7 @@ class ElasticCloud(cli.app.CommandLineApp):
         
         # global parameters
         self.add_param('-c', '--cluster', help='name of the cluster', required=True)
-        self.add_param('-v', '--verbose', action='count')
+        self.add_param('-v', '--verbose', action='count', default=0)
         self.add_param('-s', '--storage', help="storage folder, default is" + AbstractCommand.default_storage_dir, default=AbstractCommand.default_storage_dir)
         self.add_param('--config', help='configuration file, default is ' + AbstractCommand.default_configuration_file, default=AbstractCommand.default_configuration_file)
         
@@ -59,7 +65,10 @@ class ElasticCloud(cli.app.CommandLineApp):
         First the central configuration is created, which can be altered through the
         command line interface. Then the given command from the command line interface is called.
         """
-        
+
+        # Set verbosity level
+        loglevel = max(1, logging.WARNING - 10 * max(0, self.params.verbose))
+        log.setLevel(loglevel)
         # initialize configuration singleton with given global parameters
         try:
             Configuration.Instance().file_path = self.params.config

@@ -33,7 +33,8 @@ class Configurator(object):
     cloud_providers_map = {
                            "ec2_boto": BotoCloudProvider
                            }
-    
+
+    # ANTONIO: No need to define an empty constructor!
     def __init__(self):
         pass
     
@@ -61,6 +62,12 @@ class Configurator(object):
         Creates a node with the needed information from the configuration file. The information of the node is
         specific to its type (e.g. a frontend node could differ from a compute node).
         """
+        # ANTONIO: I don't think a node should have a cloud_provider
+        # different from the cluster. Thus, cloud_provider should be
+        # in the signature of `create_node` and it should be Cluster's
+        # responsability to call `create_node` with its cloud provider
+        # as argument. This will avoid having multiple instances of
+        # the same cloud provider.
         config = Configuration.Instance().read_node_section(cluster_name, node_type)
         
         cloud_name = Configuration.Instance().read_cluster_section(cluster_name)['cloud']
