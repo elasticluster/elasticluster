@@ -20,9 +20,9 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 import cli.app
 import sys
-from elasticluster.cmd import Start
-from elasticluster.cmd import Stop
-from elasticluster.cmd import AbstractCommand
+from elasticluster.subcommands import Start
+from elasticluster.subcommands import Stop
+from elasticluster.subcommands import AbstractCommand
 from elasticluster.conf import Configuration
 
 class ElasticCloud(cli.app.CommandLineApp):        
