@@ -69,6 +69,7 @@ class Cluster(object):
             # ANTONIO: This is dangerous: the exit condition could never be
             # condition from this loop!
             starting_nodes = [n for n in starting_nodes if not n.is_alive()]
+            # ANTONIO: You should put some call to sleep() here...
             
             
 class Node(object):
