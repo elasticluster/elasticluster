@@ -20,7 +20,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 import cli.app
 import sys
-from elasticluster.cmd import Start
+from elasticluster.cmd import Start, ListClusters, ListNodes
 from elasticluster.cmd import Stop
 from elasticluster.cmd import AbstractCommand
 from elasticluster.conf import Configuration
@@ -34,7 +34,9 @@ class ElasticCloud(cli.app.CommandLineApp):
         # if you add an object here, make sure it implements the commands.abstract_command contract
         commands = [
                     Start(self.params),
-                    Stop(self.params)
+                    Stop(self.params),
+                    ListClusters(self.params),
+                    ListNodes(self.params)
                     ]
         
         # global parameters

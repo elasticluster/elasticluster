@@ -25,9 +25,8 @@ import os
 
 class Cluster(object):
     """
-    TODO: document
+    Handles all cluster related functionality such as start, setup, load, stop, storage etc.
     """
-
 
     def __init__(self, name, cloud, cloud_provider, frontend, compute, configurator, **extra):
         self.name = name
@@ -42,10 +41,6 @@ class Cluster(object):
         self.compute_nodes = []
         self.frontend_nodes = []
         
-    def start(self):
-        """
-        TODO: document
-        """
         # initialize nodes
         for _ in range(self._frontend):
             node = self._configurator.create_node(self.name, Node.frontend_type)
@@ -54,7 +49,24 @@ class Cluster(object):
         for _ in range(self._compute):
             node = self._configurator.create_node(self.name, Node.compute_type)
             self.compute_nodes.append(node)
+
+    def add_node(self, node_type):
+        """
+        Adds a new node, but doesn't start the instance on the cloud. 
+        """
+        node = self._configurator.create_node(self.name, node_type)
+        if node_type == Node.frontend_type:
+            self.compute_nodes.append(node)
+        else:
+            self.compute_nodes.append(node)
         
+    def start(self):
+        """
+        Starts the cluster with the properties given in the constructor. It will create the nodes
+        through the configurator and delegate all the work to them. After the identifiers of all instances
+        are available, it will save the cluster throgh the cluster storage.
+        """
+                
         # start every node
         for node in self.frontend_nodes + self.compute_nodes:
             node.start()
@@ -69,9 +81,30 @@ class Cluster(object):
             starting_nodes = [n for n in starting_nodes if not n.is_alive()]
             
             
+    def stop(self):
+        """
+        Terminates all instances corresponding to this cluster and deletes the cluster storage.
+        """
+        for node in self.frontend_nodes + self.compute_nodes:
+            node.stop()
+        self._storage.delete_cluster(self.name)
+            
+            
+    def load_from_storage(self):
+        """
+        Fills the cluster with the stored informations such as instance ids, so its possible to resume
+        operations on the cloud.
+        """
+        self._storage.load_cluster(self)
+        
+        for n in self.frontend_nodes + self.compute_nodes:
+            if not n.is_alive():
+                elasticluster.log.error("instance `%s` is not correclty running anymore, shutting it down." % n.instance_id)
+                n.stop()
+            
 class Node(object):
     """
-    TODO: document
+    Handles all the node related funcitonality such as start, stop, configure, etc.
     """
     frontend_type = 1
     compute_type = 2
@@ -87,35 +120,65 @@ class Node(object):
         self.flavor = flavor
         
         self.instance_id = None
+        self.ip_public = None
+        self.ip_private = None
         
         
     def start(self):
+        """
+        Starts an instance for this node on the cloud through the clode provider. This method is non-blocking, as soon as the
+        node id is returned from the cloud provider, it will return.
+        """
         elasticluster.log.info("trying to start a node")
         self.instance_id = self._cloud_provider.start_instance(self.user_key_name, self.user_key, self.security_group, self.flavor, self.image)
         elasticluster.log.info("starting node with id `%s`" % self.instance_id)
         
+    def stop(self):
+        elasticluster.log.info("shutting down instance `%s`" % self.instance_id)
+        try:
+            self._cloud_provider.stop_instance(self.instance_id)
+        except:
+            elasticluster.log.error("could not stop instance `%s`, it might already be down." % self.instance_id)
+        
     def is_alive(self):
+        """
+        Checks if the current node is up and running in the cloud
+        """
         running = self._cloud_provider.is_instance_running(self.instance_id)
         
         if running:
             elasticluster.log.info("node `%s` is up and running" % self.instance_id)
+            self.update_ips()
         else:
             elasticluster.log.debug("waiting for node `%s` to start")
-    
         
+        return running
+    
+    def update_ips(self):
+        """
+        Updates the ips of the node through the cloud provider.
+        """
+        if not self.ip_private and not self.ip_public:
+            private, public = self._cloud_provider.get_ips(self.instance_id)
+            self.ip_public = public
+            self.ip_private = private
+            
 
 class ClusterStorage(object):
     """
-    TODO: document
+    Handles the storage to save information about all the clusters managed by this tool.
     """
     
     def __init__(self, storage_dir):
         self._storage_dir = storage_dir
     
     def dump_cluster(self, cluster):
+        """
+        Saves the information of the cluster to disk in json format to load it later on.
+        """
         db = {"name":cluster.name}
         db["frontend"] = [node.instance_id for node in cluster.frontend_nodes]
-        db["backend"] = [node.instance_id for node in cluster.compute_nodes]
+        db["compute"] = [node.instance_id for node in cluster.compute_nodes]
         
         db_json = json.dumps(db)
         
@@ -127,18 +190,59 @@ class ClusterStorage(object):
         f.close()
         
         
-    def load_cluster(self, cluster_name):
-        pass
+    def load_cluster(self, cluster):
+        """
+        Loads a cluster from the local storage and fills the given cluster object with the known information.
+        """
+        db_path = self._get_json_path(cluster.name)
+        
+        f = io.open(db_path, 'r')
+        db_json = f.readline()
+        
+        information = json.loads(db_json)
+        
+        # if a cluster grows the number of nodes in the config is not enough
+        while len(cluster.frontend_nodes) > len(information["frontend"]):
+            cluster.add_node(Node.frontend_type)
+        while len(cluster.compute_nodes) > len(information["compute"]):
+            cluster.add_node(Node.compute_type)
+        
+        # fill the information of the nodes
+        for node, cache in zip(cluster.frontend_nodes, information['frontend']):
+            node.instance_id = cache
+        for node, cache in zip(cluster.compute_nodes, information['compute']):
+            node.instance_id = cache
     
-    def list_stored_clusters(self):
-        pass
+    
+    def delete_cluster(self, cluster_name):
+        """
+        Deletes the storage of a cluster.
+        """
+        db_file = self._get_json_path(cluster_name)
+        self._clear_storage(db_file)
+    
+    
+    def get_stored_clusters(self):
+        """
+        Returns a list of all stored clusters.
+        """
+        from os import listdir
+        from os.path import isfile, join
+        db_files = [ f.split(os.extsep, 1)[0] for f in listdir(self._storage_dir) if isfile(join(self._storage_dir,f)) ]
+        return db_files
     
     
     def _get_json_path(self, cluster_name):
+        """
+        Gets the path to the json storage file.
+        """
         return self._storage_dir + os.sep + cluster_name + ".json"
         
         
     def _clear_storage(self, db_path):
+        """
+        Clears a storage file.
+        """
         if os.path.exists(db_path):
             os.unlink(db_path)
     

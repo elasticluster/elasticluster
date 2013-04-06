@@ -27,7 +27,7 @@ import ConfigParser
 
 class Configurator(object):
     """
-    Reads the configuration file and creates the corresponding instances.
+    Responsible to create instances, which need information from the configuration file.
     """
     
     cloud_providers_map = {
@@ -40,7 +40,7 @@ class Configurator(object):
     
     def create_cloud_provider(self, cloud_name):
         """
-        Creates a new cloud provider by reading the corresponding part from the configuration file.
+        Creates a new cloud provider with the needed information from the configuration.
         """
         config = Configuration.Instance().read_cloud_section(cloud_name)
         provider = Configurator.cloud_providers_map[config["provider"]]
@@ -48,12 +48,19 @@ class Configurator(object):
         return provider(config["ec2_url"], config["ec2_region"], config["ec2_access_key"], config["ec2_secret_key"])
         
     def create_cluster(self, name):
+        """
+        Creates a cluster with the needed information from the configuration.
+        """
         config = Configuration.Instance().read_cluster_section(name)
         
         return Cluster(name, config['cloud'], self.create_cloud_provider(config['cloud']), int(config['frontend']), int(config['compute']), self)
         
     
     def create_node(self, cluster_name, node_type):
+        """
+        Creates a node with the needed information from the configuration file. The information of the node is
+        specific to its type (e.g. a frontend node could differ from a compute node).
+        """
         config = Configuration.Instance().read_node_section(cluster_name, node_type)
         
         cloud_name = Configuration.Instance().read_cluster_section(cluster_name)['cloud']
@@ -62,7 +69,13 @@ class Configurator(object):
         return Node(node_type, self.create_cloud_provider(cloud_name), config['user_key'], config['user_key_name'], config['os_user'], config['security_group'], config['image'], config['flavor'])
 
     def create_cluster_storage(self):
+        """
+        Creates the storage to manage clusters.
+        """
         return ClusterStorage(Configuration.Instance().storage_path)
+
+
+
 
 @Singleton
 class Configuration(object):
@@ -121,6 +134,7 @@ class Configuration(object):
         config_name_general = "cluster/" + cluster_name
         config_name_specific = "cluster/" + cluster_name + "/" + node_type
         
+        # merge configuration parts from the cluster and compute/frontend section
         if self._config.has_section(config_name_general):
             if self._config.has_section(config_name_specific):
                 config = dict(self._read_section(config_name_general).items() + self._read_section(config_name_specific).items())
@@ -142,7 +156,6 @@ class Configuration(object):
         """
         config = self._read_section("cloud/"+name)
         
-        # check for mandatory options
         self._check_mandatory_options(Configuration.Instance().mandatory_cloud_options, config)
         
         return config

@@ -15,17 +15,15 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
+
 import elasticluster
 from elasticluster.providers import AbstractCloudProvider
 from boto import ec2
 import boto
 import os
 import urllib
-from elasticluster.exceptions import SecurityGroupError, KeypairError,\
-    InstanceError
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
-
-
+from elasticluster.exceptions import SecurityGroupError, KeypairError, InstanceError
 
 class BotoCloudProvider(AbstractCloudProvider):
     """
@@ -55,7 +53,6 @@ class BotoCloudProvider(AbstractCloudProvider):
         self._region = None
         self._instances = {}
         
-        
     def _connect(self):
         """
         Connects to the ec2 cloud provider
@@ -65,7 +62,6 @@ class BotoCloudProvider(AbstractCloudProvider):
             return self._connection
         
         region = ec2.regioninfo.RegionInfo(name=self._region_name, endpoint=self._ec2host)
-        # connect to webservice
         self._connection = boto.connect_ec2(aws_access_key_id=self._access_key, aws_secret_access_key=self._secret_key, is_secure=self._secure, port=self._ec2port, host=self._ec2host, path=self._ec2path, region=region)
         
         return self._connection
@@ -90,17 +86,24 @@ class BotoCloudProvider(AbstractCloudProvider):
         
         return vm.id
     
+    def stop_instance(self, instance_id):
+        """
+        Terminates the given instance.
+        """
+        instance = self._instances[instance_id]
+        instance.terminate()
+        
+    def get_ips(self, instance_id):
+        self._load_instance(instance_id)
+        instance = self._instances[instance_id]
+        
+        return instance.private_ip_address, instance.ip_address
         
     def is_instance_running(self, instance_id):
-        if instance_id not in self._instances:
-            reservations = self._connection.conn.get_all_instances()
-            for res in reservations:
-                for instance in res.instances:
-                    if instance.id == instance_id:
-                        self._instances[instance_id] = instance
-            
-        if instance_id not in self._instances:
-            raise InstanceError("the given instance `%s` was not found on the coud" % instance_id)
+        """
+        Checks if an instance with the given id is up and running.
+        """
+        self._load_instance(instance_id)
         
         instance = self._instances[instance_id]
         
@@ -110,12 +113,31 @@ class BotoCloudProvider(AbstractCloudProvider):
         else:
             return False
         
+        
+    def _load_instance(self, instance_id):
+        """
+        Checks if an instance with the given id is cached. If not it will connect to the cloud and 
+        put it into the local cache _instances. An InstanceError is returned if the instance can't
+        be found in the local cache or in the cloud.
+        """
+        connection = self._connect()
+        if instance_id not in self._instances:
+            reservations = connection.get_all_instances()
+            for res in reservations:
+                for instance in res.instances:
+                    if instance.id == instance_id:
+                        self._instances[instance_id] = instance
+                        
+        if instance_id not in self._instances:
+            raise InstanceError("the given instance `%s` was not found on the coud" % instance_id)
+        
+        
     def _check_keypair(self, name, path):
         connection = self._connect()
         keypairs = connection.get_all_key_pairs()
         keypairs = dict((k.name, k) for k in keypairs)
         
-        # create keys that don't exist yet
+        # try to create keys that don't exist yet
         if name not in keypairs:
             elasticluster.log.warning("keypair not found on cloud, creating a new one")
             with open(os.path.expanduser(path)) as f:
@@ -143,16 +165,15 @@ class BotoCloudProvider(AbstractCloudProvider):
     
     def _find_image_id(self, name):
         """
-        Finds an image id to a given name. This only works if a connection is already established and will return
-        None otherwise.
+        Finds an image id to a given name.
         """
-        if self._connection:
-            images = self._connection.get_all_images()
-            
-            for i in images:
-                if i.name == name:
-                    return i.id            
+        connection = self._connect()
+        images = connection.get_all_images()
         
+        for i in images:
+            if i.name == name:
+                return i.id            
+    
         return None
     
     

@@ -15,10 +15,10 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from elasticluster.conf import Configurator
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
-from elasticluster.cluster import Cluster
+from elasticluster.conf import Configurator
+
 import os
 
 
@@ -69,7 +69,7 @@ class Start(AbstractCommand):
         
     def execute(self):
         """
-        Starts a new Cluster with the given configuration file.
+        Starts a new cluster.
         """
         AbstractCommand.execute(self)
         
@@ -78,14 +78,77 @@ class Start(AbstractCommand):
         cluster = Configurator().create_cluster(cluster_name)
         cluster.start()
         
+        print "your cluster is up and running:"
         
         
         
 class Stop(AbstractCommand):
-    
+    """
+    Handles the stop of a cluster.
+    """
     def setup(self, subparsers):
+        """
+        @see abstract_command contract
+        """
         parser = subparsers.add_parser("stop")
         parser.set_defaults(func=self.execute)
     
     def execute(self):
+        """
+        Stops the cluster if it's running.
+        """
         AbstractCommand.execute(self)
+        
+        cluster_name = self.params.cluster
+        cluster = Configurator().create_cluster(cluster_name)
+        cluster.load_from_storage()
+        cluster.stop()
+        
+        
+class ListClusters(AbstractCommand):
+    """
+    Handles the listing of all clusters.
+    TODO: this command still needs the --cluster argument to run, since that is a mandatory global parameter, tho it makes no sense here.
+    """
+    def setup(self, subparsers):
+        parser = subparsers.add_parser("listclusters")
+        parser.set_defaults(func=self.execute)
+        
+    def execute(self):
+        storage = Configurator().create_cluster_storage()
+        cluster_names = storage.get_stored_clusters()
+        
+        print "The following clusters appear in your storage. Yet, there's no guarantee that they are up and running tho:"
+        for name in cluster_names:
+            print "- %s " % name
+            
+
+class ListNodes(AbstractCommand):
+    """
+    Handles the listing of information about a cluster.
+    """
+    def setup(self, subparsers):
+        parser = subparsers.add_parser("listnodes")
+        parser.set_defaults(func=self.execute)
+    
+    def execute(self):
+        """
+        Lists all nodes within the specified cluster with certain information like id and ip.
+        """
+        AbstractCommand.execute(self)
+        
+        cluster_name = self.params.cluster
+        cluster = Configurator().create_cluster(cluster_name)
+        cluster.load_from_storage()
+        
+        print "The following nodes are in your cluster:"
+        print "\nfrontend nodes:"
+        for node in cluster.frontend_nodes:
+            print "id=`%s`, public_ip=`%s`, private_ip=`%s`" % (node.instance_id, node.ip_public, node.ip_private)
+            
+        print "\ncompute nodes:"
+        for node in cluster.compute_nodes:
+            print "id=`%s`, public_ip=`%s`, private_ip=`%s`" % (node.instance_id, node.ip_public, node.ip_private)
+            
+            
+            

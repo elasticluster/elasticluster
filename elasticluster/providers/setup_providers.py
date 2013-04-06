@@ -18,14 +18,14 @@
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 
-class ConfigurationError(Exception):
-    pass
+from elasticluster.providers import AbstractSetupProvider
 
-class SecurityGroupError(Exception):
-    pass
 
-class KeypairError(Exception):
-    pass
+class AnsibleSetupProvider(AbstractSetupProvider):
+    """
+    """
 
-class InstanceError(Exception):
-    pass
+    def __init__(self):
+        pass
+    
+    

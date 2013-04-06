@@ -21,15 +21,35 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 class AbstractCloudProvider:
     """
-    TODO: document
+    Defines the contract for a cloud provider to proper function with elasticluster.
     """
+    
     def start_instance(self, key_name, key_path, security_group, flavor, image_name):
+        """
+        Starts a new instance with the given properties and returns the instance id.
+        """
         pass
+    
+    
+    def stop_instance(self, instance_id):
+        """
+        Stops the instance with the given id gracefully.
+        """
+        pass
+    
+    
+    
+    def is_instance_running(self, instance_id):
+        """
+        Checks if the instance with the given id is up and running.
+        """
+        pass
+    
     
     
 class AbstractSetupProvider:
     """
-    TODO: document
+    TODO: define...
     """
     def __init__(self):
         pass

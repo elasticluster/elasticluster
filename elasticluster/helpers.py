@@ -61,8 +61,3 @@ class Singleton(object):
         return isinstance(inst, self._decorated)
     
     
-
-
-def find_filename(self, path):
-    head, tail = ntpath.split(path)
-    return tail or ntpath.basename(head)
