@@ -1,17 +1,56 @@
 Ansible GC3 playbooks
 =====================
 
-List of playbooks usable for ansible
+This repository contains the modules and playbooks used by the GC3 to
+mantain the production infrastructure *and* to configure VM instances
+on the `Hobbes` cloud.
+
+The structure of the repository follow this schema::
+
+    |   # Group variables   
+    +-- group_vars
+    |   +-- foo  # variables automatically set for group `foo`
+    |   +-- bar  # variables automatically set for group `bar` 
+    |
+    |   # Host variables
+    +-- host_vars
+    |   +-- host1  # variables automatically set for host `host1`
+    |
+    |   # Private variables. All the files in this directory are
+    |   # *encrypted* with the filter specified in ``.gitattributes``
+    +-- private_vars
+    |   +-- ldap  # variables included by some playbook.
+    |
+    |   # Collection of playbooks divided by *role*
+    +-- roles
+    |  - role-foo.yml  # playbook for role `role-foo`
+    |  - role-foo      # directory containing stuff used by `role-foo`
+    |    - files       # files to be copied on the managed machine.
+    |    - handles     # handlers used by the role
+    |    - tasks       # collection of tasks executed by the playbook
+    |    - templates   # templates used by the playbook
+    |
+    +-- site.yml
+    |   # This is the main playbook. It includes all the playbooks created
+    |   # in `roles` directory. Each role is supposed to be applied only
+    |   # to specific group of nodes. For instance, the `ganglia` role
+    |   # will configure only hosts in the  `ganglia_monitor` or
+    |   # `ganglia_master` groups.
+    |
+    +-- hosts     # GC3 inventory file
+    +-- examples  # directory containing examples and code snippets.
+    +-- README.rst
+
 
 GC3-specific configuration
 --------------------------
 
-Some playbooks, like the one to configure the GC3 repository, only
-work for hosts in the `gc3` group. You can either assign an host to
-that group, or you can set a variable `gc3group` equals to `gc3`
-(either from the inventory file or from the command line by using the
-`-e` option), and the ``site.yml`` playbook will assign the host to
-the `gc3` group.
+Some playbooks, like `roles/gc3.yml`, only work for hosts in the `gc3`
+group. You can either assign an host to that group in the inventory
+file, or you can set a variable `gc3group` equals to `gc3` (either
+from the inventory file or from the command line by using the `-e`
+option), and the ``site.yml`` playbook will assign the host to the
+`gc3` group.
 
 
 SLURM configuration
