@@ -66,6 +66,8 @@ class Cluster(object):
         # TODO: add some sort of timeout here, otherwise you know...
         starting_nodes = self.compute_nodes + self.frontend_nodes
         while starting_nodes:
+            # ANTONIO: This is dangerous: the exit condition could never be
+            # condition from this loop!
             starting_nodes = [n for n in starting_nodes if not n.is_alive()]
             
             
@@ -121,7 +123,9 @@ class ClusterStorage(object):
         
         db_path = self._get_json_path(cluster.name)
         self._clear_storage(db_path)
-        
+
+        # ANTONIO: here you have to check if the storage dir does not
+        # exist, and in case create one.
         f = io.open(db_path, 'w')
         f.write(unicode(db_json))
         f.close()
@@ -141,9 +145,3 @@ class ClusterStorage(object):
     def _clear_storage(self, db_path):
         if os.path.exists(db_path):
             os.unlink(db_path)
-    
-    
-    
-    
-    
-    
