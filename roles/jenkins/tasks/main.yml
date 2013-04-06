@@ -1,30 +1,54 @@
 ---
-- name: configure apt key for jenkins repository
+# Only if this is an ubuntu
+- name: Configure apt key for jenkins repository
   action: apt_key url=http://pkg.jenkins-ci.org/debian/jenkins-ci.org.key state=present
+  only_if: $is_ubuntu
 
-- name: add jenkins repository
+- name: Add jenkins APT repository
   action: apt_repository repo='deb http://pkg.jenkins-ci.org/debian binary/' state=present
+  only_if: $is_ubuntu
 
-- name: remove non-existing src apt repository
+- name: Remove non-existing src apt repository
   action: apt_repository repo='deb-src http://pkg.jenkins-ci.org/debian binary/' state=absent
-- name: add old-python apt repository
-  action: apt_repository repo=ppa:fkrull/deadsnakes state=present
+  only_if: $is_ubuntu
 
-- name: install jenkins
+- name: Add old-python apt repository
+  action: apt_repository repo=ppa:fkrull/deadsnakes state=present
+  only_if: $is_ubuntu
+
+- name: Install jenkins
   action: apt pkg=$item update_cache=yes force=yes state=latest
   with_items: $j_packages
+  only_if: $is_ubuntu
 
-- name: configure jenkins for GC3Pie
+# Only if this is a CentOS (NOT TESTED!)
+- name: Configure YUM repository
+  action: get_url url=http://pkg.jenkins-ci.org/redhat/jenkins.repo dest=/etc/yum.repos.d/jenkins.repo 
+  only_if: $is_centos
+
+- name: Import repository key
+  action: shell rpm --import http://pkg.jenkins-ci.org/redhat/jenkins-ci.org.key
+  only_if: $is_centos
+
+- name: Configure YUM repository
+  action: yum name=jenkins state=present
+  only_if: $is_centos
+
+# GC3Pie specific configuration
+- name: Configure jenkins for GC3Pie
   action: template src=jenkins/templates/config.xml.j2 dest=/var/lib/jenkins/config.xml owner=jenkins
+  only_if: "'$inventory_hostname' in ${groups.gc3}"
   notify:
     - restart jenkins
 
 - name: create jenkins directory job
   action: file path=/var/lib/jenkins/jobs/$item owner=jenkins state=directory
   with_items: $j_jobs
+  only_if: "'$inventory_hostname' in ${groups.gc3}"
 
 - name: configure jenkins job
   action: copy src=jenkins/files/jobs/$item/config.xml dest=/var/lib/jenkins/jobs/$item/config.xml owner=jenkins
   with_items: $j_jobs
+  only_if: "'$inventory_hostname' in ${groups.gc3}"
   notify:
     - restart jenkins
