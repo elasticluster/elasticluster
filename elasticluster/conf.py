@@ -34,10 +34,6 @@ class Configurator(object):
                            "ec2_boto": BotoCloudProvider
                            }
 
-    # ANTONIO: No need to define an empty constructor!
-    def __init__(self):
-        pass
-    
     
     def create_cloud_provider(self, cloud_name):
         """

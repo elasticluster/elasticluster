@@ -70,11 +70,7 @@ class Start(AbstractCommand):
     def execute(self):
         """
         Starts a new cluster.
-        """
-        # ANTONIO: No need to call parent's `execute` method since
-        # it's a noop.
-        AbstractCommand.execute(self)
-        
+        """        
         cluster_name = self.params.cluster
         
         cluster = Configurator().create_cluster(cluster_name)
@@ -99,8 +95,6 @@ class Stop(AbstractCommand):
         """
         Stops the cluster if it's running.
         """
-        AbstractCommand.execute(self)
-        
         cluster_name = self.params.cluster
         cluster = Configurator().create_cluster(cluster_name)
         cluster.load_from_storage()
@@ -110,7 +104,7 @@ class Stop(AbstractCommand):
 class ListClusters(AbstractCommand):
     """
     Handles the listing of all clusters.
-    TODO: this command still needs the --cluster argument to run, since that is a mandatory global parameter, tho it makes no sense here.
+    TODO: this command still needs the --cluster argument to run, since that is a mandatory global parameter - it makes no sense here.
     """
     def setup(self, subparsers):
         parser = subparsers.add_parser("listclusters")
@@ -137,8 +131,6 @@ class ListNodes(AbstractCommand):
         """
         Lists all nodes within the specified cluster with certain information like id and ip.
         """
-        AbstractCommand.execute(self)
-        
         cluster_name = self.params.cluster
         cluster = Configurator().create_cluster(cluster_name)
         cluster.load_from_storage()

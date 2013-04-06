@@ -71,6 +71,7 @@ class ElasticCloud(cli.app.CommandLineApp):
         # Set verbosity level
         loglevel = max(1, logging.WARNING - 10 * max(0, self.params.verbose))
         log.setLevel(loglevel)
+        
         # initialize configuration singleton with given global parameters
         try:
             Configuration.Instance().file_path = self.params.config
