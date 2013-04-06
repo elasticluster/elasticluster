@@ -2,6 +2,24 @@
 #
 # DRBD module for ansible
 #
+#  Copyright (C) 2013, GC3, University of Zurich. All rights
+#  reserved.
+#
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; either version 2 of the License, or (at your
+#  option) any later version.
+#
+#  This program is distributed in the hope that it will be useful, but
+#  WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#  General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License along
+#  with this program; if not, write to the Free Software Foundation, Inc.,
+#  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+#
 # module: drdb
 # short_description: This module will configure a drbd resource
 # description:
@@ -89,19 +107,42 @@
 # examples:
 #     - code: drbd name=myresource disk=/dev/sdb device=/dev/drbd1 address0=10.0.0.1:7789 address1=10.0.0.2:7789
 
-function missing_argument(){
+function json_fail(){
+    msg="$*"
     cat <<EOF
 {
   "failed" : true,
-  "msg" : "Missing required arguments '$1'"
+  "msg" : "$msg"
 }
 EOF
     exit 1
 }
 
+function json_changed(){
+    msg="$*"
+    cat <<EOF
+{
+  "changed": true,
+  "failed": false,
+  "msg": "$msg"
+}
+EOF
+}
+
+function json_ok(){
+    msg="$*"
+    cat <<EOF
+{
+  "changed": false,
+  "failed": false,
+  "msg": "$msg"
+}
+EOF
+}
+
+trap "json_fail 'We got killed!'" SIGINT SIGTERM
+
 [ -f $1 ] && source $1 || eval $*
-
-
 
 [ -z "$device0" ] && device0=$device
 [ -z "$device1" ] && device1=$device
@@ -117,7 +158,6 @@ EOF
 [ -z "$metadisk1" ] && metadisk1=$metadisk
 
 
-
 [ -z "$name" ] && missing_argument name
 [ -z "$disk0" ] && missing_argument disk0
 [ -z "$disk1" ] && missing_argument disk1
@@ -126,7 +166,7 @@ EOF
 [ -z "$address0" ] && missing_argument address0
 [ -z "$address1" ] && missing_argument address1
 
-tmp=$(tempfile)
+tmp=$(mktemp)
 cat > $tmp <<EOF
 resource $name {
   on $peer0 {
@@ -147,31 +187,15 @@ EOF
 cmp -s $tmp $dest
 if [ $? -eq 0 ]
 then
-    cat <<EOF
-{
-    "changed": false,
-    "ok": true
-}
-EOF
+    rm -rf $tmp
+    json_ok "File is already latest version"
 else
     cp -f $tmp $dest
+    if [ $? -ne 0 ]
+    then
+        rm -f $tmp
+        json_fail "Error creating DRBD configuration file $dest"
+    fi
     rm -f $tmp
-    cat <<EOF
-{
-  "ok": true,
-  "changed": true,
-  "failed": false
-}
-EOF
+    json_changed "File has been updated"
 fi
-
-# - failed=True, indicating that the action failed
-# - skipped=True, indicating a pre-condition for running the task was already
-#   met
-# - changed=True/False, indicating the task changed/didn't change something,
-#   used to trigger notifiers and coloring of the output.
-# - ansible_facts=<dict>, containing custom facts that will be usable as
-#   variables in following tasks
-# - stdout=<str>, containing text output. Will be split into lines that can be
-#   used if register'd
-# - msg, used for e.g. failure messages
