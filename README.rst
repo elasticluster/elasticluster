@@ -37,6 +37,9 @@ The structure of the repository follow this schema::
     |   # will configure only hosts in the  `ganglia_monitor` or
     |   # `ganglia_master` groups.
     |
+    +-- modules
+    |   # This directory contains ansible modules developed by GC3
+    |
     +-- hosts     # GC3 inventory file
     +-- examples  # directory containing examples and code snippets.
     +-- README.rst
@@ -45,13 +48,21 @@ The structure of the repository follow this schema::
 GC3-specific configuration
 --------------------------
 
-Some playbooks, like `roles/gc3.yml`, only work for hosts in the `gc3`
-group. You can either assign an host to that group in the inventory
-file, or you can set a variable `gc3group` equals to `gc3` (either
-from the inventory file or from the command line by using the `-e`
-option), and the ``site.yml`` playbook will assign the host to the
-`gc3` group.
+Some playbooks, like ``roles/gc3.yml``, only work for hosts in the
+`gc3` group. You can either assign an host to that group in the
+inventory file, or you can set a variable `gc3group` equals to `gc3`
+(either from the inventory file or from the command line by using the
+`-e` option), and the ``site.yml`` playbook will assign the host to
+the `gc3` group.
 
+Extra modules
+-------------
+
+Extra modules are defined in the ``modules`` directory. In order to
+use them you need to either run ``ansible-playbook`` with option ``-M
+modules``, **or** edit your ansible configuration file and update the
+`library` option, **or** set the environemnt variable
+``ANSIBLE_LIBRARY``.
 
 SLURM configuration
 -------------------
@@ -69,7 +80,6 @@ In order to configure a slurm cluster, create an hosts file with::
 then run::
 
     ansible-playbook -i <hostfile> site.yml
-
 
 Jenkins
 -------
