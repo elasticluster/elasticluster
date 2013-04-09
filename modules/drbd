@@ -140,6 +140,10 @@ function json_ok(){
 EOF
 }
 
+function missing_argument(){
+  json_fail "Missing required arguments '$1'"
+}
+
 trap "json_fail 'We got killed!'" SIGINT SIGTERM
 
 [ -f $1 ] && source $1 || eval $*
