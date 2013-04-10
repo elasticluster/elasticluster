@@ -26,7 +26,7 @@ import cli.app
 
 # Elasticluster imports
 from elasticluster import log
-from elasticluster.subcommands import Start
+from elasticluster.subcommands import Start, SetupCluster
 from elasticluster.subcommands import Stop
 from elasticluster.subcommands import AbstractCommand
 from elasticluster.subcommands import ListClusters
@@ -44,11 +44,11 @@ class ElasticCloud(cli.app.CommandLineApp):
                     Start(self.params),
                     Stop(self.params),
                     ListClusters(self.params),
-                    ListNodes(self.params)
+                    ListNodes(self.params),
+                    SetupCluster(self.params)
                     ]
         
         # global parameters
-        self.add_param('-c', '--cluster', help='name of the cluster', required=True)
         self.add_param('-v', '--verbose', action='count', default=0)
         self.add_param('-s', '--storage', help="storage folder, default is" + AbstractCommand.default_storage_dir, default=AbstractCommand.default_storage_dir)
         self.add_param('--config', help='configuration file, default is ' + AbstractCommand.default_configuration_file, default=AbstractCommand.default_configuration_file)
@@ -75,7 +75,6 @@ class ElasticCloud(cli.app.CommandLineApp):
         # initialize configuration singleton with given global parameters
         try:
             Configuration.Instance().file_path = self.params.config
-            Configuration.Instance().cluster_name = self.params.cluster
             Configuration.Instance().storage_path = self.params.storage
         except Exception as ex:
             print "please specify a valid configuration file"

@@ -32,12 +32,13 @@ class Cluster(object):
     """
     startup_timeout = 180
 
-    def __init__(self, name, cloud, cloud_provider, frontend, compute, configurator, **extra):
+    def __init__(self, name, cloud, cloud_provider, setup_provider, frontend, compute, configurator, **extra):
         self.name = name
         self._cloud = cloud
         self._frontend = frontend
         self._compute = compute
         self._cloud_provider = cloud_provider
+        self._setup_provider = setup_provider
         
         self._configurator = configurator
         self._storage = configurator.create_cluster_storage()
@@ -105,6 +106,16 @@ class Cluster(object):
             elasticluster.log.error("timeout error occured: stopping all nodes")
             self.stop()
             
+        signal.alarm(0)
+        time.sleep(10)
+        
+        try:
+            # setup the cluster using the setup provider
+            self._setup_provider.setup_cluster(self)
+        except Exception as e:
+            elasticluster.log.error("the setup provider was not able to setup the cluster, but the cluster is running by now.")
+            elasticluster.log.error("setup provider error message = `%s`" % e.message)
+        
     def stop(self):
         """
         Terminates all instances corresponding to this cluster and deletes the cluster storage.
@@ -127,7 +138,15 @@ class Cluster(object):
                 elasticluster.log.error("instance `%s` is not correclty running anymore, shutting it down." % n.instance_id)
                 n.stop()
                 
-            
+    def setup(self):
+        try:
+            # setup the cluster using the setup provider
+            self._setup_provider.setup_cluster(self)
+        except Exception as e:
+            elasticluster.log.error("the setup provider was not able to setup the cluster, but the cluster is running by now.")
+            elasticluster.log.error("setup provider error message = `%s`" % e.message)
+    
+    
 class Node(object):
     """
     Handles all the node related funcitonality such as start, stop, configure, etc.
@@ -135,7 +154,7 @@ class Node(object):
     frontend_type = 1
     compute_type = 2
 
-    def __init__(self, node_type, cloud_provider, user_key, user_key_name, os_user, security_group, image, flavor):
+    def __init__(self, node_type, cloud_provider, user_key, user_key_name, os_user, security_group, image, flavor, setup_classes):
         self.type = node_type
         self._cloud_provider = cloud_provider
         self.user_key = user_key
@@ -144,6 +163,7 @@ class Node(object):
         self.security_group = security_group
         self.image = image
         self.flavor = flavor
+        self.setup_classes = setup_classes
         
         self.instance_id = None
         self.ip_public = None

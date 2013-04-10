@@ -15,6 +15,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+from elasticluster.providers.setup_providers import AnsibleSetupProvider
 
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
@@ -34,6 +35,9 @@ class Configurator(object):
                            "ec2_boto": BotoCloudProvider
                            }
 
+    setup_providers_map = {
+                           "ansible" : AnsibleSetupProvider
+                           }
     
     def create_cloud_provider(self, cloud_name):
         """
@@ -50,7 +54,7 @@ class Configurator(object):
         """
         config = Configuration.Instance().read_cluster_section(name)
         
-        return Cluster(name, config['cloud'], self.create_cloud_provider(config['cloud']), int(config['frontend']), int(config['compute']), self)
+        return Cluster(name, config['cloud'], self.create_cloud_provider(config['cloud']), self.create_setup_provider(config["setup_provider"]) , int(config['frontend']), int(config['compute']), self)
         
     
     def create_node(self, cluster_name, node_type, cloud_provider):
@@ -60,7 +64,7 @@ class Configurator(object):
         """
         config = Configuration.Instance().read_node_section(cluster_name, node_type)
                 
-        return Node(node_type, cloud_provider, config['user_key'], config['user_key_name'], config['image_user'], config['security_group'], config['image'], config['flavor'])
+        return Node(node_type, cloud_provider, config['user_key'], config['user_key_name'], config['image_user'], config['security_group'], config['image'], config['flavor'], config['setup_classes'])
 
     def create_cluster_storage(self):
         """
@@ -68,7 +72,11 @@ class Configurator(object):
         """
         return ClusterStorage(Configuration.Instance().storage_path)
 
-
+    def create_setup_provider(self, setup_provider_name):
+        config = Configuration.Instance().read_setup_section(setup_provider_name)
+        provider = Configurator.setup_providers_map[config['provider']]
+        
+        return provider(config['private_key_file'], config['remote_user'], config['sudo_user'], config['playbook_path'])
 
 
 @Singleton
@@ -86,8 +94,9 @@ class Configuration(object):
         # needed.
     
     mandatory_cloud_options = ("provider", "ec2_url", "ec2_access_key", "ec2_secret_key", "ec2_region")
-    mandatory_cluster_options = ("cloud", "frontend", "compute")
-    mandatory_node_options = ("image", "security_group", "flavor", "user_key", "user_key_name", "image_user")
+    mandatory_cluster_options = ("cloud", "frontend", "compute", "setup_provider")
+    mandatory_node_options = ("image", "security_group", "flavor", "user_key", "user_key_name", "image_user", "setup_classes")
+    mandatory_setup_options = ("remote_user", "sudo_user", "private_key_file", "playbook_path")
     
     def __init__(self):
         # will be initialized upon user input from outside
@@ -151,7 +160,7 @@ class Configuration(object):
             
     def read_cloud_section(self, name):
         """
-        Reads the cloud section for a given cluster name from the configuraiton file and returns
+        Reads the cloud section for a given cloud name from the configuraiton file and returns
         its properties in a dictionary.
         """
         config = self._read_section("cloud/"+name)
@@ -160,6 +169,15 @@ class Configuration(object):
         
         return config
     
+    def read_setup_section(self, name):
+        """
+        Reads the setup section for a given setup name from the configuration file and returns
+        its properties in a dictionary
+        """
+        config = self._read_section("setup/"+name)
+        self._check_mandatory_options(Configuration.Instance().mandatory_setup_options, config)
+        
+        return config
     
     def _check_mandatory_options(self, options, config):
         for o in options:

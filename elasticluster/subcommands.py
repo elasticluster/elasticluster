@@ -18,6 +18,7 @@
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 from elasticluster.conf import Configurator
+from elasticluster.conf import Configuration
 
 import os
 
@@ -66,11 +67,13 @@ class Start(AbstractCommand):
         """        
         parser = subparsers.add_parser("start")
         parser.set_defaults(func=self.execute)
+        parser.add_argument('cluster', help='name of the cluster')
         
     def execute(self):
         """
         Starts a new cluster.
         """        
+        Configuration.Instance().cluster_name = self.params.cluster
         cluster_name = self.params.cluster
         
         cluster = Configurator().create_cluster(cluster_name)
@@ -90,11 +93,13 @@ class Stop(AbstractCommand):
         """
         parser = subparsers.add_parser("stop")
         parser.set_defaults(func=self.execute)
+        parser.add_argument('cluster', help='name of the cluster')
     
     def execute(self):
         """
         Stops the cluster if it's running.
         """
+        Configuration.Instance().cluster_name = self.params.cluster
         cluster_name = self.params.cluster
         cluster = Configurator().create_cluster(cluster_name)
         cluster.load_from_storage()
@@ -129,11 +134,13 @@ class ListNodes(AbstractCommand):
     def setup(self, subparsers):
         parser = subparsers.add_parser("listnodes")
         parser.set_defaults(func=self.execute)
+        parser.add_argument('cluster', help='name of the cluster')
     
     def execute(self):
         """
         Lists all nodes within the specified cluster with certain information like id and ip.
         """
+        Configuration.Instance().cluster_name = self.params.cluster
         cluster_name = self.params.cluster
         cluster = Configurator().create_cluster(cluster_name)
         cluster.load_from_storage()
@@ -146,3 +153,20 @@ class ListNodes(AbstractCommand):
         print "\ncompute nodes:"
         for node in cluster.compute_nodes:
             print "id=`%s`, public_ip=`%s`, private_ip=`%s`" % (node.instance_id, node.ip_public, node.ip_private)
+
+class SetupCluster(AbstractCommand):
+    def setup(self, subparsers):
+        parser = subparsers.add_parser("setup")
+        parser.set_defaults(func=self.execute)
+        parser.add_argument('cluster', help='name of the cluster')
+        
+    def execute(self):
+        Configuration.Instance().cluster_name = self.params.cluster
+        cluster_name = self.params.cluster
+        cluster = Configurator().create_cluster(cluster_name)
+        cluster.load_from_storage()
+        
+        cluster.setup()
+        
+        
+        
