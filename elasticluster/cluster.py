@@ -58,7 +58,12 @@ class Cluster(object):
         Adds a new node, but doesn't start the instance on the cloud.
         Returns the created node instance 
         """
-        node = self._configurator.create_node(self.name, node_type, self._cloud_provider)
+        name = ""
+        if node_type == Node.frontend_type:
+            name = "frontend" + str(len(self.frontend_nodes)).zfill(3)
+        if node_type == Node.compute_type:
+            name = "compute" + str(len(self.compute_nodes)).zfill(3)
+        node = self._configurator.create_node(self.name, node_type, self._cloud_provider, name)
         if node_type == Node.frontend_type:
             self.frontend_nodes.append(node)
         else:
@@ -154,7 +159,8 @@ class Node(object):
     frontend_type = 1
     compute_type = 2
 
-    def __init__(self, node_type, cloud_provider, user_key, user_key_name, os_user, security_group, image, flavor, setup_classes):
+    def __init__(self, name, node_type, cloud_provider, user_key, user_key_name, os_user, security_group, image, flavor, setup_classes):
+        self.name = name
         self.type = node_type
         self._cloud_provider = cloud_provider
         self.user_key = user_key
@@ -223,8 +229,8 @@ class ClusterStorage(object):
         Saves the information of the cluster to disk in json format to load it later on.
         """
         db = {"name":cluster.name}
-        db["frontend"] = [node.instance_id for node in cluster.frontend_nodes]
-        db["compute"] = [node.instance_id for node in cluster.compute_nodes]
+        db["frontend"] = [[node.instance_id, node.name] for node in cluster.frontend_nodes]
+        db["compute"] = [[node.instance_id, node.name] for node in cluster.compute_nodes]
         
         db_json = json.dumps(db)
         
@@ -255,9 +261,11 @@ class ClusterStorage(object):
         
         # fill the information of the nodes
         for node, cache in zip(cluster.frontend_nodes, information['frontend']):
-            node.instance_id = cache
+            node.instance_id = cache[0]
+            node.name = cache[1]
         for node, cache in zip(cluster.compute_nodes, information['compute']):
-            node.instance_id = cache
+            node.instance_id = cache[0]
+            node.name = cache[1]
     
     
     def delete_cluster(self, cluster_name):

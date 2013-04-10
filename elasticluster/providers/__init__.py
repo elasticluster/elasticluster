@@ -52,14 +52,6 @@ class AbstractSetupProvider:
     TODO: define...
     """
     
-    slurm_class = "slurm"
-    slurm_master = "slurm_master"
-    slurm_clients = "slurm_clients"
-    
-    ganglia_class = "ganglia"
-    ganglia_master = "ganglia_master"
-    ganglia_clients = "ganglia_monitor"
-    
     def __init__(self):
         pass
     

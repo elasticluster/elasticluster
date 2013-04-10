@@ -144,14 +144,17 @@ class ListNodes(AbstractCommand):
         cluster = Configurator().create_cluster(cluster_name)
         cluster.load_from_storage()
         
+        def print_node(node):
+            print "name=`%s`, id=`%s`, public_ip=`%s`, private_ip=`%s`" % (node.name, node.instance_id, node.ip_public, node.ip_private)
+        
         print "The following nodes are in your cluster:"
         print "\nfrontend nodes:"
         for node in cluster.frontend_nodes:
-            print "id=`%s`, public_ip=`%s`, private_ip=`%s`" % (node.instance_id, node.ip_public, node.ip_private)
+            print_node(node)
             
         print "\ncompute nodes:"
         for node in cluster.compute_nodes:
-            print "id=`%s`, public_ip=`%s`, private_ip=`%s`" % (node.instance_id, node.ip_public, node.ip_private)
+            print_node(node)
 
 class SetupCluster(AbstractCommand):
     def setup(self, subparsers):

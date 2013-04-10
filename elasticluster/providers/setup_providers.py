@@ -35,6 +35,22 @@ class AnsibleSetupProvider(AbstractSetupProvider):
     """
     """
     
+    # defines the general sections for an ansible inventory file
+    _inventory_definitions = {
+                         "slurm": {
+                                   "frontend": ["slurm_master"],
+                                   "compute": ["slurm_clients"]
+                                  },
+                         "ganglia": {
+                                     "frontend": ["ganglia_master", "ganglia_monitor"],
+                                     "compute": ["ganglia_monitor"]
+                                     },
+                         "jenkins": {
+                                     "frontend": ["jenkins"],
+                                     "compute": ["jenkins"]
+                                    }
+                        }
+    
     def __init__(self, private_key_file, remote_user, sudo_user, playbook_path):
         self._private_key_file = private_key_file
         self._remote_user = remote_user
@@ -47,7 +63,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
     
     def setup_cluster(self, cluster):
         inventory_path = self._build_inventory(cluster)
-        
+                
         # check paths
         if not os.path.exists(inventory_path):
             raise AnsibleError("the inventory: %s could not be found" % inventory_path)
@@ -59,12 +75,9 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         stats = callbacks.AggregateStats()
         playbook_cb = callbacks.PlaybookCallbacks(verbose=0)
         runner_cb = callbacks.PlaybookRunnerCallbacks(stats, verbose=0)
+
         
-        # change path, since ansible needs to be in the same path then the playbook
-        # TODO: is this a bug in ansible or playbook script?
-        os.chdir(os.path.dirname(os.path.realpath(self._playbook_path)))
-        print os.getcwd()
-        
+        # TODO: make this more flexible: add to configuration file (sudo)
         pb = PlayBook(
             playbook=self._playbook_path,
             host_list=inventory_path,
@@ -90,42 +103,35 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         inventory = dict()
         
         for node in cluster.frontend_nodes + cluster.compute_nodes:
+            # get all configured classes for this node
             classes = [x.strip() for x in node.setup_classes.split(',')]
             
+            # build inventory dictionary
             for c in classes:
-                # slurm
-                if c == AbstractSetupProvider.slurm_class:
+                if c in AnsibleSetupProvider._inventory_definitions:
                     if node.type == Node.frontend_type:
-                        if AbstractSetupProvider.slurm_master not in inventory:
-                            inventory[AbstractSetupProvider.slurm_master] = []
-                        inventory[AbstractSetupProvider.slurm_master].append(node.ip_public)
+                        sections = AnsibleSetupProvider._inventory_definitions[c]["frontend"]
+                        for section in sections:
+                            if section not in inventory:
+                                inventory[section] = []
+                            inventory[section].append((node.name, node.ip_public))
                     elif node.type == Node.compute_type:
-                        if AbstractSetupProvider.slurm_clients not in inventory:
-                            inventory[AbstractSetupProvider.slurm_clients] = []
-                        inventory[AbstractSetupProvider.slurm_clients].append(node.ip_public)
-                        
-                #ganglia
-                if c == AbstractSetupProvider.ganglia_class:
-                    if node.type == Node.frontend_type:
-                        if AbstractSetupProvider.ganglia_master not in inventory:
-                            inventory[AbstractSetupProvider.ganglia_master] = []
-                        inventory[AbstractSetupProvider.ganglia_master].append(node.ip_public)
-                    elif node.type == Node.compute_type:
-                        if AbstractSetupProvider.ganglia_clients not in inventory:
-                            inventory[AbstractSetupProvider.ganglia_clients] = []
-                        inventory[AbstractSetupProvider.ganglia_clients].append(node.ip_public)    
-        
+                        sections = AnsibleSetupProvider._inventory_definitions[c]["compute"]
+                        for section in sections:
+                            if section not in inventory:
+                                inventory[section] = []
+                            inventory[section].append((node.name, node.ip_public))
+                    
         if inventory:
-            # create a temporary file to pass to ansible, since the api is not stable...
+            # create a temporary file to pass to ansible, since the api is not stable yet...
+            # TODO: create inventory file in the same directory of the "group_vars" and "host_vars" directories
             inventory_file = NamedTemporaryFile(delete=False)
      
             for section,hosts in inventory.items():
                 inventory_file.write("\n["+section+"]\n")
                 if hosts:
-                    counter = 0
                     for host in hosts:
-                        counter = counter + 1
-                        inventory_file.write("node" + str(counter) + " ansible_ssh_host="+host+"\n")
+                        inventory_file.write(host[0] + " ansible_ssh_host="+host[1]+"\n")
                         
             
             inventory_file.close

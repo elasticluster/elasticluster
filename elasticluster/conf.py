@@ -57,14 +57,14 @@ class Configurator(object):
         return Cluster(name, config['cloud'], self.create_cloud_provider(config['cloud']), self.create_setup_provider(config["setup_provider"]) , int(config['frontend']), int(config['compute']), self)
         
     
-    def create_node(self, cluster_name, node_type, cloud_provider):
+    def create_node(self, cluster_name, node_type, cloud_provider, name):
         """
         Creates a node with the needed information from the configuration file. The information of the node is
         specific to its type (e.g. a frontend node could differ from a compute node).
         """
         config = Configuration.Instance().read_node_section(cluster_name, node_type)
                 
-        return Node(node_type, cloud_provider, config['user_key'], config['user_key_name'], config['image_user'], config['security_group'], config['image'], config['flavor'], config['setup_classes'])
+        return Node(name, node_type, cloud_provider, config['user_key'], config['user_key_name'], config['image_user'], config['security_group'], config['image'], config['flavor'], config['setup_classes'])
 
     def create_cluster_storage(self):
         """
