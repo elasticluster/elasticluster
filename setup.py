@@ -32,4 +32,9 @@ setup(
         'boto',
         'PyCLI',
         ],
+    entry_points = {
+        'console_scripts': [
+            'elasticluster = elasticluster.main:main',
+            ]
+        },
 )
