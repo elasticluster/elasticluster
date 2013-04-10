@@ -188,6 +188,8 @@ class ClusterStorage(object):
         db_path = self._get_json_path(cluster.name)
         self._clear_storage(db_path)
         
+        # ANTONIO: here you have to check if the storage dir does not
+        # exist, and in case create one.
         f = io.open(db_path, 'w')
         f.write(unicode(db_json))
         f.close()
