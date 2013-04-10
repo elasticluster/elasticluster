@@ -114,9 +114,12 @@ class ListClusters(AbstractCommand):
         storage = Configurator().create_cluster_storage()
         cluster_names = storage.get_stored_clusters()
         
-        print "The following clusters appear in your storage. Yet, there's no guarantee that they are up and running tho:"
-        for name in cluster_names:
-            print "- %s " % name
+        print "The following clusters appear in your storage. Yet, there's no guarantee that they are up and running:"
+        if not cluster_names:
+            print "no clusters found"
+        else:
+            for name in cluster_names:
+                print "- %s " % name
             
 
 class ListNodes(AbstractCommand):

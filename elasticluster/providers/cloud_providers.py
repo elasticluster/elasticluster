@@ -55,6 +55,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         self._connection = None
         self._region = None
         self._instances = {}
+        self._images = None
         
     def _connect(self):
         """
@@ -208,11 +209,11 @@ class BotoCloudProvider(AbstractCloudProvider):
         """
         Finds an image id to a given name.
         """
-        connection = self._connect()
-        images = connection.get_all_images()
+        if not self._images:
+            connection = self._connect()
+            self._images = connection.get_all_images()
         
-        # ANTONIO: this is a method you may want to cache
-        for i in images:
+        for i in self._images:
             if i.name == name:
                 return i.id            
     
