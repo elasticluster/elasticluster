@@ -7,7 +7,9 @@
 
 - name: install packages
   action: apt pkg=$item update_cache=yes force=yes state=latest
-  with_items: $packages
+  with_items:
+    - slurm-llnl
+    - munge
 
 - include: slurm/tasks/slurm.yml
 - include: slurm/tasks/munge.yml

@@ -1,3 +1,0 @@
----
-is_ubuntu: "'${ansible_distribution}' == 'Ubuntu'"
-is_centos: "'${ansible_distribution}' == 'CentOS'"

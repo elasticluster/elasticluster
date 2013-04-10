@@ -2,6 +2,9 @@
 - name: Collecting facts
   hosts: all
   gather_facts: yes
+  vars:
+    is_ubuntu: "'${ansible_distribution}' == 'Ubuntu'"
+    is_centos: "'${ansible_distribution}' == 'CentOS'"
   tasks:
     - group_by: key="$gc3group"
 
