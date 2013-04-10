@@ -15,22 +15,20 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import elasticluster
-from ansible.utils import VERBOSITY
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 
 from elasticluster.providers import AbstractSetupProvider
 from elasticluster.cluster import Node
+import elasticluster
 
-from ansible.inventory import Inventory
 from ansible.playbook import PlayBook
 from ansible import callbacks
 import ansible.constants as ansible_constants
 from ansible.errors import AnsibleError
 
 import os
-from tempfile import TemporaryFile, NamedTemporaryFile
+from tempfile import NamedTemporaryFile
 
 
 class AnsibleSetupProvider(AbstractSetupProvider):

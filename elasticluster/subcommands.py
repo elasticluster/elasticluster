@@ -109,10 +109,9 @@ class Stop(AbstractCommand):
 class ListClusters(AbstractCommand):
     """
     Handles the listing of all clusters.
-    TODO: this command still needs the --cluster argument to run, since that is a mandatory global parameter - it makes no sense here.
     """
     def setup(self, subparsers):
-        parser = subparsers.add_parser("listclusters")
+        parser = subparsers.add_parser("list")
         parser.set_defaults(func=self.execute)
         
     def execute(self):
@@ -132,7 +131,7 @@ class ListNodes(AbstractCommand):
     Handles the listing of information about a cluster.
     """
     def setup(self, subparsers):
-        parser = subparsers.add_parser("listnodes")
+        parser = subparsers.add_parser("list-nodes")
         parser.set_defaults(func=self.execute)
         parser.add_argument('cluster', help='name of the cluster')
     
