@@ -60,6 +60,16 @@ tcp_accept_channel {
 
 {% endif %}
 
+{% if inventory_hostname in groups['ganglia_monitor'] and not inventory_hostname in groups['ganglia_master'] %}
+/* You can specify as many tcp_accept_channels as you like to share
+   an xml description of the state of the cluster */
+tcp_accept_channel {
+  bind = 127.0.0.1
+  port = 8649
+}
+
+{% endif %}
+
 
 /* Each metrics module that is referenced by gmond must be specified and 
    loaded. If the module has been statically linked with gmond, it does not 
