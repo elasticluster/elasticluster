@@ -15,6 +15,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+from elasticluster.exceptions import TimeoutError
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 
@@ -22,11 +23,14 @@ import elasticluster
 import json
 import io
 import os
+import time
+import signal
 
 class Cluster(object):
     """
     Handles all cluster related functionality such as start, setup, load, stop, storage etc.
     """
+    startup_timeout = 180
 
     def __init__(self, name, cloud, cloud_provider, frontend, compute, configurator, **extra):
         self.name = name
@@ -43,22 +47,32 @@ class Cluster(object):
         
         # initialize nodes
         for _ in range(self._frontend):
-            node = self._configurator.create_node(self.name, Node.frontend_type)
-            self.frontend_nodes.append(node)
+            self.add_node(Node.frontend_type)
         
         for _ in range(self._compute):
-            node = self._configurator.create_node(self.name, Node.compute_type)
-            self.compute_nodes.append(node)
+            self.add_node(Node.compute_type)
 
     def add_node(self, node_type):
         """
-        Adds a new node, but doesn't start the instance on the cloud. 
+        Adds a new node, but doesn't start the instance on the cloud.
+        Returns the created node instance 
         """
-        node = self._configurator.create_node(self.name, node_type)
+        node = self._configurator.create_node(self.name, node_type, self._cloud_provider)
         if node_type == Node.frontend_type:
             self.frontend_nodes.append(node)
         else:
             self.compute_nodes.append(node)
+        
+        return node
+            
+    def remove_node(self, node):
+        """
+        Removes a node from the cluster, but does not stop it.
+        """
+        if node.type == Node.compute_type:
+            self.compute_nodes.remove(node)
+        elif node.type == Node.frontend_type:
+            self.frontend_nodes.remove(node)
         
     def start(self):
         """
@@ -74,15 +88,22 @@ class Cluster(object):
         # dump the cluster here, so we don't loose any knowledge about nodes
         self._storage.dump_cluster(self)
             
-        # check if the nodes are running
-        # TODO: add some sort of timeout here, otherwise you know...
-        starting_nodes = self.compute_nodes + self.frontend_nodes
-        while starting_nodes:
-            # ANTONIO: This is dangerous: the exit condition could never be
-            # condition from this loop!
-            starting_nodes = [n for n in starting_nodes if not n.is_alive()]
-            # ANTONIO: You should put some call to sleep() here...
-            
+        # check if all nodes are running, stop all nodes if the timeout is reached
+        def timeout_handler(signum, frame):
+            raise TimeoutError("problems occured while starting the nodes, timeout `%i`" % Cluster.startup_timeout)
+ 
+        signal.signal(signal.SIGALRM, timeout_handler) 
+        signal.alarm(Cluster.startup_timeout)
+        
+        try:
+            starting_nodes = self.compute_nodes + self.frontend_nodes
+            while starting_nodes:
+                starting_nodes = [n for n in starting_nodes if not n.is_alive()]
+                time.sleep(5)
+        except TimeoutError as timeout:
+            elasticluster.log.error(timeout.message)
+            elasticluster.log.error("timeout error occured: stopping all nodes")
+            self.stop()
             
     def stop(self):
         """
@@ -102,8 +123,10 @@ class Cluster(object):
         
         for n in self.frontend_nodes + self.compute_nodes:
             if not n.is_alive():
+                # TODO: this is very dangerous..., start a new instance at least
                 elasticluster.log.error("instance `%s` is not correclty running anymore, shutting it down." % n.instance_id)
                 n.stop()
+                
             
 class Node(object):
     """

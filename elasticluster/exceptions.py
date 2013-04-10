@@ -29,3 +29,6 @@ class KeypairError(Exception):
 
 class InstanceError(Exception):
     pass
+
+class TimeoutError(Exception):
+    pass

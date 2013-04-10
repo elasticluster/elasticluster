@@ -64,11 +64,19 @@ class BotoCloudProvider(AbstractCloudProvider):
         if self._connection:
             return self._connection
         
-        region = ec2.regioninfo.RegionInfo(name=self._region_name, endpoint=self._ec2host)
+    
+        try:
+            region = ec2.regioninfo.RegionInfo(name=self._region_name, endpoint=self._ec2host)
 
-        # connect to webservice
-        # ANTONIO: You need to check if this method fails!
-        self._connection = boto.connect_ec2(aws_access_key_id=self._access_key, aws_secret_access_key=self._secret_key, is_secure=self._secure, port=self._ec2port, host=self._ec2host, path=self._ec2path, region=region)
+            # connect to webservice
+            self._connection = boto.connect_ec2(aws_access_key_id=self._access_key, aws_secret_access_key=self._secret_key, is_secure=self._secure, port=self._ec2port, host=self._ec2host, path=self._ec2path, region=region)
+            
+            # list images to see if the connection works
+            self._connection.get_all_images()
+        
+        except Exception as e:
+            elasticluster.log.error("connection to cloud could not be established: message=`%s`" % e.message)
+            raise
         
         return self._connection
 
@@ -113,7 +121,6 @@ class BotoCloudProvider(AbstractCloudProvider):
         
         instance = self._instances[instance_id]
         
-        # TODO: this might not be enough, since we need an instance with available ip address
         if instance.update() == "running":
             return True
         else:
@@ -145,12 +152,6 @@ class BotoCloudProvider(AbstractCloudProvider):
         
 
         # create keys that don't exist yet
-        #
-        # ANTONIO: Please remember to call strip('"').strip("'") on
-        # the name string: quotes and double quotes are invalid chars
-        # for boto, and it's quite common error to wrap strings
-        # between quotes in configuration file even if they are not
-        # needed.
         if name not in keypairs:
             # ANTONIO: Better to specify where the keypair was not found, and the name as well.
             # something on the lien "Keypair `%s` not found on resource `%s`. Creating a new one" % (name, ec2endpoint)
@@ -191,15 +192,14 @@ class BotoCloudProvider(AbstractCloudProvider):
     def _check_security_group(self, name):
         """
         Checks if the security group exists.
-        TODO: include security group options in config and compare these here to create a new on if not exists
+        TODO: if the configuration file specify some rules, ensure
+              that the security group has those rules, and if the security
+              group does not exists, create it.
         """
         connection = self._connect()
         security_groups = connection.get_all_security_groups()
         security_groups = dict((s.name, s) for s in security_groups)
         
-        # TODO: if the configuration file specify some rules, ensure
-        # that the security group has those rules, and if the security
-        # group does not exists, create it.
         if name not in security_groups:
             raise SecurityGroupError("the specified security group %s does not exist" % name)
     

@@ -18,8 +18,6 @@
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 
-import ntpath
-
 class Singleton(object):
     """
     see: http://stackoverflow.com/a/7346105

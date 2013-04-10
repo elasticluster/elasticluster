@@ -39,7 +39,7 @@ class ElasticCloud(cli.app.CommandLineApp):
         cli.app.CommandLineApp.setup(self)
         
         # all commands in this list will be added to the subcommands
-        # if you add an object here, make sure it implements the commands.abstract_command contract
+        # if you add an object here, make sure it implements the subcommands.abstract_command contract
         commands = [
                     Start(self.params),
                     Stop(self.params),
