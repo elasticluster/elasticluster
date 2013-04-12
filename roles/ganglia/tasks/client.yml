@@ -10,6 +10,7 @@
   action: template src=ganglia/templates/gmond.conf.j2 dest=/etc/ganglia/gmond.conf
   notify:
     - restart gmond
+    - restart gmetad
   tags:
     - ganglia
     - gmond
