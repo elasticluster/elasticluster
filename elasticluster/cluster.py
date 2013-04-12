@@ -89,7 +89,14 @@ class Cluster(object):
                 
         # start every node
         for node in self.frontend_nodes + self.compute_nodes:
-            node.start()
+            try:
+                # ANTONIO: We shouldn't need to put this inside a
+                # try/except statement! Node.is_alive() should
+                # *always* return True or False.
+                node.is_alive()
+                elasticluster.log.warning("Not starting node %s which is already up&running." % node.name)
+            except:
+                node.start()
             
         # dump the cluster here, so we don't loose any knowledge about nodes
         self._storage.dump_cluster(self)
@@ -116,11 +123,19 @@ class Cluster(object):
         
         try:
             # setup the cluster using the setup provider
-            self._setup_provider.setup_cluster(self)
-        except Exception as e:
+            ret = self._setup_provider.setup_cluster(self)
+        except Exception, e:
             elasticluster.log.error("the setup provider was not able to setup the cluster, but the cluster is running by now.")
             elasticluster.log.error("setup provider error message = `%s`" % str(e))
-        
+            return
+
+        if not ret:
+            elasticluster.log.warning(
+                "Cluster `%s` not yet configured. Please, re-run `elasticluster"
+                " setup %s` and/or check your configuration" % (
+                    self.name, self.name))
+
+
     def stop(self):
         """
         Terminates all instances corresponding to this cluster and deletes the cluster storage.
@@ -202,7 +217,7 @@ class Node(object):
             elasticluster.log.info("node `%s` is up and running" % self.instance_id)
             self.update_ips()
         else:
-            elasticluster.log.debug("waiting for node `%s` to start")
+            elasticluster.log.debug("waiting for node `%s` to start" % self.instance_id)
         
         return running
     

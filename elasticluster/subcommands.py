@@ -19,6 +19,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 from elasticluster.conf import Configurator
 from elasticluster.conf import Configuration
+from elasticluster import log
 
 import os
 
@@ -77,10 +78,17 @@ class Start(AbstractCommand):
         cluster_name = self.params.cluster
         
         cluster = Configurator().create_cluster(cluster_name)
+
+        # ANTONIO: You must check if the cluster is already present.
+        # Note: this should be one of the possible way to do it, but
+        # it rasies an error later on!
+        storage = Configurator().create_cluster_storage()
+        cluster_names = storage.get_stored_clusters()
+        if cluster_name in cluster_names:
+            cluster.load_from_storage()
         cluster.start()
         
-        print "your cluster is up and running:"
-        
+        log.info("Your cluster is up and running.")
         
         
 class Stop(AbstractCommand):
