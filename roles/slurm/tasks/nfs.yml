@@ -13,12 +13,6 @@
     -nfs
 
 # CentOS-specific actions
-- name: install nfs server
-  action: yum pkg=nfs-kernel-server state=present
-  only_if: $is_centos
-  tags:
-    -nfs
-
 - name: install nfs client
   action: yum pkg=nfs-utils state=present
   only_if: $is_centos

@@ -1,0 +1,3 @@
+{% for host in groups['pbs_clients'] %}
+{{ host }} np={{ hostvars[host].ansible_processor_count }}
+{% endfor %}

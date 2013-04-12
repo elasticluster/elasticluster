@@ -1,6 +1,13 @@
 ---
 - name: install nfs client
-  action: apt pkg=nfs-common state=latest
+  action: apt pkg=nfs-common state=present
+  only_if: $is_ubuntu
+  tags:
+    -nfs
+
+- name: install nfs client
+  action: yum pkg=nfs-utils state=present
+  only_if: $is_centos
   tags:
     -nfs
 

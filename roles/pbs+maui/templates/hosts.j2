@@ -1,0 +1,11 @@
+127.0.0.1 localhost.localdomain localhost
+
+# master node
+{% for host in groups['pbs_master'] %}
+{{ hostvars[host].ansible_default_ipv4.address }} {{ host }}
+{% endfor %}
+
+# worker nodes
+{% for host in groups['pbs_clients'] %}
+{{ hostvars[host].ansible_default_ipv4.address }} {{ host }}
+{% endfor %}

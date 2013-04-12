@@ -2,19 +2,11 @@
 - name: Collecting facts
   hosts: all
   gather_facts: yes
-  vars:
-    is_ubuntu: "'${ansible_distribution}' == 'Ubuntu'"
-    is_centos: "'${ansible_distribution}' == 'CentOS'"
   tasks:
     - group_by: key="$gc3group"
-    - action: debug msg="I am ubuntu"
-      only_if: $is_ubuntu
-    - action: debug msg="I am centos"
-      only_if: $is_centos
 
-
-- include: roles/pbs+maui.yml
 - include: roles/gc3.yml
 - include: roles/slurm.yml
 - include: roles/jenkins.yml
 - include: roles/ganglia.yml
+- include: roles/pbs+maui.yml

@@ -1,4 +1,10 @@
 ---
-- name: install torque
-  action: debug msg="not yet implemented"
+- name: fix /var/spool/torque/server_name
+  action: template src=pbs+maui/templates/var/spool/torque/server_name.j2
+          dest=/var/spool/torque/server_name
+  notify: 
+    - restart pbs_mom
+    - restart pbs_server
+  
+    
   

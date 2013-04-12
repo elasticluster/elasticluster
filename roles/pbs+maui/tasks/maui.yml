@@ -1,3 +1,4 @@
 ---
-- name: install maui
-  action: debug msg="Not yet implemented"
+- name: Check maui configuration
+  action: template src=pbs+maui/templates/var/spool/maui/maui.cfg.j2 dest=/var/spool/maui/maui.cfg
+  notify: restart maui
