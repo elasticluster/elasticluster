@@ -52,18 +52,18 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                         }
     
     def __init__(self, private_key_file, remote_user, sudo_user, playbook_path):
-        self._private_key_file = private_key_file
+        self._private_key_file = os.path.expanduser(os.path.expandvars(private_key_file))
         self._remote_user = remote_user
         self._sudo_user = sudo_user
-        self._playbook_path = playbook_path
-        
+        self._playbook_path = os.path.expanduser(os.path.expandvars(playbook_path))
+
         ansible_constants.DEFAULT_PRIVATE_KEY_FILE = self._private_key_file
         ansible_constants.DEFAULT_REMOTE_USER = self._remote_user
         ansible_constants.DEFAULT_SUDO_USER = self._sudo_user
     
     def setup_cluster(self, cluster):
         inventory_path = self._build_inventory(cluster)
-                
+
         # check paths
         if not os.path.exists(inventory_path):
             raise AnsibleError("the inventory: %s could not be found" % inventory_path)
