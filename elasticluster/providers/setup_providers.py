@@ -45,6 +45,10 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                                      "frontend": ["ganglia_master", "ganglia_monitor"],
                                      "compute": ["ganglia_monitor"]
                                      },
+                         "pbs": {
+                                     "frontend": ["pbs_master", "maui_master"],
+                                     "compute": ["pbs_clients"]
+                                     },
                          "jenkins": {
                                      "frontend": ["jenkins"],
                                      "compute": ["jenkins"]
