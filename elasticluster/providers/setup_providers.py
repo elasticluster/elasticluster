@@ -69,6 +69,12 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         inventory_path = self._build_inventory(cluster)
 
         # check paths
+        if not inventory_path:
+            # ANTONIO: No inventory file has been created, maybe an
+            # invalid calss has been specified in config file? Or none?
+            # assume it is fine.
+            elasticluster.log.info("No setup required for this cluster.")
+            return True
         if not os.path.exists(inventory_path):
             raise AnsibleError("the inventory: %s could not be found" % inventory_path)
         if not os.path.exists(self._playbook_path):
@@ -95,11 +101,32 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         )
         
         try:
-            pb.run()
+            status = pb.run()
         except AnsibleError as e:
             elasticluster.log.error("could not execute ansible playbooks. message=`%s`" % str(e))
-            
-        
+            return False
+
+        # Check ansible status.
+        cluster_failures = False
+        for host, hoststatus in status.items():
+            if hoststatus['unreachable']:
+                elasticluster.log.error("Host `%s` was unreachable, please re-run elasticluster setup" % host)
+                cluster_failures = True
+            if hoststatus['failures']:
+                elasticluster.log.error(
+                    "Host `%s` had %d failures: please re-run elasticluster "
+                    "setup or check the Ansible playbook `%s`" % (
+                        host, hoststatus['failures'], self._playbook_path))
+                cluster_failures = True
+
+        if not cluster_failures:
+            elasticluster.log.info("Cluster correctly configured.")
+            # ANTONIO: TODO: We should return an object to identify if
+            # the cluster was correctly configured, if we had
+            # temporary errors or permanent errors.
+            return True
+        return False
+
     def _build_inventory(self, cluster):
         """
         Builds the inventory for the given cluster and returns its path
@@ -125,20 +152,24 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                             if section not in inventory:
                                 inventory[section] = []
                             inventory[section].append((node.name, node.ip_public))
-                    
+                else:
+                    if c:
+                        elasticluster.log.warning("Invalid setup class `%s` for cluster `%s` in configuration file." % (c, cluster.name))
+                    else:
+                        elasticluster.log.info("Empty setup class defined for cluster %s" % cluster.name)
         if inventory:
             # create a temporary file to pass to ansible, since the api is not stable yet...
             # TODO: create inventory file in the same directory of the "group_vars" and "host_vars" directories
             inventory_file = NamedTemporaryFile(delete=False)
-     
+            elasticluster.log.debug("Writing invenetory file `%s`" % inventory_file.name)
+
             for section,hosts in inventory.items():
                 inventory_file.write("\n["+section+"]\n")
                 if hosts:
                     for host in hosts:
                         inventory_file.write(host[0] + " ansible_ssh_host="+host[1]+"\n")
                         
-            
-            inventory_file.close
+            inventory_file.close()
             
             return inventory_file.name
         
