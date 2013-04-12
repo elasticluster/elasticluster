@@ -119,7 +119,7 @@ class Cluster(object):
             self._setup_provider.setup_cluster(self)
         except Exception as e:
             elasticluster.log.error("the setup provider was not able to setup the cluster, but the cluster is running by now.")
-            elasticluster.log.error("setup provider error message = `%s`" % e.message)
+            elasticluster.log.error("setup provider error message = `%s`" % str(e))
         
     def stop(self):
         """
@@ -149,7 +149,7 @@ class Cluster(object):
             self._setup_provider.setup_cluster(self)
         except Exception as e:
             elasticluster.log.error("the setup provider was not able to setup the cluster, but the cluster is running by now.")
-            elasticluster.log.error("setup provider error message = `%s`" % e.message)
+            elasticluster.log.error("setup provider error message = `%s`" % str(e))
     
     
 class Node(object):

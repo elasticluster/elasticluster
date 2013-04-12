@@ -93,7 +93,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         try:
             pb.run()
         except AnsibleError as e:
-            elasticluster.log.error("could not execute ansible playbooks. message=`%s`" % e.message)
+            elasticluster.log.error("could not execute ansible playbooks. message=`%s`" % str(e))
             
         
     def _build_inventory(self, cluster):

@@ -76,7 +76,7 @@ class BotoCloudProvider(AbstractCloudProvider):
             self._connection.get_all_images()
         
         except Exception as e:
-            elasticluster.log.error("connection to cloud could not be established: message=`%s`" % e.message)
+            elasticluster.log.error("connection to cloud could not be established: message=`%s`" % str(e))
             raise
         
         return self._connection
