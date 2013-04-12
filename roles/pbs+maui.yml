@@ -1,0 +1,29 @@
+---
+- name: Configure GC3 Repository
+  hosts: pbs_master:pbs_clients:maui_master
+  tasks:
+    - include: common/tasks/gc3repo.yml
+
+- name: PBS masternode Playbook
+  hosts: pbs_master
+  tasks: 
+    - include: pbs+maui/tasks/main.yml
+    - include: slurm/tasks/nfs.yml
+  # handlers:
+  #   - include: pbs+maui/handlers/main.yml
+
+- name: MAUI masternode Playbook
+  hosts: maui_master
+  tasks: 
+    - include: pbs+maui/tasks/maui.yml
+    - include: slurm/tasks/nfs.yml
+  # handlers:
+  #   - include: pbs+maui/handlers/main.yml
+
+- name: PBS worker nodes Playbook
+  hosts: pbs_clients
+  tasks: 
+    - include: pbs+maui/tasks/main.yml
+    - include: slurm/tasks/nfs-clients.yml nfsserver=${groups.pbs_master[0]}
+  # handlers:
+  #   - include: pbs+maui/handlers/main.yml

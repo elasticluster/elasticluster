@@ -5,7 +5,7 @@
     -nfs
 
 - name: configure /etc/fstab on clients
-  action: mount name=/home src=${groups.slurm_master[0]}:/home fstype=nfs opts=rw,sync state=mounted
+  action: mount name=/home src=${nfsserver}:/home fstype=nfs opts=rw,sync state=mounted
   tags:
     - nfs
   

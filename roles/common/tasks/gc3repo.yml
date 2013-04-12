@@ -1,4 +1,8 @@
 ---
+- name: I am centos indie ...
+  action: debug msg="I am centos"
+  only_if: "'${ansible_distribution}' == 'CentOS'"
+
 - name: configure apt key for GC3 repository
   action: apt_key url=http://www.gc3.uzh.ch/packages/public.gpg state=present
   only_if: $is_ubuntu

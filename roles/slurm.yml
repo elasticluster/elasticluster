@@ -11,7 +11,7 @@
   hosts: slurm_clients
   tasks: 
     - include: slurm/tasks/main.yml
-    - include: slurm/tasks/nfs-clients.yml
+    - include: slurm/tasks/nfs-clients.yml nfsserver=${groups.slurm_master[0]}
   handlers:
     - include: slurm/handlers/main.yml
 

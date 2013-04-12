@@ -1,0 +1,4 @@
+---
+- name: install torque
+  action: debug msg="not yet implemented"
+  
