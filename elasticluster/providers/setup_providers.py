@@ -49,6 +49,10 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                                      "frontend": ["pbs_master", "maui_master"],
                                      "compute": ["pbs_clients"]
                                      },
+                         "gridengine": {
+                                     "frontend": ["gridengine_master"],
+                                     "compute": ["gridengine_clients"]
+                                     },
                          "jenkins": {
                                      "frontend": ["jenkins"],
                                      "compute": ["jenkins"]
