@@ -24,7 +24,7 @@ class AbstractCloudProvider:
     Defines the contract for a cloud provider to proper function with elasticluster.
     """
     
-    def start_instance(self, key_name, key_path, security_group, flavor, image_name):
+    def start_instance(self, key_name, key_path, security_group, flavor, image_name, image_userdata):
         """
         Starts a new instance with the given properties and returns the instance id.
         """

@@ -64,7 +64,7 @@ class Configurator(object):
         """
         config = Configuration.Instance().read_node_section(cluster_name, node_type)
                 
-        return Node(name, node_type, cloud_provider, config['user_key'], config['user_key_name'], config['image_user'], config['security_group'], config['image'], config['flavor'], config['setup_classes'])
+        return Node(name, node_type, cloud_provider, config['user_key'], config['user_key_name'], config['image_user'], config['security_group'], config['image'], config['flavor'], config['setup_classes'], config.get('image_userdata', ''))
 
     def create_cluster_storage(self):
         """

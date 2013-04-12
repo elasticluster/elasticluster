@@ -82,7 +82,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         return self._connection
 
         
-    def start_instance(self, key_name, key_path, security_group, flavor, image_name):
+    def start_instance(self, key_name, key_path, security_group, flavor, image_name, image_userdata):
         """
         Starts an instance in the cloud on the specified cloud provider (configuration option)
         and returns the id of the started instance.
@@ -93,7 +93,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         self._check_security_group(security_group)
         image_id = self._find_image_id(image_name)
         
-        reservation = connection.run_instances(image_id, key_name=key_name, security_groups=[security_group], instance_type=flavor)
+        reservation = connection.run_instances(image_id, key_name=key_name, security_groups=[security_group], instance_type=flavor, user_data=image_userdata)
         vm = reservation.instances[-1]
         
         # cache instance object locally for faster access later on
