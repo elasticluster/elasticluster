@@ -10,3 +10,4 @@
 - include: roles/jenkins.yml
 - include: roles/ganglia.yml
 - include: roles/pbs+maui.yml
+- include: roles/gridengine.yml

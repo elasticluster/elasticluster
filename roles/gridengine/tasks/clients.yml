@@ -1,0 +1,14 @@
+---
+- name: Install GridEngine APT packages
+  action: apt pkg=$item state=latest
+  only_if: $is_ubuntu
+  with_items:
+    - gridengine-client
+    - gridengine-exec
+
+- name: configure gridengine execd
+  action: lineinfile dest=/var/lib/gridengine/default/common/act_qmaster regexp='.*' line="${groups.gridengine_master[0]}"
+  only_if: $is_ubuntu
+  notify: restart execd
+  tags:
+    - sge

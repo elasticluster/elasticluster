@@ -1,0 +1,4 @@
+---
+- name: restart execd
+  action: service name=gridengine-exec state=restarted
+  only_if: $is_ubuntu
