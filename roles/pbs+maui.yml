@@ -5,10 +5,7 @@
     - vars/os
   tasks:
     - include: common/tasks/gc3repo.yml
-
-    - name: configure /etc/hosts file
-      action: template src=pbs+maui/templates/hosts.j2 dest=/etc/hosts owner=root group=root
-
+    - include: common/tasks/hosts.yml hosts=${groups.all}
     - name: set hostname
       action: command hostname $inventory_hostname
 

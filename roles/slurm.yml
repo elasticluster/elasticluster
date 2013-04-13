@@ -14,6 +14,7 @@
   vars_files:
     - vars/os
   tasks: 
+    - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: slurm/tasks/main.yml
     - include: slurm/tasks/nfs-clients.yml nfsserver=${groups.slurm_master[0]}
   handlers:

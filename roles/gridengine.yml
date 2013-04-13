@@ -4,9 +4,7 @@
   vars_files:
     - vars/os
   tasks:
-    - name: configure /etc/hosts file
-      action: template src=gridengine/templates/hosts.j2 dest=/etc/hosts owner=root group=root
-
+    - include: common/tasks/hosts.yml hosts=${groups.all}
     - name: set hostname
       action: command hostname $inventory_hostname
 
