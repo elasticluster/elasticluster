@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-# 
-# @(#)drbd2
+# @(#)drbd
 # 
 # 
 # Copyright (C) 2013, GC3, University of Zurich. All rights reserved.
@@ -111,7 +111,6 @@ EXAMPLES = """
     - code: drbd name=myresource disk=/dev/sdb device=/dev/drbd1 address0=10.0.0.1:7789 address1=10.0.0.2:7789
 """
 import os
-import tempfile
 
 DRBDCONFDIR='/etc/drbd.d/'
 TEMPLATE_RESOURCE_FILE = """resource %(name)s {
