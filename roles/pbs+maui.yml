@@ -16,6 +16,7 @@
   tasks: 
     - include: slurm/tasks/nfs.yml
     - include: pbs+maui/tasks/master.yml
+    - include: cluster/tasks/packages.yml
   handlers:
     - include: pbs+maui/handlers/main.yml
 
@@ -35,6 +36,7 @@
   tasks: 
     - include: slurm/tasks/nfs-clients.yml nfsserver=${groups.pbs_master[0]}
     - include: pbs+maui/tasks/clients.yml
+    - include: cluster/tasks/packages.yml
   handlers:
     - include: pbs+maui/handlers/main.yml
 
