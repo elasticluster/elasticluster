@@ -60,9 +60,9 @@ class Cluster(object):
         """
         name = ""
         if node_type == Node.frontend_type:
-            name = "frontend" + str(len(self.frontend_nodes)).zfill(3)
+            name = "frontend" + str(len(self.frontend_nodes) + 1).zfill(3)
         if node_type == Node.compute_type:
-            name = "compute" + str(len(self.compute_nodes)).zfill(3)
+            name = "compute" + str(len(self.compute_nodes) + 1).zfill(3)
         node = self._configurator.create_node(self.name, node_type, self._cloud_provider, name)
         if node_type == Node.frontend_type:
             self.frontend_nodes.append(node)
