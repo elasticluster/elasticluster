@@ -7,6 +7,7 @@
     - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: slurm/tasks/main.yml
     - include: slurm/tasks/nfs.yml
+    - include: cluster/tasks/packages.yml
   handlers:
     - include: slurm/handlers/main.yml
 
@@ -18,6 +19,7 @@
     - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: slurm/tasks/main.yml
     - include: slurm/tasks/nfs-clients.yml nfsserver=${groups.slurm_master[0]}
+    - include: cluster/tasks/packages.yml
   handlers:
     - include: slurm/handlers/main.yml
 

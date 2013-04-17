@@ -111,14 +111,18 @@ Waittime=0
 # 
 # SCHEDULING 
 #DefMemPerCPU=0 
-FastSchedule=1
+FastSchedule=0
 #MaxMemPerCPU=0 
 #SchedulerRootFilter=1 
 #SchedulerTimeSlice=30 
 SchedulerType=sched/backfill
 SchedulerPort=7321
-SelectType=select/cons_res
-SelectTypeParameters=CR_CPU_Memory
+# NOTE: If we don't know the number of CPUs of each node, we need to
+# set FastSchedule=0 and SelectType=select/linear Please check SLURM's
+# FAQ and manpage of slurm.conf
+# https://computing.llnl.gov/linux/slurm/faq.html#fast_schedule
+SelectType=select/linear
+SelectTypeParameters=CR_Memory
 # 
 # 
 # JOB PRIORITY 
