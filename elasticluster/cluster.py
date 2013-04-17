@@ -174,13 +174,14 @@ class Node(object):
     frontend_type = 1
     compute_type = 2
 
-    def __init__(self, name, node_type, cloud_provider, user_key, user_key_name, os_user, security_group, image, flavor, setup_classes, image_userdata=None):
+    def __init__(self, name, node_type, cloud_provider, user_key_public, user_key_private, user_key_name, image_user, security_group, image, flavor, setup_classes, image_userdata=None):
         self.name = name
         self.type = node_type
         self._cloud_provider = cloud_provider
-        self.user_key = user_key
+        self.user_key_public = user_key_public
+        self.user_key_private = user_key_private
         self.user_key_name = user_key_name
-        self._os_user = os_user
+        self.image_user = image_user
         self.security_group = security_group
         self.image = image
         self.image_userdata = image_userdata
@@ -198,7 +199,7 @@ class Node(object):
         node id is returned from the cloud provider, it will return.
         """
         elasticluster.log.info("trying to start a node")
-        self.instance_id = self._cloud_provider.start_instance(self.user_key_name, self.user_key, self.security_group, self.flavor, self.image, self.image_userdata)
+        self.instance_id = self._cloud_provider.start_instance(self.user_key_name, self.user_key_public, self.security_group, self.flavor, self.image, self.image_userdata)
         elasticluster.log.info("starting node with id `%s`" % self.instance_id)
         
     def stop(self):

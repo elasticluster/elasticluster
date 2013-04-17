@@ -54,7 +54,7 @@ class Configurator(object):
         """
         config = Configuration.Instance().read_cluster_section(name)
         
-        return Cluster(name, config['cloud'], self.create_cloud_provider(config['cloud']), self.create_setup_provider(config["setup_provider"]) , int(config['frontend']), int(config['compute']), self)
+        return Cluster(name, config['cloud'], self.create_cloud_provider(config['cloud']), self.create_setup_provider(config["setup_provider"], name) , int(config['frontend']), int(config['compute']), self)
         
     
     def create_node(self, cluster_name, node_type, cloud_provider, name):
@@ -64,7 +64,7 @@ class Configurator(object):
         """
         config = Configuration.Instance().read_node_section(cluster_name, node_type)
                 
-        return Node(name, node_type, cloud_provider, config['user_key'], config['user_key_name'], config['image_user'], config['security_group'], config['image'], config['flavor'], config['setup_classes'], config.get('image_userdata', ''))
+        return Node(name, node_type, cloud_provider, config['user_key_public'], config["user_key_private"], config['user_key_name'], config['image_user'], config['security_group'], config['image'], config['flavor'], config['setup_classes'], config.get('image_userdata', ''))
 
     def create_cluster_storage(self):
         """
@@ -72,11 +72,11 @@ class Configurator(object):
         """
         return ClusterStorage(Configuration.Instance().storage_path)
 
-    def create_setup_provider(self, setup_provider_name):
-        config = Configuration.Instance().read_setup_section(setup_provider_name)
+    def create_setup_provider(self, setup_provider_name, cluster_name):
+        config = Configuration.Instance().read_setup_section(setup_provider_name, cluster_name)
         provider = Configurator.setup_providers_map[config['provider']]
         
-        return provider(config['private_key_file'], config['remote_user'], config['sudo_user'], config['playbook_path'])
+        return provider(config['user_key_private'], config['image_user'], config['image_user_sudo'], config['image_sudo'], config['playbook_path'])
 
 
 @Singleton
@@ -94,9 +94,10 @@ class Configuration(object):
         # needed.
     
     mandatory_cloud_options = ("provider", "ec2_url", "ec2_access_key", "ec2_secret_key", "ec2_region")
-    mandatory_cluster_options = ("cloud", "frontend", "compute", "setup_provider")
-    mandatory_node_options = ("image", "security_group", "flavor", "user_key", "user_key_name", "image_user", "setup_classes")
-    mandatory_setup_options = ("remote_user", "sudo_user", "private_key_file", "playbook_path")
+    mandatory_cluster_options = ("cloud", "frontend", "compute", "setup_provider", "login")
+    mandatory_node_options = ("image", "security_group", "image_userdata", "flavor", "setup_classes")
+    mandatory_setup_options = ("provider", "playbook_path")
+    mandatory_login_options = ("image_user", "image_user_sudo", "image_sudo", "user_key_name", "user_key_private", "user_key_public")
     
     def __init__(self):
         # will be initialized upon user input from outside
@@ -126,7 +127,9 @@ class Configuration(object):
         config = self._read_section("cluster/"+name)
         self._check_mandatory_options(Configuration.Instance().mandatory_cluster_options, config)
         
-        return config
+        config_login = self.read_login_section(config["login"])
+        
+        return dict(config.items() + config_login.items())
 
     def read_node_section(self, cluster_name, node_type):
         """
@@ -146,9 +149,9 @@ class Configuration(object):
         # merge configuration parts from the cluster and compute/frontend section
         if self._config.has_section(config_name_general):
             if self._config.has_section(config_name_specific):
-                config = dict(self._read_section(config_name_general).items() + self._read_section(config_name_specific).items())
+                config = dict(self.read_cluster_section(cluster_name).items() + self._read_section(config_name_specific).items())
             else:
-                config = self._read_section(config_name_general)
+                config = self.read_cluster_section(cluster_name)
             
             self._check_mandatory_options(Configuration.Instance().mandatory_node_options, config)
             
@@ -169,13 +172,27 @@ class Configuration(object):
         
         return config
     
-    def read_setup_section(self, name):
+    def read_setup_section(self, name, cluster_name):
         """
         Reads the setup section for a given setup name from the configuration file and returns
         its properties in a dictionary
         """
         config = self._read_section("setup/"+name)
         self._check_mandatory_options(Configuration.Instance().mandatory_setup_options, config)
+        
+        login_name = self.read_cluster_section(cluster_name)["login"]
+        
+        config_login = self.read_login_section(login_name)
+        
+        return dict(config.items() + config_login.items())
+    
+    def read_login_section(self, name):
+        """
+        Reads the login section for the given name from the configuration file and returns its properties
+        in a dictionary
+        """
+        config = self._read_section("login/" + name)
+        self._check_mandatory_options(Configuration.Instance().mandatory_login_options, config)
         
         return config
     

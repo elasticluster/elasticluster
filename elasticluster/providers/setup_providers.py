@@ -59,10 +59,11 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                                     }
                         }
     
-    def __init__(self, private_key_file, remote_user, sudo_user, playbook_path):
+    def __init__(self, private_key_file, remote_user, sudo_user, sudo, playbook_path):
         self._private_key_file = os.path.expanduser(os.path.expandvars(private_key_file))
         self._remote_user = remote_user
         self._sudo_user = sudo_user
+        self._sudo = sudo
         self._playbook_path = os.path.expanduser(os.path.expandvars(playbook_path))
 
         ansible_constants.DEFAULT_PRIVATE_KEY_FILE = self._private_key_file
@@ -91,7 +92,6 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         runner_cb = callbacks.PlaybookRunnerCallbacks(stats, verbose=0)
 
         
-        # TODO: make this more flexible: add to configuration file (sudo)
         pb = PlayBook(
             playbook=self._playbook_path,
             host_list=inventory_path,
@@ -99,7 +99,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             callbacks=playbook_cb,
             runner_callbacks=runner_cb,
             stats=stats,
-            sudo=True,
+            sudo=self._sudo,
             sudo_user=self._sudo_user,
             private_key_file=self._private_key_file,
         )
