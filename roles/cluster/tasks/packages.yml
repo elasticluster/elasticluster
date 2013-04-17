@@ -6,6 +6,8 @@
     - make
     - openmpi-devel
     - hdf5-openmpi
+    - hdf5
+    - netcdf-devel
     - blacs-openmpi
     - blas-devel
     - atlas-devel
@@ -22,4 +24,5 @@
     - gfortran
     - libhdf5-openmpi-dev
     - libatlas-dev
+    - libnetcdf-dev
   only_if: $is_ubuntu
