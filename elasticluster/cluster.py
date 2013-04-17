@@ -89,13 +89,9 @@ class Cluster(object):
                 
         # start every node
         for node in self.frontend_nodes + self.compute_nodes:
-            try:
-                # ANTONIO: We shouldn't need to put this inside a
-                # try/except statement! Node.is_alive() should
-                # *always* return True or False.
-                node.is_alive()
+            if node.is_alive():
                 elasticluster.log.warning("Not starting node %s which is already up&running." % node.name)
-            except:
+            else:
                 node.start()
             
         # dump the cluster here, so we don't loose any knowledge about nodes
@@ -112,14 +108,14 @@ class Cluster(object):
             starting_nodes = self.compute_nodes + self.frontend_nodes
             while starting_nodes:
                 starting_nodes = [n for n in starting_nodes if not n.is_alive()]
-                time.sleep(5)
+                if(starting_nodes):
+                    time.sleep(5)
         except TimeoutError as timeout:
             elasticluster.log.error(timeout.message)
             elasticluster.log.error("timeout error occured: stopping all nodes")
             self.stop()
             
         signal.alarm(0)
-        time.sleep(10)
         
         try:
             # setup the cluster using the setup provider
@@ -213,8 +209,11 @@ class Node(object):
         """
         Checks if the current node is up and running in the cloud
         """
-        running = self._cloud_provider.is_instance_running(self.instance_id)
-        
+        try:
+            running = self._cloud_provider.is_instance_running(self.instance_id)
+        except:
+            running = False
+            
         if running:
             elasticluster.log.info("node `%s` is up and running" % self.instance_id)
             self.update_ips()
