@@ -108,7 +108,7 @@ class Cluster(object):
             starting_nodes = self.compute_nodes + self.frontend_nodes
             while starting_nodes:
                 starting_nodes = [n for n in starting_nodes if not n.is_alive()]
-                if(starting_nodes):
+                if starting_nodes:
                     time.sleep(5)
         except TimeoutError as timeout:
             elasticluster.log.error(timeout.message)
@@ -117,19 +117,8 @@ class Cluster(object):
             
         signal.alarm(0)
         
-        try:
-            # setup the cluster using the setup provider
-            ret = self._setup_provider.setup_cluster(self)
-        except Exception, e:
-            elasticluster.log.error("the setup provider was not able to setup the cluster, but the cluster is running by now.")
-            elasticluster.log.error("setup provider error message = `%s`" % str(e))
-            return
-
-        if not ret:
-            elasticluster.log.warning(
-                "Cluster `%s` not yet configured. Please, re-run `elasticluster"
-                " setup %s` and/or check your configuration" % (
-                    self.name, self.name))
+        # setup the cluster
+        self.setup()
 
 
     def stop(self):
@@ -151,16 +140,25 @@ class Cluster(object):
         for n in self.frontend_nodes + self.compute_nodes:
             if not n.is_alive():
                 # TODO: this is very dangerous..., start a new instance at least
-                elasticluster.log.error("instance `%s` is not correclty running anymore, shutting it down." % n.instance_id)
+                elasticluster.log.error("instance `%s` with name `%s` is not correclty running anymore, terminating it." % (n.instance_id, n.name))
                 n.stop()
                 
     def setup(self):
         try:
             # setup the cluster using the setup provider
-            self._setup_provider.setup_cluster(self)
-        except Exception as e:
+            ret = self._setup_provider.setup_cluster(self)
+        except Exception, e:
             elasticluster.log.error("the setup provider was not able to setup the cluster, but the cluster is running by now.")
             elasticluster.log.error("setup provider error message = `%s`" % str(e))
+            ret = False
+
+        if not ret:
+            elasticluster.log.warning(
+                "Cluster `%s` not yet configured. Please, re-run `elasticluster"
+                " setup %s` and/or check your configuration" % (
+                    self.name, self.name))
+        
+        return ret
     
     
 class Node(object):
