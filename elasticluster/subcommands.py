@@ -24,6 +24,7 @@ from elasticluster.conf import Configuration
 from elasticluster import log
 from elasticluster.exceptions import ClusterNotFound, ConfigurationError
 
+
 class AbstractCommand():
     """
     Defines the general contract every command has to fullfill in

@@ -249,7 +249,7 @@ class Node(object):
 
     def stop(self):
         log.info("shutting down instance `%s`",
-                               self.instance_id)
+                 self.instance_id)
         try:
             self._cloud_provider.stop_instance(self.instance_id)
         except:

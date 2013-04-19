@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-# 
+# -*- coding: utf-8 -*-#
 # @(#)setup.py
-# 
-# 
+#
+#
 # Copyright (C) 2013, GC3, University of Zurich. All rights reserved.
-# 
-# 
+#
+#
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
 # Free Software Foundation; either version 2 of the License, or (at your
@@ -38,4 +38,4 @@ setup(
             'elasticluster = elasticluster.main:main',
             ]
         },
-)
+    )
