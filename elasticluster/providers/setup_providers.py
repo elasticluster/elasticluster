@@ -99,6 +99,15 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         playbook_cb = callbacks.PlaybookCallbacks(verbose=0)
         runner_cb = callbacks.PlaybookRunnerCallbacks(stats, verbose=0)
 
+        # ANTONIO: This monkey patching almost works: instead of the
+        # standard stuff only newlines are printed. This is not good
+        # enough though...
+        # def noop(*args, **kw):
+        #     return ''
+        # import ansible
+        # ansible.callbacks.banner = noop
+        # ansible.callbacks.stringc = noop
+
         pb = PlayBook(
             playbook=self._playbook_path,
             host_list=inventory_path,
