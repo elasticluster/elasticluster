@@ -157,7 +157,7 @@ class Cluster(object):
                               node.name, node.ip_public, ex)
                 except paramiko.SSHException, ex:
                     log.debug("Ignoring error %s connecting to %s",
-                              str(ex), node.node)
+                              str(ex), node.name)
         signal.alarm(0)
 
         # setup the cluster
