@@ -31,6 +31,7 @@ setup(
     install_requires = [
         'boto',
         'PyCLI',
+        'ansible',
         ],
     entry_points = {
         'console_scripts': [
