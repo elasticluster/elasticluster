@@ -60,7 +60,6 @@ class Configurator(object):
         try:
             config = Configuration.Instance().read_cluster_section(name)
         except ConfigParser.NoSectionError:
-            log.info("Cluster `%s` not found in configuration file.", name)
             raise ConfigurationError(
                 "Cluster `%s` not found in configuration file." % name)
 

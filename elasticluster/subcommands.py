@@ -93,7 +93,12 @@ class Start(AbstractCommand):
         Configuration.Instance().cluster_name = self.params.cluster
         cluster_name = self.params.cluster
 
-        cluster = Configurator().create_cluster(cluster_name)
+        try:
+            cluster = Configurator().create_cluster(cluster_name)
+        except ConfigurationError, ex:
+            log.error("Cluster `%s` not found in configuration file." %
+                      cluster_name)
+            return
 
         # ANTONIO: You must check if the cluster is already present.
         # Note: this should be one of the possible way to do it, but
@@ -128,8 +133,13 @@ class Stop(AbstractCommand):
         """
         Configuration.Instance().cluster_name = self.params.cluster
         cluster_name = self.params.cluster
-        cluster = Configurator().create_cluster(cluster_name)
-        cluster.load_from_storage()
+        try:
+            cluster = Configurator().create_cluster(cluster_name)
+            cluster.load_from_storage()
+        except (ClusterNotFound, ConfigurationError), ex:
+            log.error("Stopping cluster %s: %s\n" %
+                      (cluster_name, ex))
+            return
         cluster.stop()
 
 
@@ -211,7 +221,12 @@ class SetupCluster(AbstractCommand):
     def execute(self):
         Configuration.Instance().cluster_name = self.params.cluster
         cluster_name = self.params.cluster
-        cluster = Configurator().create_cluster(cluster_name)
-        cluster.load_from_storage()
+        try:
+            cluster = Configurator().create_cluster(cluster_name)
+            cluster.load_from_storage()
+        except (ClusterNotFound, ConfigurationError), ex:
+            log.error("Setting up cluster %s: %s\n" %
+                      (cluster_name, ex))
+            return
 
         cluster.setup()
