@@ -19,12 +19,16 @@ from elasticluster.exceptions import TimeoutError
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 
-import elasticluster
-import json
 import io
+import json
 import os
-import time
 import signal
+import socket
+import time
+
+import paramiko
+
+from elasticluster import log
 
 
 class Cluster(object):
@@ -96,8 +100,8 @@ class Cluster(object):
         # start every node
         for node in self.frontend_nodes + self.compute_nodes:
             if node.is_alive():
-                elasticluster.log.warning("Not starting node %s which is "
-                                          "already up&running.", node.name)
+                log.warning("Not starting node %s which is "
+                            "already up&running.", node.name)
             else:
                 node.start()
 
@@ -121,11 +125,38 @@ class Cluster(object):
                 if starting_nodes:
                     time.sleep(5)
         except TimeoutError as timeout:
-            elasticluster.log.error(timeout.message)
-            elasticluster.log.error("timeout error occured: "
-                                    "stopping all nodes")
+            log.error(timeout.message)
+            log.error("timeout error occured: "
+                      "stopping all nodes")
             self.stop()
 
+        signal.alarm(0)
+
+        # Try to connect to each node. Run the setup action only when
+        # we successfully connect to all of them.
+        signal.alarm(Cluster.startup_timeout)
+        pending_nodes = self.compute_nodes + self.frontend_nodes
+        ssh = paramiko.SSHClient()
+        ssh.load_system_host_keys()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        while pending_nodes:
+            for node in pending_nodes:
+                try:
+                    log.debug("Trying to connect to host %s (%s)",
+                              node.name, node.ip_public)
+
+                    ssh.connect(node.ip_public,
+                                username=node.image_user,
+                                allow_agent=True,
+                                key_filename=node.user_key_private)
+                    pending_nodes.remove(node)
+                except socket.error, ex:
+                    log.debug("Host %s (%s) not reachable: %s.",
+                              node.name, node.ip_public, ex)
+                except paramiko.SSHException, ex:
+                    log.debug("Ignoring error %s connecting to %s",
+                              str(ex), self.node)
         signal.alarm(0)
 
         # setup the cluster
@@ -152,7 +183,7 @@ class Cluster(object):
             if not n.is_alive():
                 # TODO: this is very dangerous..., start a new
                 # instance at least
-                elasticluster.log.error(
+                log.error(
                     "instance `%s` with name `%s` is not correclty running "
                     "anymore, terminating it.", n.instance_id, n.name)
                 n.stop()
@@ -162,14 +193,14 @@ class Cluster(object):
             # setup the cluster using the setup provider
             ret = self._setup_provider.setup_cluster(self)
         except Exception, e:
-            elasticluster.log.error(
+            log.error(
                 "the setup provider was not able to setup the cluster, "
                 "but the cluster is running by now. Setup provider error "
                 "message: `%s`", str(e))
             ret = False
 
         if not ret:
-            elasticluster.log.warning(
+            log.warning(
                 "Cluster `%s` not yet configured. Please, re-run "
                 "`elasticluster setup %s` and/or check your configuration",
                 self.name, self.name)
@@ -191,8 +222,8 @@ class Node(object):
         self.name = name
         self.type = node_type
         self._cloud_provider = cloud_provider
-        self.user_key_public = user_key_public
-        self.user_key_private = user_key_private
+        self.user_key_public = os.path.expanduser(user_key_public)
+        self.user_key_private = os.path.expanduser(user_key_private)
         self.user_key_name = user_key_name
         self.image_user = image_user
         self.security_group = security_group
@@ -211,38 +242,43 @@ class Node(object):
         clode provider. This method is non-blocking, as soon as the
         node id is returned from the cloud provider, it will return.
         """
-        elasticluster.log.info("trying to start a node")
+        log.info("Starting node %s.", self.name)
         self.instance_id = self._cloud_provider.start_instance(
             self.user_key_name, self.user_key_public, self.security_group,
             self.flavor, self.image, self.image_userdata)
-        elasticluster.log.info("starting node with id `%s`" % self.instance_id)
+        log.info("starting node with id `%s`" % self.instance_id)
 
     def stop(self):
-        elasticluster.log.info("shutting down instance `%s`",
+        log.info("shutting down instance `%s`",
                                self.instance_id)
         try:
             self._cloud_provider.stop_instance(self.instance_id)
         except:
-            elasticluster.log.error("could not stop instance `%s`, it might "
-                                    "already be down." % self.instance_id)
+            log.error("could not stop instance `%s`, it might "
+                      "already be down." % self.instance_id)
 
     def is_alive(self):
         """
         Checks if the current node is up and running in the cloud
         """
-        try:
-            running = self._cloud_provider.is_instance_running(
-                self.instance_id)
-        except:
-            running = False
+        running = False
+        if self.instance_id:
+            try:
+                log.debug("Getting information for instance %s",
+                          self.instance_id)
+                running = self._cloud_provider.is_instance_running(
+                    self.instance_id)
+            except Exception, ex:
+                log.debug("Ignoring error while looking form vm id %s: %s",
+                          self.instance_id, str(ex))
 
         if running:
-            elasticluster.log.info("node `%s` is up and running",
-                                   self.instance_id)
+            log.info("node `%s` is up and running",
+                     self.instance_id)
             self.update_ips()
         else:
-            elasticluster.log.debug("waiting for node `%s` to start",
-                                    self.instance_id)
+            log.debug("waiting for node `%s` to start",
+                      self.instance_id)
 
         return running
 

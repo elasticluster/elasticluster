@@ -96,6 +96,7 @@ class Start(AbstractCommand):
         # Note: this should be one of the possible way to do it, but
         # it rasies an error later on!
         storage = Configurator().create_cluster_storage()
+        log.debug("Starting cluster %s", cluster_name)
         cluster_names = storage.get_stored_clusters()
         if cluster_name in cluster_names:
             cluster.load_from_storage()
