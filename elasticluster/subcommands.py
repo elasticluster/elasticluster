@@ -21,8 +21,6 @@ from elasticluster.conf import Configurator
 from elasticluster.conf import Configuration
 from elasticluster import log
 
-import os
-
 
 class AbstractCommand():
     """
@@ -30,10 +28,6 @@ class AbstractCommand():
     order to be recognized by the arguments list and executed
     afterwards.
     """
-    default_configuration_file = os.path.expanduser(
-        "~/.elasticluster/config.cfg")
-    default_storage_dir = os.path.expanduser(
-        "~/.elasticluster/storage")
 
     def __init__(self, params):
         """
@@ -61,6 +55,16 @@ class AbstractCommand():
         """
         pass
 
+    def __call__(self):
+        return self.execute()
+
+    def pre_run(self):
+        """
+        Overrides this method to execute any pre-run code, especially
+        to check any command line options.
+        """
+        pass
+
 
 class Start(AbstractCommand):
     """
@@ -74,7 +78,7 @@ class Start(AbstractCommand):
         @see abstract_command contract
         """
         parser = subparsers.add_parser("start")
-        parser.set_defaults(func=self.execute)
+        parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
@@ -109,7 +113,7 @@ class Stop(AbstractCommand):
         @see abstract_command contract
         """
         parser = subparsers.add_parser("stop")
-        parser.set_defaults(func=self.execute)
+        parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
@@ -131,7 +135,7 @@ class ListClusters(AbstractCommand):
     """
     def setup(self, subparsers):
         parser = subparsers.add_parser("list")
-        parser.set_defaults(func=self.execute)
+        parser.set_defaults(func=self)
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
 
@@ -157,7 +161,7 @@ class ListNodes(AbstractCommand):
 
     def setup(self, subparsers):
         parser = subparsers.add_parser("list-nodes")
-        parser.set_defaults(func=self.execute)
+        parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
@@ -190,7 +194,7 @@ class ListNodes(AbstractCommand):
 class SetupCluster(AbstractCommand):
     def setup(self, subparsers):
         parser = subparsers.add_parser("setup")
-        parser.set_defaults(func=self.execute)
+        parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")

@@ -19,6 +19,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 # System imports
 import logging
+import os
 import sys
 
 # External modules
@@ -38,6 +39,11 @@ class ElasticCloud(cli.app.CommandLineApp):
 
     name = "elasticluster"
 
+    default_configuration_file = os.path.expanduser(
+        "~/.elasticluster/config.cfg")
+    default_storage_dir = os.path.expanduser(
+        "~/.elasticluster/storage")
+
     def setup(self):
         cli.app.CommandLineApp.setup(self)
 
@@ -54,23 +60,48 @@ class ElasticCloud(cli.app.CommandLineApp):
         # global parameters
         self.add_param('-v', '--verbose', action='count', default=0,
                        help="Increase verbosity.")
-        self.add_param('-s', '--storage',
-                       help="storage folder, default is "
-                       "%s" % AbstractCommand.default_storage_dir,
-                       default=AbstractCommand.default_storage_dir)
-        self.add_param('--config', help="configuration file, default is"
-                       "%s " % AbstractCommand.default_configuration_file,
-                       default=AbstractCommand.default_configuration_file)
+        self.add_param('-s', '--storage', metavar="PATH",
+                       help="Path to the storage folder. Default: `%s`" %
+                       self.default_storage_dir,
+                       default=self.default_storage_dir)
+        self.add_param('-c', '--config', metavar='PATH',
+                       help="Path to the configuration file. Default: `%s`" %
+                       self.default_configuration_file,
+                       default=self.default_configuration_file)
 
         # to parse subcommands
         self.subparsers = self.argparser.add_subparsers(
             title="COMMANDS",
-            help="Available commands. Run `elasticluster cmd --help`"
+            help="Available commands. Run `elasticluster cmd --help` "
             "to have information on command `cmd`.")
 
         for command in commands:
             if isinstance(command, AbstractCommand):
                 command.setup(self.subparsers)
+
+    def pre_run(self):
+        cli.app.CommandLineApp.pre_run(self)
+        if not os.path.isdir(self.params.storage):
+            # We do not create *all* the parents, but we do create the
+            # directory if we can.
+            try:
+                os.mkdir(self.params.storage)
+            except OSError, ex:
+                sys.stderr.write("Unable to create storage directory: "
+                                 "%s\n" % (str(ex)))
+                sys.exit(1)
+
+        if not os.path.isfile(self.params.config):
+            sys.stderr.write("Unable to read configuration file `%s`.\n" %
+                             self.params.config)
+            sys.exit(1)
+
+        if self.params.func:
+            try:
+                self.params.func.pre_run()
+            except RuntimeError, ex:
+                sys.stderr.write(str(ex).strip() + '\n')
+                sys.exit(1)
 
     def main(self):
         """
@@ -84,7 +115,6 @@ class ElasticCloud(cli.app.CommandLineApp):
         # Set verbosity level
         loglevel = max(1, logging.WARNING - 10 * max(0, self.params.verbose))
         log.setLevel(loglevel)
-
         # initialize configuration singleton with given global parameters
         try:
             Configuration.Instance().file_path = self.params.config
