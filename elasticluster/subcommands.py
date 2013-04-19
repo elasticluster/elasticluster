@@ -104,13 +104,23 @@ class Start(AbstractCommand):
         # Note: this should be one of the possible way to do it, but
         # it rasies an error later on!
         storage = Configurator().create_cluster_storage()
-        log.debug("Starting cluster %s", cluster_name)
         cluster_names = storage.get_stored_clusters()
         if cluster_name in cluster_names:
+            log.debug("Loading status of cluster %s.", cluster_name)
             cluster.load_from_storage()
+
+        print "Starting cluster `%s` with %d compute nodes." % (
+            cluster_name, len(cluster.compute_nodes))
+        print "(this may take a while...)"
         cluster.start()
 
-        log.info("Your cluster is up and running.")
+        frontend = cluster.frontend_nodes[0]
+        print """
+Your cluster is up and running.
+To login on the frontend node, run the command:
+
+    ssh %s@%s -i %s
+""" % (frontend.image_user, frontend.ip_public, frontend.user_key_private)
 
 
 class Stop(AbstractCommand):
@@ -140,6 +150,8 @@ class Stop(AbstractCommand):
             log.error("Stopping cluster %s: %s\n" %
                       (cluster_name, ex))
             return
+
+        print "Destroying cluster `%s`" % cluster_name
         cluster.stop()
 
 
@@ -229,6 +241,6 @@ class SetupCluster(AbstractCommand):
                       (cluster_name, ex))
             return
 
-        sys.stdout.write("Running setup provider for cluster `%s`\n" % cluster_name)
+        print "Running setup provider for cluster `%s`..." % cluster_name
         cluster.setup()
-        sys.stdout.write("Done.\n")
+        print "Done.\n"
