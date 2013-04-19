@@ -21,14 +21,18 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 class ConfigurationError(Exception):
     pass
 
+
 class SecurityGroupError(Exception):
     pass
+
 
 class KeypairError(Exception):
     pass
 
+
 class InstanceError(Exception):
     pass
+
 
 class TimeoutError(Exception):
     pass

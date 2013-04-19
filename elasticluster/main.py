@@ -33,45 +33,52 @@ from elasticluster.subcommands import ListClusters
 from elasticluster.subcommands import ListNodes
 from elasticluster.conf import Configuration
 
-class ElasticCloud(cli.app.CommandLineApp):        
-        
+
+class ElasticCloud(cli.app.CommandLineApp):
+
     def setup(self):
         cli.app.CommandLineApp.setup(self)
-        
+
         # all commands in this list will be added to the subcommands
-        # if you add an object here, make sure it implements the subcommands.abstract_command contract
-        commands = [
-                    Start(self.params),
+        # if you add an object here, make sure it implements the
+        # subcommands.abstract_command contract
+        commands = [Start(self.params),
                     Stop(self.params),
                     ListClusters(self.params),
                     ListNodes(self.params),
-                    SetupCluster(self.params)
+                    SetupCluster(self.params),
                     ]
-        
+
         # global parameters
         self.add_param('-v', '--verbose', action='count', default=0)
-        self.add_param('-s', '--storage', help="storage folder, default is" + AbstractCommand.default_storage_dir, default=AbstractCommand.default_storage_dir)
-        self.add_param('--config', help='configuration file, default is ' + AbstractCommand.default_configuration_file, default=AbstractCommand.default_configuration_file)
-        
+        self.add_param('-s', '--storage',
+                       help="storage folder, default is "
+                       "%s" % AbstractCommand.default_storage_dir,
+                       default=AbstractCommand.default_storage_dir)
+        self.add_param('--config', help="configuration file, default is"
+                       "%s " % AbstractCommand.default_configuration_file,
+                       default=AbstractCommand.default_configuration_file)
 
         # to parse subcommands
-        self.subparsers = self.argparser.add_subparsers(title="subcommands", help="Sub commands")
-        
+        self.subparsers = self.argparser.add_subparsers(title="subcommands",
+                                                        help="Sub commands")
+
         for command in commands:
             if isinstance(command, AbstractCommand):
-                command.setup(self.subparsers)        
-            
+                command.setup(self.subparsers)
+
     def main(self):
         """
-        This is the main entry point of the elasticluster.
-        First the central configuration is created, which can be altered through the
-        command line interface. Then the given command from the command line interface is called.
+        This is the main entry point of the elasticluster.  First the
+        central configuration is created, which can be altered through
+        the command line interface. Then the given command from the
+        command line interface is called.
         """
 
         # Set verbosity level
         loglevel = max(1, logging.WARNING - 10 * max(0, self.params.verbose))
         log.setLevel(loglevel)
-        
+
         # initialize configuration singleton with given global parameters
         try:
             Configuration.Instance().file_path = self.params.config
@@ -79,7 +86,7 @@ class ElasticCloud(cli.app.CommandLineApp):
         except Exception as ex:
             print "please specify a valid configuration file"
             sys.exit()
-        
+
         # call the subcommand function (ususally execute)
         return self.params.func()
 
