@@ -58,16 +58,19 @@ class Cluster(object):
         for _ in range(self._compute):
             self.add_node(Node.compute_type)
 
-    def add_node(self, node_type):
+    def add_node(self, node_type, name=""):
         """
         Adds a new node, but doesn't start the instance on the cloud.
         Returns the created node instance
         """
         name = ""
-        if node_type == Node.frontend_type:
-            name = "frontend" + str(len(self.frontend_nodes) + 1).zfill(3)
-        if node_type == Node.compute_type:
-            name = "compute" + str(len(self.compute_nodes) + 1).zfill(3)
+        if not name:
+            if node_type == Node.frontend_type:
+                name = "frontend" + str(len(self.frontend_nodes) + 1).zfill(3)
+            if node_type == Node.compute_type:
+                name = "compute" + str(len(self.compute_nodes) + 1).zfill(3)
+            else:
+                log.warning("Invalid node type %s given. Unable to add node" % node_type)
         node = self._configurator.create_node(self.name, node_type,
                                               self._cloud_provider, name)
         if node_type == Node.frontend_type:
@@ -156,6 +159,7 @@ class Cluster(object):
                 except paramiko.SSHException, ex:
                     log.debug("Ignoring error %s connecting to %s",
                               str(ex), node.name)
+            time.sleep(5)
         signal.alarm(0)
 
         # setup the cluster
@@ -212,8 +216,8 @@ class Node(object):
     Handles all the node related funcitonality such as start, stop,
     configure, etc.
     """
-    frontend_type = 1
-    compute_type = 2
+    frontend_type = 'frontend'
+    compute_type = 'compute'
 
     def __init__(self, name, node_type, cloud_provider, user_key_public,
                  user_key_private, user_key_name, image_user, security_group,
@@ -340,10 +344,16 @@ class ClusterStorage(object):
 
         # if a cluster grows the number of nodes in the config is not
         # enough
-        while len(cluster.frontend_nodes) > len(information["frontend"]):
-            cluster.add_node(Node.frontend_type)
-        while len(cluster.compute_nodes) > len(information["compute"]):
-            cluster.add_node(Node.compute_type)
+        compute_names = [n.name for n in cluster.compute_nodes]
+        for node in information['compute']:
+            if node[1] not in compute_names:
+                cluster.add_node(Node.compute_type, name=node[1])
+
+        # The same happens if the cluster is shrunk.
+        compute_names = [n[1] for n in information['compute']]
+        for node in cluster.compute_nodes:
+            if node.name not in compute_names:
+                cluster.remove_node(node)
 
         # fill the information of the nodes
         for node, cache in zip(cluster.frontend_nodes,
