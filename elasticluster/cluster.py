@@ -15,11 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from elasticluster.exceptions import TimeoutError
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
-
-import io
 import json
 import os
 import signal
@@ -29,6 +26,7 @@ import time
 import paramiko
 
 from elasticluster import log
+from elasticluster.exceptions import TimeoutError, ClusterNotFound
 
 
 class Cluster(object):
@@ -322,7 +320,7 @@ class ClusterStorage(object):
         db_path = self._get_json_path(cluster.name)
         self._clear_storage(db_path)
 
-        f = io.open(db_path, 'w')
+        f = open(db_path, 'w')
         f.write(unicode(db_json))
         f.close()
 
@@ -333,7 +331,9 @@ class ClusterStorage(object):
         """
         db_path = self._get_json_path(cluster.name)
 
-        f = io.open(db_path, 'r')
+        if not os.path.exists(db_path):
+            raise ClusterNotFound("Storage file %s not found" % db_path)
+        f = open(db_path, 'r')
         db_json = f.readline()
 
         information = json.loads(db_json)

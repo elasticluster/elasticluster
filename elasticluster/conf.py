@@ -16,16 +16,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from elasticluster.providers.setup_providers import AnsibleSetupProvider
-
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
+import ConfigParser
+
+from elasticluster import log
 from elasticluster.providers.cloud_providers import BotoCloudProvider
+from elasticluster.providers.setup_providers import AnsibleSetupProvider
 from elasticluster.helpers import Singleton
 from elasticluster.cluster import Node, ClusterStorage
-from elasticluster.exceptions import ConfigurationError
+from elasticluster.exceptions import ConfigurationError, ClusterNotFound
 from elasticluster.cluster import Cluster
-import ConfigParser
 
 
 class Configurator(object):
@@ -56,7 +57,12 @@ class Configurator(object):
         Creates a cluster with the needed information from the
         configuration.
         """
-        config = Configuration.Instance().read_cluster_section(name)
+        try:
+            config = Configuration.Instance().read_cluster_section(name)
+        except ConfigParser.NoSectionError:
+            log.info("Cluster `%s` not found in configuration file.", name)
+            raise ConfigurationError(
+                "Cluster `%s` not found in configuration file." % name)
 
         return Cluster(name,
                        config['cloud'],

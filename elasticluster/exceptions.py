@@ -36,3 +36,7 @@ class InstanceError(Exception):
 
 class TimeoutError(Exception):
     pass
+
+
+class ClusterNotFound(Exception):
+    pass

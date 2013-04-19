@@ -17,10 +17,12 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
+import sys
+
 from elasticluster.conf import Configurator
 from elasticluster.conf import Configuration
 from elasticluster import log
-
+from elasticluster.exceptions import ClusterNotFound, ConfigurationError
 
 class AbstractCommand():
     """
@@ -179,8 +181,13 @@ class ListNodes(AbstractCommand):
         """
         Configuration.Instance().cluster_name = self.params.cluster
         cluster_name = self.params.cluster
-        cluster = Configurator().create_cluster(cluster_name)
-        cluster.load_from_storage()
+        try:
+            cluster = Configurator().create_cluster(cluster_name)
+            cluster.load_from_storage()
+        except (ClusterNotFound, ConfigurationError), ex:
+            log.error("Listing nodes from cluster %s: %s\n" %
+                      (cluster_name, ex))
+            return
 
         print "The following nodes are in your cluster:"
         print "\nfrontend nodes:"
