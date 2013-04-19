@@ -36,6 +36,8 @@ from elasticluster.conf import Configuration
 
 class ElasticCloud(cli.app.CommandLineApp):
 
+    name = "elasticluster"
+
     def setup(self):
         cli.app.CommandLineApp.setup(self)
 
@@ -50,7 +52,8 @@ class ElasticCloud(cli.app.CommandLineApp):
                     ]
 
         # global parameters
-        self.add_param('-v', '--verbose', action='count', default=0)
+        self.add_param('-v', '--verbose', action='count', default=0,
+                       help="Increase verbosity.")
         self.add_param('-s', '--storage',
                        help="storage folder, default is "
                        "%s" % AbstractCommand.default_storage_dir,
@@ -60,8 +63,10 @@ class ElasticCloud(cli.app.CommandLineApp):
                        default=AbstractCommand.default_configuration_file)
 
         # to parse subcommands
-        self.subparsers = self.argparser.add_subparsers(title="subcommands",
-                                                        help="Sub commands")
+        self.subparsers = self.argparser.add_subparsers(
+            title="COMMANDS",
+            help="Available commands. Run `elasticluster cmd --help`"
+            "to have information on command `cmd`.")
 
         for command in commands:
             if isinstance(command, AbstractCommand):
@@ -69,11 +74,12 @@ class ElasticCloud(cli.app.CommandLineApp):
 
     def main(self):
         """
-        This is the main entry point of the elasticluster.  First the
-        central configuration is created, which can be altered through
-        the command line interface. Then the given command from the
-        command line interface is called.
+        Elasticluster will start, stop, grow, shrink clusters on an EC2 cloud.
         """
+        # This is the main entry point of the elasticluster.  First the
+        # central configuration is created, which can be altered through
+        # the command line interface. Then the given command from the
+        # command line interface is called.
 
         # Set verbosity level
         loglevel = max(1, logging.WARNING - 10 * max(0, self.params.verbose))

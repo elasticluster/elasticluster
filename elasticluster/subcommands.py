@@ -76,7 +76,8 @@ class Start(AbstractCommand):
         parser = subparsers.add_parser("start")
         parser.set_defaults(func=self.execute)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0)
+        parser.add_argument('-v', '--verbose', action='count', default=0,
+                            help="Increase verbosity.")
 
     def execute(self):
         """
@@ -110,7 +111,8 @@ class Stop(AbstractCommand):
         parser = subparsers.add_parser("stop")
         parser.set_defaults(func=self.execute)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0)
+        parser.add_argument('-v', '--verbose', action='count', default=0,
+                            help="Increase verbosity.")
 
     def execute(self):
         """
@@ -130,7 +132,8 @@ class ListClusters(AbstractCommand):
     def setup(self, subparsers):
         parser = subparsers.add_parser("list")
         parser.set_defaults(func=self.execute)
-        parser.add_argument('-v', '--verbose', action='count', default=0)
+        parser.add_argument('-v', '--verbose', action='count', default=0,
+                            help="Increase verbosity.")
 
     def execute(self):
         storage = Configurator().create_cluster_storage()
@@ -156,7 +159,13 @@ class ListNodes(AbstractCommand):
         parser = subparsers.add_parser("list-nodes")
         parser.set_defaults(func=self.execute)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0)
+        parser.add_argument('-v', '--verbose', action='count', default=0,
+                            help="Increase verbosity.")
+        parser.add_argument(
+            '-u', '--update', action='store_true', default=False,
+            help="By default `elasticluster list-nodes` will not contact the "
+            "EC2 provider to get up-to-date information, unless `-u` option "
+            "is given.")
 
     def execute(self):
         """
@@ -183,7 +192,8 @@ class SetupCluster(AbstractCommand):
         parser = subparsers.add_parser("setup")
         parser.set_defaults(func=self.execute)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0)
+        parser.add_argument('-v', '--verbose', action='count', default=0,
+                            help="Increase verbosity.")
 
     def execute(self):
         Configuration.Instance().cluster_name = self.params.cluster
