@@ -229,4 +229,6 @@ class SetupCluster(AbstractCommand):
                       (cluster_name, ex))
             return
 
+        sys.stdout.write("Running setup provider for cluster `%s`\n" % cluster_name)
         cluster.setup()
+        sys.stdout.write("Done.\n")

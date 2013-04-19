@@ -19,6 +19,5 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 
 import logging
-import logging.config
 logging.basicConfig()
 log = logging.getLogger("gc3.elasticluster")

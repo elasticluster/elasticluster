@@ -22,12 +22,50 @@ from elasticluster.cluster import Node
 import elasticluster
 
 from ansible.playbook import PlayBook
-from ansible import callbacks
 import ansible.constants as ansible_constants
 from ansible.errors import AnsibleError
 
 import os
 from tempfile import NamedTemporaryFile
+
+import ansible.callbacks
+from ansible.callbacks import call_callback_module
+
+
+class ElasticlusterPbCallbacks(ansible.callbacks.PlaybookCallbacks):
+    def on_no_hosts_matched(self):
+        call_callback_module('playbook_on_no_hosts_matched')
+
+    def on_no_hosts_remaining(self):
+        call_callback_module('playbook_on_no_hosts_remaining')
+
+    def on_task_start(self, name, is_conditional):
+        if hasattr(self, 'step') and self.step:
+            resp = raw_input('Perform task: %s (y/n/c): ' % name)
+            if resp.lower() in ['y','yes']:
+                self.skip_task = False
+            elif resp.lower() in ['c', 'continue']:
+                self.skip_task = False
+                self.step = False
+            else:
+                self.skip_task = True
+        
+        call_callback_module('playbook_on_task_start', name, is_conditional)
+
+    def on_setup(self):
+        call_callback_module('playbook_on_setup')
+
+    def on_import_for_host(self, host, imported_file):
+        call_callback_module('playbook_on_import_for_host', host, imported_file)
+
+    def on_not_import_for_host(self, host, missing_file):
+        call_callback_module('playbook_on_not_import_for_host', host, missing_file)
+
+    def on_play_start(self, pattern):
+        call_callback_module('playbook_on_play_start', pattern)
+
+    def on_stats(self, stats):
+        call_callback_module('playbook_on_stats', stats)
 
 
 class AnsibleSetupProvider(AbstractSetupProvider):
@@ -95,18 +133,14 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             raise AnsibleError(
                 "the playbook `%s` is not a file" % self._playbook_path)
 
-        stats = callbacks.AggregateStats()
-        playbook_cb = callbacks.PlaybookCallbacks(verbose=0)
-        runner_cb = callbacks.PlaybookRunnerCallbacks(stats, verbose=0)
+        stats = ansible.callbacks.AggregateStats()
+        playbook_cb = ElasticlusterPbCallbacks(verbose=0)
+        runner_cb = ansible.callbacks.DefaultRunnerCallbacks()
 
-        # ANTONIO: This monkey patching almost works: instead of the
-        # standard stuff only newlines are printed. This is not good
-        # enough though...
-        # def noop(*args, **kw):
-        #     return ''
-        # import ansible
-        # ansible.callbacks.banner = noop
-        # ansible.callbacks.stringc = noop
+        verbosity = max(0, 3 - elasticluster.log.level/10)
+        if verbosity > 0:
+            playbook_cb = ansible.callbacks.PlaybookCallbacks(verbose=verbosity)
+            runner_cb = ansible.callbacks.PlaybookRunnerCallbacks(stats, verbose=verbosity)
 
         pb = PlayBook(
             playbook=self._playbook_path,
