@@ -30,8 +30,10 @@ class AbstractCommand():
     order to be recognized by the arguments list and executed
     afterwards.
     """
-    default_configuration_file = os.expanduser("~/.elasticluster/config.cfg")
-    default_storage_dir = os.expanduser("~/.elasticluster/storage")
+    default_configuration_file = os.path.expanduser(
+        "~/.elasticluster/config.cfg")
+    default_storage_dir = os.path.expanduser(
+        "~/.elasticluster/storage")
 
     def __init__(self, params):
         """
@@ -74,6 +76,7 @@ class Start(AbstractCommand):
         parser = subparsers.add_parser("start")
         parser.set_defaults(func=self.execute)
         parser.add_argument('cluster', help='name of the cluster')
+        parser.add_argument('-v', '--verbose', action='count', default=0)
 
     def execute(self):
         """
@@ -107,6 +110,7 @@ class Stop(AbstractCommand):
         parser = subparsers.add_parser("stop")
         parser.set_defaults(func=self.execute)
         parser.add_argument('cluster', help='name of the cluster')
+        parser.add_argument('-v', '--verbose', action='count', default=0)
 
     def execute(self):
         """
@@ -126,6 +130,7 @@ class ListClusters(AbstractCommand):
     def setup(self, subparsers):
         parser = subparsers.add_parser("list")
         parser.set_defaults(func=self.execute)
+        parser.add_argument('-v', '--verbose', action='count', default=0)
 
     def execute(self):
         storage = Configurator().create_cluster_storage()
@@ -151,6 +156,7 @@ class ListNodes(AbstractCommand):
         parser = subparsers.add_parser("list-nodes")
         parser.set_defaults(func=self.execute)
         parser.add_argument('cluster', help='name of the cluster')
+        parser.add_argument('-v', '--verbose', action='count', default=0)
 
     def execute(self):
         """
@@ -177,6 +183,7 @@ class SetupCluster(AbstractCommand):
         parser = subparsers.add_parser("setup")
         parser.set_defaults(func=self.execute)
         parser.add_argument('cluster', help='name of the cluster')
+        parser.add_argument('-v', '--verbose', action='count', default=0)
 
     def execute(self):
         Configuration.Instance().cluster_name = self.params.cluster
