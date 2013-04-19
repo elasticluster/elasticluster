@@ -150,13 +150,14 @@ class Cluster(object):
                                 username=node.image_user,
                                 allow_agent=True,
                                 key_filename=node.user_key_private)
+                    log.debug("success!")
                     pending_nodes.remove(node)
                 except socket.error, ex:
                     log.debug("Host %s (%s) not reachable: %s.",
                               node.name, node.ip_public, ex)
                 except paramiko.SSHException, ex:
                     log.debug("Ignoring error %s connecting to %s",
-                              str(ex), self.node)
+                              str(ex), node.node)
         signal.alarm(0)
 
         # setup the cluster
