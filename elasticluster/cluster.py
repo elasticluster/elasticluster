@@ -140,13 +140,10 @@ class Cluster(object):
         signal.signal(signal.SIGALRM, timeout_handler)
         signal.alarm(Cluster.startup_timeout)
         pending_nodes = self.compute_nodes + self.frontend_nodes
-        ssh = paramiko.SSHClient()
-        ssh.load_system_host_keys()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
             while pending_nodes:
-                for node in pending_nodes:
+                for node in pending_nodes[:]:
                     if node.connect():
                         pending_nodes.remove(node)
                 time.sleep(5)
