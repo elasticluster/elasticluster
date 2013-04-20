@@ -17,19 +17,22 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
-from elasticluster.providers import AbstractSetupProvider
-from elasticluster.cluster import Node
-import elasticluster
+# system imports
+import logging
+import os
+import tempfile
 
+# external imports
 from ansible.playbook import PlayBook
 import ansible.constants as ansible_constants
 from ansible.errors import AnsibleError
-
-import os
-from tempfile import NamedTemporaryFile
-
 import ansible.callbacks
 from ansible.callbacks import call_callback_module
+
+# local imports
+from elasticluster.providers import AbstractSetupProvider
+from elasticluster.cluster import Node
+import elasticluster
 
 
 class ElasticlusterPbCallbacks(ansible.callbacks.PlaybookCallbacks):
@@ -49,7 +52,7 @@ class ElasticlusterPbCallbacks(ansible.callbacks.PlaybookCallbacks):
                 self.step = False
             else:
                 self.skip_task = True
-        
+
         call_callback_module('playbook_on_task_start', name, is_conditional)
 
     def on_setup(self):
@@ -114,10 +117,9 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         playbook_cb = ElasticlusterPbCallbacks(verbose=0)
         runner_cb = ansible.callbacks.DefaultRunnerCallbacks()
 
-        verbosity = max(0, 3 - elasticluster.log.level/10)
-        if verbosity > 0:
-            playbook_cb = ansible.callbacks.PlaybookCallbacks(verbose=verbosity)
-            runner_cb = ansible.callbacks.PlaybookRunnerCallbacks(stats, verbose=verbosity)
+        if elasticluster.log.level <= logging.INFO:
+            playbook_cb = ansible.callbacks.PlaybookCallbacks()
+            runner_cb = ansible.callbacks.PlaybookRunnerCallbacks(stats)
 
         pb = PlayBook(
             playbook=self._playbook_path,
@@ -169,7 +171,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         Builds the inventory for the given cluster and returns its path
         """
         inventory = dict()
-        
+
         for node in cluster.frontend_nodes:
             for group in self._frontend_groups:
                 if group not in inventory:
@@ -181,21 +183,22 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 if group not in inventory:
                     inventory[group] = []
                 inventory[group].append((node.name, node.ip_public))
-        
+
         if inventory:
             # create a temporary file to pass to ansible, since the
             # api is not stable yet...
-            inventory_file = NamedTemporaryFile(delete=False)
+            (fd, fname) = tempfile.mkstemp()
+            fd = os.fdopen(fd, 'w+')
             elasticluster.log.debug("Writing invenetory file `%s`",
-                                    inventory_file.name)
+                                    fname)
 
             for section, hosts in inventory.items():
-                inventory_file.write("\n["+section+"]\n")
+                fd.write("\n["+section+"]\n")
                 if hosts:
                     for host in hosts:
                         hostline = "%s ansible_ssh_host=%s\n" % host
-                        inventory_file.write(hostline)
+                        fd.write(hostline)
 
-            inventory_file.close()
+            fd.close()
 
-            return inventory_file.name
+            return fname
