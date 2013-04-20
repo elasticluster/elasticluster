@@ -22,7 +22,8 @@ from test import config_cluster_name, config_cloud_ec2_url,\
     config_cloud_ec2_region, config_cloud_ec2_access_key,\
     config_cloud_ec2_secret_key, config_login_user_key_private,\
     config_login_image_user, config_login_image_user_sudo,\
-    config_login_image_sudo, config_setup_playbook_path, config_cloud_name
+    config_login_image_sudo, config_setup_playbook_path, config_cloud_name,\
+    config_setup_frontend_groups, config_setup_compute_groups
 from elasticluster.providers.cloud_providers import BotoCloudProvider
 from elasticluster.providers.setup_providers import AnsibleSetupProvider
 from elasticluster.conf import Configurator
@@ -36,7 +37,7 @@ class TestCluster(unittest.TestCase):
 
     def test_init(self):
         cloud_provider = BotoCloudProvider(config_cloud_ec2_url, config_cloud_ec2_region, config_cloud_ec2_access_key, config_cloud_ec2_secret_key)
-        setup_provider = AnsibleSetupProvider(config_login_user_key_private, config_login_image_user, config_login_image_user_sudo, config_login_image_sudo, config_setup_playbook_path)
+        setup_provider = AnsibleSetupProvider(config_login_user_key_private, config_login_image_user, config_login_image_user_sudo, config_login_image_sudo, config_setup_playbook_path, config_setup_frontend_groups, config_setup_compute_groups)
         
         frontend_amount = 1
         compute_amount = 2
@@ -56,7 +57,7 @@ class TestCluster(unittest.TestCase):
 
     def test_add_node(self):
         cloud_provider = BotoCloudProvider(config_cloud_ec2_url, config_cloud_ec2_region, config_cloud_ec2_access_key, config_cloud_ec2_secret_key)
-        setup_provider = AnsibleSetupProvider(config_login_user_key_private, config_login_image_user, config_login_image_user_sudo, config_login_image_sudo, config_setup_playbook_path)
+        setup_provider = AnsibleSetupProvider(config_login_user_key_private, config_login_image_user, config_login_image_user_sudo, config_login_image_sudo, config_setup_playbook_path, config_setup_frontend_groups, config_setup_compute_groups)
         
         cluster = Cluster(config_cluster_name, config_cloud_name, cloud_provider, setup_provider, 1, 2, Configurator())
         
@@ -77,7 +78,7 @@ class TestCluster(unittest.TestCase):
 
     def test_remove_node(self):
         cloud_provider = BotoCloudProvider(config_cloud_ec2_url, config_cloud_ec2_region, config_cloud_ec2_access_key, config_cloud_ec2_secret_key)
-        setup_provider = AnsibleSetupProvider(config_login_user_key_private, config_login_image_user, config_login_image_user_sudo, config_login_image_sudo, config_setup_playbook_path)
+        setup_provider = AnsibleSetupProvider(config_login_user_key_private, config_login_image_user, config_login_image_user_sudo, config_login_image_sudo, config_setup_playbook_path, config_setup_frontend_groups, config_setup_compute_groups)
         
         cluster = Cluster(config_cluster_name, config_cloud_name, cloud_provider, setup_provider, 1, 2, Configurator())
         

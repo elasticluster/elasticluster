@@ -44,6 +44,8 @@ config_cloud_ec2_region = "nova"
 config_setup_name = "test"
 config_setup_provider = "ansible"
 config_setup_playbook_path = "~/.elasticluster/playbook"
+config_setup_frontend_groups = "slurm_master"
+config_setup_compute_groups = "slurm_clients"
 
 config_login_name = "test"
 config_login_image_user = "test"
@@ -61,13 +63,11 @@ config_cluster_compute = "2"
 config_cluster_login = "test"
 
 config_frontend_image = "Ubuntu"
-config_frontend_setup_classes = "slurm, ganglia"
 config_frontend_security_group = "all"
 config_frontend_flavor = "m1.tiny"
 config_frontend_image_userdata = "none"
 
 config_compute_image = "Ubuntu"
-config_compute_setup_classes = "slurm"
 config_compute_security_group = "all"
 config_compute_flavor = "m1.tiny"
 config_compute_image_userdata = "none"
@@ -95,7 +95,7 @@ def setup():
                    [("provider", config_cloud_provider), ("ec2_url", config_cloud_ec2_url),("ec2_access_key", config_cloud_ec2_access_key), ("ec2_secret_key", config_cloud_ec2_secret_key), ("ec2_region", config_cloud_ec2_region)],
                    
                    config_section_setup:
-                   [("provider", config_setup_provider), ("playbook_path", config_setup_playbook_path)],
+                   [("provider", config_setup_provider), ("playbook_path", config_setup_playbook_path), ("frontend_groups", config_setup_frontend_groups), ("compute_groups", config_setup_compute_groups)],
                    
                    config_section_login:
                    [("image_user", config_login_image_user), ("image_user_sudo", config_login_image_user_sudo), ("image_sudo", config_login_image_sudo), ("user_key_name", config_login_user_key_name), ("user_key_private", config_login_user_key_private), ("user_key_public", config_login_user_key_public)],
@@ -104,10 +104,10 @@ def setup():
                    [("cloud", config_cluster_cloud), ("setup_provider", config_cluster_setup_provider), ("frontend", config_cluster_frontend), ("compute", config_cluster_compute), ("login", config_cluster_login)],
                    
                    config_section_frontend:
-                   [("image", config_frontend_image), ("setup_classes", config_frontend_setup_classes), ("security_group", config_frontend_security_group), ("flavor", config_frontend_flavor), ("image_userdata", config_frontend_image_userdata)],
+                   [("image", config_frontend_image), ("security_group", config_frontend_security_group), ("flavor", config_frontend_flavor), ("image_userdata", config_frontend_image_userdata)],
                    
                    config_section_compute:
-                   [("image", config_compute_image), ("setup_classes", config_compute_setup_classes), ("security_group", config_compute_security_group), ("flavor", config_compute_flavor), ("image_userdata", config_compute_image_userdata)]
+                   [("image", config_compute_image), ("security_group", config_compute_security_group), ("flavor", config_compute_flavor), ("image_userdata", config_compute_image_userdata)]
                    }
         if name in content:
             return content[name]

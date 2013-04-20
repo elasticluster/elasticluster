@@ -87,7 +87,7 @@ class Configurator(object):
         return Node(name, node_type, cloud_provider, config['user_key_public'],
                     config["user_key_private"], config['user_key_name'],
                     config['image_user'], config['security_group'],
-                    config['image'], config['flavor'], config['setup_classes'],
+                    config['image'], config['flavor'],
                     config.get('image_userdata', ''))
 
     def create_cluster_storage(self):
@@ -103,7 +103,8 @@ class Configurator(object):
 
         return provider(config['user_key_private'], config['image_user'],
                         config['image_user_sudo'], config['image_sudo'],
-                        config['playbook_path'])
+                        config['playbook_path'], config['frontend_groups'],
+                        config['compute_groups'])
 
 
 class QuotelessConfigParser(ConfigParser.RawConfigParser):
@@ -113,6 +114,17 @@ class QuotelessConfigParser(ConfigParser.RawConfigParser):
     def get(self, section, option):
         val = ConfigParser.RawConfigParser.get(self, section, option)
         return val.strip('"').strip("'")
+    
+    def items(self, section):
+        items = ConfigParser.RawConfigParser.items(self, section)
+        items_stripped = []
+        for i in items:
+            l = list(i)
+            if l[1]:
+                l[1] = l[1].strip("'").strip('"')
+            items_stripped.append(tuple(l))
+        
+        return items_stripped
 
 
 @Singleton
@@ -130,8 +142,9 @@ class Configuration(object):
     mandatory_cluster_options = ("cloud", "frontend", "compute",
                                  "setup_provider", "login")
     mandatory_node_options = ("image", "security_group", "image_userdata",
-                              "flavor", "setup_classes")
-    mandatory_setup_options = ("provider", "playbook_path")
+                              "flavor")
+    mandatory_setup_options = ("provider", "playbook_path", "frontend_groups",
+                               "compute_groups")
     mandatory_login_options = ("image_user", "image_user_sudo", "image_sudo",
                                "user_key_name", "user_key_private",
                                "user_key_public")
@@ -225,7 +238,11 @@ class Configuration(object):
         config = self._read_section("setup/"+name)
         self._check_mandatory_options(
             Configuration.Instance().mandatory_setup_options, config)
-
+        
+        config["playbook_path"] = os.path.expanduser(
+                                    os.path.expanduser(config["playbook_path"])
+                                    )
+        
         login_name = self.read_cluster_section(cluster_name)["login"]
 
         config_login = self.read_login_section(login_name)
@@ -241,16 +258,14 @@ class Configuration(object):
         self._check_mandatory_options(
             Configuration.Instance().mandatory_login_options, config)
         config["user_key_private"] = os.path.expanduser(
-            config["user_key_private"])
+            os.path.expandvars(config["user_key_private"]))
         config["user_key_public"] = os.path.expanduser(
-            config["user_key_public"])
+            os.path.expandvars(config["user_key_public"]))
         
         if (not os.path.exists(config["user_key_private"]) or
             not os.path.exists(config["user_key_public"])):
             log.warning("The key files don't exist. Please check your\
                 configuration file `user_key_public`, `user_key_private`.")
-            
-        
 
         return config
 

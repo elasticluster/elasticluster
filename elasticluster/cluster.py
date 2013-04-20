@@ -215,7 +215,7 @@ class Node(object):
 
     def __init__(self, name, node_type, cloud_provider, user_key_public,
                  user_key_private, user_key_name, image_user, security_group,
-                 image, flavor, setup_classes, image_userdata=None):
+                 image, flavor, image_userdata=None):
         self.name = name
         self.type = node_type
         self._cloud_provider = cloud_provider
@@ -227,7 +227,6 @@ class Node(object):
         self.image = image
         self.image_userdata = image_userdata
         self.flavor = flavor
-        self.setup_classes = setup_classes
 
         self.instance_id = None
         self.ip_public = None
