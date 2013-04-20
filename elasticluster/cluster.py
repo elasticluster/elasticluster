@@ -293,7 +293,7 @@ class Node(object):
         """
         Updates the ips of the node through the cloud provider.
         """
-        if not self.ip_private and not self.ip_public:
+        if not self.ip_private or not self.ip_public:
             private, public = self._cloud_provider.get_ips(self.instance_id)
             self.ip_public = public
             self.ip_private = private
