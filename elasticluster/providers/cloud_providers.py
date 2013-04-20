@@ -58,6 +58,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         self._connection = None
         self._region = None
         self._instances = {}
+        self._cached_instances = []
         self._images = None
 
     def _connect(self):
@@ -117,12 +118,12 @@ class BotoCloudProvider(AbstractCloudProvider):
         """
         Terminates the given instance.
         """
-        instance = self._instances[instance_id]
+        instance = self._load_instance(instance_id)
         instance.terminate()
 
     def get_ips(self, instance_id):
         self._load_instance(instance_id)
-        instance = self._instances[instance_id]
+        instance = self._load_instance(instance_id)
 
         return instance.private_ip_address, instance.ip_address
 
@@ -132,7 +133,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         """
         self._load_instance(instance_id)
 
-        instance = self._instances[instance_id]
+        instance = self._load_instance(instance_id)
 
         if instance.update() == "running":
             return True
@@ -147,16 +148,27 @@ class BotoCloudProvider(AbstractCloudProvider):
         be found in the local cache or in the cloud.
         """
         connection = self._connect()
-        if instance_id not in self._instances:
+        if instance_id in self._instances:
+            return self._instances[instance_id]
+
+        # Instance not in the internal dictionary.
+        # First, check the internal cache:
+        if instance_id not in [i.id for i in self._cached_instances]:
+            # Refresh the cache, just in case
+            self._cached_instances = []
             reservations = connection.get_all_instances()
             for res in reservations:
-                for instance in res.instances:
-                    if instance.id == instance_id:
-                        self._instances[instance_id] = instance
+                self._cached_instances.extend(res.instances)
 
-        if instance_id not in self._instances:
-            raise InstanceError("the given instance `%s` was not found "
-                                "on the coud" % instance_id)
+        for inst in self._cached_instances:
+            if inst.id == instance_id:
+                self._instances[instance_id] = inst
+                return inst
+
+        # If we reached this point, the instance was not found neither
+        # in the cache or on the website.
+        raise InstanceError("the given instance `%s` was not found "
+                            "on the coud" % instance_id)
 
     def _check_keypair(self, name, path):
         connection = self._connect()
