@@ -18,6 +18,7 @@
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 import elasticluster
+from elasticluster import log
 from elasticluster.providers import AbstractCloudProvider
 from boto import ec2
 import boto
@@ -168,38 +169,18 @@ class BotoCloudProvider(AbstractCloudProvider):
             # found, and the name as well.  something on the lien
             # "Keypair `%s` not found on resource `%s`. Creating a new
             # one" % (name, ec2endpoint)
-            elasticluster.log.warning(
-                "keypair not found on cloud, creating a new one")
+            log.warning(
+                "Keypair `%s` not found on resource `%s`, Creating a new one",
+                (name, self._url))
             with open(os.path.expanduser(path)) as f:
                 key_material = f.read()
                 try:
+                    # TODO check if given key is a public key file
                     connection.import_key_pair(name, key_material)
                 except Exception, ex:
-                    # ANTONIO: This is probably an error:
-                    #
-                    # * If you cannot import a *new* key, there is no
-                    #   key to delete.
-                    #
-                    # * However, if you get an error because the key
-                    #   already exists (shouldn't but could happen,
-                    #   because of a race condition) you are deleting
-                    #   a valid key.
-                    #
-                    # (I know, the example I gave you have the same bug :))
-                    #
-                    # Moreover: one of the error you can get here is
-                    # that the configuration file defines a *private*
-                    # key, while you want to upload a public key. You
-                    # should add some check (sooner or later) to work
-                    # around this kind of mistake, knowing that
-                    # usually the public key has the same name of the
-                    # private key but with extension `.pub`.
-                    #
-                    # One more thing: change the name of the
-                    # configuration file meaningful: `user_key` could
-                    # either be the private or the public key. Call it
-                    # `public_key` or `private_key`.
-                    connection.delete_key_pair(name)
+                    log.error(
+                        "Could not import key `%s` with name `%s` to `%s`",
+                        (name, path, self._url))
                     raise KeypairError(
                         "could not create keypair `%s`: %s" % (name, ex))
 

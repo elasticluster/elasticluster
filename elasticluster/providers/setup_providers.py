@@ -72,40 +72,17 @@ class AnsibleSetupProvider(AbstractSetupProvider):
     """
     """
 
-    # defines the general sections for an ansible inventory file
-    # ANTONIO: this should stay on a configuration file.
-    _inventory_definitions = {
-        "slurm": {
-                    "frontend": ["slurm_master"],
-                    "compute": ["slurm_clients"],
-                  },
-        "ganglia": {
-                    "frontend": ["ganglia_master", "ganglia_monitor"],
-                    "compute": ["ganglia_monitor"],
-                    },
-        "pbs": {
-                    "frontend": ["pbs_master", "maui_master"],
-                    "compute": ["pbs_clients"],
-                },
-        "gridengine": {
-                    "frontend": ["gridengine_master"],
-                    "compute": ["gridengine_clients"],
-                       },
-        "jenkins": {
-                    "frontend": ["jenkins"],
-                    "compute": ["jenkins"],
-                    },
-    }
-
     def __init__(self, private_key_file, remote_user,
-                 sudo_user, sudo, playbook_path):
+                 sudo_user, sudo, playbook_path, frontend_groups,
+                 compute_groups):
         self._private_key_file = os.path.expanduser(
             os.path.expandvars(private_key_file))
         self._remote_user = remote_user
         self._sudo_user = sudo_user
         self._sudo = sudo
-        self._playbook_path = os.path.expanduser(
-            os.path.expandvars(playbook_path))
+        self._playbook_path = playbook_path
+        self._frontend_groups = [g.strip() for g in frontend_groups.split(',')]
+        self._compute_groups = [g.strip() for g in compute_groups.split(",")]
 
         ansible_constants.DEFAULT_PRIVATE_KEY_FILE = self._private_key_file
         ansible_constants.DEFAULT_REMOTE_USER = self._remote_user
@@ -116,7 +93,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
 
         # check paths
         if not inventory_path:
-            # ANTONIO: No inventory file has been created, maybe an
+            # No inventory file has been created, maybe an
             # invalid calss has been specified in config file? Or none?
             # assume it is fine.
             elasticluster.log.info("No setup required for this cluster.")
@@ -161,6 +138,9 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 "could not execute ansible playbooks. message=`%s`", str(e))
             return False
 
+        # delete inventory file
+        os.unlink(inventory_path)
+
         # Check ansible status.
         cluster_failures = False
         for host, hoststatus in status.items():
@@ -189,44 +169,22 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         Builds the inventory for the given cluster and returns its path
         """
         inventory = dict()
+        
+        for node in cluster.frontend_nodes:
+            for group in self._frontend_groups:
+                if group not in inventory:
+                    inventory[group] = []
+                inventory[group].append((node.name, node.ip_public))
 
-        for node in cluster.frontend_nodes + cluster.compute_nodes:
-            # get all configured classes for this node
-            classes = [x.strip() for x in node.setup_classes.split(',')]
-
-            # build inventory dictionary
-
-            # ANTONIO: I'm not even looking at this. You have 3 nested
-            # loop and 3 nested if! There has to be a better way to
-            # write it!
-            for c in classes:
-                if c in AnsibleSetupProvider._inventory_definitions:
-                    if node.type == Node.frontend_type:
-                        sections = AnsibleSetupProvider._inventory_definitions[c]["frontend"]
-                        for section in sections:
-                            if section not in inventory:
-                                inventory[section] = []
-                            inventory[section].append((node.name, node.ip_public))
-                    elif node.type == Node.compute_type:
-                        sections = AnsibleSetupProvider._inventory_definitions[c]["compute"]
-                        for section in sections:
-                            if section not in inventory:
-                                inventory[section] = []
-                            inventory[section].append((node.name, node.ip_public))
-                else:
-                    if c:
-                        elasticluster.log.warning(
-                            "Invalid setup class `%s` for cluster `%s` in "
-                            "configuration file.", c, cluster.name)
-                    else:
-                        elasticluster.log.info(
-                            "Empty setup class defined for cluster %s",
-                            cluster.name)
+        for node in cluster.compute_nodes:
+            for group in self._compute_groups:
+                if group not in inventory:
+                    inventory[group] = []
+                inventory[group].append((node.name, node.ip_public))
+        
         if inventory:
             # create a temporary file to pass to ansible, since the
-            # api is not stable yet...  TODO: create inventory file in
-            # the same directory of the "group_vars" and "host_vars"
-            # directories
+            # api is not stable yet...
             inventory_file = NamedTemporaryFile(delete=False)
             elasticluster.log.debug("Writing invenetory file `%s`",
                                     inventory_file.name)

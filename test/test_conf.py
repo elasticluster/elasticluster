@@ -35,13 +35,14 @@ from test import config_cloud_ec2_url, config_cloud_provider,\
     config_login_user_key_public, config_login_user_key_name,\
     config_login_image_user, config_frontend_security_group,\
     config_frontend_image, config_frontend_image_userdata,\
-    config_frontend_flavor, config_frontend_setup_classes,\
+    config_frontend_flavor,\
     config_compute_security_group, config_compute_image,\
     config_compute_image_userdata, config_compute_flavor,\
-    config_compute_setup_classes, config_storage_path, config_setup_name,\
+    config_storage_path, config_setup_name,\
     config_cluster_setup_provider, config_cluster_login, config_login_name,\
     config_login_image_user_sudo, config_login_image_sudo,\
-    config_login_user_key_private
+    config_login_user_key_private, config_setup_frontend_groups,\
+    config_setup_compute_groups
     
 
 class TestConfigurator(unittest.TestCase):
@@ -88,7 +89,6 @@ class TestConfigurator(unittest.TestCase):
         assert node_frontend.image == config_frontend_image
         assert node_frontend.image_userdata == config_frontend_image_userdata
         assert node_frontend.flavor == config_frontend_flavor
-        assert node_frontend.setup_classes == config_frontend_setup_classes
         
         node_compute = configurator.create_node(config_cluster_name, Node.compute_type, cloud_provider, "node001")
         assert node_compute
@@ -103,7 +103,6 @@ class TestConfigurator(unittest.TestCase):
         assert node_compute.image == config_compute_image
         assert node_compute.image_userdata == config_compute_image_userdata
         assert node_compute.flavor == config_compute_flavor
-        assert node_compute.setup_classes == config_compute_setup_classes
         
     def test_create_cluster_storage(self):
         configurator = Configurator()
@@ -142,13 +141,11 @@ class TestConfiguration(unittest.TestCase):
         
     def test_read_node_section(self):
         node_frontend = Configuration.Instance().read_node_section(config_cluster_name, Node.frontend_type)
-        assert node_frontend["setup_classes"] == config_frontend_setup_classes
         assert node_frontend["security_group"] == config_frontend_security_group
         assert node_frontend["image"] == config_frontend_image
         assert node_frontend["flavor"] == config_frontend_flavor
         
         node_compute = Configuration.Instance().read_node_section(config_cluster_name, Node.compute_type)
-        assert node_compute["setup_classes"] == config_compute_setup_classes
         assert node_compute["security_group"] == config_compute_security_group
         assert node_compute["image"] == config_compute_image
         assert node_compute["flavor"] == config_compute_flavor
@@ -166,7 +163,9 @@ class TestConfiguration(unittest.TestCase):
     def test_read_setup_section(self):
         setup = Configuration.Instance().read_setup_section(config_setup_name, config_cluster_name)
         assert setup["provider"] == config_setup_provider
-        assert setup["playbook_path"] == config_setup_playbook_path
+        assert setup["playbook_path"] == os.path.expanduser(os.path.expandvars(config_setup_playbook_path))
+        assert setup["frontend_groups"] == config_setup_frontend_groups
+        assert setup["compute_groups"] == config_setup_compute_groups
         
         
         
