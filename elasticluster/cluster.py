@@ -184,6 +184,10 @@ class Cluster(object):
 
         return ret
 
+    def update(self):
+        for node in self.compute_nodes + self.frontend_nodes:
+            node.update_ips()
+        self._storage.dump_cluster(self)
 
 class Node(object):
     """
