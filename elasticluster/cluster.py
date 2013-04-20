@@ -165,23 +165,6 @@ class Cluster(object):
             node.stop()
         self._storage.delete_cluster(self.name)
 
-    def load_from_storage(self):
-        """
-        Fills the cluster with the stored informations such as
-        instance ids, so its possible to resume operations on the
-        cloud.
-        """
-        self._storage.load_cluster(self)
-
-        for n in self.frontend_nodes + self.compute_nodes:
-            if not n.is_alive():
-                # TODO: this is very dangerous..., start a new
-                # instance at least
-                log.error(
-                    "instance `%s` with name `%s` is not correclty running "
-                    "anymore, terminating it.", n.instance_id, n.name)
-                n.stop()
-
     def setup(self):
         try:
             # setup the cluster using the setup provider
