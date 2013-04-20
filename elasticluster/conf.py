@@ -59,10 +59,12 @@ class Configurator(object):
         configuration.
         """
         try:
-            config = Configuration.Instance().read_cluster_section(cluster_template)
+            config = Configuration.Instance().read_cluster_section(
+                cluster_template)
         except ConfigParser.NoSectionError:
             raise ConfigurationError(
-                "Cluster `%s` not found in configuration file." % cluster_template)
+                "Cluster `%s` not found in configuration file."
+                "" % cluster_template)
         config['name'] = cluster_template
 
         # Update with extra conf
@@ -82,7 +84,8 @@ class Configurator(object):
         storage = self.create_cluster_storage()
         information = storage.load_cluster(cluster_name)
 
-        cluster = Configurator().create_cluster(information['template'], name=information['name'])
+        cluster = Configurator().create_cluster(
+            information['template'], name=information['name'])
 
         # Clear frontend and compute nodes
         cluster.compute_nodes = []
@@ -101,7 +104,7 @@ class Configurator(object):
             node.ip_private = compute.get('ip_private')
 
         return cluster
-    
+
     def create_node(self, cluster_name, node_type, cloud_provider, name):
         """
         Creates a node with the needed information from the
@@ -142,7 +145,7 @@ class QuotelessConfigParser(ConfigParser.RawConfigParser):
     def get(self, section, option):
         val = ConfigParser.RawConfigParser.get(self, section, option)
         return val.strip('"').strip("'")
-    
+
     def items(self, section):
         items = ConfigParser.RawConfigParser.items(self, section)
         items_stripped = []
@@ -151,7 +154,7 @@ class QuotelessConfigParser(ConfigParser.RawConfigParser):
             if l[1]:
                 l[1] = l[1].strip("'").strip('"')
             items_stripped.append(tuple(l))
-        
+
         return items_stripped
 
 
@@ -266,11 +269,10 @@ class Configuration(object):
         config = self._read_section("setup/"+name)
         self._check_mandatory_options(
             Configuration.Instance().mandatory_setup_options, config)
-        
+
         config["playbook_path"] = os.path.expanduser(
-                                    os.path.expanduser(config["playbook_path"])
-                                    )
-        
+            os.path.expanduser(config["playbook_path"]))
+
         login_name = self.read_cluster_section(cluster_name)["login"]
 
         config_login = self.read_login_section(login_name)
@@ -289,11 +291,12 @@ class Configuration(object):
             os.path.expandvars(config["user_key_private"]))
         config["user_key_public"] = os.path.expanduser(
             os.path.expandvars(config["user_key_public"]))
-        
+
         if (not os.path.exists(config["user_key_private"]) or
-            not os.path.exists(config["user_key_public"])):
-            log.warning("The key files don't exist. Please check your\
-                configuration file `user_key_public`, `user_key_private`.")
+                not os.path.exists(config["user_key_public"])):
+            log.warning("The key files don't exist. Please check your "
+                        "configuration file `user_key_public`, "
+                        "`user_key_private`.")
 
         return config
 

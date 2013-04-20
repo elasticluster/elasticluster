@@ -28,6 +28,7 @@ import paramiko
 from elasticluster import log
 from elasticluster.exceptions import TimeoutError, ClusterNotFound
 
+
 class Cluster(object):
     """
     Handles all cluster related functionality such as start, setup,
@@ -70,7 +71,8 @@ class Cluster(object):
             elif node_type == Node.compute_type:
                 name = "compute" + str(len(self.compute_nodes) + 1).zfill(3)
             else:
-                log.warning("Invalid node type %s given. Unable to add node" % node_type)
+                log.warning("Invalid node type %s given. "
+                            "Unable to add node" % node_type)
                 return
 
         node = self._configurator.create_node(self.template, node_type,
@@ -188,6 +190,7 @@ class Cluster(object):
         for node in self.compute_nodes + self.frontend_nodes:
             node.update_ips()
         self._storage.dump_cluster(self)
+
 
 class Node(object):
     """

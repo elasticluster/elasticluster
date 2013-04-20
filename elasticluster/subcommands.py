@@ -103,8 +103,10 @@ class Start(AbstractCommand):
                             "configuration stanza [cluster/<name>]")
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
-        parser.add_argument('-n', '--name', dest='cluster_name', help='Name of the cluster.')
-        parser.add_argument('-c', '--compute-nodes', help='Number of compute nodes.')
+        parser.add_argument('-n', '--name', dest='cluster_name',
+                            help='Name of the cluster.')
+        parser.add_argument('-c', '--compute-nodes',
+                            help='Number of compute nodes.')
 
     def pre_run(self):
         if self.params.compute_nodes:
@@ -122,7 +124,7 @@ class Start(AbstractCommand):
         try:
             cluster = Configurator().load_cluster(self.params.cluster)
         except ClusterNotFound, ex:
-            cluster_template = self.params.cluster        
+            cluster_template = self.params.cluster
             extra_conf = dict()
             if self.params.compute_nodes:
                 extra_conf['compute'] = self.params.compute_nodes
@@ -131,7 +133,8 @@ class Start(AbstractCommand):
                 extra_conf['name'] = self.params.cluster_name
 
             try:
-                cluster = Configurator().create_cluster(cluster_template, **extra_conf)
+                cluster = Configurator().create_cluster(
+                    cluster_template, **extra_conf)
             except ConfigurationError, ex:
                 log.error("Cluster `%s` not found in configuration file." %
                           cluster_template)
@@ -179,6 +182,7 @@ class Stop(AbstractCommand):
         print("Destroying cluster `%s`" % cluster_name)
         cluster.stop()
 
+
 class ResizeCluster(AbstractCommand):
     """
     Resize the cluster by adding or removing
@@ -224,14 +228,14 @@ class ResizeCluster(AbstractCommand):
                 self.params.nodes_to_add = N - nnodes
 
         if self.params.nodes_to_add:
-            print("Adding %d nodes to the cluster" \
-                % self.params.nodes_to_add)
+            print("Adding %d nodes to the cluster"
+                  "" % self.params.nodes_to_add)
         for i in range(self.params.nodes_to_add):
             cluster.add_node('compute')
 
         if self.params.nodes_to_remove:
-            print("Removing %d nodes from the cluster." \
-                % self.params.nodes_to_remove)
+            print("Removing %d nodes from the cluster."
+                  "" % self.params.nodes_to_remove)
         for i in range(self.params.nodes_to_remove):
             node = cluster.compute_nodes.pop()
             if node in cluster.compute_nodes:
@@ -248,7 +252,7 @@ To login on the frontend node, run the command:
 
     ssh %s@%s -i %s
 """ % (frontend.image_user, frontend.ip_public, frontend.user_key_private))
- 
+
 
 class ListClusters(AbstractCommand):
     """

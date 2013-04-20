@@ -45,7 +45,7 @@ class ElasticlusterPbCallbacks(ansible.callbacks.PlaybookCallbacks):
     def on_task_start(self, name, is_conditional):
         if hasattr(self, 'step') and self.step:
             resp = raw_input('Perform task: %s (y/n/c): ' % name)
-            if resp.lower() in ['y','yes']:
+            if resp.lower() in ['y', 'yes']:
                 self.skip_task = False
             elif resp.lower() in ['c', 'continue']:
                 self.skip_task = False
@@ -59,10 +59,12 @@ class ElasticlusterPbCallbacks(ansible.callbacks.PlaybookCallbacks):
         call_callback_module('playbook_on_setup')
 
     def on_import_for_host(self, host, imported_file):
-        call_callback_module('playbook_on_import_for_host', host, imported_file)
+        call_callback_module('playbook_on_import_for_host',
+                             host, imported_file)
 
     def on_not_import_for_host(self, host, missing_file):
-        call_callback_module('playbook_on_not_import_for_host', host, missing_file)
+        call_callback_module('playbook_on_not_import_for_host',
+                             host, missing_file)
 
     def on_play_start(self, pattern):
         call_callback_module('playbook_on_play_start', pattern)
