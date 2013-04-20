@@ -147,33 +147,16 @@ class Cluster(object):
         try:
             while pending_nodes:
                 for node in pending_nodes:
-                    try:
-                        log.debug("Trying to connect to host %s (%s)",
-                                  node.name, node.ip_public)
-    
-                        ssh.connect(node.ip_public,
-                                    username=node.image_user,
-                                    allow_agent=True,
-                                    key_filename=node.user_key_private)
-                        log.debug("success!")
+                    if node.connect():
                         pending_nodes.remove(node)
-                    except socket.error, ex:
-                        log.debug("Host %s (%s) not reachable: %s.",
-                                  node.name, node.ip_public, ex)
-                    except paramiko.SSHException, ex:
-                        log.debug("Ignoring error %s connecting to %s",
-                                  str(ex), node.name)
                 time.sleep(5)
-                
-            # setup the cluster
-            self.setup()
-        
+
         except TimeoutError:
             log.error("Timeout occured after trying to connect to the nodes \
                         via ssh. The nodes are running, but no connection\
                         could be established and the setup did not run. \
                         Please re-run `elasticluster setup %s`", self.name)
-            
+
         signal.alarm(0)
 
     def stop(self):
@@ -276,25 +259,51 @@ class Node(object):
         Checks if the current node is up and running in the cloud
         """
         running = False
-        if self.instance_id:
-            try:
-                log.debug("Getting information for instance %s",
-                          self.instance_id)
-                running = self._cloud_provider.is_instance_running(
-                    self.instance_id)
-            except Exception, ex:
-                log.debug("Ignoring error while looking form vm id %s: %s",
-                          self.instance_id, str(ex))
+        if not self.instance_id:
+            return running
 
+        try:
+            log.debug("Getting information for instance %s",
+                      self.instance_id)
+            running = self._cloud_provider.is_instance_running(
+                self.instance_id)
+        except Exception, ex:
+            log.debug("Ignoring error while looking for vm id %s: %s",
+                      self.instance_id, str(ex))
         if running:
-            log.info("node `%s` is up and running",
-                     self.instance_id)
+            log.info("node `%s` (instance id %s) is up and running",
+                     self.name, self.instance_id)
             self.update_ips()
         else:
-            log.debug("waiting for node `%s` to start",
-                      self.instance_id)
+            log.debug("node `%s` (instance id `%s`) still building...",
+                      self.name, self.instance_id)
 
         return running
+
+    def connect(self):
+        """
+        Connect to the node via ssh and returns a paramiko.SSHClient
+        object, or None if we are unable to connect.
+        """
+        ssh = paramiko.SSHClient()
+        ssh.load_system_host_keys()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            log.debug("Trying to connect to host %s (%s)",
+                      self.name, self.ip_public)
+            ssh.connect(self.ip_public,
+                        username=self.image_user,
+                        allow_agent=True,
+                        key_filename=self.user_key_private)
+            return ssh
+        except socket.error, ex:
+            log.debug("Host %s (%s) not reachable: %s.",
+                      self.name, self.ip_public, ex)
+        except paramiko.SSHException, ex:
+            log.debug("Ignoring error %s connecting to %s",
+                      str(ex), self.name)
+
+        return None
 
     def update_ips(self):
         """

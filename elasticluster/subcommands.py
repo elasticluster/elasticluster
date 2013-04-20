@@ -127,6 +127,10 @@ class Start(AbstractCommand):
             cluster_name, len(cluster.compute_nodes)))
         print("(this may take a while...)")
         cluster.start()
+        print("Configuring the cluster.")
+        print("(this too may take a while...)")
+
+        cluster.setup()
 
         print("Your cluster is ready!")
         print(cluster_summary(cluster))
@@ -323,7 +327,7 @@ class SetupCluster(AbstractCommand):
                       (cluster_name, ex))
             return
 
-        print("Running setup provider for cluster `%s`..." % cluster_name)
+        print("Configuring cluster `%s`..." % cluster_name)
         cluster.setup()
         print("Your cluster is ready!")
         print(cluster_summary(cluster))
