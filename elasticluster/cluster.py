@@ -294,6 +294,7 @@ class Node(object):
                         username=self.image_user,
                         allow_agent=True,
                         key_filename=self.user_key_private)
+            log.debug("Connection to %s succeded!", self.ip_public)
             return ssh
         except socket.error, ex:
             log.debug("Host %s (%s) not reachable: %s.",
