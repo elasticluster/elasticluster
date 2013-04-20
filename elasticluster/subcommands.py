@@ -69,6 +69,20 @@ class AbstractCommand():
         pass
 
 
+def cluster_summary(cluster):
+    frontend = cluster.frontend_nodes[0]
+    return """
+Cluster name: %s
+Frontend nodes: %3d
+Compute nodes:  %3d
+
+To login on the frontend node, run the command:
+
+    ssh %s@%s -i %s
+""" % (cluster.name, len(cluster.compute_nodes), len(cluster.frontend_nodes),
+       frontend.image_user, frontend.ip_public, frontend.user_key_private)
+
+
 class Start(AbstractCommand):
     """
     Handles the start of a cluster. The cluster parameters are mostly
@@ -109,18 +123,13 @@ class Start(AbstractCommand):
             log.debug("Loading status of cluster %s.", cluster_name)
             cluster.load_from_storage()
 
-        print "Starting cluster `%s` with %d compute nodes." % (
-            cluster_name, len(cluster.compute_nodes))
-        print "(this may take a while...)"
+        print("Starting cluster `%s` with %d compute nodes." % (
+            cluster_name, len(cluster.compute_nodes)))
+        print("(this may take a while...)")
         cluster.start()
 
-        frontend = cluster.frontend_nodes[0]
-        print """
-Your cluster is up and running.
-To login on the frontend node, run the command:
-
-    ssh %s@%s -i %s
-""" % (frontend.image_user, frontend.ip_public, frontend.user_key_private)
+        print("Your cluster is ready!")
+        print(cluster_summary(cluster))
 
 
 class Stop(AbstractCommand):
@@ -151,7 +160,7 @@ class Stop(AbstractCommand):
                       (cluster_name, ex))
             return
 
-        print "Destroying cluster `%s`" % cluster_name
+        print("Destroying cluster `%s`" % cluster_name)
         cluster.stop()
 
 class ResizeCluster(AbstractCommand):
@@ -200,14 +209,14 @@ class ResizeCluster(AbstractCommand):
                 self.params.nodes_to_add = N - nnodes
 
         if self.params.nodes_to_add:
-            print "Adding %d nodes to the cluster" \
-                % self.params.nodes_to_add
+            print("Adding %d nodes to the cluster" \
+                % self.params.nodes_to_add)
         for i in range(self.params.nodes_to_add):
             cluster.add_node('compute')
 
         if self.params.nodes_to_remove:
-            print "Removing %d nodes from the cluster." \
-                % self.params.nodes_to_remove
+            print("Removing %d nodes from the cluster." \
+                % self.params.nodes_to_remove)
         for i in range(self.params.nodes_to_remove):
             node = cluster.compute_nodes.pop()
             if node in cluster.compute_nodes:
@@ -215,15 +224,15 @@ class ResizeCluster(AbstractCommand):
             node.stop()
 
         cluster.start()
-        print "Reconfiguring the cluster."
+        print("Reconfiguring the cluster.")
         cluster.setup()
         frontend = cluster.frontend_nodes[0]
-        print """
+        print("""
 Your cluster is up and running.
 To login on the frontend node, run the command:
 
     ssh %s@%s -i %s
-""" % (frontend.image_user, frontend.ip_public, frontend.user_key_private)
+""" % (frontend.image_user, frontend.ip_public, frontend.user_key_private))
  
 
 class ListClusters(AbstractCommand):
@@ -241,14 +250,14 @@ class ListClusters(AbstractCommand):
         cluster_names = storage.get_stored_clusters()
 
         if not cluster_names:
-            print "No clusters found."
+            print("No clusters found.")
         else:
-            print """
+            print("""
 The following clusters appear in your storage.
 Yet, there's no guarantee that they are up and running:
-"""
+""")
             for name in cluster_names:
-                print "- %s " % name
+                print("- %s " % name)
 
 
 class ListNodes(AbstractCommand):
@@ -283,14 +292,16 @@ class ListNodes(AbstractCommand):
                       (cluster_name, ex))
             return
 
-        print "The following nodes are in your cluster:"
-        print "\nfrontend nodes:"
+        print(cluster_summary(cluster))
+        print("")
+        print("Frontend nodes:")
         for node in cluster.frontend_nodes:
-            print node
+            print("  " + str(node))
 
-        print "\ncompute nodes:"
+        print("")
+        print("Compute nodes:")
         for node in cluster.compute_nodes:
-            print node
+            print("  " + str(node))
 
 
 class SetupCluster(AbstractCommand):
@@ -312,6 +323,7 @@ class SetupCluster(AbstractCommand):
                       (cluster_name, ex))
             return
 
-        print "Running setup provider for cluster `%s`..." % cluster_name
+        print("Running setup provider for cluster `%s`..." % cluster_name)
         cluster.setup()
-        print "Done.\n"
+        print("Your cluster is ready!")
+        print(cluster_summary(cluster))

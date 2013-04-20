@@ -123,7 +123,7 @@ class ElasticCloud(cli.app.CommandLineApp):
             Configuration.Instance().storage_path = self.params.storage
         except Exception as ex:
             print "please specify a valid configuration file"
-            sys.exit()
+            sys.exit(1)
 
         # call the subcommand function (ususally execute)
         return self.params.func()
