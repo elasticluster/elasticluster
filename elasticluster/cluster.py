@@ -34,7 +34,7 @@ class Cluster(object):
     Handles all cluster related functionality such as start, setup,
     load, stop, storage etc.
     """
-    startup_timeout = 180
+    startup_timeout = 60*10
 
     def __init__(self, name, cloud, cloud_provider, setup_provider,
                  frontend, compute, configurator, **extra):
