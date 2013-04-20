@@ -127,6 +127,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             remote_user=self._remote_user,
             callbacks=playbook_cb,
             runner_callbacks=runner_cb,
+            forks=10,
             stats=stats,
             sudo=self._sudo,
             sudo_user=self._sudo_user,
