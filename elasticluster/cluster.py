@@ -365,11 +365,15 @@ class ClusterStorage(object):
         """
         Returns a list of all stored clusters.
         """
-        from os import listdir
-        from os.path import isfile, join
-        db_files = [f.split(os.extsep, 1)[0]
-                    for f in listdir(self._storage_dir)
-                    if isfile(join(self._storage_dir, f))]
+        allfiles = os.listdir(self._storage_dir)
+        db_files = []
+        for fname in allfiles:
+            fpath = os.path.join(self._storage_dir, fname)
+            if fname.endswith('.json') and os.path.isfile(fpath):
+                db_files.append(fname[:-5])
+            else:
+                log.warning("Ignoring invalid storage file %s", fpath)
+
         return db_files
 
     def _get_json_path(self, cluster_name):
