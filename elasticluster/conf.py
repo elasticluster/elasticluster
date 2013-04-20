@@ -53,27 +53,55 @@ class Configurator(object):
                         config["ec2_access_key"],
                         config["ec2_secret_key"])
 
-    def create_cluster(self, name):
+    def create_cluster(self, cluster_template, **extra_args):
         """
         Creates a cluster with the needed information from the
         configuration.
         """
         try:
-            config = Configuration.Instance().read_cluster_section(name)
+            config = Configuration.Instance().read_cluster_section(cluster_template)
         except ConfigParser.NoSectionError:
             raise ConfigurationError(
-                "Cluster `%s` not found in configuration file." % name)
+                "Cluster `%s` not found in configuration file." % cluster_template)
+        config['name'] = cluster_template
 
-        return Cluster(name,
+        # Update with extra conf
+        config.update(extra_args)
+        return Cluster(cluster_template,
+                       config['name'],
                        config['cloud'],
                        self.create_cloud_provider(config['cloud']),
                        self.create_setup_provider(
-                           config["setup_provider"], name),
+                           config["setup_provider"], cluster_template),
                        int(config['frontend']),
                        int(config['compute']),
                        self)  # ANTONIO: why self? Why at the end? It
                               # does not looks right
 
+    def load_cluster(self, cluster_name):
+        storage = self.create_cluster_storage()
+        information = storage.load_cluster(cluster_name)
+
+        cluster = Configurator().create_cluster(information['template'], name=information['name'])
+
+        # Clear frontend and compute nodes
+        cluster.compute_nodes = []
+        cluster.frontend_nodes = []
+
+        for compute in information['compute']:
+            node = cluster.add_node(Node.compute_type, name=compute['name'])
+            node.instance_id = compute.get('instance_id')
+            node.ip_public = compute.get('ip_public')
+            node.ip_private = compute.get('ip_private')
+
+        for frontend in information['frontend']:
+            node = cluster.add_node(Node.frontend_type, name=frontend['name'])
+            node.instance_id = frontend.get('instance_id')
+            node.ip_public = compute.get('ip_public')
+            node.ip_private = compute.get('ip_private')
+
+        return cluster
+    
     def create_node(self, cluster_name, node_type, cloud_provider, name):
         """
         Creates a node with the needed information from the

@@ -28,7 +28,6 @@ import paramiko
 from elasticluster import log
 from elasticluster.exceptions import TimeoutError, ClusterNotFound
 
-
 class Cluster(object):
     """
     Handles all cluster related functionality such as start, setup,
@@ -36,8 +35,9 @@ class Cluster(object):
     """
     startup_timeout = 60*10
 
-    def __init__(self, name, cloud, cloud_provider, setup_provider,
+    def __init__(self, template, name, cloud, cloud_provider, setup_provider,
                  frontend, compute, configurator, **extra):
+        self.template = template
         self.name = name
         self._cloud = cloud
         self._frontend = frontend
@@ -73,7 +73,7 @@ class Cluster(object):
                 log.warning("Invalid node type %s given. Unable to add node" % node_type)
                 return
 
-        node = self._configurator.create_node(self.name, node_type,
+        node = self._configurator.create_node(self.template, node_type,
                                               self._cloud_provider, name)
         if node_type == Node.frontend_type:
             self.frontend_nodes.append(node)
@@ -330,11 +330,17 @@ class ClusterStorage(object):
         Saves the information of the cluster to disk in json format to
         load it later on.
         """
-        db = {"name": cluster.name}
+        db = {"name": cluster.name, "template": cluster.template}
         db["frontend"] = [
-            (node.instance_id, node.name) for node in cluster.frontend_nodes]
+            {'instance_id': node.instance_id,
+             'name': node.name,
+             'ip_public': node.ip_public,
+             'ip_private': node.ip_private} for node in cluster.frontend_nodes]
         db["compute"] = [
-            (node.instance_id, node.name) for node in cluster.compute_nodes]
+            {'instance_id': node.instance_id,
+             'name': node.name,
+             'ip_public': node.ip_public,
+             'ip_private': node.ip_private} for node in cluster.compute_nodes]
 
         db_json = json.dumps(db)
 
@@ -345,12 +351,12 @@ class ClusterStorage(object):
         f.write(unicode(db_json))
         f.close()
 
-    def load_cluster(self, cluster):
+    def load_cluster(self, cluster_name):
         """
-        Loads a cluster from the local storage and fills the given
-        cluster object with the known information.
+        Read the storage file, create a cluster and return a `Cluster`
+        object.
         """
-        db_path = self._get_json_path(cluster.name)
+        db_path = self._get_json_path(cluster_name)
 
         if not os.path.exists(db_path):
             raise ClusterNotFound("Storage file %s not found" % db_path)
@@ -359,28 +365,7 @@ class ClusterStorage(object):
 
         information = json.loads(db_json)
 
-        # if a cluster grows the number of nodes in the config is not
-        # enough
-        compute_names = [n.name for n in cluster.compute_nodes]
-        for node in information['compute']:
-            if node[1] not in compute_names:
-                cluster.add_node(Node.compute_type, name=node[1])
-
-        # The same happens if the cluster is shrunk.
-        compute_names = [n[1] for n in information['compute']]
-        for node in cluster.compute_nodes:
-            if node.name not in compute_names:
-                cluster.remove_node(node)
-
-        # fill the information of the nodes
-        for node, cache in zip(cluster.frontend_nodes,
-                               information['frontend']):
-            node.instance_id = cache[0]
-            node.name = cache[1]
-        for node, cache in zip(cluster.compute_nodes,
-                               information['compute']):
-            node.instance_id = cache[0]
-            node.name = cache[1]
+        return information
 
     def delete_cluster(self, cluster_name):
         """

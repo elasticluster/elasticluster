@@ -73,14 +73,16 @@ def cluster_summary(cluster):
     frontend = cluster.frontend_nodes[0]
     return """
 Cluster name: %s
+Cluster template: %s
 Frontend nodes: %3d
 Compute nodes:  %3d
 
 To login on the frontend node, run the command:
 
     ssh %s@%s -i %s
-""" % (cluster.name, len(cluster.compute_nodes), len(cluster.frontend_nodes),
-       frontend.image_user, frontend.ip_public, frontend.user_key_private)
+""" % (cluster.name, cluster.template, len(cluster.compute_nodes),
+       len(cluster.frontend_nodes), frontend.image_user, frontend.ip_public,
+       frontend.user_key_private)
 
 
 class Start(AbstractCommand):
@@ -96,35 +98,47 @@ class Start(AbstractCommand):
         """
         parser = subparsers.add_parser("start")
         parser.set_defaults(func=self)
-        parser.add_argument('cluster', help='name of the cluster')
+        parser.add_argument('cluster',
+                            help="Type of cluster. It refers to a "
+                            "configuration stanza [cluster/<name>]")
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
+        parser.add_argument('-n', '--name', dest='cluster_name', help='Name of the cluster.')
+        parser.add_argument('-c', '--compute-nodes', help='Number of compute nodes.')
+
+    def pre_run(self):
+        if self.params.compute_nodes:
+            try:
+                self.params.compute_nodes = int(self.params.compute_nodes)
+            except ValueError:
+                pass
 
     def execute(self):
         """
         Starts a new cluster.
         """
-        Configuration.Instance().cluster_name = self.params.cluster
-        cluster_name = self.params.cluster
 
+        # First, check if the cluster is already created.
         try:
-            cluster = Configurator().create_cluster(cluster_name)
-        except ConfigurationError, ex:
-            log.error("Cluster `%s` not found in configuration file." %
-                      cluster_name)
-            return
+            cluster = Configurator().load_cluster(self.params.cluster)
+        except ClusterNotFound, ex:
+            cluster_template = self.params.cluster        
+            extra_conf = dict()
+            if self.params.compute_nodes:
+                extra_conf['compute'] = self.params.compute_nodes
 
-        # ANTONIO: You must check if the cluster is already present.
-        # Note: this should be one of the possible way to do it, but
-        # it rasies an error later on!
-        storage = Configurator().create_cluster_storage()
-        cluster_names = storage.get_stored_clusters()
-        if cluster_name in cluster_names:
-            log.debug("Loading status of cluster %s.", cluster_name)
-            cluster.load_from_storage()
+            if self.params.cluster_name:
+                extra_conf['name'] = self.params.cluster_name
+
+            try:
+                cluster = Configurator().create_cluster(cluster_template, **extra_conf)
+            except ConfigurationError, ex:
+                log.error("Cluster `%s` not found in configuration file." %
+                          cluster_template)
+                return
 
         print("Starting cluster `%s` with %d compute nodes." % (
-            cluster_name, len(cluster.compute_nodes)))
+            cluster.name, len(cluster.compute_nodes)))
         print("(this may take a while...)")
         cluster.start()
         print("Configuring the cluster.")
@@ -154,11 +168,9 @@ class Stop(AbstractCommand):
         """
         Stops the cluster if it's running.
         """
-        Configuration.Instance().cluster_name = self.params.cluster
         cluster_name = self.params.cluster
         try:
-            cluster = Configurator().create_cluster(cluster_name)
-            cluster.load_from_storage()
+            cluster = Configurator().load_cluster(cluster_name)
         except (ClusterNotFound, ConfigurationError), ex:
             log.error("Stopping cluster %s: %s\n" %
                       (cluster_name, ex))
@@ -190,11 +202,10 @@ class ResizeCluster(AbstractCommand):
 
     def execute(self):
         # Get current cluster configuration
-        Configuration.Instance().cluster_name = self.params.cluster
         cluster_name = self.params.cluster
         try:
-            cluster = Configurator().create_cluster(cluster_name)
-            cluster.load_from_storage()
+            cluster = Configurator().load_cluster(cluster_name)
+            cluster.update()
         except (ClusterNotFound, ConfigurationError), ex:
             log.error("Listing nodes from cluster %s: %s\n" %
                       (cluster_name, ex))
@@ -289,8 +300,9 @@ class ListNodes(AbstractCommand):
         Configuration.Instance().cluster_name = self.params.cluster
         cluster_name = self.params.cluster
         try:
-            cluster = Configurator().create_cluster(cluster_name)
-            cluster.load_from_storage()
+            cluster = Configurator().load_cluster(cluster_name)
+            if self.params.update:
+                cluster.update()
         except (ClusterNotFound, ConfigurationError), ex:
             log.error("Listing nodes from cluster %s: %s\n" %
                       (cluster_name, ex))
@@ -320,8 +332,8 @@ class SetupCluster(AbstractCommand):
         Configuration.Instance().cluster_name = self.params.cluster
         cluster_name = self.params.cluster
         try:
-            cluster = Configurator().create_cluster(cluster_name)
-            cluster.load_from_storage()
+            cluster = Configurator().load_cluster(cluster_name)
+            cluster.update()
         except (ClusterNotFound, ConfigurationError), ex:
             log.error("Setting up cluster %s: %s\n" %
                       (cluster_name, ex))
