@@ -34,7 +34,7 @@ class Cluster(object):
     Handles all cluster related functionality such as start, setup,
     load, stop, storage etc.
     """
-    startup_timeout = 180
+    startup_timeout = 60*10
 
     def __init__(self, name, cloud, cloud_provider, setup_provider,
                  frontend, compute, configurator, **extra):
@@ -67,10 +67,12 @@ class Cluster(object):
         if not name:
             if node_type == Node.frontend_type:
                 name = "frontend" + str(len(self.frontend_nodes) + 1).zfill(3)
-            if node_type == Node.compute_type:
+            elif node_type == Node.compute_type:
                 name = "compute" + str(len(self.compute_nodes) + 1).zfill(3)
             else:
                 log.warning("Invalid node type %s given. Unable to add node" % node_type)
+                return
+
         node = self._configurator.create_node(self.name, node_type,
                                               self._cloud_provider, name)
         if node_type == Node.frontend_type:
