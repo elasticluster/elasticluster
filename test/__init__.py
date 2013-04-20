@@ -17,7 +17,6 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
-
 import unittest
 from StringIO import StringIO
 from mock import Mock
@@ -28,17 +27,11 @@ import ConfigParser
 
 from elasticluster.conf import Configuration
 
-
-
-
-
-
-
-
 """
 This section mocks the configuration file and defines the variables to mock it with.
 We need this actually to test the classes related to configuration.
 """
+
 config_storage_path = "~/.elasticluster/storage"
 
 config_cloud_name = "test"
