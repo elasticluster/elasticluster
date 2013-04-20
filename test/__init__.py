@@ -24,10 +24,10 @@ from mock import Mock
 from mock import patch
 from mock import MagicMock
 from mock import mock_open
-
+import ConfigParser
 
 from elasticluster.conf import Configuration
-import ConfigParser
+
 
 
 

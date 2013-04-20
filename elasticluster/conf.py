@@ -19,6 +19,7 @@
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 import ConfigParser
+import os
 
 from elasticluster import log
 from elasticluster.providers.cloud_providers import BotoCloudProvider
@@ -105,6 +106,15 @@ class Configurator(object):
                         config['playbook_path'])
 
 
+class QuotelessConfigParser(ConfigParser.RawConfigParser):
+    """
+    This implementation removes all the quotes from the value of a property.
+    """
+    def get(self, section, option):
+        val = ConfigParser.RawConfigParser.get(self, section, option)
+        return val.strip('"').strip("'")
+
+
 @Singleton
 class Configuration(object):
     """
@@ -114,11 +124,6 @@ class Configuration(object):
     parses the file and provides the important sections as *datatype
     undecied*
     """
-
-    # ANTONIO: Please remember to call strip('"').strip("'") on the
-    # name string: quotes and double quotes are invalid chars for
-    # boto, and it's quite common error to wrap strings between quotes
-    # in configuration file even if they are not needed.
 
     mandatory_cloud_options = ("provider", "ec2_url", "ec2_access_key",
                                "ec2_secret_key", "ec2_region")
@@ -137,7 +142,7 @@ class Configuration(object):
         self.cluster_name = None
         self.storage_path = None
 
-        self._config = ConfigParser.ConfigParser()
+        self._config = QuotelessConfigParser()
 
     def _read_section(self, name):
         """
@@ -235,6 +240,17 @@ class Configuration(object):
         config = self._read_section("login/" + name)
         self._check_mandatory_options(
             Configuration.Instance().mandatory_login_options, config)
+        config["user_key_private"] = os.path.expanduser(
+            config["user_key_private"])
+        config["user_key_public"] = os.path.expanduser(
+            config["user_key_public"])
+        
+        if (not os.path.exists(config["user_key_private"]) or
+            not os.path.exists(config["user_key_public"])):
+            log.warning("The key files don't exist. Please check your\
+                configuration file `user_key_public`, `user_key_private`.")
+            
+        
 
         return config
 

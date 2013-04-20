@@ -20,6 +20,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 
 import unittest
+import os
 
 from elasticluster.conf import Configuration, Configurator
 from elasticluster.cluster import Node, Cluster, ClusterStorage
@@ -80,8 +81,8 @@ class TestConfigurator(unittest.TestCase):
         assert node_frontend.name == "node001"
         assert node_frontend.type == Node.frontend_type
         assert node_frontend._cloud_provider == cloud_provider
-        assert node_frontend.user_key_public == config_login_user_key_public
-        assert node_frontend.user_key_name == config_login_user_key_name
+        assert node_frontend.user_key_public == os.path.expanduser(config_login_user_key_public)
+        assert node_frontend.user_key_name == os.path.expanduser(config_login_user_key_name)
         assert node_frontend.image_user == config_login_image_user
         assert node_frontend.security_group == config_frontend_security_group
         assert node_frontend.image == config_frontend_image
@@ -95,7 +96,7 @@ class TestConfigurator(unittest.TestCase):
         assert node_compute.name == "node001"
         assert node_compute.type == Node.compute_type
         assert node_compute._cloud_provider == cloud_provider
-        assert node_compute.user_key_public == config_login_user_key_public
+        assert node_compute.user_key_public == os.path.expanduser(config_login_user_key_public)
         assert node_compute.user_key_name == config_login_user_key_name
         assert node_compute.image_user == config_login_image_user
         assert node_compute.security_group == config_compute_security_group
@@ -159,8 +160,8 @@ class TestConfiguration(unittest.TestCase):
         assert login["image_user_sudo"] == config_login_image_user_sudo
         assert login["image_sudo"] == config_login_image_sudo
         assert login["user_key_name"] == config_login_user_key_name
-        assert login["user_key_private"] == config_login_user_key_private
-        assert login["user_key_public"] == config_login_user_key_public
+        assert login["user_key_private"] == os.path.expanduser(config_login_user_key_private)
+        assert login["user_key_public"] == os.path.expanduser(config_login_user_key_public)
         
     def test_read_setup_section(self):
         setup = Configuration.Instance().read_setup_section(config_setup_name, config_cluster_name)

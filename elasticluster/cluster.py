@@ -135,35 +135,44 @@ class Cluster(object):
 
         # Try to connect to each node. Run the setup action only when
         # we successfully connect to all of them.
+        signal.signal(signal.SIGALRM, timeout_handler)
         signal.alarm(Cluster.startup_timeout)
         pending_nodes = self.compute_nodes + self.frontend_nodes
         ssh = paramiko.SSHClient()
         ssh.load_system_host_keys()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        while pending_nodes:
-            for node in pending_nodes:
-                try:
-                    log.debug("Trying to connect to host %s (%s)",
-                              node.name, node.ip_public)
-
-                    ssh.connect(node.ip_public,
-                                username=node.image_user,
-                                allow_agent=True,
-                                key_filename=node.user_key_private)
-                    log.debug("success!")
-                    pending_nodes.remove(node)
-                except socket.error, ex:
-                    log.debug("Host %s (%s) not reachable: %s.",
-                              node.name, node.ip_public, ex)
-                except paramiko.SSHException, ex:
-                    log.debug("Ignoring error %s connecting to %s",
-                              str(ex), node.name)
-            time.sleep(5)
+        try:
+            while pending_nodes:
+                for node in pending_nodes:
+                    try:
+                        log.debug("Trying to connect to host %s (%s)",
+                                  node.name, node.ip_public)
+    
+                        ssh.connect(node.ip_public,
+                                    username=node.image_user,
+                                    allow_agent=True,
+                                    key_filename=node.user_key_private)
+                        log.debug("success!")
+                        pending_nodes.remove(node)
+                    except socket.error, ex:
+                        log.debug("Host %s (%s) not reachable: %s.",
+                                  node.name, node.ip_public, ex)
+                    except paramiko.SSHException, ex:
+                        log.debug("Ignoring error %s connecting to %s",
+                                  str(ex), node.name)
+                time.sleep(5)
+                
+            # setup the cluster
+            self.setup()
+        
+        except TimeoutError:
+            log.error("Timeout occured after trying to connect to the nodes \
+                        via ssh. The nodes are running, but no connection\
+                        could be established and the setup did not run. \
+                        Please re-run `elasticluster setup %s`", self.name)
+            
         signal.alarm(0)
-
-        # setup the cluster
-        self.setup()
 
     def stop(self):
         """
@@ -225,8 +234,8 @@ class Node(object):
         self.name = name
         self.type = node_type
         self._cloud_provider = cloud_provider
-        self.user_key_public = os.path.expanduser(user_key_public)
-        self.user_key_private = os.path.expanduser(user_key_private)
+        self.user_key_public = user_key_public
+        self.user_key_private = user_key_private
         self.user_key_name = user_key_name
         self.image_user = image_user
         self.security_group = security_group
