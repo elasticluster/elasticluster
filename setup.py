@@ -25,6 +25,9 @@ __docformat__ = 'reStructuredText'
 import os
 import sys
 
+from setuptools.command import sdist
+del sdist.finders[:]
+
 ANSIBLE_PB_DIR = 'elasticluster/providers/ansible-playbooks'
 
 def ansible_pb_files():
@@ -33,8 +36,9 @@ def ansible_pb_files():
     for (dirname, dirnames, filenames) in os.walk(ANSIBLE_PB_DIR):
         tmp = []
         for fname in filenames:
+            if fname.startswith('.git'): continue
             tmp.append(os.path.join(dirname, fname))
-        ansible_data.append((dirname, tmp))
+        ansible_data.append((os.path.join('share', dirname), tmp))
     return ansible_data
 
 from setuptools import setup, find_packages
@@ -46,13 +50,16 @@ setup(
         'boto',
         'PyCLI',
         'paramiko',
+        'ansible',  # works from pip, does not work from setup.py
         ],
     # # Note: if you add staff to package_data, you have to add it also
     # # to the MANIFEST.in, since setup.py works for bdist only, and
     # # MANIFEST.in works for sdist only.
-    packages_data = {
-        'elasticluster': [ANSIBLE_PB_DIR],
-        },
+    # package_data = {        
+    #     '': ['elasticluster/providers/ansible-playbooks',
+    #                       'docs/'],
+    #     # 'elasticluster': [ANSIBLE_PB_DIR] + ['docs/config.template.ini'],
+    #     },
     data_files = ansible_pb_files(),
     entry_points = {
         'console_scripts': [

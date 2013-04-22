@@ -20,6 +20,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 import ConfigParser
 import os
+import sys
 
 from elasticluster import log
 from elasticluster.providers.cloud_providers import BotoCloudProvider
@@ -181,7 +182,7 @@ class Configuration(object):
                                "user_key_public")
 
     config_defaults = {
-        'ansible_pb_dir' : os.path.join(os.path.dirname(__file__), 'providers/ansible-playbooks'),
+        'ansible_pb_dir' : os.path.join(sys.prefix, 'share/elasticluster/providers/ansible-playbooks'),
         }
 
     def __init__(self):
