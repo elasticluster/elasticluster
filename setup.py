@@ -22,6 +22,20 @@
 
 __docformat__ = 'reStructuredText'
 
+import os
+import sys
+
+ANSIBLE_PB_DIR = 'elasticluster/providers/ansible-playbooks'
+
+def ansible_pb_files():
+    basedir = os.path.dirname(__file__)
+    ansible_data = []
+    for (dirname, dirnames, filenames) in os.walk(ANSIBLE_PB_DIR):
+        tmp = []
+        for fname in filenames:
+            tmp.append(os.path.join(dirname, fname))
+        ansible_data.append((dirname, tmp))
+    return ansible_data
 
 from setuptools import setup, find_packages
 setup(
@@ -31,8 +45,15 @@ setup(
     install_requires = [
         'boto',
         'PyCLI',
-        'ansible',
+        'paramiko',
         ],
+    # # Note: if you add staff to package_data, you have to add it also
+    # # to the MANIFEST.in, since setup.py works for bdist only, and
+    # # MANIFEST.in works for sdist only.
+    packages_data = {
+        'elasticluster': [ANSIBLE_PB_DIR],
+        },
+    data_files = ansible_pb_files(),
     entry_points = {
         'console_scripts': [
             'elasticluster = elasticluster.main:main',

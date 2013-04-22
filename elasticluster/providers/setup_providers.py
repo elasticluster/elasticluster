@@ -115,6 +115,8 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             raise AnsibleError(
                 "the playbook `%s` is not a file" % self._playbook_path)
 
+        elasticluster.log.debug("Using playbook file %s.", self._playbook_path)
+
         stats = ansible.callbacks.AggregateStats()
         playbook_cb = ElasticlusterPbCallbacks(verbose=0)
         runner_cb = ansible.callbacks.DefaultRunnerCallbacks()

@@ -138,16 +138,16 @@ class Configurator(object):
                         config['compute_groups'])
 
 
-class QuotelessConfigParser(ConfigParser.RawConfigParser):
+class QuotelessConfigParser(ConfigParser.ConfigParser):
     """
     This implementation removes all the quotes from the value of a property.
     """
     def get(self, section, option):
-        val = ConfigParser.RawConfigParser.get(self, section, option)
+        val = ConfigParser.ConfigParser.get(self, section, option)
         return val.strip('"').strip("'")
 
     def items(self, section):
-        items = ConfigParser.RawConfigParser.items(self, section)
+        items = ConfigParser.ConfigParser.items(self, section)
         items_stripped = []
         for i in items:
             l = list(i)
@@ -180,13 +180,17 @@ class Configuration(object):
                                "user_key_name", "user_key_private",
                                "user_key_public")
 
+    config_defaults = {
+        'ansible_pb_dir' : os.path.join(os.path.dirname(__file__), 'providers/ansible-playbooks'),
+        }
+
     def __init__(self):
         # will be initialized upon user input from outside
         self.file_path = None
         self.cluster_name = None
         self.storage_path = None
 
-        self._config = QuotelessConfigParser()
+        self._config = QuotelessConfigParser(self.config_defaults)
 
     def _read_section(self, name):
         """
