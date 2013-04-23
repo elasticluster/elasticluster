@@ -142,12 +142,12 @@ class TestConfiguration(unittest.TestCase):
     def test_read_node_section(self):
         node_frontend = Configuration.Instance().read_node_section(config_cluster_name, Node.frontend_type)
         assert node_frontend["security_group"] == config_frontend_security_group
-        assert node_frontend["image"] == config_frontend_image
+        assert node_frontend["image_id"] == config_frontend_image
         assert node_frontend["flavor"] == config_frontend_flavor
         
         node_compute = Configuration.Instance().read_node_section(config_cluster_name, Node.compute_type)
         assert node_compute["security_group"] == config_compute_security_group
-        assert node_compute["image"] == config_compute_image
+        assert node_compute["image_id"] == config_compute_image
         assert node_compute["flavor"] == config_compute_flavor
         
     

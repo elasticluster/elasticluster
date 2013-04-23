@@ -119,7 +119,7 @@ class Configurator(object):
         return Node(name, node_type, cloud_provider, config['user_key_public'],
                     config["user_key_private"], config['user_key_name'],
                     config['image_user'], config['security_group'],
-                    config['image'], config['flavor'],
+                    config['image_id'], config['flavor'],
                     config.get('image_userdata', ''))
 
     def create_cluster_storage(self):
@@ -173,7 +173,7 @@ class Configuration(object):
                                "ec2_secret_key", "ec2_region")
     mandatory_cluster_options = ("cloud", "frontend", "compute",
                                  "setup_provider", "login")
-    mandatory_node_options = ("image", "security_group", "image_userdata",
+    mandatory_node_options = ("image_id", "security_group", "image_userdata",
                               "flavor")
     mandatory_setup_options = ("provider", "playbook_path", "frontend_groups",
                                "compute_groups")

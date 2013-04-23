@@ -62,7 +62,7 @@ config_cluster_frontend = "1"
 config_cluster_compute = "2"
 config_cluster_login = "test"
 
-config_frontend_image = "Ubuntu"
+config_frontend_image = "ami-00000"
 config_frontend_security_group = "all"
 config_frontend_flavor = "m1.tiny"
 config_frontend_image_userdata = "none"
@@ -104,10 +104,10 @@ def setup():
                    [("cloud", config_cluster_cloud), ("setup_provider", config_cluster_setup_provider), ("frontend", config_cluster_frontend), ("compute", config_cluster_compute), ("login", config_cluster_login)],
                    
                    config_section_frontend:
-                   [("image", config_frontend_image), ("security_group", config_frontend_security_group), ("flavor", config_frontend_flavor), ("image_userdata", config_frontend_image_userdata)],
+                   [("image_id", config_frontend_image), ("security_group", config_frontend_security_group), ("flavor", config_frontend_flavor), ("image_userdata", config_frontend_image_userdata)],
                    
                    config_section_compute:
-                   [("image", config_compute_image), ("security_group", config_compute_security_group), ("flavor", config_compute_flavor), ("image_userdata", config_compute_image_userdata)]
+                   [("image_id", config_compute_image), ("security_group", config_compute_security_group), ("flavor", config_compute_flavor), ("image_userdata", config_compute_image_userdata)]
                    }
         if name in content:
             return content[name]

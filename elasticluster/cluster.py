@@ -103,13 +103,18 @@ class Cluster(object):
         """
 
         # start every node
-        for node in self.frontend_nodes + self.compute_nodes:
-            if node.is_alive():
-                log.warning("Not starting node %s which is "
-                            "already up&running.", node.name)
-            else:
-                node.start()
-
+        try:
+            for node in self.frontend_nodes + self.compute_nodes:
+                if node.is_alive():
+                    log.warning("Not starting node %s which is "
+                                "already up&running.", node.name)
+                else:
+                    node.start()
+        except:
+            log.error("Error occured during node start, stopping all nodes")
+            self.stop()
+            raise
+            
         # dump the cluster here, so we don't loose any knowledge about nodes
         self._storage.dump_cluster(self)
 

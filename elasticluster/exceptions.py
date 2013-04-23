@@ -40,3 +40,6 @@ class TimeoutError(Exception):
 
 class ClusterNotFound(Exception):
     pass
+
+class ImageError(Exception):
+    pass

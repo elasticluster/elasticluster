@@ -25,7 +25,8 @@ import boto
 
 from elasticluster import log
 from elasticluster.providers import AbstractCloudProvider
-from elasticluster.exceptions import SecurityGroupError, KeypairError
+from elasticluster.exceptions import SecurityGroupError, KeypairError,\
+    ImageError
 from elasticluster.exceptions import InstanceError
 
 
@@ -93,7 +94,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         return self._connection
 
     def start_instance(self, key_name, key_path, security_group, flavor,
-                       image_name, image_userdata):
+                       image_id, image_userdata):
         """
         Starts an instance in the cloud on the specified cloud
         provider (configuration option) and returns the id of the
@@ -103,7 +104,7 @@ class BotoCloudProvider(AbstractCloudProvider):
 
         self._check_keypair(key_name, key_path)
         self._check_security_group(security_group)
-        image_id = self._find_image_id(image_name)
+        image_id = self._find_image_id(image_id)
 
         reservation = connection.run_instances(
             image_id, key_name=key_name, security_groups=[security_group],
@@ -178,10 +179,6 @@ class BotoCloudProvider(AbstractCloudProvider):
 
         # create keys that don't exist yet
         if name not in keypairs:
-            # ANTONIO: Better to specify where the keypair was not
-            # found, and the name as well.  something on the lien
-            # "Keypair `%s` not found on resource `%s`. Creating a new
-            # one" % (name, ec2endpoint)
             log.warning(
                 "Keypair `%s` not found on resource `%s`, Creating a new one",
                 (name, self._url))
@@ -212,16 +209,22 @@ class BotoCloudProvider(AbstractCloudProvider):
             raise SecurityGroupError(
                 "the specified security group %s does not exist" % name)
 
-    def _find_image_id(self, name):
+    def _find_image_id(self, image_id):
         """
-        Finds an image id to a given name.
+        Finds an image id to a given image_id.
         """
         if not self._images:
             connection = self._connect()
             self._images = connection.get_all_images()
 
+        image_id_cloud = None
         for i in self._images:
-            if i.name == name:
-                return i.id
+            if i.id == image_id or i.name == image_id:
+                image_id_cloud = i.id
+                break
 
-        return None
+        if image_id_cloud:
+            return image_id_cloud
+        else:
+            raise ImageError(
+                "Could not find given image id `%s`" % image_id)

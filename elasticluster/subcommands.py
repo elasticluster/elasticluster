@@ -22,7 +22,8 @@ import sys
 from elasticluster.conf import Configurator
 from elasticluster.conf import Configuration
 from elasticluster import log
-from elasticluster.exceptions import ClusterNotFound, ConfigurationError
+from elasticluster.exceptions import ClusterNotFound, ConfigurationError,\
+    ImageError, SecurityGroupError
 
 
 class AbstractCommand():
@@ -140,17 +141,20 @@ class Start(AbstractCommand):
                           cluster_template)
                 return
 
-        print("Starting cluster `%s` with %d compute nodes." % (
-            cluster.name, len(cluster.compute_nodes)))
-        print("(this may take a while...)")
-        cluster.start()
-        print("Configuring the cluster.")
-        print("(this too may take a while...)")
-
-        cluster.setup()
-
-        print("Your cluster is ready!")
-        print(cluster_summary(cluster))
+        try:
+            print("Starting cluster `%s` with %d compute nodes." % (
+                cluster.name, len(cluster.compute_nodes)))
+            print("(this may take a while...)")
+            cluster.start()
+            print("Configuring the cluster.")
+            print("(this too may take a while...)")
+    
+            cluster.setup()
+    
+            print("Your cluster is ready!")
+            print(cluster_summary(cluster))
+        except (KeyError, ImageError, SecurityGroupError) as e:
+            print("Your cluster could not start `%s`" % e)
 
 
 class Stop(AbstractCommand):
