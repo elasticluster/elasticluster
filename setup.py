@@ -24,6 +24,7 @@ __docformat__ = 'reStructuredText'
 
 import os
 import sys
+import shutil
 
 from setuptools.command import sdist
 del sdist.finders[:]
@@ -59,3 +60,36 @@ setup(
             ]
         },
     )
+
+if __name__ == "__main__":
+    if sys.argv[1] in ['develop', 'install']:
+        develop = True if sys.argv[1] == 'develop' else False
+        curdir = os.path.abspath(os.path.dirname(__file__))
+        sharedir = os.path.join(os.path.abspath(sys.prefix), 'share', 'elasticluster')
+        etcdir = os.path.join(sharedir, 'etc')
+        templatecfg = os.path.join(curdir, 'docs', 'config.template.ini')
+        templatedest = os.path.join(etcdir, os.path.basename(templatecfg))
+        ansibledest = os.path.join(sharedir, 'providers', 'ansible-playbooks')
+        ansiblesrc = os.path.join(curdir, 'elasticluster', 'providers', 'ansible-playbooks')
+
+        if not os.path.exists(sharedir):
+            os.makedirs(sharedir)
+            
+        if not os.path.exists(etcdir):
+            os.makedirs(etcdir)
+
+        if not os.path.exists(os.path.dirname(ansibledest)):
+            os.makedirs(os.path.dirname(ansibledest))
+
+        if develop and os.path.exists(templatedest):
+            os.unlink(templatedest)
+
+        if develop and os.path.exists(ansibledest):
+            os.unlink(ansibledest)
+
+        if develop:
+            os.symlink(ansiblesrc, ansibledest)
+            os.symlink(templatecfg, os.path.join(etcdir, os.path.basename(templatecfg)))
+        else:
+            shutil.copytree(ansiblesrc, ansibledest)
+            shutil.copy(templatecfg, etcdir)

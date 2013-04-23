@@ -17,13 +17,14 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
-import elasticluster
-from elasticluster import log
-from elasticluster.providers import AbstractCloudProvider
-from boto import ec2
-import boto
 import os
 import urllib
+
+from boto import ec2
+import boto
+
+from elasticluster import log
+from elasticluster.providers import AbstractCloudProvider
 from elasticluster.exceptions import SecurityGroupError, KeypairError
 from elasticluster.exceptions import InstanceError
 
@@ -85,7 +86,7 @@ class BotoCloudProvider(AbstractCloudProvider):
             self._connection.get_all_images()
 
         except Exception as e:
-            elasticluster.log.error("connection to cloud could not be "
+            log.error("connection to cloud could not be "
                                     "established: message=`%s`", str(e))
             raise
 
