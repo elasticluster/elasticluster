@@ -137,6 +137,10 @@ class Cluster(object):
 
         signal.alarm(0)
 
+        # If we reached this point, we should have IP addresses for
+        # the nodes, so update the storage file again.
+        self._storage.dump_cluster(self)
+
         # Try to connect to each node. Run the setup action only when
         # we successfully connect to all of them.
         signal.signal(signal.SIGALRM, timeout_handler)
