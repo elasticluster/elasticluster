@@ -32,7 +32,7 @@ ANSIBLE_PB_DIR = 'elasticluster/providers/ansible-playbooks'
 
 def ansible_pb_files():
     basedir = os.path.dirname(__file__)
-    ansible_data = []
+    ansible_data = [('share/elasticluster/etc', ['docs/config.template.ini'])]
     for (dirname, dirnames, filenames) in os.walk(ANSIBLE_PB_DIR):
         tmp = []
         for fname in filenames:
@@ -52,14 +52,6 @@ setup(
         'paramiko',
         'ansible',  # works from pip, does not work from setup.py
         ],
-    # # Note: if you add staff to package_data, you have to add it also
-    # # to the MANIFEST.in, since setup.py works for bdist only, and
-    # # MANIFEST.in works for sdist only.
-    # package_data = {        
-    #     '': ['elasticluster/providers/ansible-playbooks',
-    #                       'docs/'],
-    #     # 'elasticluster': [ANSIBLE_PB_DIR] + ['docs/config.template.ini'],
-    #     },
     data_files = ansible_pb_files(),
     entry_points = {
         'console_scripts': [

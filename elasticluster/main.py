@@ -20,6 +20,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 # System imports
 import logging
 import os
+import shutil
 import sys
 
 # External modules
@@ -93,10 +94,22 @@ class ElasticCloud(cli.app.CommandLineApp):
                                  "%s\n" % (str(ex)))
                 sys.exit(1)
 
+        # If no configuration file was specified and default does not exists...
         if not os.path.isfile(self.params.config):
-            sys.stderr.write("Unable to read configuration file `%s`.\n" %
-                             self.params.config)
-            sys.exit(1)
+            if self.params.config == self.default_configuration_file:
+            # Copy the default configuration file to the user's home
+                if not os.path.exists(os.path.dirname(self.params.config)):
+                    os.mkdir(os.path.dirname(self.params.config))
+                template = os.path.join(sys.prefix, 'share/elasticluster/etc/config.template.ini')
+                log.warning("Deploying default configuration file to %s.", self.params.config)
+                shutil.copyfile(template, self.params.config)
+            else:
+                # Exit if supplied configuration file does not exists.
+                if not os.path.isfile(self.params.config):
+                    sys.stderr.write(
+                        "Unable to read configuration file `%s`.\n" %
+                        self.params.config)
+                    sys.exit(1)
 
         if self.params.func:
             try:

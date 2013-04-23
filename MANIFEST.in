@@ -1,1 +1,2 @@
 recursive-include elasticluster/providers/ansible-playbooks *
+recursive-include docs *
