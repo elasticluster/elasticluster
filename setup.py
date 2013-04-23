@@ -81,15 +81,14 @@ if __name__ == "__main__":
         if not os.path.exists(os.path.dirname(ansibledest)):
             os.makedirs(os.path.dirname(ansibledest))
 
-        if develop and os.path.exists(templatedest):
-            os.unlink(templatedest)
+        if not os.path.exists(ansibledest):
+            if develop:
+                os.symlink(ansiblesrc, ansibledest)
+            else:
+                shutil.copytree(ansiblesrc, ansibledest)
 
-        if develop and os.path.exists(ansibledest):
-            os.unlink(ansibledest)
-
-        if develop:
-            os.symlink(ansiblesrc, ansibledest)
-            os.symlink(templatecfg, os.path.join(etcdir, os.path.basename(templatecfg)))
-        else:
-            shutil.copytree(ansiblesrc, ansibledest)
-            shutil.copy(templatecfg, etcdir)
+        if not os.path.exists(templatedest):
+            if develop:
+                os.symlink(templatecfg, templatedest)
+            else:
+                shutil.copy(templatecfg, etcdir)
