@@ -101,8 +101,8 @@ class Configurator(object):
         for frontend in information['frontend']:
             node = cluster.add_node(Node.frontend_type, name=frontend['name'])
             node.instance_id = frontend.get('instance_id')
-            node.ip_public = compute.get('ip_public')
-            node.ip_private = compute.get('ip_private')
+            node.ip_public = frontend.get('ip_public')
+            node.ip_private = frontend.get('ip_private')
 
         return cluster
 
