@@ -16,3 +16,8 @@
           regexp='.*pbsserver.*'
           line='\$pbsserver ${groups.pbs_master[0]}'
   notify: restart pbs_mom
+
+- name: Check pbs_mom usecp file
+  action: lineinfile dest=/var/spool/torque/mom_priv/config
+          regexp='.usecp .*'
+          line='\$usecp *:/home /home'

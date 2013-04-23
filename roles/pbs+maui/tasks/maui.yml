@@ -5,6 +5,9 @@
   with_items:
     - maui
 
+- name: Ensure /var/spool/maui/log directory exists
+  action: file path=/var/spool/maui/log state=directory
+
 - name: Ensure MAUI is running
   only_if: $is_centos
   action: service name=$item state=started
