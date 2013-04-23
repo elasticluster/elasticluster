@@ -29,7 +29,7 @@ python setup.py install
 ```
 
 ## Configuration
-After the software is installed you'll need to create a configuration file. You'll find a configuration template along with its description [here](docs/config.template.ini). The following shows a basic configuration to connect to OpenStack, please consider the template for details and further options:
+After the software is installed you'll need to create a configuration file. You'll find a configuration template along with its description [here](docs/config.template.ini). When running elasticluster the first time it will copy the configuration template to `~/.elasticluster/config.cfg`. The following shows a basic configuration to connect to OpenStack, please consider the template for details and further options:
 ```
 [cloud/mycloud]
 provider=ec2_boto
@@ -51,7 +51,7 @@ cloud=mycloud
 login=mylogin
 setup_provider=ansible
 security_group=no-access
-image_id=ami-000000
+image=Ubuntu
 flavor=m1.tiny
 frontend=1
 compute=2
@@ -83,6 +83,18 @@ elasticluster start mycluster --name mycluster2 --compute-nodes 10
 This will start a cluster (recognized by the name mycluster2) with 10 compute nodes and configure it as specified in the config section of `cluster/mycluster`.  
 
 The started clusters will be automatically configured with the given frontend_groups and compute_groups in the `setup/ansible` section of the configuration file. In this example elasticluster will configure your cluster with slurm and gridengine.  
+
+## List your clusters
+The following command will show you all clusters managed with elasticluster:
+```shell
+elasticluster list
+```
+
+## List all nodes of your cluster
+To list all nodes within your cluster `mycluster2` you can call:
+```shell
+elasticluster list-nodes mycluster2
+```
 
 ## Grow your cluster
 Growing your cluster by a certain number of nodes works out of the box:
