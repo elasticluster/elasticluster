@@ -71,9 +71,10 @@ class AbstractCommand():
 
 
 def cluster_summary(cluster):
-    frontend = cluster.frontend_nodes[0]
-    return """
-Cluster name: %s
+    if cluster.frontend_nodes:
+        frontend = cluster.frontend_nodes[0]
+        return """
+Cluster name:     %s
 Cluster template: %s
 Frontend nodes: %3d
 Compute nodes:  %3d
@@ -84,7 +85,13 @@ To login on the frontend node, run the command:
 """ % (cluster.name, cluster.template, len(cluster.compute_nodes),
        len(cluster.frontend_nodes), frontend.image_user, frontend.ip_public,
        frontend.user_key_private)
-
+    else:
+        # Invalid/not complete cluster!
+        return """
+INCOMPLETE CLUSTER! MISSING FRONTEND NODE!
+Cluster name:     %s
+Cluster template: %s
+Compute nodes:    %d""" % (cluster.name, cluster.template, len(cluster.compute_nodes))
 
 class Start(AbstractCommand):
     """
@@ -179,6 +186,9 @@ class Stop(AbstractCommand):
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
+        parser.add_argument('--force', action="store_true", default=False,
+                            help="Remove the cluster even if not all the nodes"
+                            " have been terminated properly.")
 
     def execute(self):
         """
@@ -193,7 +203,7 @@ class Stop(AbstractCommand):
             return
 
         print("Destroying cluster `%s`" % cluster_name)
-        cluster.stop()
+        cluster.stop(force=self.params.force)
 
 
 class ResizeCluster(AbstractCommand):
@@ -325,15 +335,17 @@ class ListNodes(AbstractCommand):
             return
 
         print(cluster_summary(cluster))
-        print("")
-        print("Frontend nodes:")
-        for node in cluster.frontend_nodes:
-            print("  " + str(node))
+        if cluster.frontend_nodes:
+            print("")
+            print("Frontend nodes:")
+            for node in cluster.frontend_nodes:
+                print("  " + str(node))
 
-        print("")
-        print("Compute nodes:")
-        for node in cluster.compute_nodes:
-            print("  " + str(node))
+        if cluster.compute_nodes:
+            print("")
+            print("Compute nodes:")
+            for node in cluster.compute_nodes:
+                print("  " + str(node))
 
 
 class SetupCluster(AbstractCommand):

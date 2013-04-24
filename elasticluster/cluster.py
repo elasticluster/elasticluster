@@ -167,14 +167,38 @@ class Cluster(object):
 
         signal.alarm(0)
 
-    def stop(self):
+    def stop(self, force=False):
         """
         Terminates all instances corresponding to this cluster and
         deletes the cluster storage.
         """
         for node in self.frontend_nodes + self.compute_nodes:
-            node.stop()
-        self._storage.delete_cluster(self.name)
+            try:
+                node.stop()
+                if node in self.compute_nodes:
+                    self.compute_nodes.remove(node)
+                elif node in self.frontend_nodes:
+                    self.frontend_nodes.remove(node)
+                else:
+                    log.warning(
+                        "node %s (instance id %s) is nor a compute node nor a "
+                        "frontend node! Something strange happened!", 
+                        node.name, node.instance_id)
+            except:
+                # Boto does not always raises an `Exception` class!
+                log.error("could not stop instance `%s`, it might "
+                          "already be down.", node.instance_id)
+        if not self.frontend_nodes and not self.compute_nodes:
+            log.debug("Removing cluster %s.", self.name)
+            self._storage.delete_cluster(self.name)
+        elif not force:
+            log.warning("Not all instances have been terminated. "
+                        "Please rerun the `elasticluster stop %s`", self.name)
+            self._storage.dump_cluster(self)
+        else:
+            log.warning("Not all instances have been terminated. However, "
+                        "as requested, the cluster has been force-removed.")
+            self._storage.delete_cluster(self.name)
 
     def setup(self):
         try:
@@ -243,11 +267,7 @@ class Node(object):
     def stop(self):
         log.info("shutting down instance `%s`",
                  self.instance_id)
-        try:
-            self._cloud_provider.stop_instance(self.instance_id)
-        except:
-            log.error("could not stop instance `%s`, it might "
-                      "already be down." % self.instance_id)
+        self._cloud_provider.stop_instance(self.instance_id)
 
     def is_alive(self):
         """
