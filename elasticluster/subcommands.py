@@ -120,12 +120,17 @@ class Start(AbstractCommand):
         """
         Starts a new cluster.
         """
+        
+        cluster_template = self.params.cluster
+        if self.params.cluster_name:
+            cluster_name = self.params.cluster_name
+        else:
+            cluster_name = self.params.cluster
 
         # First, check if the cluster is already created.
         try:
-            cluster = Configurator().load_cluster(self.params.cluster)
+            cluster = Configurator().load_cluster(cluster_name)
         except ClusterNotFound, ex:
-            cluster_template = self.params.cluster
             extra_conf = dict()
             if self.params.compute_nodes:
                 extra_conf['compute'] = self.params.compute_nodes
