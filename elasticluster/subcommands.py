@@ -108,6 +108,9 @@ class Start(AbstractCommand):
                             help='Name of the cluster.')
         parser.add_argument('-c', '--compute-nodes',
                             help='Number of compute nodes.')
+        parser.add_argument('--no-setup', action="store_true", default=False,
+                            help="Only start the cluster, do not configure it")
+                            
 
     def pre_run(self):
         if self.params.compute_nodes:
@@ -151,12 +154,13 @@ class Start(AbstractCommand):
                 cluster.name, len(cluster.compute_nodes)))
             print("(this may take a while...)")
             cluster.start()
-            print("Configuring the cluster.")
-            print("(this too may take a while...)")
-    
-            cluster.setup()
-    
-            print("Your cluster is ready!")
+            if self.params.no_setup:
+                print("NOT configuring the cluster as requested.")
+            else:
+                print("Configuring the cluster.")
+                print("(this too may take a while...)")
+                cluster.setup()
+                print("Your cluster is ready!")
             print(cluster_summary(cluster))
         except (KeyError, ImageError, SecurityGroupError) as e:
             print("Your cluster could not start `%s`" % e)
@@ -204,6 +208,8 @@ class ResizeCluster(AbstractCommand):
                             "or -n, resize by adding or removing `n` nodes.")
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
+        parser.add_argument('--no-setup', action="store_true", default=False,
+                            help="Only start the cluster, do not configure it")
 
     def pre_run(self):
         self.params.nodes_to_add = 0
@@ -252,15 +258,12 @@ class ResizeCluster(AbstractCommand):
             node.stop()
 
         cluster.start()
-        print("Reconfiguring the cluster.")
-        cluster.setup()
-        frontend = cluster.frontend_nodes[0]
-        print("""
-Your cluster is up and running.
-To login on the frontend node, run the command:
-
-    ssh %s@%s -i %s
-""" % (frontend.image_user, frontend.ip_public, frontend.user_key_private))
+        if self.params.no_setup:
+            print("NOT configuring the cluster as requested.")
+        else:
+            print("Reconfiguring the cluster.")
+            cluster.setup()
+        print(cluster_summary(cluster))
 
 
 class ListClusters(AbstractCommand):
