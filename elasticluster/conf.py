@@ -62,10 +62,10 @@ class Configurator(object):
         try:
             config = Configuration.Instance().read_cluster_section(
                 cluster_template)
-        except ConfigParser.NoSectionError:
+        except ConfigParser.NoSectionError, ex:
             raise ConfigurationError(
-                "Cluster `%s` not found in configuration file."
-                "" % cluster_template)
+                "Invalid configuration for cluster `%s`: %s"
+                "" % (cluster_template, str(ex)))
         config['name'] = cluster_template
 
         # Update with extra conf

@@ -152,8 +152,8 @@ class Start(AbstractCommand):
                 cluster = Configurator().create_cluster(
                     cluster_template, **extra_conf)
             except ConfigurationError, ex:
-                log.error("Cluster `%s` not found in configuration file." %
-                          cluster_template)
+                log.error("Starting cluster %s: %s\n",
+                          cluster_template, ex)
                 return
 
         try:
