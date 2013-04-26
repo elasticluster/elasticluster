@@ -100,17 +100,12 @@ Compute nodes:    %d""" % (cluster.name, cluster.template, len(cluster.compute_n
 
 class Start(AbstractCommand):
     """
-    Handles the start of a cluster. The cluster parameters are mostly
-    read from a configuration file in order to keep the parameter set
-    to a minimum.
+    Create a new cluster using the given cluster template.
     """
-
     def setup(self, subparsers):
-        """
-        @see abstract_command contract
-        """
         parser = subparsers.add_parser(
-            "start", help="Create a cluster using the supplied configuration.")
+            "start", help="Create a cluster using the supplied configuration.",
+            description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster',
                             help="Type of cluster. It refers to a "
@@ -122,8 +117,7 @@ class Start(AbstractCommand):
         parser.add_argument('-c', '--compute-nodes',
                             help='Number of compute nodes.')
         parser.add_argument('--no-setup', action="store_true", default=False,
-                            help="Only start the cluster, do not configure it")
-                            
+                            help="Only start the cluster, do not configure it")                            
 
     def pre_run(self):
         if self.params.compute_nodes:
@@ -181,14 +175,15 @@ class Start(AbstractCommand):
 
 class Stop(AbstractCommand):
     """
-    Handles the stop of a cluster.
+    Stop a cluster and terminate all associated virtual machines.
     """
     def setup(self, subparsers):
         """
         @see abstract_command contract
         """
-        parser = subparsers.add_parser("stop", help="Stop a cluster and all "
-                                       "associated VM instances.")
+        parser = subparsers.add_parser(
+            "stop", help="Stop a cluster and all associated VM instances.",
+            description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
@@ -215,12 +210,12 @@ class Stop(AbstractCommand):
 
 class ResizeCluster(AbstractCommand):
     """
-    Resize the cluster by adding or removing
+    Resize the cluster by adding or removing compute nodes.
     """
     def setup(self, subparsers):
         parser = subparsers.add_parser(
             "resize", help="Resize a cluster by adding or removing "
-            "compute nodes.")
+            "compute nodes.", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('N', help="Number of compute nodes, or, using +n"
@@ -287,11 +282,12 @@ class ResizeCluster(AbstractCommand):
 
 class ListClusters(AbstractCommand):
     """
-    Handles the listing of all clusters.
+    Print a list of all clusters that have been started.
     """
     def setup(self, subparsers):
-        parser = subparsers.add_parser("list", 
-                                       help="List all started clusters.")
+        parser = subparsers.add_parser(
+            "list", help="List all started clusters.",
+            description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
@@ -313,13 +309,14 @@ Yet, there's no guarantee that they are up and running:
 
 class ListNodes(AbstractCommand):
     """
-    Handles the listing of information about a cluster.
+    Show some information on all the nodes belonging to a given
+    cluster.
     """
 
     def setup(self, subparsers):
         parser = subparsers.add_parser(
             "list-nodes", help="Show information about the nodes in the "
-            "cluster")
+            "cluster", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
@@ -361,9 +358,13 @@ class ListNodes(AbstractCommand):
 
 
 class SetupCluster(AbstractCommand):
+    """
+    Setup the given cluster by calling the setup provider defined for
+    this cluster.
+    """
     def setup(self, subparsers):
         parser = subparsers.add_parser(
-            "setup", help="Configure the cluster.")
+            "setup", help="Configure the cluster.", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
@@ -387,12 +388,12 @@ class SetupCluster(AbstractCommand):
 
 class SshFrontend(AbstractCommand):
     """
-    Connect to the frontend of the cluster using `ssh`
+    Connect to the frontend of the cluster using `ssh`.
     """
     def setup(self, subparsers):
         parser = subparsers.add_parser(
-            "ssh", help="Connect to the frontend of the cluster"
-            " using the `ssh` command")
+            "ssh", help="Connect to the frontend of the cluster using the "
+            "`ssh` command", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
