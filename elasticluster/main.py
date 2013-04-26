@@ -88,7 +88,7 @@ class ElasticCloud(cli.app.CommandLineApp):
             # We do not create *all* the parents, but we do create the
             # directory if we can.
             try:
-                os.mkdir(self.params.storage)
+                os.makedirs(self.params.storage)
             except OSError, ex:
                 sys.stderr.write("Unable to create storage directory: "
                                  "%s\n" % (str(ex)))
