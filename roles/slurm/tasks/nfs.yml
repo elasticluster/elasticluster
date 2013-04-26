@@ -6,6 +6,12 @@
   tags:
     -nfs
 
+- name: install nfs server
+  action: apt pkg=nfs-utils state=present
+  only_if: $is_centos
+  tags:
+    - nfs
+
 - name: install nfs client
   action: apt pkg=nfs-common state=present
   only_if: $is_ubuntu
