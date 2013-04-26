@@ -1,10 +1,4 @@
 ---
-- name: ensure that the accounting files are world-readable
-  action: file path=/var/tmp/$item mode=0644 state=file owner=slurm
-  with_items:
-    - slurm-acct.txt
-    - slurm-jobs.txt
-
 - name: configure slurm
   action: template src=slurm/templates/slurm.conf.j2 dest=/etc/slurm-llnl/slurm.conf owner=root group=root mode=0644
   notify: restart slurm
@@ -15,4 +9,10 @@
   action: service name=slurm-llnl state=started
   tags: 
     - slurm
+
+- name: ensure that the accounting files are world-readable
+  action: file path=/var/tmp/$item mode=0644 state=file owner=slurm
+  with_items:
+    - slurm-acct.txt
+    - slurm-jobs.txt
 
