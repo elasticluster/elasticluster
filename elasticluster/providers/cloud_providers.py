@@ -72,6 +72,7 @@ class BotoCloudProvider(AbstractCloudProvider):
             return self._connection
 
         try:
+            log.debug("Connecting to ec2 host %s", self._ec2host)
             region = ec2.regioninfo.RegionInfo(name=self._region_name,
                                                endpoint=self._ec2host)
 
@@ -84,7 +85,10 @@ class BotoCloudProvider(AbstractCloudProvider):
                 path=self._ec2path, region=region)
 
             # list images to see if the connection works
-            self._connection.get_all_images()
+            log.debug("Connection has been successful.")
+            # images = self._connection.get_all_images()
+            # log.debug("%d images found on cloud %s",
+            #           len(images), self._ec2host)
 
         except Exception as e:
             log.error("connection to cloud could not be "
@@ -102,9 +106,11 @@ class BotoCloudProvider(AbstractCloudProvider):
         """
         connection = self._connect()
 
+        log.debug("Checking keypair `%s`.", key_name)
         self._check_keypair(key_name, key_path)
+        log.debug("Checking security group `%s`.", security_group)
         self._check_security_group(security_group)
-        image_id = self._find_image_id(image_id)
+        # image_id = self._find_image_id(image_id)
 
         reservation = connection.run_instances(
             image_id, key_name=key_name, security_groups=[security_group],
@@ -181,7 +187,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         if name not in keypairs:
             log.warning(
                 "Keypair `%s` not found on resource `%s`, Creating a new one",
-                (name, self._url))
+                name, self._url)
             with open(os.path.expanduser(path)) as f:
                 key_material = f.read()
                 try:
@@ -190,7 +196,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                 except Exception, ex:
                     log.error(
                         "Could not import key `%s` with name `%s` to `%s`",
-                        (name, path, self._url))
+                        name, path, self._url)
                     raise KeypairError(
                         "could not create keypair `%s`: %s" % (name, ex))
 
