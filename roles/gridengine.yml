@@ -13,9 +13,12 @@
   vars_files:
     - vars/os
   tasks: 
-    - include: slurm/tasks/nfs.yml
     - include: gridengine/tasks/master.yml
+    - include: slurm/tasks/nfs.yml
+    - action: nfsexport path=/home dest=/etc/exports clients=${groups.slurm_clients} options=rw,no_root_squash,sync
+      notify: reload exports
   handlers:
+    - include: slurm/handlers/main.yml
     - include: gridengine/handlers/main.yml
 
 - name: GridEngine worker nodes Playbook

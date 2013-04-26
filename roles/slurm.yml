@@ -6,6 +6,7 @@
   tasks: 
     - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: slurm/tasks/main.yml
+    - include: slurm/tasks/nfs.yml
 
     - action: nfsexport path=/home dest=/etc/exports clients=${groups.slurm_clients} options=rw,no_root_squash,sync
       notify: reload exports

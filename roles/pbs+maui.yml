@@ -15,9 +15,13 @@
     - vars/os
   tasks: 
     - include: slurm/tasks/nfs.yml
+    - action: nfsexport path=/home dest=/etc/exports clients=${groups.pbs_clients} options=rw,no_root_squash,sync
+      notify: reload exports
+
     - include: pbs+maui/tasks/master.yml
     - include: cluster/tasks/packages.yml
   handlers:
+    - include: slurm/handlers/main.yml
     - include: pbs+maui/handlers/main.yml
 
 - name: MAUI masternode Playbook

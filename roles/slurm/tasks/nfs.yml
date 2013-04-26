@@ -25,17 +25,6 @@
   tags:
     -nfs
 
-# /etc/exports
-- name: set /etc/exports
-  action: template src=slurm/templates/exports.j2 dest=/etc/exports
-  tags:
-    - nfs
-
-- name: reload nfs exports
-  action: shell exportfs -r
-  tags:
-    - nfs
-
 # CentOS does not start needed services after installation
 - name: ensure nfs service is running
   action: service name=$item state=started
