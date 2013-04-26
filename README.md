@@ -20,10 +20,11 @@ _elasticluster_ is in active development, but the following features at the curr
 
 * Simple configuration file to define cluster templates
 * Can start and manage multiple independent clusters at the same time
-* Automated cluster setup
-    * [SLURM](https://computing.llnl.gov/linux/slurm/)
-    * [Grid Engine](http://gridengine.info)
-    * Ganglia
+* Automated cluster setup:
+    * use [Debian GNU/Linux](http://www.debian.org), [Ubuntu](http://www.ubuntu.com), or [CentOS](http://www.centos.org/) as a base operating system
+    * choose [SLURM](https://computing.llnl.gov/linux/slurm/), [Grid Engine](http://gridengine.info) or [TORQUE+MAUI](http://www.adaptivecomputing.com/products/open-source/torque/) as a batch-queueing system
+    * add useful tools like [Ganglia](http://ganglia.info) for monitoring...
+    * ...or anything that you can install with an [Ansible](http://ansible.cc) playbook!
 * Grow and shrink a running cluster
 
 _elasticluster_ is currently in active development: please use the
