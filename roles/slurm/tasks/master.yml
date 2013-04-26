@@ -1,0 +1,6 @@
+---
+- name: ensure that the accounting files are world-readable
+  action: file path=/var/tmp/$item mode=0644 state=file owner=slurm
+  with_items:
+    - slurm-acct.txt
+    - slurm-jobs.txt
