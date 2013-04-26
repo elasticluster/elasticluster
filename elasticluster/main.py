@@ -34,6 +34,7 @@ from elasticluster.subcommands import AbstractCommand
 from elasticluster.subcommands import ListClusters
 from elasticluster.subcommands import ListNodes
 from elasticluster.subcommands import ResizeCluster
+from elasticluster.subcommands import SshFrontend
 from elasticluster.conf import Configuration
 
 
@@ -58,6 +59,7 @@ class ElasticCloud(cli.app.CommandLineApp):
                     ListNodes(self.params),
                     SetupCluster(self.params),
                     ResizeCluster(self.params),
+                    SshFrontend(self.params),
                     ]
 
         # global parameters

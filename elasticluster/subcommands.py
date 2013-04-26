@@ -17,6 +17,7 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
+import os
 import sys
 
 from elasticluster.conf import Configurator
@@ -82,9 +83,13 @@ Compute nodes:  %3d
 To login on the frontend node, run the command:
 
     ssh %s@%s -i %s
+
+Or run:
+
+    elasticluster ssh %s
 """ % (cluster.name, cluster.template, len(cluster.compute_nodes),
        len(cluster.frontend_nodes), frontend.image_user, frontend.ip_public,
-       frontend.user_key_private)
+       frontend.user_key_private, cluster.name)
     else:
         # Invalid/not complete cluster!
         return """
@@ -371,3 +376,27 @@ class SetupCluster(AbstractCommand):
         cluster.setup()
         print("Your cluster is ready!")
         print(cluster_summary(cluster))
+
+class SshFrontend(AbstractCommand):
+    def setup(self, subparsers):
+        parser = subparsers.add_parser("ssh")
+        parser.set_defaults(func=self)
+        parser.add_argument('cluster', help='name of the cluster')
+        parser.add_argument('-v', '--verbose', action='count', default=0,
+                            help="Increase verbosity.")
+
+    def execute(self):
+        Configuration.Instance().cluster_name = self.params.cluster
+        cluster_name = self.params.cluster
+        try:
+            cluster = Configurator().load_cluster(cluster_name)
+            cluster.update()
+        except (ClusterNotFound, ConfigurationError), ex:
+            log.error("Setting up cluster %s: %s\n" %
+                      (cluster_name, ex))
+            return
+
+        frontend = cluster.frontend_nodes[0]
+        host = frontend.ip_public
+        username = frontend.image_user
+        os.execlp("ssh", "ssh", "-l", username, "-i", frontend.user_key_private, host)
