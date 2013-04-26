@@ -27,6 +27,7 @@ from ansible.playbook import PlayBook
 import ansible.constants as ansible_constants
 from ansible.errors import AnsibleError
 import ansible.callbacks
+import ansible.utils
 from ansible.callbacks import call_callback_module
 
 # local imports
@@ -79,7 +80,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
 
     def __init__(self, private_key_file, remote_user,
                  sudo_user, sudo, playbook_path, frontend_groups,
-                 compute_groups):
+                 compute_groups, **extra_conf):
         self._private_key_file = os.path.expanduser(
             os.path.expandvars(private_key_file))
         self._remote_user = remote_user
@@ -88,6 +89,11 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         self._playbook_path = playbook_path
         self._frontend_groups = [g.strip() for g in frontend_groups.split(',')]
         self._compute_groups = [g.strip() for g in compute_groups.split(",")]
+
+        module_dir = extra_conf.get('ansible_module_dir', None)
+        if module_dir:
+            for mdir in module_dir.split(','):
+                ansible.utils.module_finder.add_directory(mdir.strip())
 
         ansible_constants.DEFAULT_PRIVATE_KEY_FILE = self._private_key_file
         ansible_constants.DEFAULT_REMOTE_USER = self._remote_user

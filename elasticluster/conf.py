@@ -133,10 +133,11 @@ class Configurator(object):
             setup_provider_name, cluster_name)
         provider = Configurator.setup_providers_map[config['provider']]
 
-        return provider(config['user_key_private'], config['image_user'],
-                        config['image_user_sudo'], config['image_sudo'],
-                        config['playbook_path'], config['frontend_groups'],
-                        config['compute_groups'])
+        return provider(
+            config.pop('user_key_private'), config.pop('image_user'),
+            config.pop('image_user_sudo'), config.pop('image_sudo'),
+            config.pop('playbook_path'), config.pop('frontend_groups'),
+            config.pop('compute_groups'), **config)
 
 
 class QuotelessConfigParser(ConfigParser.ConfigParser):
@@ -183,6 +184,7 @@ class Configuration(object):
 
     config_defaults = {
         'ansible_pb_dir' : os.path.join(sys.prefix, 'share/elasticluster/providers/ansible-playbooks'),
+        'ansible_module_dir' : os.path.join(sys.prefix, 'share/elasticluster/providers/ansible-playbooks/modules'),
         }
 
     def __init__(self):
