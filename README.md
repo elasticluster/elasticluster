@@ -78,7 +78,7 @@ elasticluster start mycluster
 Considering the `cluster/mycluster` section in the configuration file, this command will create 1 frontend node and 2 compute nodes based on the given specifications above.  
 It's also possible to start a different cluster with the given configuration:
 ```shell
-elasticluster start mycluster --name mycluster2 --compute-nodes 10
+elasticluster start --name mycluster2 --compute-nodes 10 mycluster
 ```
 This will start a cluster (recognized by the name mycluster2) with 10 compute nodes and configure it as specified in the config section of `cluster/mycluster`.  
 
