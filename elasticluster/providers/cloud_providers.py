@@ -92,7 +92,7 @@ class BotoCloudProvider(AbstractCloudProvider):
 
         except Exception as e:
             log.error("connection to cloud could not be "
-                                    "established: message=`%s`", str(e))
+                      "established: message=`%s`", str(e))
             raise
 
         return self._connection

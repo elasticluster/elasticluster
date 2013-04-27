@@ -183,9 +183,12 @@ class Configuration(object):
                                "user_key_public")
 
     config_defaults = {
-        'ansible_pb_dir' : os.path.join(sys.prefix, 'share/elasticluster/providers/ansible-playbooks'),
-        'ansible_module_dir' : os.path.join(sys.prefix, 'share/elasticluster/providers/ansible-playbooks/modules'),
-        }
+        'ansible_pb_dir': os.path.join(
+            sys.prefix, 'share/elasticluster/providers/ansible-playbooks'),
+        'ansible_module_dir': os.path.join(
+            sys.prefix,
+            'share/elasticluster/providers/ansible-playbooks/modules'),
+    }
 
     def __init__(self):
         # will be initialized upon user input from outside

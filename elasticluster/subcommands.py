@@ -96,7 +96,10 @@ Or run:
 INCOMPLETE CLUSTER! MISSING FRONTEND NODE!
 Cluster name:     %s
 Cluster template: %s
-Compute nodes:    %d""" % (cluster.name, cluster.template, len(cluster.compute_nodes))
+Compute nodes:    %d""" % (cluster.name,
+                           cluster.template,
+                           len(cluster.compute_nodes))
+
 
 class Start(AbstractCommand):
     """
@@ -117,7 +120,7 @@ class Start(AbstractCommand):
         parser.add_argument('-c', '--compute-nodes',
                             help='Number of compute nodes.')
         parser.add_argument('--no-setup', action="store_true", default=False,
-                            help="Only start the cluster, do not configure it")                            
+                            help="Only start the cluster, do not configure it")
 
     def pre_run(self):
         if self.params.compute_nodes:
@@ -130,7 +133,7 @@ class Start(AbstractCommand):
         """
         Starts a new cluster.
         """
-        
+
         cluster_template = self.params.cluster
         if self.params.cluster_name:
             cluster_name = self.params.cluster_name
@@ -392,6 +395,7 @@ class SetupCluster(AbstractCommand):
         print("Your cluster is ready!")
         print(cluster_summary(cluster))
 
+
 class SshFrontend(AbstractCommand):
     """
     Connect to the frontend of the cluster using `ssh`.
@@ -419,4 +423,5 @@ class SshFrontend(AbstractCommand):
         frontend = cluster.frontend_nodes[0]
         host = frontend.ip_public
         username = frontend.image_user
-        os.execlp("ssh", "ssh", "-l", username, "-i", frontend.user_key_private, host)
+        os.execlp("ssh", "ssh", "-l", username, "-i",
+                  frontend.user_key_private, host)

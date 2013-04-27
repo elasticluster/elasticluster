@@ -102,8 +102,10 @@ class ElasticCloud(cli.app.CommandLineApp):
             # Copy the default configuration file to the user's home
                 if not os.path.exists(os.path.dirname(self.params.config)):
                     os.mkdir(os.path.dirname(self.params.config))
-                template = os.path.join(sys.prefix, 'share/elasticluster/etc/config.template.ini')
-                log.warning("Deploying default configuration file to %s.", self.params.config)
+                template = os.path.join(
+                    sys.prefix, 'share/elasticluster/etc/config.template.ini')
+                log.warning("Deploying default configuration file to %s.",
+                            self.params.config)
                 shutil.copyfile(template, self.params.config)
             else:
                 # Exit if supplied configuration file does not exists.

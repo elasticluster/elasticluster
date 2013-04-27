@@ -114,7 +114,7 @@ class Cluster(object):
             log.error("Error occured during node start, stopping all nodes")
             self.stop()
             raise
-            
+
         # dump the cluster here, so we don't loose any knowledge about nodes
         self._storage.dump_cluster(self)
 
@@ -182,7 +182,7 @@ class Cluster(object):
                 else:
                     log.warning(
                         "node %s (instance id %s) is nor a compute node nor a "
-                        "frontend node! Something strange happened!", 
+                        "frontend node! Something strange happened!",
                         node.name, node.instance_id)
             except:
                 # Boto does not always raises an `Exception` class!
