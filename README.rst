@@ -38,12 +38,14 @@ version 2.7 is required to run it.
 
 It's quite easy to install `elasticluster` using
 `pip`_; the command below is all you
-need to install `elasticluster` on your system:
+need to install `elasticluster` on your system::
 
     pip install elasticluster
 
-If you want to run `elasticluster` from source you have to **install
-`Ansible`_ first:**
+If you want to run `elasticluster` from source you have to **install**
+`Ansible`_ **first:**
+
+::
 
     pip install ansible
     python setup.py install
@@ -105,7 +107,7 @@ with the `-c` option: for example, `elasticluster -c
 file ``/path/to/another.cfg``
 
 When you are done configuring, you can start your first cluster with
-`elasticluster`: read the "Start a cluster" section below!
+`elasticluster`: read the "*Start a cluster*" section below!
 
 
 How to...
@@ -128,7 +130,7 @@ from the ``[cluster/...]`` section in the configuration file.  Assuming
 you have a Considering the ``cluster/mycluster`` section in the
 configuration file, the following command will create a cluster with 1
 frontend node and 2 compute nodes, and install the SLURM
-batch-queueing system on it:
+batch-queueing system on it::
 
     elasticluster start mycluster
 
@@ -136,6 +138,8 @@ You can override parts of the configuration using command-line
 options.  For example, the following invocation of `elasticluster`
 creates a cluster using the ``cluster/mycluster`` configuration template
 but with 10 compute nodes (instead of 2).
+
+::
 
     elasticluster start mycluster --name my-other-cluster --compute-nodes 10
 
@@ -159,7 +163,7 @@ are printed to explain how to connect to the cluster. However, the
 easiest way to connect to the frontend of the cluster is using the
 `ssh` elasticluster command. The `ssh` command accepts a cluster name
 as unique argument and will open an ssh connection to the frontend of
-the cluster:
+the cluster::
 
     elasticluster ssh my-other-cluster
 
@@ -169,7 +173,7 @@ version of the `ssh` command in your operating system.
 List your clusters
 ------------------
 
-Use the following command to show all the running clusters:
+Use the following command to show all the running clusters::
 
     elasticluster list
 
@@ -177,7 +181,7 @@ Use the following command to show all the running clusters:
 List all nodes of a cluster
 ---------------------------
 
-To list all nodes within a cluster `my-other-cluster`, run:
+To list all nodes within a cluster `my-other-cluster`, run::
 
     elasticluster list-nodes my-other-cluster
 
@@ -189,7 +193,7 @@ one cluster.   You can list the started cluster names with
 Grow a cluster
 --------------
 
-To grow a cluster by a certain number of compute nodes run:
+To grow a cluster by a certain number of compute nodes run::
 
     elasticluster resize my-other-cluster +10
 
@@ -208,7 +212,7 @@ Shrink a cluster
 At the moment there is no code to determine what nodes could be safely
 stopped.  Use the `shrink` functionality with caution, you have been warned!
 
-The following command removes 1 compute node from cluster `my-other-cluster`:
+The following command removes 1 compute node from cluster `my-other-cluster`::
 
     elasticluster resize my-other-cluster -1
 
@@ -217,7 +221,7 @@ Stop a cluster
 --------------
 
 To stop and destroy a cluster (named `my-other-cluster`), use the following
-command:
+command::
 
     elasticluster stop my-other-cluster
 
