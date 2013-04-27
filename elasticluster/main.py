@@ -147,8 +147,15 @@ class ElasticCloud(cli.app.CommandLineApp):
 
 
 def main():
-    app = ElasticCloud()
-    app.run()
+    try:
+        app = ElasticCloud()
+        app.run()
+    except KeyboardInterrupt:
+        sys.stderr.write("""
+WARNING: execution interrupted by the user!
+Your clusters may be in inconsistent state!
+""")
+        return 1
 
 
 if __name__ == "__main__":

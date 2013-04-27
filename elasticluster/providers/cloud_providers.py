@@ -112,9 +112,14 @@ class BotoCloudProvider(AbstractCloudProvider):
         self._check_security_group(security_group)
         # image_id = self._find_image_id(image_id)
 
-        reservation = connection.run_instances(
-            image_id, key_name=key_name, security_groups=[security_group],
-            instance_type=flavor, user_data=image_userdata)
+        try:
+            reservation = connection.run_instances(
+                image_id, key_name=key_name, security_groups=[security_group],
+                instance_type=flavor, user_data=image_userdata)
+        except Exception, ex:
+            log.error("Error starting instance: %s", ex)
+            return
+
         vm = reservation.instances[-1]
 
         # cache instance object locally for faster access later on
