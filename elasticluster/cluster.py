@@ -106,8 +106,8 @@ class Cluster(object):
         try:
             for node in self.frontend_nodes + self.compute_nodes:
                 if node.is_alive():
-                    log.warning("Not starting node %s which is "
-                                "already up&running.", node.name)
+                    log.info("Not starting node %s which is "
+                             "already up&running.", node.name)
                 else:
                     node.start()
         except:
@@ -264,7 +264,7 @@ class Node(object):
         self.instance_id = self._cloud_provider.start_instance(
             self.user_key_name, self.user_key_public, self.security_group,
             self.flavor, self.image, self.image_userdata)
-        log.info("starting node with id `%s`" % self.instance_id)
+        log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
 
     def stop(self):
         log.info("shutting down instance `%s`",
@@ -288,8 +288,8 @@ class Node(object):
             log.debug("Ignoring error while looking for vm id %s: %s",
                       self.instance_id, str(ex))
         if running:
-            log.info("node `%s` (instance id %s) is up and running",
-                     self.name, self.instance_id)
+            log.debug("node `%s` (instance id %s) is up and running",
+                      self.name, self.instance_id)
             self.update_ips()
         else:
             log.debug("node `%s` (instance id `%s`) still building...",
