@@ -89,7 +89,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         self._playbook_path = playbook_path
         self._frontend_groups = [g.strip() for g in frontend_groups.split(',')]
         self._compute_groups = [g.strip() for g in compute_groups.split(",")]
-
+        self.inventory_path = None
         module_dir = extra_conf.get('ansible_module_dir', None)
         if module_dir:
             for mdir in module_dir.split(','):
@@ -100,18 +100,18 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         ansible_constants.DEFAULT_SUDO_USER = self._sudo_user
 
     def setup_cluster(self, cluster):
-        inventory_path = self._build_inventory(cluster)
+        self.inventory_path = self._build_inventory(cluster)
 
         # check paths
-        if not inventory_path:
+        if not self.inventory_path:
             # No inventory file has been created, maybe an
             # invalid calss has been specified in config file? Or none?
             # assume it is fine.
             elasticluster.log.info("No setup required for this cluster.")
             return True
-        if not os.path.exists(inventory_path):
+        if not os.path.exists(self.inventory_path):
             raise AnsibleError(
-                "inventory file `%s` could not be found" % inventory_path)
+                "inventory file `%s` could not be found" % self.inventory_path)
         # ANTONIO: These should probably be configuration error
         # instead, and should probably checked inside __init__().
         if not os.path.exists(self._playbook_path):
@@ -133,7 +133,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
 
         pb = PlayBook(
             playbook=self._playbook_path,
-            host_list=inventory_path,
+            host_list=self.inventory_path,
             remote_user=self._remote_user,
             callbacks=playbook_cb,
             runner_callbacks=runner_cb,
@@ -149,10 +149,11 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         except AnsibleError as e:
             elasticluster.log.error(
                 "could not execute ansible playbooks. message=`%s`", str(e))
+            self.cleanup()
             return False
 
         # delete inventory file
-        os.unlink(inventory_path)
+        self.cleanup()
 
         # Check ansible status.
         cluster_failures = False
@@ -213,3 +214,16 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             fd.close()
 
             return fname
+
+    def cleanup(self):
+        """
+        Delete inventory file.
+        """
+        if self.inventory_path:
+            if os.path.exists(self.inventory_path):
+                try:
+                    os.unlink(self.inventory_path)
+                except OSError, ex:
+                    log.warning(
+                        "AnsibileProvider: Ignoring error while deleting "
+                        "inventory file %s: %s", self.inventory_path, ex)

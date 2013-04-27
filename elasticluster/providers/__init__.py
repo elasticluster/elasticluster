@@ -50,8 +50,27 @@ class AbstractSetupProvider:
     TODO: define...
     """
 
-    def __init__(self):
+    def setup_cluster(self, cluster):
+        """
+        Setup a cluster. `cluster` must be a
+        `elasticluster.cluster.Cluster` class.
+
+        This method *must* be idempotent, i.e. it should always be
+        safe calling it multiple times..
+
+        :return: `True` if the cluster is correctly configured, even
+                  if the method didn't actually do anything.
+
+                 `False` if the cluster is not configured.
+        """
         pass
 
-    def setup_cluster(self, cluster):
+    def cleanup(self):
+        """
+        Cleanup any temporary file or directory created during setup.
+
+        This method is called every time a cluster is stopped.
+
+        :return: None
+        """
         pass

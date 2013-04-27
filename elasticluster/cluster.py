@@ -190,6 +190,7 @@ class Cluster(object):
                           "already be down.", node.instance_id)
         if not self.frontend_nodes and not self.compute_nodes:
             log.debug("Removing cluster %s.", self.name)
+            self._setup_provider.cleanup()
             self._storage.delete_cluster(self.name)
         elif not force:
             log.warning("Not all instances have been terminated. "
@@ -198,6 +199,7 @@ class Cluster(object):
         else:
             log.warning("Not all instances have been terminated. However, "
                         "as requested, the cluster has been force-removed.")
+            self._setup_provider.cleanup()
             self._storage.delete_cluster(self.name)
 
     def setup(self):
