@@ -152,6 +152,20 @@ frontend_groups and compute_groups in the `setup/ansible` section of
 the configuration file. In this example _elasticluster_ will configure
 your cluster with the SLURM batch-queueing system.
 
+Login into the cluster
+----------------------
+
+After a cluster has been started by _elasticluster_, some information
+are printed to explain how to connect to the cluster. However, the
+easiest way to connect to the frontend of the cluster is using the
+`ssh` elasticluster command. The `ssh` command accepts a cluster name
+as unique argument and will open an ssh connection to the frontend of
+the cluster:
+
+    elasticluster ssh my-other-cluster
+
+Please note that in order this to work you _need_ to have a working
+version of the `ssh` command in your operating system. 
 
 List your clusters
 ------------------
