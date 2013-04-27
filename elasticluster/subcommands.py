@@ -169,8 +169,9 @@ class Start(AbstractCommand):
             else:
                 print("Configuring the cluster.")
                 print("(this too may take a while...)")
-                cluster.setup()
-                print("Your cluster is ready!")
+                ret = cluster.setup()
+                if ret:
+                    print("Your cluster is ready!")
             print(cluster_summary(cluster))
         except (KeyError, ImageError, SecurityGroupError) as e:
             print("Your cluster could not start `%s`" % e)
