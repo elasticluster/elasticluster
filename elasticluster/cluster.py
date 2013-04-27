@@ -154,6 +154,8 @@ class Cluster(object):
             while pending_nodes:
                 for node in pending_nodes[:]:
                     if node.connect():
+                        log.info("Connection to node %s (%s) successful.",
+                                 node.name, node.ip_public)
                         pending_nodes.remove(node)
                 time.sleep(5)
 
