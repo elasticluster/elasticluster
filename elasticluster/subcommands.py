@@ -300,11 +300,17 @@ class ListClusters(AbstractCommand):
             print("No clusters found.")
         else:
             print("""
-The following clusters appear in your storage.
-Yet, there's no guarantee that they are up and running:
+The following clusters have been started.
+Please note that there's no guarantee that they are fully configured:
 """)
-            for name in cluster_names:
-                print("- %s " % name)
+            for name in sorted(cluster_names):
+                cluster = Configurator().load_cluster(name)
+                print("%s " % name)
+                print("-"*len(name))
+                print("  template:       %s" % cluster.template)
+                print("  cloud:          %s " % cluster._cloud)
+                print("  compute nodes:  %d" % len(cluster.compute_nodes))
+                print("")
 
 
 class ListNodes(AbstractCommand):
