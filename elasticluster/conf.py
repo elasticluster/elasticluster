@@ -47,7 +47,13 @@ class Configurator(object):
         the configuration.
         """
         config = Configuration.Instance().read_cloud_section(cloud_name)
-        provider = Configurator.cloud_providers_map[config["provider"]]
+
+        if config.get('provider') not in Configurator.cloud_providers_map:
+            raise ConfigurationError(
+                "Invalid value `%s` for cloud `provider` in configuration "
+                "file." % config.get('provider'))
+
+        provider = Configurator.cloud_providers_map[config['provider']]
 
         args = dict()
         for param in ['ec2_url', 'ec2_access_key', 'ec2_secret_key', 'ec2_region']:
@@ -79,6 +85,13 @@ class Configurator(object):
 
         # Update with extra conf
         config.update(extra_args)
+
+        for key in ['cloud', 'setup_provider', 'frontend', 'compute']:
+            if key not in config:
+                raise ConfigurationError(
+                    "Invalid configuration for cluster `%s`: "
+                    "missing configuration key `%s`." % (config['name'], key))
+
         return Cluster(cluster_template,
                        config['name'],
                        config['cloud'],
@@ -125,11 +138,19 @@ class Configurator(object):
         config = Configuration.Instance().read_node_section(
             cluster_name, node_type)
 
+        for key in ['user_key_private', 'user_key_name', 'image_user',
+                    'security_group', 'image_id', 'flavor']:
+            if key not in config:
+                raise ConfigurationError(
+                    "Invalid configuration for node `%s` in cluster `%s`: "
+                    "missing configuration key `%s`." % (
+                        name, cluster_name, key))
+
         return Node(name, node_type, cloud_provider, config['user_key_public'],
                     config["user_key_private"], config['user_key_name'],
                     config['image_user'], config['security_group'],
                     config['image_id'], config['flavor'],
-                    config.get('image_userdata', ''))
+                    image_userdata=config.get('image_userdata', ''))
 
     def create_cluster_storage(self):
         """
@@ -140,6 +161,12 @@ class Configurator(object):
     def create_setup_provider(self, setup_provider_name, cluster_name):
         config = Configuration.Instance().read_setup_section(
             setup_provider_name, cluster_name)
+
+        if config.get('provider') not in Configurator.setup_providers_map:
+            raise ConfigurationError(
+                "Invalid value `%s` for `setup_provider` in configuration "
+                "file." % config.get('provider'))
+
         provider = Configurator.setup_providers_map[config['provider']]
 
         return provider(
@@ -225,8 +252,6 @@ class Configuration(object):
         configuration file and returns its properties in a dictionary.
         """
         config = self._read_section("cluster/"+name)
-        self._check_mandatory_options(
-            Configuration.Instance().mandatory_cluster_options, config)
 
         config_login = self.read_login_section(config["login"])
 
@@ -258,9 +283,6 @@ class Configuration(object):
             else:
                 config = self.read_cluster_section(cluster_name)
 
-            self._check_mandatory_options(
-                Configuration.Instance().mandatory_node_options, config)
-
             return config
 
         else:
@@ -275,9 +297,6 @@ class Configuration(object):
         """
         config = self._read_section("cloud/"+name)
 
-        self._check_mandatory_options(
-            Configuration.Instance().mandatory_cloud_options, config)
-
         return config
 
     def read_setup_section(self, name, cluster_name):
@@ -286,8 +305,6 @@ class Configuration(object):
         configuration file and returns its properties in a dictionary
         """
         config = self._read_section("setup/"+name)
-        self._check_mandatory_options(
-            Configuration.Instance().mandatory_setup_options, config)
 
         config["playbook_path"] = os.path.expanduser(
             os.path.expanduser(config["playbook_path"]))
@@ -304,8 +321,6 @@ class Configuration(object):
         configuration file and returns its properties in a dictionary
         """
         config = self._read_section("login/" + name)
-        self._check_mandatory_options(
-            Configuration.Instance().mandatory_login_options, config)
         config["user_key_private"] = os.path.expanduser(
             os.path.expandvars(config["user_key_private"]))
         config["user_key_public"] = os.path.expanduser(
@@ -318,10 +333,3 @@ class Configuration(object):
                         "`user_key_private`.")
 
         return config
-
-    def _check_mandatory_options(self, options, config):
-        for o in options:
-            if o not in config:
-                raise ConfigurationError(
-                    "could not find mandatory cloud option `%s` in "
-                    "configuration file" % o)

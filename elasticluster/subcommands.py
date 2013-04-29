@@ -300,6 +300,7 @@ class ListClusters(AbstractCommand):
         storage = Configurator().create_cluster_storage()
         cluster_names = storage.get_stored_clusters()
 
+
         if not cluster_names:
             print("No clusters found.")
         else:
@@ -308,7 +309,12 @@ The following clusters have been started.
 Please note that there's no guarantee that they are fully configured:
 """)
             for name in sorted(cluster_names):
-                cluster = Configurator().load_cluster(name)
+                try:
+                    cluster = Configurator().load_cluster(name)
+                except ConfigurationError, ex:
+                    log.error("gettin information from cluster `%s`: %s",
+                              name, ex)
+                    continue
                 print("%s " % name)
                 print("-"*len(name))
                 print("  name:           %s" % cluster.name)
