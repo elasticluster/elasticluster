@@ -79,6 +79,10 @@ setup(
         'PyCLI',
         'paramiko',
         'ansible',
+        # required by GCE
+        'google-api-python-client',
+        'oauth2client',
+        'httplib2',
         ],
     data_files = ansible_pb_files(),
     entry_points = {
@@ -101,7 +105,7 @@ if __name__ == "__main__":
 
         if not os.path.exists(sharedir):
             os.makedirs(sharedir)
-            
+
         if not os.path.exists(etcdir):
             os.makedirs(etcdir)
 
