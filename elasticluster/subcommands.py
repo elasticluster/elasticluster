@@ -311,6 +311,7 @@ Please note that there's no guarantee that they are fully configured:
                 cluster = Configurator().load_cluster(name)
                 print("%s " % name)
                 print("-"*len(name))
+                print("  name:           %s" % cluster.name)
                 print("  template:       %s" % cluster.template)
                 print("  cloud:          %s " % cluster._cloud)
                 print("  compute nodes:  %d" % len(cluster.compute_nodes))
