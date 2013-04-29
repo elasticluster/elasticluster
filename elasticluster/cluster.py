@@ -336,6 +336,14 @@ class Node(object):
         return "name=`%s`, id=`%s`, public_ip=`%s`, private_ip=`%s`" % (
             self.name, self.instance_id, self.ip_public, self.ip_private)
 
+    def pprint(self):
+        """
+        Pretty print information about the node.
+        """
+        return """%s
+public IP:   %s
+private IP:  %s
+instance id: %s""" % (self.name, self.ip_public, self.ip_private, self.instance_id)
 
 class ClusterStorage(object):
     """

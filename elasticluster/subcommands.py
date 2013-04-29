@@ -87,8 +87,8 @@ To login on the frontend node, run the command:
 Or run:
 
     elasticluster ssh %s
-""" % (cluster.name, cluster.template, len(cluster.compute_nodes),
-       len(cluster.frontend_nodes), frontend.image_user, frontend.ip_public,
+""" % (cluster.name, cluster.template, len(cluster.frontend_nodes),
+       len(cluster.compute_nodes), frontend.image_user, frontend.ip_public,
        frontend.user_key_private, cluster.name)
     else:
         # Invalid/not complete cluster!
@@ -356,16 +356,21 @@ class ListNodes(AbstractCommand):
 
         print(cluster_summary(cluster))
         if cluster.frontend_nodes:
-            print("")
             print("Frontend nodes:")
+            print("")
             for node in cluster.frontend_nodes:
-                print("  " + str(node))
+                txt = ["    " + i for i in node.pprint().splitlines() ]
+                print('  - ' + str.join("\n", txt)[4:])
+                print("")
 
         if cluster.compute_nodes:
             print("")
             print("Compute nodes:")
+            print("")
             for node in cluster.compute_nodes:
-                print("  " + str(node))
+                txt = ["    " + i for i in node.pprint().splitlines() ]
+                print('  - ' + str.join("\n", txt)[4:])
+                print("")
 
 
 class SetupCluster(AbstractCommand):
