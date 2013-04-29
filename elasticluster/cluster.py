@@ -343,7 +343,9 @@ class Node(object):
         return """%s
 public IP:   %s
 private IP:  %s
-instance id: %s""" % (self.name, self.ip_public, self.ip_private, self.instance_id)
+instance id: %s
+instance flavor: %s""" % (self.name, self.ip_public, self.ip_private,
+                          self.instance_id, self.flavor)
 
 class ClusterStorage(object):
     """
