@@ -49,10 +49,19 @@ class Configurator(object):
         config = Configuration.Instance().read_cloud_section(cloud_name)
         provider = Configurator.cloud_providers_map[config["provider"]]
 
-        return provider(config["ec2_url"],
-                        config["ec2_region"],
-                        config["ec2_access_key"],
-                        config["ec2_secret_key"])
+        args = dict()
+        for param in ['ec2_url', 'ec2_access_key', 'ec2_secret_key', 'ec2_region']:
+            PARAM = param.upper()
+            if PARAM in os.environ:
+                args[param] = os.environ[PARAM]
+            elif param in config:
+                args[param] = config[param]
+            else:
+                raise ConfigurationError(
+                    "Required configuration parameter '%s' missing from configuration file section 'cloud/%s'"
+                    " and environment variable '%s' is not set."
+                    % (param, cloud_name, PARAM))
+        return provider(**args)
 
     def create_cluster(self, cluster_template, **extra_args):
         """
