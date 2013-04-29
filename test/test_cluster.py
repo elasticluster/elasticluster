@@ -24,8 +24,8 @@ from test import config_cluster_name, config_cloud_ec2_url,\
     config_login_image_user, config_login_image_user_sudo,\
     config_login_image_sudo, config_setup_playbook_path, config_cloud_name,\
     config_setup_frontend_groups, config_setup_compute_groups
-from elasticluster.providers.cloud_providers import BotoCloudProvider
-from elasticluster.providers.setup_providers import AnsibleSetupProvider
+from elasticluster.providers.ec2_boto import BotoCloudProvider
+from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.conf import Configurator
 from elasticluster.cluster import Cluster, Node
 

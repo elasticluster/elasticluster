@@ -24,7 +24,7 @@ import sys
 
 from elasticluster import log
 from elasticluster.providers.ec2_boto import BotoCloudProvider
-from elasticluster.providers.setup_providers import AnsibleSetupProvider
+from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.helpers import Singleton
 from elasticluster.cluster import Node, ClusterStorage
 from elasticluster.exceptions import ConfigurationError, ClusterNotFound
