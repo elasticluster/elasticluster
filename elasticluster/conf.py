@@ -23,7 +23,7 @@ import os
 import sys
 
 from elasticluster import log
-from elasticluster.providers.cloud_providers import BotoCloudProvider
+from elasticluster.providers.ec2_boto import BotoCloudProvider
 from elasticluster.providers.setup_providers import AnsibleSetupProvider
 from elasticluster.helpers import Singleton
 from elasticluster.cluster import Node, ClusterStorage
