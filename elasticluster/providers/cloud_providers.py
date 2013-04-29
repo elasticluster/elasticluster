@@ -36,14 +36,14 @@ class BotoCloudProvider(AbstractCloudProvider):
     the virtual instances
     """
 
-    def __init__(self, url, region_name, access_key, secret_key):
-        self._url = url
-        self._region_name = region_name
-        self._access_key = access_key
-        self._secret_key = secret_key
+    def __init__(self, ec2_url, ec2_region, ec2_access_key, ec2_secret_key):
+        self._url = ec2_url
+        self._region_name = ec2_region
+        self._access_key = ec2_access_key
+        self._secret_key = ec2_secret_key
 
         # read all parameters from url
-        proto, opaqueurl = urllib.splittype(url)
+        proto, opaqueurl = urllib.splittype(ec2_url)
         self._host, self._ec2path = urllib.splithost(opaqueurl)
         self._ec2host, port = urllib.splitport(self._host)
 
