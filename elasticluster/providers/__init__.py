@@ -18,12 +18,18 @@
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 
+# stdlib imports
+from abc import ABCMeta, abstractmethod
+
+
 class AbstractCloudProvider:
     """
     Defines the contract for a cloud provider to proper function with
     elasticluster.
     """
+    __metaclass__ = ABCMeta
 
+    @abstractmethod
     def start_instance(self, key_name, key_path, security_group,
                        flavor, image_name, image_userdata):
         """
@@ -32,12 +38,14 @@ class AbstractCloudProvider:
         """
         pass
 
+    @abstractmethod
     def stop_instance(self, instance_id):
         """
         Stops the instance with the given id gracefully.
         """
         pass
 
+    @abstractmethod
     def is_instance_running(self, instance_id):
         """
         Checks if the instance with the given id is up and running.
@@ -49,7 +57,9 @@ class AbstractSetupProvider:
     """
     TODO: define...
     """
+    __metaclass__ = ABCMeta
 
+    @abstractmethod
     def setup_cluster(self, cluster):
         """
         Setup a cluster. `cluster` must be a
@@ -65,6 +75,7 @@ class AbstractSetupProvider:
         """
         pass
 
+    @abstractmethod
     def cleanup(self):
         """
         Cleanup any temporary file or directory created during setup.

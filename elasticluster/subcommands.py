@@ -17,9 +17,12 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
+# stdlib imports
+from abc import ABCMeta, abstractmethod
 import os
 import sys
 
+# local imports
 from elasticluster.conf import Configurator
 from elasticluster.conf import Configuration
 from elasticluster import log
@@ -33,6 +36,7 @@ class AbstractCommand():
     order to be recognized by the arguments list and executed
     afterwards.
     """
+    __metaclass__ = ABCMeta
 
     def __init__(self, params):
         """
@@ -42,6 +46,7 @@ class AbstractCommand():
         """
         self.params = params
 
+    @abstractmethod
     def setup(self, subparsers):
         """
         This method handles the setup of the subcommand. In order to
@@ -53,6 +58,7 @@ class AbstractCommand():
         """
         pass
 
+    @abstractmethod
     def execute(self):
         """
         This method is executed after a command was recognized and may
@@ -63,6 +69,7 @@ class AbstractCommand():
     def __call__(self):
         return self.execute()
 
+    @abstractmethod
     def pre_run(self):
         """
         Overrides this method to execute any pre-run code, especially
@@ -82,14 +89,17 @@ Compute nodes:  %3d
 
 To login on the frontend node, run the command:
 
-    ssh %s@%s -i %s
-
-Or run:
-
     elasticluster ssh %s
-""" % (cluster.name, cluster.template, len(cluster.frontend_nodes),
-       len(cluster.compute_nodes), frontend.image_user, frontend.ip_public,
-       frontend.user_key_private, cluster.name)
+
+To upload or download files to the cluster, use the command:
+
+    elasticluster sftp %s
+""" % (cluster.name, cluster.template,  # initial info set
+       len(cluster.frontend_nodes), len(cluster.compute_nodes),
+       # elasticluster ssh %s
+       cluster.name
+       # elasticluster sftp %s
+       )
     else:
         # Invalid/not complete cluster!
         return """
@@ -435,5 +445,47 @@ class SshFrontend(AbstractCommand):
         frontend = cluster.frontend_nodes[0]
         host = frontend.ip_public
         username = frontend.image_user
-        os.execlp("ssh", "ssh", "-l", username, "-i",
-                  frontend.user_key_private, host)
+        ssh_cmdline = [
+            "ssh",
+            "-i", frontend.user_key_private,
+        ] + (['-v'] * self.params.verbose) + [
+            '%s@%s' % (username, host),
+        ]
+        os.execlp("ssh", *ssh_cmdline)
+
+
+class SftpFrontend(AbstractCommand):
+    """
+    Open an SFTP session to the cluster frontend host.
+    """
+    def setup(self, subparsers):
+        parser = subparsers.add_parser(
+            "ssh",
+            help="Open an SFTP session to the cluster frontend host.",
+            description=self.__doc__)
+        parser.set_defaults(func=self)
+        parser.add_argument('cluster', help='name of the cluster')
+        parser.add_argument('-v', '--verbose', action='count', default=0,
+                            help="Increase verbosity.")
+
+    def execute(self):
+        Configuration.Instance().cluster_name = self.params.cluster
+        cluster_name = self.params.cluster
+        try:
+            cluster = Configurator().load_cluster(cluster_name)
+            cluster.update()
+        except (ClusterNotFound, ConfigurationError), ex:
+            log.error("Setting up cluster %s: %s\n" %
+                      (cluster_name, ex))
+            return
+
+        frontend = cluster.frontend_nodes[0]
+        host = frontend.ip_public
+        username = frontend.image_user
+        sftp_cmdline = [
+            "sftp",
+            "-i", frontend.user_key_private,
+        ] + (['-v'] * self.params.verbose) + [
+            '%s@%s' % (username, host),
+        ]
+        os.execlp("sftp", *sftp_cmdline)
