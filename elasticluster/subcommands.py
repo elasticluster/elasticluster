@@ -69,7 +69,6 @@ class AbstractCommand():
     def __call__(self):
         return self.execute()
 
-    @abstractmethod
     def pre_run(self):
         """
         Overrides this method to execute any pre-run code, especially
