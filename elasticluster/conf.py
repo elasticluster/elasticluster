@@ -24,6 +24,7 @@ import sys
 
 from elasticluster import log
 from elasticluster.providers.ec2_boto import BotoCloudProvider
+from elasticluster.providers.gce import GoogleCloudProvider
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.helpers import Singleton
 from elasticluster.cluster import Node, ClusterStorage
@@ -37,7 +38,10 @@ class Configurator(object):
     configuration file.
     """
 
-    cloud_providers_map = {"ec2_boto": BotoCloudProvider, }
+    cloud_providers_map = {
+        "ec2_boto": BotoCloudProvider,
+        "google":   GoogleCloudProvider,
+    }
 
     setup_providers_map = {"ansible": AnsibleSetupProvider, }
 
@@ -48,26 +52,52 @@ class Configurator(object):
         """
         config = Configuration.Instance().read_cloud_section(cloud_name)
 
-        if config.get('provider') not in Configurator.cloud_providers_map:
+        if 'provider' not in config:
+            raise ConfigurationError(
+                "Missing `provider` configuration option in configuration "
+                "file.")
+
+        provider = Configurator.cloud_providers_map[config["provider"]]
+
+        if config['provider'] == 'ec2_boto':
+            args = dict()
+            # required parameters. They may be found also in the
+            # program environment.
+            for param in ['ec2_url', 'ec2_region',
+                          'ec2_access_key', 'ec2_secret_key']:
+                PARAM = param.upper()
+                if PARAM in os.environ:
+                    args[param] = os.environ[PARAM]
+                elif param in config:
+                    args[param] = config[param]
+                else:
+                    raise ConfigurationError(
+                        "Required configuration parameter '%s' missing from "
+                        "configuration file section 'cloud/%s' and "
+                        "environment variable '%s' is not set."
+                        % (param, cloud_name, PARAM))
+            return provider(**args)
+        elif config['provider'] == 'google':
+            # required parameters
+            for param in ['client_id', 'client_secret', 'project_id']:
+                if param not in config:
+                    raise ConfigurationError(
+                        "Required parameter '%s' missing from "
+                        "configuration section 'cloud/%s'"
+                        % (param, cloud_name))
+                else:
+                    args[param] = config[param]
+            # add optional parameters
+            for param in ['zone', 'network', 'email']:
+                if param in config:
+                    args[param] = config[param]
+            # create the provider
+            return provider(**args)
+        
+        else:  # Invalid `provider`
             raise ConfigurationError(
                 "Invalid value `%s` for cloud `provider` in configuration "
-                "file." % config.get('provider'))
-
-        provider = Configurator.cloud_providers_map[config['provider']]
-
-        args = dict()
-        for param in ['ec2_url', 'ec2_access_key', 'ec2_secret_key', 'ec2_region']:
-            PARAM = param.upper()
-            if PARAM in os.environ:
-                args[param] = os.environ[PARAM]
-            elif param in config:
-                args[param] = config[param]
-            else:
-                raise ConfigurationError(
-                    "Required configuration parameter '%s' missing from configuration file section 'cloud/%s'"
-                    " and environment variable '%s' is not set."
-                    % (param, cloud_name, PARAM))
-        return provider(**args)
+                "file." % config['provider'])
 
     def create_cluster(self, cluster_template, **extra_args):
         """
