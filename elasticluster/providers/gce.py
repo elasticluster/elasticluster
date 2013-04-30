@@ -47,8 +47,8 @@ from elasticluster.providers import AbstractCloudProvider
 GCE_SCOPE = 'https://www.googleapis.com/auth/compute'
 GCE_API_NAME = 'compute'
 GCE_API_VERSION = 'v1beta14'
-GCE_URL = 'https://www.googleapis.com/%s/%s/projects/'
-% (GCE_API_NAME, GCE_API_VERSION)
+GCE_URL = 'https://www.googleapis.com/%s/%s/projects/' \
+    % (GCE_API_NAME, GCE_API_VERSION)
 GCE_DEFAULT_ZONE = 'us-central1-a'
 GCE_DEFAULT_SERVICE_EMAIL = 'default'
 GCE_DEFAULT_SCOPES = [
