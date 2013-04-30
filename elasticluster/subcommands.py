@@ -459,7 +459,7 @@ class SftpFrontend(AbstractCommand):
     """
     def setup(self, subparsers):
         parser = subparsers.add_parser(
-            "ssh",
+            "sftp",
             help="Open an SFTP session to the cluster frontend host.",
             description=self.__doc__)
         parser.set_defaults(func=self)
