@@ -441,8 +441,13 @@ class SshFrontend(AbstractCommand):
         frontend = cluster.frontend_nodes[0]
         host = frontend.ip_public
         username = frontend.image_user
-        os.execlp("ssh", "ssh", "-l", username, "-i",
-                  frontend.user_key_private, host)
+        ssh_cmdline = [
+            "ssh",
+            "-i", frontend.user_key_private,
+        ] + (['-v'] * self.params.verbose) + [
+            '%s@%s' % (username, host),
+        ]
+        os.execlp("ssh", *ssh_cmdline)
 
 
 class SftpFrontend(AbstractCommand):
@@ -473,6 +478,10 @@ class SftpFrontend(AbstractCommand):
         frontend = cluster.frontend_nodes[0]
         host = frontend.ip_public
         username = frontend.image_user
-        os.execlp("sftp",
-                  "sftp", "-i", frontend.user_key_private,
-                  '%s@%s' % (username, host))
+        sftp_cmdline = [
+            "sftp",
+            "-i", frontend.user_key_private,
+        ] + (['-v'] * self.params.verbose) + [
+            '%s@%s' % (username, host),
+        ]
+        os.execlp("sftp", *sftp_cmdline)
