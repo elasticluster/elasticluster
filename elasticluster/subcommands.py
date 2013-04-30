@@ -17,9 +17,12 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
+# stdlib imports
+from abc import ABCMeta, abstractmethod
 import os
 import sys
 
+# local imports
 from elasticluster.conf import Configurator
 from elasticluster.conf import Configuration
 from elasticluster import log
@@ -33,6 +36,7 @@ class AbstractCommand():
     order to be recognized by the arguments list and executed
     afterwards.
     """
+    __metaclass__ = ABCMeta
 
     def __init__(self, params):
         """
@@ -42,6 +46,7 @@ class AbstractCommand():
         """
         self.params = params
 
+    @abstractmethod
     def setup(self, subparsers):
         """
         This method handles the setup of the subcommand. In order to
@@ -53,6 +58,7 @@ class AbstractCommand():
         """
         pass
 
+    @abstractmethod
     def execute(self):
         """
         This method is executed after a command was recognized and may
@@ -63,6 +69,7 @@ class AbstractCommand():
     def __call__(self):
         return self.execute()
 
+    @abstractmethod
     def pre_run(self):
         """
         Overrides this method to execute any pre-run code, especially
