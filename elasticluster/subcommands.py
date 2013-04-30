@@ -300,7 +300,6 @@ class ListClusters(AbstractCommand):
         storage = Configurator().create_cluster_storage()
         cluster_names = storage.get_stored_clusters()
 
-
         if not cluster_names:
             print("No clusters found.")
         else:
@@ -365,7 +364,7 @@ class ListNodes(AbstractCommand):
             print("Frontend nodes:")
             print("")
             for node in cluster.frontend_nodes:
-                txt = ["    " + i for i in node.pprint().splitlines() ]
+                txt = ["    " + i for i in node.pprint().splitlines()]
                 print('  - ' + str.join("\n", txt)[4:])
                 print("")
 
@@ -374,7 +373,7 @@ class ListNodes(AbstractCommand):
             print("Compute nodes:")
             print("")
             for node in cluster.compute_nodes:
-                txt = ["    " + i for i in node.pprint().splitlines() ]
+                txt = ["    " + i for i in node.pprint().splitlines()]
                 print('  - ' + str.join("\n", txt)[4:])
                 print("")
 

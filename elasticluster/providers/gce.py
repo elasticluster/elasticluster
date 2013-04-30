@@ -47,7 +47,8 @@ from elasticluster.providers import AbstractCloudProvider
 GCE_SCOPE = 'https://www.googleapis.com/auth/compute'
 GCE_API_NAME = 'compute'
 GCE_API_VERSION = 'v1beta14'
-GCE_URL = 'https://www.googleapis.com/%s/%s/projects/' % (GCE_API_NAME, GCE_API_VERSION)
+GCE_URL = 'https://www.googleapis.com/%s/%s/projects/'
+% (GCE_API_NAME, GCE_API_VERSION)
 GCE_DEFAULT_ZONE = 'us-central1-a'
 GCE_DEFAULT_SERVICE_EMAIL = 'default'
 GCE_DEFAULT_SCOPES = [
@@ -62,12 +63,16 @@ class GoogleCloudProvider(AbstractCloudProvider):
     """
 
     def __init__(self, client_id, client_secret, project_id,
-                 zone=GCE_DEFAULT_ZONE, network='default', email=GCE_DEFAULT_SERVICE_EMAIL):
+                 zone=GCE_DEFAULT_ZONE, network='default',
+                 email=GCE_DEFAULT_SERVICE_EMAIL):
         """
         Initialize a provider for the GCE service.
 
         :param str client_id:     Client ID to use in OAuth authentication.
-        :param str client_secret: Client secret (password) to use in OAuth authentication.
+
+        :param str client_secret: Client secret (password) to use in
+         OAuth authentication.
+
         :param str project_id:    Project name to log in to GCE.
         """
         self._client_id = client_id
@@ -83,7 +88,6 @@ class GoogleCloudProvider(AbstractCloudProvider):
         self._cached_instances = []
         self._images = None
 
-
     def _connect(self):
         """
         Connects to the cloud provider.
@@ -95,18 +99,21 @@ class GoogleCloudProvider(AbstractCloudProvider):
         if self._gce:
             return self._gce
 
-        flow = OAuth2WebServerFlow(self._client_id, self._client_secret, GCE_SCOPE)
+        flow = OAuth2WebServerFlow(self._client_id, self._client_secret,
+                                   GCE_SCOPE)
         # The `Storage` object holds the credentials that your
         # application needs to authorize access to the user's
         # data. The name of the credentials file is provided. If the
         # file does not exist, it is created. This object can only
         # hold credentials for a single user,
-        storage = Storage(os.path.join(self.Configuration.storage, self._client_id + '.oauth.dat'))
+        storage = Storage(os.path.join(self.Configuration.storage,
+                                       self._client_id + '.oauth.dat'))
 
         credentials = storage.get()
         if credentials is None or credentials.invalid:
             # try to start a browser to have the user authenticate with Google
-            # XXX: what kind of exception is raised if the browser cannot be started?
+            # XXX: what kind of exception is raised if the browser
+            # cannot be started?
             credentials = run(flow, storage)
 
         http = httplib2.Http()
@@ -116,7 +123,6 @@ class GoogleCloudProvider(AbstractCloudProvider):
 
         return self._gce
 
-
     # The following function was adapted from
     # https://developers.google.com/compute/docs/api/python_guide
     # (function _blocking_call)
@@ -125,7 +131,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
         Blocks until the operation status is done for the given operation.
 
         :param response: The response object used in a previous GCE call.
-        :param int wait: Wait up to this number of seconds in between successive polling of the GCE status.
+
+        :param int wait: Wait up to this number of seconds in between
+        successive polling of the GCE status.
         """
 
         gce = self._connect()
@@ -141,21 +149,26 @@ class GoogleCloudProvider(AbstractCloudProvider):
             # Identify if this is a per-zone resource
             if 'zone' in response:
                 zone_name = response['zone'].split('/')[-1]
-                request = gce.zoneOperations().get(project=self._project_id, operation=operation_id, zone=zone_name)
+                request = gce.zoneOperations().get(
+                    project=self._project_id, operation=operation_id,
+                    zone=zone_name)
             else:
-                request = gce.globalOperations().get(project=self._project_id, operation=operation_id)
+                request = gce.globalOperations().get(
+                    project=self._project_id,
+                    operation=operation_id)
 
             response = request.execute(self._auth_http)
             if response:
                 status = response['status']
         return response
 
-
     def start_instance(self,
-                       # these are common to any CloudProvider.start_instance() call
+                       # these are common to any
+                       # CloudProvider.start_instance() call
                        key_name, key_path, security_group,
                        flavor, image_name, image_userdata,
-                       # these params are specific to the GoogleCloudProvider
+                       # these params are specific to the
+                       # GoogleCloudProvider
                        instance_name=None):
         """
         Starts a new instance with the given properties and returns
@@ -181,28 +194,30 @@ class GoogleCloudProvider(AbstractCloudProvider):
         if instance_name is None:
             # XXX: it would be nice to have a way to name this
             # <clustername>-<nodetype>-NNN, e.g.,
-            # "mycluster-compute-001", but we take an easy path to uniqueness for now.
+            # "mycluster-compute-001", but we take an easy path to
+            # uniqueness for now.
             instance_name = 'elasticluster-%s' % uuid.uuid4()
         instance = {
-          'name': instance_name,
-          'machineType': flavor,
-          'image': image_url,
-          'networkInterfaces': [{
-            'accessConfigs': [{
-              'type': 'ONE_TO_ONE_NAT',
-              'name': 'External NAT'
-             }],
-            'network': network_url
-          }],
-          'serviceAccounts': [{
-               'email': self._email,
-               'scopes': GCE_DEFAULT_SCOPES
-          }]
+            'name': instance_name,
+            'machineType': flavor,
+            'image': image_url,
+            'networkInterfaces': [
+                {'accessConfigs': [
+                    {'type': 'ONE_TO_ONE_NAT',
+                     'name': 'External NAT'
+                     }],
+                    'network': network_url
+                 }],
+            'serviceAccounts': [
+                {'email': self._email,
+                 'scopes': GCE_DEFAULT_SCOPES
+                 }]
         }
 
         # create the instance
         gce = self._connect()
-        request = gce.instances().insert(project=self._project_id, body=instance, zone=self._zone)
+        request = gce.instances().insert(
+            project=self._project_id, body=instance, zone=self._zone)
         response = request.execute(self._auth_http)
         response = self._wait_until_done(response)
         # XXX: we are likely interested in one specific value from the
@@ -211,7 +226,6 @@ class GoogleCloudProvider(AbstractCloudProvider):
         # instance name, so let us return that.
         return instance_name
 
-
     def stop_instance(self, instance_id):
         """
         Stops the instance with the given id gracefully.
@@ -219,11 +233,11 @@ class GoogleCloudProvider(AbstractCloudProvider):
         gce = self._connect()
 
         # delete an Instance
-        request = gce.instances().delete(project=self._project_id, instance=instance_id, zone=self._zone)
+        request = gce.instances().delete(
+            project=self._project_id, instance=instance_id, zone=self._zone)
         response = request.execute(self._auth_http)
         response = self._wait_until_done(response)
         # XXX: check for errors!
-
 
     def list_instances(self, filter=None):
         """
@@ -232,7 +246,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str filter: Filter specification; see https://developers.google.com/compute/docs/reference/latest/instances/list for details.
         """
         gce = self._connect()
-        request = gce.instances().list(project=self._project_id, filter=filter, zone=self._zone)
+        request = gce.instances().list(
+            project=self._project_id, filter=filter, zone=self._zone)
         response = request.execute(self._auth_http)
         if response and 'items' in response:
             return response['items']
@@ -240,10 +255,10 @@ class GoogleCloudProvider(AbstractCloudProvider):
             # return new empty list
             return list()
 
-
     def is_instance_running(self, instance_id):
         """
-        Return True/False depending on whether the instance with the given id is up and running.
+        Return True/False depending on whether the instance with the
+        given id is up and running.
         """
         items = self.list_images(filter=('name eq "%s"' % instance_id))
         for item in items:

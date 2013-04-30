@@ -93,7 +93,7 @@ class Configurator(object):
                     args[param] = config[param]
             # create the provider
             return provider(**args)
-        
+
         else:  # Invalid `provider`
             raise ConfigurationError(
                 "Invalid value `%s` for cloud `provider` in configuration "

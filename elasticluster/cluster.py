@@ -347,6 +347,7 @@ instance id: %s
 instance flavor: %s""" % (self.name, self.ip_public, self.ip_private,
                           self.instance_id, self.flavor)
 
+
 class ClusterStorage(object):
     """
     Handles the storage to save information about all the clusters
