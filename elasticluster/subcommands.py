@@ -96,8 +96,9 @@ To upload or download files to the cluster, use the command:
 """ % (cluster.name, cluster.template,  # initial info set
        len(cluster.frontend_nodes), len(cluster.compute_nodes),
        # elasticluster ssh %s
-       cluster.name
+       cluster.name,
        # elasticluster sftp %s
+       cluster.name
        )
     else:
         # Invalid/not complete cluster!
@@ -429,6 +430,9 @@ class SshFrontend(AbstractCommand):
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
+        parser.add_argument('ssh_args', metavar='args', nargs='*',
+                            help="Execute the following command on the remote "
+                            "machine instead of opening an interactive shell.")
 
     def execute(self):
         Configuration.Instance().cluster_name = self.params.cluster
@@ -449,7 +453,7 @@ class SshFrontend(AbstractCommand):
             "-i", frontend.user_key_private,
         ] + (['-v'] * self.params.verbose) + [
             '%s@%s' % (username, host),
-        ]
+        ] + self.params.ssh_args
         os.execlp("ssh", *ssh_cmdline)
 
 
@@ -466,6 +470,9 @@ class SftpFrontend(AbstractCommand):
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
+        parser.add_argument('sftp_args', metavar='args', nargs='*',
+                            help="Arguments to pass to ftp, instead of "
+                            "opening an interactive shell.")
 
     def execute(self):
         Configuration.Instance().cluster_name = self.params.cluster
@@ -484,7 +491,7 @@ class SftpFrontend(AbstractCommand):
         sftp_cmdline = [
             "sftp",
             "-i", frontend.user_key_private,
-        ] + (['-v'] * self.params.verbose) + [
+        ] + (['-v'] * self.params.verbose) + self.params.sftp_args + [
             '%s@%s' % (username, host),
         ]
         os.execlp("sftp", *sftp_cmdline)
