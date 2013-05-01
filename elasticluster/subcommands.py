@@ -26,8 +26,9 @@ import sys
 from elasticluster.conf import Configurator
 from elasticluster.conf import Configuration
 from elasticluster import log
-from elasticluster.exceptions import ClusterNotFound, ConfigurationError,\
-    ImageError, SecurityGroupError
+from elasticluster.exceptions import ClusterNotFound, ConfigurationError
+from elasticluster.exceptions import ImageError, SecurityGroupError
+from elasticluster.exceptions import NodeNotFound
 
 
 class AbstractCommand():
@@ -78,14 +79,21 @@ class AbstractCommand():
 
 
 def cluster_summary(cluster):
-    if cluster.frontend_nodes:
-        frontend = cluster.frontend_nodes[0]
-        return """
+    try:
+        frontend = cluster.get_frontend_node().name
+    except NodeNotFound, ex:
+        frontend = 'unknown'
+        log.error("Unable to get information on the frontend node: "
+                  "%s", str(ex))
+    msg = """
 Cluster name:     %s
 Cluster template: %s
-Frontend nodes: %3d
-Compute nodes:  %3d
+Frontend node: %s
+""" % (cluster.name, cluster.template, frontend)
 
+    for cls in cluster.nodes:
+        msg += "- %s nodes: %d\n" % (cls, len(cluster.nodes[cls]))
+    msg += """
 To login on the frontend node, run the command:
 
     elasticluster ssh %s
@@ -93,23 +101,8 @@ To login on the frontend node, run the command:
 To upload or download files to the cluster, use the command:
 
     elasticluster sftp %s
-""" % (cluster.name, cluster.template,  # initial info set
-       len(cluster.frontend_nodes), len(cluster.compute_nodes),
-       # elasticluster ssh %s
-       cluster.name,
-       # elasticluster sftp %s
-       cluster.name
-       )
-    else:
-        # Invalid/not complete cluster!
-        return """
-INCOMPLETE CLUSTER! MISSING FRONTEND NODE!
-Cluster name:     %s
-Cluster template: %s
-Compute nodes:    %d""" % (cluster.name,
-                           cluster.template,
-                           len(cluster.compute_nodes))
-
+""" % (cluster.name, cluster.name )
+    return msg
 
 class Start(AbstractCommand):
     """
@@ -127,17 +120,23 @@ class Start(AbstractCommand):
                             help="Increase verbosity.")
         parser.add_argument('-n', '--name', dest='cluster_name',
                             help='Name of the cluster.')
-        parser.add_argument('-c', '--compute-nodes',
-                            help='Number of compute nodes.')
+        parser.add_argument('--nodes', metavar='N1:GROUP[,N2:GROUP2,...]', 
+                            help='Override the values in of the configuration file and starts `N1` nodes of group `GROUP`, N2 of GROUP2 etc...')
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Only start the cluster, do not configure it")
 
     def pre_run(self):
-        if self.params.compute_nodes:
-            try:
-                self.params.compute_nodes = int(self.params.compute_nodes)
-            except ValueError:
-                pass
+        self.params.extra_conf = {}
+        try:
+            if self.params.nodes:
+                nodes = self.params.nodes.split(',')
+                for nspec in nodes:
+                    n, group = nspec.split(':')
+                    n = int(n)
+                    self.params.extra_conf[group+'_nodes'] = n
+        except ValueError:
+            raise ConfigurationError(
+                "Invalid argument for option --nodes: %s" % self.params.nodes)
 
     def execute(self):
         """
@@ -154,24 +153,21 @@ class Start(AbstractCommand):
         try:
             cluster = Configurator().load_cluster(cluster_name)
         except ClusterNotFound, ex:
-            extra_conf = dict()
-            if self.params.compute_nodes:
-                extra_conf['compute'] = self.params.compute_nodes
-
             if self.params.cluster_name:
-                extra_conf['name'] = self.params.cluster_name
+                self.params.extra_conf['name'] = self.params.cluster_name
 
             try:
                 cluster = Configurator().create_cluster(
-                    cluster_template, **extra_conf)
+                    cluster_template, **self.params.extra_conf)
             except ConfigurationError, ex:
                 log.error("Starting cluster %s: %s\n",
                           cluster_template, ex)
                 return
 
         try:
-            print("Starting cluster `%s` with %d compute nodes." % (
-                cluster.name, len(cluster.compute_nodes)))
+            for cls in cluster.nodes:
+                print("Starting cluster `%s` with %d %s nodes." % (
+                cluster.name, len(cluster.nodes[cls]), cls))
             print("(this may take a while...)")
             cluster.start()
             if self.params.no_setup:
@@ -232,20 +228,28 @@ class ResizeCluster(AbstractCommand):
             "compute nodes.", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('N', help="Number of compute nodes, or, using +n"
-                            "or -n, resize by adding or removing `n` nodes.")
+        parser.add_argument('--nodes', metavar='+-N1:GROUP1[,+-N2:GROUP2]',
+                            help="Add/remove N1 nodes of group GROUP1, N2 of group GROUP2 etc...")
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Only start the cluster, do not configure it")
 
     def pre_run(self):
-        self.params.nodes_to_add = 0
-        self.params.nodes_to_remove = 0
+        self.params.nodes_to_add = {}
+        self.params.nodes_to_remove = {}
         try:
-            int(self.params.N)
+            if self.params.nodes:
+                nodes = self.params.nodes.split(',')
+                for nspec in nodes:
+                    n, group = nspec.split(':')
+                    if n[0] == '-':
+                        self.params.nodes_to_remove[group] = int(n[1:])
+                    else:
+                        self.params.nodes_to_add[group] = int(n)
         except ValueError:
-            raise RuntimeError("Value of `N` must be an integer")
+            raise ConfigurationError(
+                "Invalid syntax for argument: %s" % self.params.nodes)
 
     def execute(self):
         # Get current cluster configuration
@@ -257,33 +261,18 @@ class ResizeCluster(AbstractCommand):
             log.error("Listing nodes from cluster %s: %s\n" %
                       (cluster_name, ex))
             return
+        for grp in self.params.nodes_to_add:
+            print("Adding %d %s node(s) to the cluster"
+                  "" % (self.params.nodes_to_add[grp], grp))
+            for i in range(self.params.nodes_to_add[grp]):
+                cluster.add_node(grp)
 
-        if self.params.N.startswith('+'):
-            self.params.nodes_to_add = int(self.params.N)
-        elif self.params.N.startswith('-'):
-            self.params.nodes_to_remove = abs(int(self.params.N))
-        else:
-            N = int(self.params.N)
-            nnodes = len(cluster.compute_nodes)
-            if nnodes > N:
-                self.params.nodes_to_remove = nnodes - N
-            else:
-                self.params.nodes_to_add = N - nnodes
-
-        if self.params.nodes_to_add:
-            print("Adding %d nodes to the cluster"
-                  "" % self.params.nodes_to_add)
-        for i in range(self.params.nodes_to_add):
-            cluster.add_node('compute')
-
-        if self.params.nodes_to_remove:
-            print("Removing %d nodes from the cluster."
-                  "" % self.params.nodes_to_remove)
-        for i in range(self.params.nodes_to_remove):
-            node = cluster.compute_nodes.pop()
-            if node in cluster.compute_nodes:
-                cluster.remove_node(node)
-            node.stop()
+        for grp in self.params.nodes_to_remove:
+            print("Removing %d %s node(s) from the cluster."
+                  "" % (self.params.nodes_to_remove[grp], grp))
+            for i in range(self.params.nodes_to_remove[grp]):
+                node = cluster.nodes[grp].pop()
+                node.stop()
 
         cluster.start()
         if self.params.no_setup:
@@ -329,7 +318,8 @@ Please note that there's no guarantee that they are fully configured:
                 print("  name:           %s" % cluster.name)
                 print("  template:       %s" % cluster.template)
                 print("  cloud:          %s " % cluster._cloud)
-                print("  compute nodes:  %d" % len(cluster.compute_nodes))
+                for cls in cluster.nodes:
+                    print("  - %s nodes: %d" % (cls, len(cluster.nodes[cls])))
                 print("")
 
 
@@ -370,19 +360,10 @@ class ListNodes(AbstractCommand):
             return
 
         print(cluster_summary(cluster))
-        if cluster.frontend_nodes:
-            print("Frontend nodes:")
+        for cls in cluster.nodes:
+            print("%s nodes:" % cls)
             print("")
-            for node in cluster.frontend_nodes:
-                txt = ["    " + i for i in node.pprint().splitlines()]
-                print('  - ' + str.join("\n", txt)[4:])
-                print("")
-
-        if cluster.compute_nodes:
-            print("")
-            print("Compute nodes:")
-            print("")
-            for node in cluster.compute_nodes:
+            for node in cluster.nodes[cls]:
                 txt = ["    " + i for i in node.pprint().splitlines()]
                 print('  - ' + str.join("\n", txt)[4:])
                 print("")
@@ -445,7 +426,11 @@ class SshFrontend(AbstractCommand):
                       (cluster_name, ex))
             return
 
-        frontend = cluster.frontend_nodes[0]
+        try:
+            frontend = cluster.get_frontend_node()
+        except NodeNotFound, ex:
+            log.error("Unable to connect to the frontend node: %s" % str(ex))
+            sys.exit(1)
         host = frontend.ip_public
         username = frontend.image_user
         ssh_cmdline = [
@@ -485,7 +470,11 @@ class SftpFrontend(AbstractCommand):
                       (cluster_name, ex))
             return
 
-        frontend = cluster.frontend_nodes[0]
+        try:
+            frontend = cluster.get_frontend_node()
+        except NodeNotFound, ex:
+            log.error("Unable to connect to the frontend node: %s" % str(ex))
+            sys.exit(1)
         host = frontend.ip_public
         username = frontend.image_user
         sftp_cmdline = [

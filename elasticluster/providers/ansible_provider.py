@@ -79,16 +79,15 @@ class AnsibleSetupProvider(AbstractSetupProvider):
     """
 
     def __init__(self, private_key_file, remote_user,
-                 sudo_user, sudo, playbook_path, frontend_groups,
-                 compute_groups, **extra_conf):
+                 sudo_user, sudo, playbook_path, **extra_conf):
         self._private_key_file = os.path.expanduser(
             os.path.expandvars(private_key_file))
         self._remote_user = remote_user
         self._sudo_user = sudo_user
         self._sudo = sudo
         self._playbook_path = playbook_path
-        self._frontend_groups = [g.strip() for g in frontend_groups.split(',')]
-        self._compute_groups = [g.strip() for g in compute_groups.split(",")]
+        self.groups = dict((k[:-7], v.split(',')) for k, v in extra_conf.items() if k.endswith('_groups'))
+
         self.inventory_path = None
         module_dir = extra_conf.get('ansible_module_dir', None)
         if module_dir:
@@ -183,18 +182,12 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         Builds the inventory for the given cluster and returns its path
         """
         inventory = dict()
-
-        for node in cluster.frontend_nodes:
-            for group in self._frontend_groups:
-                if group not in inventory:
-                    inventory[group] = []
-                inventory[group].append((node.name, node.ip_public))
-
-        for node in cluster.compute_nodes:
-            for group in self._compute_groups:
-                if group not in inventory:
-                    inventory[group] = []
-                inventory[group].append((node.name, node.ip_public))
+        for node in cluster.get_all_nodes():
+            if node.type in self.groups:
+                for group in self.groups[node.type]:
+                    if group not in inventory:
+                        inventory[group] = []
+                    inventory[group].append((node.name, node.ip_public))
 
         if inventory:
             # create a temporary file to pass to ansible, since the
