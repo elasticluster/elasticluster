@@ -5,7 +5,8 @@ elasticluster
 create, manage and setup computing clusters hosted on cloud
 infrastructures (like `Amazon's Elastic Compute Cloud EC2`_)
 or a private `OpenStack`_ cloud). Its main goal
-is to get your own private cluster up and running with just a few commands.
+is to get your own private cluster up and running with just a few commands; a `YouTube video`_
+demoes the basic features of elasticluster. 
 
 This project is an effort of the
 `Grid Computing Competence Center`_ at the
@@ -235,6 +236,7 @@ recovery or undo operation, so think twice before stopping the cluster.
 .. _`GC3 Hobbes cloud`: http://www.gc3.uzh.ch/infrastructure/hobbes
 .. _`configuration template`: https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template.ini
 .. _`GNU General Public License version 3`: http://www.gnu.org/licenses/gpl.html
+.. _`YouTube video`: http://youtu.be/cR3C7XCSMmA
 
 .. _`Amazon's Elastic Compute Cloud EC2`: http://aws.amazon.com/ec2/
 .. _`OpenStack`: http://www.openstack.org/
