@@ -35,7 +35,7 @@ Quickstart
 ==========
 
 `elasticluster` is a `Python`_ program; Python
-version 2.7 is required to run it.
+version 2.6 is required to run it.
 
 It's quite easy to install `elasticluster` using
 `pip`_; the command below is all you
