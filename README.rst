@@ -91,8 +91,9 @@ for details and further options::
     security_group=default
     image_id=ami-00000048
     flavor=m1.tiny
-    frontend=1
-    compute=2
+    frontend_nodes=1
+    compute_nodes=2
+    frontend_class=frontend
     image_userdata=
 
     [setup/my-slurm-cluster]

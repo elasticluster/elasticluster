@@ -18,6 +18,7 @@
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 import json
+import operator
 import os
 import signal
 import socket
@@ -26,7 +27,7 @@ import time
 import paramiko
 
 from elasticluster import log
-from elasticluster.exceptions import TimeoutError, ClusterNotFound
+from elasticluster.exceptions import TimeoutError, ClusterNotFound, NodeNotFound
 
 
 class Cluster(object):
@@ -37,61 +38,43 @@ class Cluster(object):
     startup_timeout = 60*10
 
     def __init__(self, template, name, cloud, cloud_provider, setup_provider,
-                 frontend, compute, configurator, **extra):
+                 nodes, configurator, **extra):
         self.template = template
         self.name = name
         self._cloud = cloud
-        self._frontend = frontend
-        self._compute = compute
         self._cloud_provider = cloud_provider
         self._setup_provider = setup_provider
 
         self._configurator = configurator
         self._storage = configurator.create_cluster_storage()
-
-        self.compute_nodes = []
-        self.frontend_nodes = []
-
+        self.nodes = dict((k, []) for k in nodes)
+        self.frontend_class = extra.get('frontend_class')
         # initialize nodes
-        for _ in range(self._frontend):
-            self.add_node(Node.frontend_type)
-
-        for _ in range(self._compute):
-            self.add_node(Node.compute_type)
+        for cls in nodes:
+            for i in range(nodes[cls]):
+                self.add_node(cls)
 
     def add_node(self, node_type, name=""):
         """
         Adds a new node, but doesn't start the instance on the cloud.
         Returns the created node instance
         """
-        name = ""
-        if not name:
-            if node_type == Node.frontend_type:
-                name = "frontend" + str(len(self.frontend_nodes) + 1).zfill(3)
-            elif node_type == Node.compute_type:
-                name = "compute" + str(len(self.compute_nodes) + 1).zfill(3)
-            else:
-                log.warning("Invalid node type %s given. "
-                            "Unable to add node" % node_type)
-                return
+        name = "%s%03d" % (node_type, len(self.nodes[node_type])+1) 
 
         node = self._configurator.create_node(self.template, node_type,
                                               self._cloud_provider, name)
-        if node_type == Node.frontend_type:
-            self.frontend_nodes.append(node)
-        else:
-            self.compute_nodes.append(node)
-
+        self.nodes[node_type].append(node)
         return node
 
     def remove_node(self, node):
         """
         Removes a node from the cluster, but does not stop it.
         """
-        if node.type == Node.compute_type:
-            self.compute_nodes.remove(node)
-        elif node.type == Node.frontend_type:
-            self.frontend_nodes.remove(node)
+        if node.type not in self.nodes:
+            log.error("Unable to remove node %s: invalid node type `%s`.",
+                      node.name, node.type)
+        else:
+            self.nodes.remove(node)
 
     def start(self):
         """
@@ -106,7 +89,7 @@ class Cluster(object):
 
         # ANTONIO: I don't think it's correct to stop all the nodes if
         # something goes wrong here.
-        for node in self.frontend_nodes + self.compute_nodes:
+        for node in self.get_all_nodes():
             if node.is_alive():
                 log.info("Not starting node %s which is "
                          "already up&running.", node.name)
@@ -126,7 +109,7 @@ class Cluster(object):
         signal.alarm(Cluster.startup_timeout)
 
         try:
-            starting_nodes = self.compute_nodes + self.frontend_nodes
+            starting_nodes = self.get_all_nodes()
             while starting_nodes:
                 starting_nodes = [n for n in starting_nodes
                                   if not n.is_alive()]
@@ -148,7 +131,7 @@ class Cluster(object):
         # we successfully connect to all of them.
         signal.signal(signal.SIGALRM, timeout_handler)
         signal.alarm(Cluster.startup_timeout)
-        pending_nodes = self.compute_nodes + self.frontend_nodes
+        pending_nodes = self.get_all_nodes()
 
         try:
             while pending_nodes:
@@ -167,28 +150,26 @@ class Cluster(object):
 
         signal.alarm(0)
 
+    def get_all_nodes(self):
+        """
+        Returns a list of all the nodes of the cluster.
+        """
+        return reduce(operator.add, self.nodes.values())
+
     def stop(self, force=False):
         """
         Terminates all instances corresponding to this cluster and
         deletes the cluster storage.
         """
-        for node in self.frontend_nodes + self.compute_nodes:
+        for node in self.get_all_nodes():
             try:
                 node.stop()
-                if node in self.compute_nodes:
-                    self.compute_nodes.remove(node)
-                elif node in self.frontend_nodes:
-                    self.frontend_nodes.remove(node)
-                else:
-                    log.warning(
-                        "node %s (instance id %s) is nor a compute node nor a "
-                        "frontend node! Something strange happened!",
-                        node.name, node.instance_id)
+                self.nodes[node.type].remove(node)
             except:
                 # Boto does not always raises an `Exception` class!
                 log.error("could not stop instance `%s`, it might "
                           "already be down.", node.instance_id)
-        if not self.frontend_nodes and not self.compute_nodes:
+        if not self.get_all_nodes():
             log.debug("Removing cluster %s.", self.name)
             self._setup_provider.cleanup()
             self._storage.delete_cluster(self.name)
@@ -201,6 +182,36 @@ class Cluster(object):
                         "as requested, the cluster has been force-removed.")
             self._setup_provider.cleanup()
             self._storage.delete_cluster(self.name)
+
+    def get_frontend_node(self):
+        """
+        Returns the first node of the class specified in the
+        configuration file as `frontend_class`, or the first node of
+        the first class in alphabetic order.  
+        """
+        if self.frontend_class:
+           if self.frontend_class in self.nodes:
+               cls = self.nodes[self.frontend_class]
+               if cls:
+                   return cls[0]
+               else:
+                   log.warning(
+                       "preferred `frontend_class` `%s` is empty: unable to "
+                       "get the choosen frontend node from that class.",
+                       self.frontend_class)
+           else:
+               raise NodeNotFound(
+                   "Invalid frontend_class `%s`. Please check your "
+                   "configuration file." % self.frontend_class)
+
+        # If we reach this point, the preferred class was empty. Pick
+        # one using the default logic.
+        for cls in sorted(self.nodes.keys()):
+            if self.nodes[cls]:
+                return self.nodes[cls][0]
+        # Uh-oh, no nodes in this cluster.
+        raise NodeNotFound("Unable to find a valid frontend: "
+                           "cluster has no nodes!")
 
     def setup(self):
         try:
@@ -222,7 +233,7 @@ class Cluster(object):
         return ret
 
     def update(self):
-        for node in self.compute_nodes + self.frontend_nodes:
+        for node in self.get_all_nodes():
             node.update_ips()
         self._storage.dump_cluster(self)
 
@@ -363,16 +374,14 @@ class ClusterStorage(object):
         load it later on.
         """
         db = {"name": cluster.name, "template": cluster.template}
-        db["frontend"] = [
+        for cls in cluster.nodes:
+            db[cls + '_nodes'] = len(cluster.nodes[cls])
+        db["nodes"] = [
             {'instance_id': node.instance_id,
              'name': node.name,
+             'type': node.type,
              'ip_public': node.ip_public,
-             'ip_private': node.ip_private} for node in cluster.frontend_nodes]
-        db["compute"] = [
-            {'instance_id': node.instance_id,
-             'name': node.name,
-             'ip_public': node.ip_public,
-             'ip_private': node.ip_private} for node in cluster.compute_nodes]
+             'ip_private': node.ip_private} for node in cluster.get_all_nodes()]
 
         db_json = json.dumps(db)
 

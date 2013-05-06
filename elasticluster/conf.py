@@ -116,11 +116,13 @@ class Configurator(object):
         # Update with extra conf
         config.update(extra_args)
 
-        for key in ['cloud', 'setup_provider', 'frontend', 'compute']:
+        for key in ['cloud', 'setup_provider']:
             if key not in config:
                 raise ConfigurationError(
                     "Invalid configuration for cluster `%s`: "
                     "missing configuration key `%s`." % (config['name'], key))
+
+        nodes = dict((k[:-6],int(config[k])) for k in config if k.endswith('_nodes'))
 
         return Cluster(cluster_template,
                        config['name'],
@@ -128,9 +130,9 @@ class Configurator(object):
                        self.create_cloud_provider(config['cloud']),
                        self.create_setup_provider(
                            config["setup_provider"], cluster_template),
-                       int(config['frontend']),
-                       int(config['compute']),
-                       self)  # ANTONIO: why self? Why at the end? It
+                       nodes,
+                       self,
+                       frontend_class=config.get('frontend_class'))  # ANTONIO: why self? Why at the end? It
                               # does not looks right
 
     def load_cluster(self, cluster_name):
@@ -140,21 +142,15 @@ class Configurator(object):
         cluster = Configurator().create_cluster(
             information['template'], name=information['name'])
 
-        # Clear frontend and compute nodes
-        cluster.compute_nodes = []
-        cluster.frontend_nodes = []
-
-        for compute in information['compute']:
-            node = cluster.add_node(Node.compute_type, name=compute['name'])
-            node.instance_id = compute.get('instance_id')
-            node.ip_public = compute.get('ip_public')
-            node.ip_private = compute.get('ip_private')
-
-        for frontend in information['frontend']:
-            node = cluster.add_node(Node.frontend_type, name=frontend['name'])
-            node.instance_id = frontend.get('instance_id')
-            node.ip_public = frontend.get('ip_public')
-            node.ip_private = frontend.get('ip_private')
+        # Clear cluster nodes.
+        cluster.nodes = dict((k, []) for k in cluster.nodes)
+        for dnode in information['nodes']:
+            if dnode['type'] not in cluster.nodes:
+                cluster.nodes[dnode['type']] = []
+            node = cluster.add_node(dnode['type'], name=dnode['name'])
+            node.instance_id = dnode['instance_id']
+            node.ip_public = dnode['ip_public']
+            node.ip_private = dnode['ip_private']
 
         return cluster
 
@@ -202,8 +198,7 @@ class Configurator(object):
         return provider(
             config.pop('user_key_private'), config.pop('image_user'),
             config.pop('image_user_sudo'), config.pop('image_sudo'),
-            config.pop('playbook_path'), config.pop('frontend_groups'),
-            config.pop('compute_groups'), **config)
+            config.pop('playbook_path'), **config)
 
 
 class QuotelessConfigParser(ConfigParser.ConfigParser):
@@ -295,11 +290,6 @@ class Configuration(object):
         will be merged (node_type is more specific) in order to allow
         easier configuration options.
         """
-
-        if node_type == Node.frontend_type:
-            node_type = "frontend"
-        else:
-            node_type = "compute"
 
         config_name_general = "cluster/" + cluster_name
         config_name_specific = "cluster/" + cluster_name + "/" + node_type
