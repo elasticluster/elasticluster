@@ -58,11 +58,11 @@ Configuration
 After the software is installed you need to create a configuration
 file. A fully-commented `configuration template`_
 is available `here
-<https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template.ini>`_.
+<https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template>`_.
 
 When `elasticluster` is run for the first time, it will copy the
 `configuration template`_ to the default
-configuration location ``~/.elasticluster/config.cfg``.
+configuration location ``~/.elasticluster/config``.
 
 The following shows a basic configuration to connect to the
 `GC3 Hobbes cloud`_;
@@ -103,7 +103,7 @@ for details and further options::
     compute_groups=slurm_clients
 
 `elasticluster` looks for a configuration file named
-``~/.elasticluster/config.cfg``; you can specify a different location
+``~/.elasticluster/config``; you can specify a different location
 with the `-c` option: for example, `elasticluster -c
 /path/to/another.cfg ...` makes `elasticluster` read the configuration
 file ``/path/to/another.cfg``

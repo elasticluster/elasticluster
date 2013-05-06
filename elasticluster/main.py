@@ -44,7 +44,7 @@ class ElasticCloud(cli.app.CommandLineApp):
     name = "elasticluster"
 
     default_configuration_file = os.path.expanduser(
-        "~/.elasticluster/config.cfg")
+        "~/.elasticluster/config")
     default_storage_dir = os.path.expanduser(
         "~/.elasticluster/storage")
 
