@@ -132,7 +132,7 @@ class Configurator(object):
                            config["setup_provider"], cluster_template),
                        nodes,
                        self,
-                       frontend_class=config.get('frontend_class'))  # ANTONIO: why self? Why at the end? It
+                       ssh_to=config.get('ssh_to'))  # ANTONIO: why self? Why at the end? It
                               # does not looks right
 
     def load_cluster(self, cluster_name):

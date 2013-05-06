@@ -274,14 +274,16 @@ compute_groups=pbs_clients
 #                corresponding <class>_groups configuration option in
 #                the [setup/] section.
 #
-# frontend_class: `ssh` and `sftp` nodes will connect to only one
-#                 node. This is the first of the group specified in
-#                 this configuration option, or the first node of the
-#                 first group in alphabetical order.  For instance, if
-#                 you don't define any frontend_class and you defined
-#                 a `frontend_nodes` and `compute_nodes`, the frontend
-#                 will be `compute001` which is the first
-#                 `compute_nodes` node.
+# ssh_to: `ssh` and `sftp` nodes will connect to only one node. This
+#          is the first of the group specified in this configuration
+#          option, or the first node of the first group in
+#          alphabetical order.  For instance, if you don't set any
+#          value for `ssh_to` and you defined two groups:
+#          `frontend_nodes` and `compute_nodes`, the ssh and sftp
+#          command will connect to `compute001` which is the first
+#          `compute_nodes` node. If you specify `frontend`, instead,
+#          it will connect to `frontend001` (or the first node of the
+#          `frontend` group).
 #
 # Optional configuration keys
 # ---------------------------

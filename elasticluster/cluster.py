@@ -48,7 +48,7 @@ class Cluster(object):
         self._configurator = configurator
         self._storage = configurator.create_cluster_storage()
         self.nodes = dict((k, []) for k in nodes)
-        self.frontend_class = extra.get('frontend_class')
+        self.ssh_to = extra.get('ssh_to')
         # initialize nodes
         for cls in nodes:
             for i in range(nodes[cls]):
@@ -186,23 +186,23 @@ class Cluster(object):
     def get_frontend_node(self):
         """
         Returns the first node of the class specified in the
-        configuration file as `frontend_class`, or the first node of
+        configuration file as `ssh_to`, or the first node of
         the first class in alphabetic order.  
         """
-        if self.frontend_class:
-           if self.frontend_class in self.nodes:
-               cls = self.nodes[self.frontend_class]
+        if self.ssh_to:
+           if self.ssh_to in self.nodes:
+               cls = self.nodes[self.ssh_to]
                if cls:
                    return cls[0]
                else:
                    log.warning(
-                       "preferred `frontend_class` `%s` is empty: unable to "
+                       "preferred `ssh_to` `%s` is empty: unable to "
                        "get the choosen frontend node from that class.",
-                       self.frontend_class)
+                       self.ssh_to)
            else:
                raise NodeNotFound(
-                   "Invalid frontend_class `%s`. Please check your "
-                   "configuration file." % self.frontend_class)
+                   "Invalid ssh_to `%s`. Please check your "
+                   "configuration file." % self.ssh_to)
 
         # If we reach this point, the preferred class was empty. Pick
         # one using the default logic.
