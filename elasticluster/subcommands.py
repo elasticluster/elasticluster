@@ -19,6 +19,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 # stdlib imports
 from abc import ABCMeta, abstractmethod
+from fnmatch import fnmatch
 import os
 import sys
 
@@ -334,9 +335,13 @@ class ListTemplates(AbstractCommand):
         parser.set_defaults(func=self)
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
+        parser.add_argument('clusters', help="List only this cluster. "
+                            "Accepts globbing.", nargs="*")
 
     def execute(self):
         templates = Configuration.Instance().list_cluster_templates()
+        for pattern in self.params.clusters:
+            templates = [t for t in templates if fnmatch(t, pattern)]
         print("""%d cluster templates found.""" % len(templates))
         for template in templates:
             try:
@@ -345,8 +350,9 @@ class ListTemplates(AbstractCommand):
 name:     %s
 image id: %s
 flavor:   %s
-cloud:    %s""" % (template, cluster.extra['image_id'], cluster.extra['flavor'],
-       cluster._cloud))
+cloud:    %s""" % (template, cluster.extra['image_id'],
+                   cluster.extra['flavor'],
+                   cluster._cloud))
                 for nodetype in cluster.nodes:
                     print("%s nodes: %d" % (
                             nodetype,
