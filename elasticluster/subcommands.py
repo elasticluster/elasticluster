@@ -323,6 +323,37 @@ Please note that there's no guarantee that they are fully configured:
                 print("")
 
 
+class ListTemplates(AbstractCommand):
+    """
+    List the available templates defined in the configuration file.
+    """
+    def setup(self, subparsers):
+        parser = subparsers.add_parser(
+            "list-templates", help="Show the templates defined in the "
+            "configuration file.", description=self.__doc__)
+        parser.set_defaults(func=self)
+        parser.add_argument('-v', '--verbose', action='count', default=0,
+                            help="Increase verbosity.")
+
+    def execute(self):
+        templates = Configuration.Instance().list_cluster_templates()
+        print("""%d cluster templates found.""" % len(templates))
+        for template in templates:
+            try:
+                cluster = Configurator().create_cluster(template)
+                print("""
+name:     %s
+image id: %s
+flavor:   %s
+cloud:    %s""" % (template, cluster.extra['image_id'], cluster.extra['flavor'],
+       cluster._cloud))
+                for nodetype in cluster.nodes:
+                    print("%s nodes: %d" % (
+                            nodetype,
+                            len(cluster.nodes[nodetype])))
+            except ConfigurationError, ex:
+                log.warning("unable to load cluster `%s`: %s", template, ex)
+
 class ListNodes(AbstractCommand):
     """
     Show some information on all the nodes belonging to a given

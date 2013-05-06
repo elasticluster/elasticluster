@@ -125,14 +125,15 @@ class Configurator(object):
         nodes = dict((k[:-6],int(config[k])) for k in config if k.endswith('_nodes'))
 
         return Cluster(cluster_template,
-                       config['name'],
+                       config.pop('name'),
                        config['cloud'],
-                       self.create_cloud_provider(config['cloud']),
+                       self.create_cloud_provider(config.pop('cloud')),
                        self.create_setup_provider(
-                           config["setup_provider"], cluster_template),
+                           config.pop("setup_provider"), cluster_template),
                        nodes,
-                       self,
-                       ssh_to=config.get('ssh_to'))  # ANTONIO: why self? Why at the end? It
+                       self,  # ANTONIO: why self? Why at the end? It
+                       ssh_to=config.pop('ssh_to', None),
+                       **config)
                               # does not looks right
 
     def load_cluster(self, cluster_name):
@@ -353,3 +354,15 @@ class Configuration(object):
                         "`user_key_private`.")
 
         return config
+
+    def list_cluster_templates(self):
+        """
+        Return the list of cluster templates that are defined in the
+        configuration file.
+        """
+        self._config.read(self.file_path)
+        templates = []
+        for section in self._config.sections():
+            if section.startswith('cluster/'):
+                templates.append(section.split('/')[1])
+        return templates

@@ -179,6 +179,13 @@ Use the following command to show all the running clusters::
 
     elasticluster list
 
+List templates
+--------------
+
+To get a list of all configured cluster templates, run::
+
+    elasticluster list-templates
+
 
 List all nodes of a cluster
 ---------------------------

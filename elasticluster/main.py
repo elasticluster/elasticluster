@@ -33,6 +33,7 @@ from elasticluster.subcommands import Stop
 from elasticluster.subcommands import AbstractCommand
 from elasticluster.subcommands import ListClusters
 from elasticluster.subcommands import ListNodes
+from elasticluster.subcommands import ListTemplates
 from elasticluster.subcommands import ResizeCluster
 from elasticluster.subcommands import SshFrontend
 from elasticluster.subcommands import SftpFrontend
@@ -58,6 +59,7 @@ class ElasticCloud(cli.app.CommandLineApp):
                     Stop(self.params),
                     ListClusters(self.params),
                     ListNodes(self.params),
+                    ListTemplates(self.params),
                     SetupCluster(self.params),
                     ResizeCluster(self.params),
                     SshFrontend(self.params),

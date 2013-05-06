@@ -49,6 +49,7 @@ class Cluster(object):
         self._storage = configurator.create_cluster_storage()
         self.nodes = dict((k, []) for k in nodes)
         self.ssh_to = extra.get('ssh_to')
+        self.extra = extra.copy()
         # initialize nodes
         for cls in nodes:
             for i in range(nodes[cls]):
