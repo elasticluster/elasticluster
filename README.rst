@@ -93,7 +93,7 @@ for details and further options::
     flavor=m1.tiny
     frontend_nodes=1
     compute_nodes=2
-    frontend_class=frontend
+    ssh_to=frontend
     image_userdata=
 
     [setup/my-slurm-cluster]
