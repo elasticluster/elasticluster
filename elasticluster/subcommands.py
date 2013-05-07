@@ -202,6 +202,8 @@ class Stop(AbstractCommand):
         parser.add_argument('--force', action="store_true", default=False,
                             help="Remove the cluster even if not all the nodes"
                             " have been terminated properly.")
+        parser.add_argument('--yes', action="store_true", default=False,
+                            help="Assume `yes` to all queries and do not prompt.")
 
     def execute(self):
         """
@@ -215,6 +217,11 @@ class Stop(AbstractCommand):
                       (cluster_name, ex))
             return
 
+        if not self.params.yes:
+            yesno = raw_input("Do you want really want to stop cluster %s? [yN] " % cluster_name)
+            if yesno.lower() not in ['yes', 'y']:
+                print("Aborting as per user request.")
+                sys.exit(0)
         print("Destroying cluster `%s`" % cluster_name)
         cluster.stop(force=self.params.force)
 
