@@ -155,7 +155,11 @@ class Cluster(object):
         """
         Returns a list of all the nodes of the cluster.
         """
-        return reduce(operator.add, self.nodes.values())
+        nodes = self.nodes.values()
+        if nodes:
+            return reduce(operator.add, nodes)
+        else:
+            return []
 
     def stop(self, force=False):
         """
