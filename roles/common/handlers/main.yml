@@ -1,0 +1,8 @@
+---
+- name: restart sshd
+  action: service name=ssh state=restarted
+  only_if: $is_ubuntu
+
+- name: restart sshd
+  action: service name=sshd state=restarted
+  only_if: $is_centos
