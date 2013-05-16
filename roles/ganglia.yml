@@ -1,6 +1,8 @@
 ---
 - name: Ganglia frontend/collector Playbook
   hosts: ganglia_master
+  vars_files:
+    - vars/os
   tasks:
     - include: ganglia/tasks/server.yml
   tags:
@@ -10,6 +12,8 @@
 
 - name: Ganglia monitor Playbook
   hosts: ganglia_monitor
+  vars_files:
+    - vars/os
   tasks:
     - include: ganglia/tasks/client.yml
   handlers:
