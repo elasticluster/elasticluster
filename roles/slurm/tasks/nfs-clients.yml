@@ -12,7 +12,7 @@
     -nfs
 
 - name: configure /etc/fstab on clients
-  action: mount name=/home src=${nfsserver}:/home fstype=nfs opts=rw,sync state=mounted
+  action: mount name=${nfsmount} src=${nfsserver}:${nfspath} fstype=nfs opts=rw,sync state=mounted
   tags:
     - nfs
   

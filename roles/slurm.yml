@@ -23,7 +23,7 @@
   tasks: 
     - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: slurm/tasks/main.yml
-    - include: slurm/tasks/nfs-clients.yml nfsserver=${groups.slurm_master[0]}
+    - include: slurm/tasks/nfs-clients.yml nfsserver=${groups.slurm_master[0]} nfspath=/home nfsmount=/home
     - include: cluster/tasks/packages.yml
   handlers:
     - include: slurm/handlers/main.yml
