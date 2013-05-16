@@ -1,0 +1,49 @@
+---
+- hosts: ethz-nfs
+  vars:
+    nfsserver: 10.0.255.254
+    nfspath: /nfs/matlab/MATLAB
+    nfsmount: /usr/local/MATLAB
+  vars_files:
+    - vars/os
+  tasks:
+    - include: common/tasks/hosts.yml hosts=${groups.all}
+    - name: set hostname
+      action: command hostname $inventory_hostname
+    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+    - action: file path=/usr/local/MATLAB state=directory
+    - include: slurm/tasks/nfs-clients.yml
+  handlers:
+    - include: common/handlers/main.yml
+
+
+- hosts: mdce_worker:mdce_master
+  vars:
+    nfsmount: /usr/local/MATLAB
+    mbin: $nfsmount/R2013a/toolbox/distcomp/bin/
+  tasks:
+    - name: install missing X11 packages
+      action: apt pkg=$item state=installed
+      with_items:
+        - libxt6
+        - libxmu6
+    - name: start MDCE daemon
+      action: shell $mbin/mdce status | grep PID || (nohup $mbin/mdce start; sleep 10)
+      ignore_errors: true
+
+- hosts: mdce_master
+  vars:
+    nfsmount: /usr/local/MATLAB
+    mbin: $nfsmount/R2013a/toolbox/distcomp/bin/
+  tasks:
+    - action: shell nohup $mbin/startjobmanager -name AnsibleMatlabCluster
+      ignore_errors: true
+
+
+- hosts: mdce_worker
+  vars:
+    nfsmount: /usr/local/MATLAB
+    mbin: $nfsmount/R2013a/toolbox/distcomp/bin/
+  tasks:
+    - action: shell for i in `seq 1 $(nproc)`; do nohup $mbin/startworker -jobmanager AnsibleMatlabCluster -jobmanagerhost ${groups.mdce_master[0]} ; done; echo "done"
+      ignore_errors: true
