@@ -1,33 +1,23 @@
 ---
 - name: Setup SSH known hosts file
   action: template dest=/etc/ssh/ssh_known_hosts src=common/templates/etc/ssh/ssh_known_hosts.j2 owner=root group=root
-  tags: test
 
 - name: Setup /etc/ssh/shosts.equiv file
   action: template dest=/etc/ssh/shosts.equiv src=common/templates/etc/ssh/shosts.equiv.j2 owner=root group=root
-  tags: test
 
 - name: Setup /root/.shosts file
   action: template dest=/root/.shosts src=common/templates/etc/ssh/shosts.equiv.j2 owner=root group=root
-  tags: test
-
-# This does not work: the registered variable is only available to the
-# current hosts, and next it's overridden.
 
 - name: Setup SSH host based authentication (server configuration file)
   action: lineinfile dest=/etc/ssh/sshd_config regexp='HostbasedAuthentication.*' line="HostbasedAuthentication yes"
   notify: restart sshd
-  tags: test
 
 - name: Setup SSH host based authentication (server configuration file)
   action: lineinfile dest=/etc/ssh/sshd_config regexp='IgnoreRhosts.*' line="IgnoreRhosts no"
   notify: restart sshd
-  tags: test
 
 - name: Setup SSH host based authentication (client configuration file)
   action: lineinfile dest=/etc/ssh/ssh_config regexp='HostbasedAuthentication.*' line="HostbasedAuthentication yes"
-  tags: test
 
 - name: Setup SSH host based authentication (client configuration file)
   action: lineinfile dest=/etc/ssh/ssh_config regexp='EnableSSHKeysign.*' line="EnableSSHKeysign yes"
-  tags: test
