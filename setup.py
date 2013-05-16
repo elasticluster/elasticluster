@@ -33,7 +33,7 @@ ANSIBLE_PB_DIR = 'elasticluster/providers/ansible-playbooks'
 
 def ansible_pb_files():
     basedir = os.path.dirname(__file__)
-    ansible_data = [('share/elasticluster/etc', ['docs/config.template.ini'])]
+    ansible_data = [('share/elasticluster/etc', ['docs/config.template'])]
     for (dirname, dirnames, filenames) in os.walk(ANSIBLE_PB_DIR):
         tmp = []
         for fname in filenames:
@@ -98,7 +98,7 @@ if __name__ == "__main__":
         curdir = os.path.abspath(os.path.dirname(__file__))
         sharedir = os.path.join(os.path.abspath(sys.prefix), 'share', 'elasticluster')
         etcdir = os.path.join(sharedir, 'etc')
-        templatecfg = os.path.join(curdir, 'docs', 'config.template.ini')
+        templatecfg = os.path.join(curdir, 'docs', 'config.template')
         templatedest = os.path.join(etcdir, os.path.basename(templatecfg))
         ansibledest = os.path.join(sharedir, 'providers', 'ansible-playbooks')
         ansiblesrc = os.path.join(curdir, 'elasticluster', 'providers', 'ansible-playbooks')

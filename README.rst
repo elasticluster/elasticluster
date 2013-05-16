@@ -34,6 +34,9 @@ GitHub issue tracker to `file enhancement requests and ideas`_
 Quickstart
 ==========
 
+Installing from PyPI
+--------------------
+
 `elasticluster` is a `Python`_ program; Python
 version 2.6 is required to run it.
 
@@ -51,6 +54,38 @@ If you want to run `elasticluster` from source you have to **install**
     pip install ansible
     python setup.py install
 
+Installing the development version from github
+----------------------------------------------
+
+The source code of elasticluster is `github`_, if you want to test the
+latest development version you can clone the `github elasticluster repository`_.
+
+You need the ``git`` command in order to be able to clone it, and we
+suggest you to use `python virtualenv`_ in order to create a
+controlled environment in which you can install elasticluster as
+normal user. 
+
+Assuming you already have ``virtualenv`` installed on your machine,
+you first need to create a virtualenv and install `ansible`, which is
+needed by elasticluster::
+
+    virtualenv elasticluster
+    . elasticluster/bin/activate
+    pip install ansible
+    
+Then you have to download the software. We suggest you to download it
+*within* the created virtualenv::
+
+    cd elasticluster
+    git clone git://github.com/gc3-uzh-ch/elasticluster.git src
+    cd src
+    git submodule init
+    git submodule update
+    python setup.py install
+
+Now the ``elasticluster`` should be available in your current
+environment.
+    
 
 Configuration
 -------------
@@ -261,3 +296,6 @@ recovery or undo operation, so think twice before stopping the cluster.
 
 .. _`Python`: http://www.python.org
 .. _`pip`: https://pypi.python.org/pypi/pip
+.. _`github`: https://github.com/
+.. _`github elasticluster page`: https://github.com/gc3-uzh-ch/elasticluster
+.. _`python virtualenv`: https://pypi.python.org/pypi/virtualenv
