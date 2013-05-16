@@ -20,6 +20,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 import json
 import operator
 import os
+import re
 import signal
 import socket
 import time
@@ -61,6 +62,11 @@ class Cluster(object):
         Returns the created node instance
         """
         name = "%s%03d" % (node_type, len(self.nodes[node_type])+1) 
+        name = name.replace('_', '-').lower()
+        if not re.match('^[a-z0-9-]+$', name):
+            raise ConfigurationError(
+                "Invalid value for node_type `%s`: it can only contain "
+                "one of the following characters: [a-zA-Z0-9_-]")
 
         node = self._configurator.create_node(self.template, node_type,
                                               self._cloud_provider, name)
