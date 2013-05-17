@@ -240,6 +240,9 @@ class ConfigValidator(object):
                     self.config[cluster]['setup']['playbook_path'] = \
                         props['setup']['playbook_path'] \
                             .replace("%(ansible_pb_dir)s", str(ansible_pb_dir))
+            elif 'setup' in props:
+                self.config[cluster]['setup']['playbook_path'] = ansible_pb_dir
+
 
     def _post_validate(self):
         """
