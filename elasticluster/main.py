@@ -27,7 +27,6 @@ import sys
 import cli.app
 from voluptuous.voluptuous import MultipleInvalid, Invalid
 
-
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.subcommands import Start, SetupCluster
@@ -63,7 +62,7 @@ class ElastiCluster(cli.app.CommandLineApp):
                     ResizeCluster(self.params),
                     SshFrontend(self.params),
                     SftpFrontend(self.params),
-        ]
+                    ]
 
         # global parameters
         self.add_param('-v', '--verbose', action='count', default=0,
@@ -142,8 +141,8 @@ class ElastiCluster(cli.app.CommandLineApp):
         try:
             return self.params.func()
         except (MultipleInvalid, Invalid) as e:
-            print("Error validating configuration file '%s': `%s`" % (
-                    self.params.config, e))
+            print("Error validating configuration file '%s': `%s`"
+                  % (self.params.config, e))
             sys.exit(1)
 
 

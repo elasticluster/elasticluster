@@ -387,8 +387,8 @@ class ListTemplates(AbstractCommand):
     def setup(self, subparsers):
         parser = subparsers.add_parser(
             "list-templates", description=self.__doc__,
-            help="Show the templates defined in the configuration file.",
-            )
+            help="Show the templates defined in the configuration file.")
+
         parser.set_defaults(func=self)
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")

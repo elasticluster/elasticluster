@@ -387,8 +387,8 @@ class ClusterStorage(object):
              'name': node.name,
              'type': node.type,
              'ip_public': node.ip_public,
-             'ip_private': node.ip_private} for node in \
-                cluster.get_all_nodes()]
+             'ip_private': node.ip_private}
+            for node in cluster.get_all_nodes()]
 
         db_json = json.dumps(db)
 

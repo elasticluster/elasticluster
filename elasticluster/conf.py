@@ -21,8 +21,8 @@ import os
 import re
 import sys
 
-from voluptuous.voluptuous import message, MultipleInvalid, Invalid
 from configobj import ConfigObj
+from voluptuous.voluptuous import message, MultipleInvalid, Invalid
 from voluptuous import Schema, All, Length, Any, Url, Boolean
 
 from elasticluster.exceptions import ConfigurationError
@@ -48,7 +48,6 @@ class Configurator(object):
 
     default_storage_dir = os.path.expanduser(
         "~/.elasticluster/storage")
-
 
     def __init__(self, cluster_conf, cluster_template=None):
         """
@@ -128,7 +127,7 @@ class Configurator(object):
                            cluster_template=cluster_template),
                        nodes,
                        self,
-        )
+                       )
 
     def load_cluster(self, cluster_name):
         """
@@ -237,12 +236,13 @@ class ConfigValidator(object):
             if 'setup' in props and 'playbook_path' in props['setup']:
                 if props['setup']['playbook_path'].startswith(
                         "%(ansible_pb_dir)s"):
-                    self.config[cluster]['setup']['playbook_path'] = \
-                        props['setup']['playbook_path'] \
-                            .replace("%(ansible_pb_dir)s", str(ansible_pb_dir))
+                    pbpath = props['setup']['playbook_path']
+                    pbpath = pbpath.replace("%(ansible_pb_dir)s",
+                                            str(ansible_pb_dir))
+                    self.config[cluster]['setup']['playbook_path'] = pbpath
+
             elif 'setup' in props:
                 self.config[cluster]['setup']['playbook_path'] = ansible_pb_dir
-
 
     def _post_validate(self):
         """
@@ -250,17 +250,16 @@ class ConfigValidator(object):
         - expanding file paths
         """
         # expand all paths
+        conf = self.config[cluster]
         for cluster, values in self.config.iteritems():
-            self.config[cluster]['setup'][
-                'playbook_path'] = os.path.expanduser(
-                os.path.expanduser(values['setup']['playbook_path']))
-            self.config[cluster]['login'][
-                'user_key_private'] = os.path.expanduser(
-                os.path.expanduser(values['login']['user_key_private']))
-            self.config[cluster]['login'][
-                'user_key_public'] = os.path.expanduser(
-                os.path.expanduser(values['login']['user_key_public']))
+            pbpath = os.path.expanduser(values['setup']['playbook_path'])
+            conf['setup']['playbook_path'] = pbpath
 
+            privkey = os.path.expanduser(values['login']['user_key_private'])
+            conf['login']['user_key_private'] = privkey
+
+            pubkey = os.path.expanduser(values['login']['user_key_public'])
+            conf['login']['user_key_public'] = pubkey
 
     def validate(self):
         """
@@ -280,40 +279,33 @@ class ConfigValidator(object):
                 raise MultipleInvalid("file could not be found `%s`" % v)
 
         # schema to validate all cluster properties
-        schema = {"cloud":
-                      Any(
-                          {
-                              "provider": 'ec2_boto',
-                              "ec2_url": Url(str),
-                              "ec2_access_key": All(str, Length(min=1)),
-                              "ec2_secret_key": All(str, Length(min=1)),
-                              "ec2_region": All(str, Length(min=1)),
-                          },
-                          {
-                              "provider": 'google',
-                              "client_id": All(str, Length(min=1)),
-                              "client_secret": All(str, Length(min=1)),
-                              "project_id": All(str, Length(min=1)),
-                          }
-                      ),
-                  "cluster": {
-                      "cloud": All(str, Length(min=1)),
-                      "setup_provider": All(str, Length(min=1)),
-                      "login": All(str, Length(min=1)),
-                  },
-                  "setup": {
-                      "provider": All(str, Length(min=1)),
-                      "playbook_path": check_file(),
-                  },
-                  "login": {
-                      "image_user": All(str, Length(min=1)),
-                      "image_user_sudo": All(str, Length(min=1)),
-                      "image_sudo": Boolean(str),
-                      "user_key_name": All(str, Length(min=1)),
-                      "user_key_private": check_file(),
-                      "user_key_public": check_file(),
+        schema = {"cloud": Any({"provider": 'ec2_boto',
+                                "ec2_url": Url(str),
+                                "ec2_access_key": All(str, Length(min=1)),
+                                "ec2_secret_key": All(str, Length(min=1)),
+                                "ec2_region": All(str, Length(min=1)),
+                                },
+                               {"provider": 'google',
+                                "client_id": All(str, Length(min=1)),
+                                "client_secret": All(str, Length(min=1)),
+                                "project_id": All(str, Length(min=1)),
+                                }
+                               ),
+                  "cluster": {"cloud": All(str, Length(min=1)),
+                              "setup_provider": All(str, Length(min=1)),
+                              "login": All(str, Length(min=1)),
+                              },
+                  "setup": {"provider": All(str, Length(min=1)),
+                            "playbook_path": check_file(),
+                            },
+                  "login": {"image_user": All(str, Length(min=1)),
+                            "image_user_sudo": All(str, Length(min=1)),
+                            "image_sudo": Boolean(str),
+                            "user_key_name": All(str, Length(min=1)),
+                            "user_key_private": check_file(),
+                            "user_key_public": check_file(),
+                            }
                   }
-        }
 
         node_schema = {
             "flavor": All(str, Length(min=1)),
@@ -358,7 +350,6 @@ class ConfigReader(object):
     setup_section = "setup"
     cloud_section = "cloud"
     node_section = "node"
-
 
     def __init__(self, configfile):
         """
@@ -407,8 +398,8 @@ class ConfigReader(object):
                 values['nodes'] = dict()
                 for node in nodes.iterkeys():
                     node_name = re.search("(.*)_nodes", node).groups()[0]
-                    property_name = ConfigReader.cluster_section + "/" \
-                                    + name + "/" + node_name
+                    property_name = "%s/%s/%s" % (ConfigReader.cluster_section,
+                                                  name, node_name)
                     if property_name in self.conf:
                         node_values = dict(
                             (key, value.strip("'").strip('"')) for key, value
