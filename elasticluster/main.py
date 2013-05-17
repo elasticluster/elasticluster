@@ -15,8 +15,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from voluptuous.voluptuous import MultipleInvalid
-
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 # System imports
@@ -27,6 +25,8 @@ import sys
 
 # External modules
 import cli.app
+from voluptuous.voluptuous import MultipleInvalid, Invalid
+
 
 # Elasticluster imports
 from elasticluster import log
@@ -145,8 +145,9 @@ class ElasticCloud(cli.app.CommandLineApp):
         # call the subcommand function (ususally execute)
         try:
             return self.params.func()
-        except MultipleInvalid as e:
-            print "Error validating the configuration file `%s`" % e.errors
+        except (MultipleInvalid, Invalid) as e:
+            print("Error validating configuration file '%s': `%s`" % (
+                    self.params.config, e))
             sys.exit(1)
 
 

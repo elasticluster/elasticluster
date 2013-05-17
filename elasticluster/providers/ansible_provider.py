@@ -86,7 +86,10 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         self._sudo_user = sudo_user
         self._sudo = sudo
         self._playbook_path = playbook_path
-        self.groups = dict((k[:-7], v.split(',')) for k, v in extra_conf.items() if k.endswith('_groups'))
+        self.groups = dict((k[:-7], v) for k, v in extra_conf.items() if k.endswith('_groups'))
+        for k, v in self.groups.iteritems():
+            if not isinstance(v, list):
+                self.groups[k] = list(v)
 
         self.inventory_path = None
         module_dir = extra_conf.get('ansible_module_dir', None)

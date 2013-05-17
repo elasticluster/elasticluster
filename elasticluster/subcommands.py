@@ -404,9 +404,8 @@ class ListTemplates(AbstractCommand):
             try:
                 cluster = configurator.create_cluster(template, template)
                 print("""
-name:     %s,
-cloud:     %s,
-""" % (template, cluster._cloud))
+name:     %s
+cloud:     %s""" % (template, cluster._cloud))
                 for nodetype in cluster.nodes:
                     print("%s nodes: %d" % (
                         nodetype,

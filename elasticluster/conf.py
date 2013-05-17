@@ -21,7 +21,7 @@ import os
 import re
 import sys
 
-from voluptuous.voluptuous import message, MultipleInvalid
+from voluptuous.voluptuous import message, MultipleInvalid, Invalid
 from configobj import ConfigObj
 from voluptuous import Schema, All, Length, Any, Url, Boolean
 
@@ -339,9 +339,10 @@ class ConfigValidator(object):
                 # check name pattern to conform hostnames
                 match = re.search(r'^[a-zA-Z0-9-]*$', node)
                 if not match:
-                    raise MultipleInvalid('Node group name `%s` must only '
-                                          'consist of letters, numbers or `-`'
-                                          % node)
+                    raise Invalid(
+                        "Invalid name `%s` for node group. A valid node group "
+                        "can only consist of letters, digits or the hyphens "
+                        "character (`-`)" % node)
 
                 validator_node(props)
 
@@ -394,15 +395,9 @@ class ConfigReader(object):
 
                 values = dict()
                 values['cluster'] = cluster_conf
-                values['setup'] = dict(
-                    (key, value.strip("'").strip('"')) for key, value in
-                    self.conf[setup_name].iteritems())
-                values['login'] = dict(
-                    (key, value.strip("'").strip('"')) for key, value in
-                    self.conf[login_name].iteritems())
-                values['cloud'] = dict(
-                    (key, value.strip("'").strip('"')) for key, value in
-                    self.conf[cloud_name].iteritems())
+                values['setup'] = dict(self.conf[setup_name])
+                values['login'] = dict(self.conf[login_name])
+                values['cloud'] = dict(self.conf[cloud_name])
 
                 # nodes can inherit the properties of cluster or overwrite them
                 nodes = dict((key, value) for key, value in
