@@ -534,12 +534,15 @@ class SshFrontend(AbstractCommand):
             sys.exit(1)
         host = frontend.ip_public
         username = frontend.image_user
+        log.warning("Ignoring known_hosts file.")
         ssh_cmdline = ["ssh",
                        "-i", frontend.user_key_private,
-                       '- ' + 'v' * self.params.verbose,
+                       "-o", "UserKnownHostsFile=/dev/null",
+                       "-o", "StrictHostKeyChecking=no",
                        '%s@%s' % (username, host),
                        ]
         ssh_cmdline.extend(self.params.ssh_args)
+        log.debug("Running command `%s`" % str.join(' ', ssh_cmdline))
         os.execlp("ssh", *ssh_cmdline)
 
 
@@ -581,7 +584,6 @@ class SftpFrontend(AbstractCommand):
         username = frontend.image_user
         sftp_cmdline = ["sftp",
                         "-i", frontend.user_key_private,
-                        '- ' + 'v' * self.params.verbose,
                         ]
         sftp_cmdline.extend(self.params.sftp_args)
         sftp_cmdline.append('%s@%s' % (username, host))
