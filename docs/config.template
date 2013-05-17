@@ -225,6 +225,9 @@ user_key_public=~/.ssh/id_dsa.cloud.pub
 #
 #                 slurm_master,ganglia_master,ganglia_monitor
 #
+# <class>_var_<varname>: an entry of this type will define a variable
+#               called <varname> for the specific <class> and add it
+#               to the ansible inventory file.
 #
 # Some (working) examples:
 

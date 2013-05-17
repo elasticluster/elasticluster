@@ -87,9 +87,18 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         self._sudo = sudo
         self._playbook_path = playbook_path
         self.groups = dict((k[:-7], v) for k, v in extra_conf.items() if k.endswith('_groups'))
-        for k, v in self.groups.iteritems():
-            if not isinstance(v, list):
-                self.groups[k] = list(v)
+        self.environment = dict()
+        for nodetype, grps in self.groups.iteritems():
+            if not isinstance(grps, list):
+                self.groups[nodetype] = [grps]
+
+            # Environment variables parsing
+            self.environment[nodetype] = dict()
+            for key, value in extra_conf.iteritems():
+                prefix = "%s_var_" % nodetype
+                if key.startswith(prefix):
+                    var = key.replace(prefix,'')
+                    self.environment[nodetype][var] = value
 
         self.inventory_path = None
         module_dir = extra_conf.get('ansible_module_dir', None)
@@ -187,10 +196,15 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         inventory = dict()
         for node in cluster.get_all_nodes():
             if node.type in self.groups:
+                extra_vars = ''
+                if node.type in self.environment:
+                    extra_vars = ['%s=%s' % (k, v) for k, v in \
+                                      self.environment[node.type].items()]
+                    extra_vars = str.join(' ', extra_vars)
                 for group in self.groups[node.type]:
                     if group not in inventory:
                         inventory[group] = []
-                    inventory[group].append((node.name, node.ip_public))
+                    inventory[group].append((node.name, node.ip_public, extra_vars))
 
         if inventory:
             # create a temporary file to pass to ansible, since the
@@ -204,7 +218,8 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 fd.write("\n["+section+"]\n")
                 if hosts:
                     for host in hosts:
-                        hostline = "%s ansible_ssh_host=%s\n" % host
+                        hostline = "%s ansible_ssh_host=%s %s\n" \
+                            % (host)
                         fd.write(hostline)
 
             fd.close()
