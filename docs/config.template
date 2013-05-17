@@ -374,9 +374,9 @@ ssh_to=frontend
 # ====================
 #
 # A `cluster node` for the node type `<nodetype>` of the cluster
-# starts with:
+# `<name>` starts with:
 #
-# [node/<nodetype>]
+# [cluster/<name>/<nodetype>]
 #
 # This section allows you to override some configuration values for
 # specific group of nodes. Assume you have a standard slurm cluster
@@ -398,5 +398,6 @@ ssh_to=frontend
 # frontend_nodes=1
 # compute_nodes=10
 #
-# [node/frontend]
+# [cluster/slurm/frontend]
 # flavor=bigdisk
+
