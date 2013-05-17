@@ -21,7 +21,7 @@ import os
 import re
 import sys
 
-from voluptuous.voluptuous import message
+from voluptuous.voluptuous import message, MultipleInvalid
 from configobj import ConfigObj
 from voluptuous import Schema, All, Length, Any, Url, Boolean
 
@@ -34,8 +34,9 @@ from elasticluster.cluster import Cluster, ClusterStorage, Node
 
 class Configurator(object):
     """
-    Responsible to create instances, which need information from the
-    configuration file.
+    The Configurator is responsible for (I) keeping track of the
+    configuration and (II) offer factory methods to create all kind of
+    objects that need information from the configuration.
     """
 
     cloud_providers_map = {
@@ -51,6 +52,10 @@ class Configurator(object):
 
     def __init__(self, cluster_conf, cluster_template=None):
         """
+        Default constructor to initialize a Configurator.
+        :param cluster_conf: configuration dictionary
+        :param cluster_template: name of the cluster template
+        :raises MultipleInvalid: configuration validation
         """
         self.general_conf = dict()
         self.general_conf['storage'] = Configurator.default_storage_dir
@@ -63,6 +68,10 @@ class Configurator(object):
     @classmethod
     def fromConfig(cls, configfile, cluster_template=None):
         """
+        Helper method to initialize Configurator from an ini file.
+        :param configfile: path to the ini file
+        :param cluster_template: name of the cluster template to use
+        :return: configurator object
         """
         config_reader = ConfigReader(configfile)
         conf = config_reader.read_config()
@@ -70,6 +79,12 @@ class Configurator(object):
 
     def create_cloud_provider(self, cluster_template=None):
         """
+        Creates a cloud provider by inspecting the configuration properties
+        of the given cluster template.
+        :param cluster_template: template to use (if not already specified
+            on init)
+        :return: object that fulfills the contract of
+            :py:class:`elasticluster.providers.AbstractSetupProvider`
         """
         if not cluster_template:
             cluster_template = self.cluster_template
@@ -81,15 +96,17 @@ class Configurator(object):
 
         return provider(**conf)
 
-    def create_cluster(self, cluster_name, cluster_template=None, **extra_args):
+    def create_cluster(self, cluster_name, cluster_template=None):
         """
-
-        :param cluster_template:
-        :param extra_args:
-        :return:
+        Creates a cluster by inspecting the configuration properties of the
+            given cluster template.
+        :param cluster_name: name of the cluster
+        :param cluster_template: name of the cluster template
+        :return: :py:class:`elasticluster.cluster.cluster` instance
+        :raises ConfigurationError: cluster template not found in config
         """
         if not cluster_template:
-            cluster_template = self.cluster
+            cluster_template = self.cluster_template
 
         if cluster_template not in self.cluster_conf:
             raise ConfigurationError(
@@ -98,18 +115,27 @@ class Configurator(object):
 
         conf = self.cluster_conf[cluster_template]
 
-        nodes = dict((k[:-6], int(v)) for k, v in conf['cluster'].iteritems() if k.endswith('_nodes'))
+        nodes = dict(
+            (k[:-6], int(v)) for k, v in conf['cluster'].iteritems() if
+            k.endswith('_nodes'))
 
         return Cluster(cluster_template,
                        cluster_name,
                        conf['cluster']['cloud'],
-                       self.create_cloud_provider(cluster_template=cluster_template),
-                       self.create_setup_provider(cluster_template=cluster_template),
+                       self.create_cloud_provider(
+                           cluster_template=cluster_template),
+                       self.create_setup_provider(
+                           cluster_template=cluster_template),
                        nodes,
                        self,
         )
 
     def load_cluster(self, cluster_name):
+        """
+        Loads a cluster from the local stored information.
+        :param cluster_name: name of the cluster
+        :return: :py:class:`elasticluster.cluster.cluster` instance
+        """
         storage = self.create_cluster_storage()
         information = storage.load_cluster(cluster_name)
 
@@ -128,25 +154,31 @@ class Configurator(object):
 
         return cluster
 
-    def create_node(self, cluster_name, node_type, cloud_provider, name):
+    def create_node(self, cluster_template, node_type, cloud_provider, name):
         """
-        Creates a node with the needed information from the
-        configuration file. The information of the node is specific to
-        its type (e.g. a frontend node could differ from a compute
-        node).
+        :param cluster_template: name of the cluster template
+        :param node_type: type of the node, string defining the <group> in
+            the configuration
+        :param cloud_provider: instance of :py:class:`elasticluster
+            .providers.AbstractCloudProvider`
+        :param name: name of the node
+        :return: :py:class:`elasticluster.cluster.node` instance
         """
-        conf = self.cluster_conf[cluster_name]['nodes'][node_type]
-        conf_login = self.cluster_conf[cluster_name]['login']
+        conf = self.cluster_conf[cluster_template]['nodes'][node_type]
+        conf_login = self.cluster_conf[cluster_template]['login']
 
-        return Node(name, node_type, cloud_provider, conf_login['user_key_public'],
-                    conf_login["user_key_private"], conf_login['user_key_name'],
+        return Node(name, node_type, cloud_provider,
+                    conf_login['user_key_public'],
+                    conf_login["user_key_private"],
+                    conf_login['user_key_name'],
                     conf_login['image_user'], conf['security_group'],
                     conf['image_id'], conf['flavor'],
                     image_userdata=conf.get('image_userdata', ''))
 
     def create_cluster_storage(self):
         """
-        Creates the storage to manage clusters.
+        Creates an instance of :py:class:`elasticluster.cluster.ClusterStorage`
+            to safe information about a cluster local.
         """
         return ClusterStorage(self.general_conf['storage'])
 
@@ -172,31 +204,68 @@ class Configurator(object):
 
 
 class ConfigValidator(object):
+    """
+    Validator for the cluster configuration dictionary.
+    """
+
     def __init__(self, config):
+        """
+        :param config: dictionary containing cluster configuration properties
+        """
         self.config = config
 
-
     def _pre_validate(self):
+        """
+        Handles all pre validation phase functionality, such as:
+        - reading environment variables
+        - interpolating configuraiton options
+        """
         # read cloud provider environment variables (ec2_boto or google)
-        for cluster, property in self.config.iteritems():
-            if "cloud" in property and "provider" in property['cloud']:
-                for param, value in property['cloud'].iteritems():
+        for cluster, props in self.config.iteritems():
+            if "cloud" in props and "provider" in props['cloud']:
+                for param, value in props['cloud'].iteritems():
                     PARAM = param.upper()
                     if not value and PARAM in os.environ:
-                        property['cloud'][param] = os.environ[PARAM]
+                        props['cloud'][param] = os.environ[PARAM]
+
+        # interpolate ansible path manual, since configobj does not offer
+        # an easy way to handle this
+        ansible_pb_dir = os.path.join(sys.prefix,
+                                      'share/elasticluster/providers/ansible-'
+                                      'playbooks')
+        for cluster, props in self.config.iteritems():
+            if 'setup' in props and 'playbook_path' in props['setup']:
+                if props['setup']['playbook_path'].startswith(
+                        "%(ansible_pb_dir)s"):
+                    self.config[cluster]['setup']['playbook_path'] = \
+                        props['setup']['playbook_path'] \
+                            .replace("%(ansible_pb_dir)s", str(ansible_pb_dir))
+                    print self.config[cluster]['setup']['playbook_path']
 
     def _post_validate(self):
+        """
+        Handles all post validation phase functionality, such as:
+        - expanding file paths
+        """
         # expand all paths
         for cluster, values in self.config.iteritems():
-            self.config[cluster]['setup']['playbook_path'] = os.path.expanduser(
+            self.config[cluster]['setup'][
+                'playbook_path'] = os.path.expanduser(
                 os.path.expanduser(values['setup']['playbook_path']))
-            self.config[cluster]['login']['user_key_private'] = os.path.expanduser(
+            self.config[cluster]['login'][
+                'user_key_private'] = os.path.expanduser(
                 os.path.expanduser(values['login']['user_key_private']))
-            self.config[cluster]['login']['user_key_public'] = os.path.expanduser(
+            self.config[cluster]['login'][
+                'user_key_public'] = os.path.expanduser(
                 os.path.expanduser(values['login']['user_key_public']))
 
 
     def validate(self):
+        """
+        Validates the given configuration :py:attr:`self.config` to comply
+        with elasticluster. As well all types are converted to the expected
+        format if possible.
+        """
         self._pre_validate()
 
         # custom validators
@@ -206,7 +275,7 @@ class ConfigValidator(object):
             if os.path.exists(f):
                 return f
             else:
-                raise ValueError("file could not be found `%s`" % v)
+                raise MultipleInvalid("file could not be found `%s`" % v)
 
         # schema to validate all cluster properties
         schema = {"cloud":
@@ -257,7 +326,8 @@ class ConfigValidator(object):
             validator(properties)
 
             if 'nodes' not in properties or len(properties['nodes']) == 0:
-                raise ValueError("No nodes configured for cluster `%s`" % cluster)
+                raise MultipleInvalid(
+                    "No nodes configured for cluster `%s`" % cluster)
 
             for node, props in properties['nodes'].iteritems():
                 validator_node(props)
@@ -267,7 +337,7 @@ class ConfigValidator(object):
 
 class ConfigReader(object):
     """
-    
+    Reads the configuration properties from a ini file.
     """
     cluster_section = "cluster"
     login_section = "login"
@@ -275,24 +345,22 @@ class ConfigReader(object):
     cloud_section = "cloud"
     node_section = "node"
 
-    # TODO: get the interpolation right!
-    config_defaults = {
-        'ansible_pb_dir': os.path.join(
-            sys.prefix, 'share/elasticluster/providers/ansible-playbooks'),
-        'ansible_module_dir': os.path.join(
-            sys.prefix,
-            'share/elasticluster/providers/ansible-playbooks/modules'),
-    }
-
 
     def __init__(self, configfile):
+        """
+        :param configfile: path to configfile
+        """
         self.configfile = configfile
-        self.conf = ConfigObj(self.configfile)
+        self.conf = ConfigObj(self.configfile, interpolation=False)
 
     def read_config(self):
         """
-
-        :return:
+        Reads the configuration properties from the ini file and links the
+        section to comply with the cluster config dictionary format.
+        :return: dictionary containing all configuration properties from the
+         ini file in compliance to the cluster config format
+        :raises MultipleInvalid: not all sections present or broken links
+            between secitons
         """
         clusters = dict((key, value) for key, value in self.conf.iteritems() if
                         re.search(ConfigReader.cluster_section + "/(.*)", key))
@@ -300,39 +368,51 @@ class ConfigReader(object):
         conf_values = dict()
 
         for cluster in clusters:
-            name = re.search(ConfigReader.cluster_section + "/(.*)", cluster).groups()[0]
+            name = re.search(ConfigReader.cluster_section + "/(.*)",
+                             cluster).groups()[0]
             try:
                 cluster_conf = dict(self.conf[cluster])
-                cloud_name = ConfigReader.cloud_section + "/" + cluster_conf['cloud']
-                login_name = ConfigReader.login_section + "/" + cluster_conf['login']
-                setup_name = ConfigReader.setup_section + "/" + cluster_conf['setup_provider']
+                cloud_name = ConfigReader.cloud_section + "/" + cluster_conf[
+                    'cloud']
+                login_name = ConfigReader.login_section + "/" + cluster_conf[
+                    'login']
+                setup_name = ConfigReader.setup_section + "/" + cluster_conf[
+                    'setup_provider']
 
                 values = dict()
                 values['cluster'] = cluster_conf
                 values['setup'] = dict(
-                    (key, value.strip("'").strip('"')) for key, value in self.conf[setup_name].iteritems())
+                    (key, value.strip("'").strip('"')) for key, value in
+                    self.conf[setup_name].iteritems())
                 values['login'] = dict(
-                    (key, value.strip("'").strip('"')) for key, value in self.conf[login_name].iteritems())
+                    (key, value.strip("'").strip('"')) for key, value in
+                    self.conf[login_name].iteritems())
                 values['cloud'] = dict(
-                    (key, value.strip("'").strip('"')) for key, value in self.conf[cloud_name].iteritems())
+                    (key, value.strip("'").strip('"')) for key, value in
+                    self.conf[cloud_name].iteritems())
 
                 # nodes can inherit the properties of cluster or overwrite them
-                nodes = dict((key, value) for key, value in values['cluster'].iteritems() if key.endswith('_nodes'))
+                nodes = dict((key, value) for key, value in
+                             values['cluster'].iteritems() if
+                             key.endswith('_nodes'))
                 values['nodes'] = dict()
                 for node in nodes.iterkeys():
                     node_name = re.search("(.*)_nodes", node).groups()[0]
                     property_name = ConfigReader.node_section + "/" + node
                     if property_name in self.conf:
                         node_values = dict(
-                            (key, value.strip("'").strip('"')) for key, value in self.conf[property_name].iteritems())
-                        node_values = dict(node_values.items() + values['cluster'].items())
+                            (key, value.strip("'").strip('"')) for key, value
+                            in self.conf[property_name].iteritems())
+                        node_values = dict(
+                            node_values.items() + values['cluster'].items())
                         values['nodes'][node_name] = node_values
                     else:
                         values['nodes'][node_name] = values['cluster']
 
                 conf_values[name] = values
             except KeyError:
-                raise ValueError(
-                    "could not find all sections required `cluster`, `setup`, `login`, `cloud` for cluster `%s`" % name)
+                raise MultipleInvalid(
+                    "could not find all sections required `cluster`, "
+                    "`setup`, \ `login`, `cloud` for cluster `%s`" % name)
 
         return conf_values

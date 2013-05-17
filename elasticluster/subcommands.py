@@ -122,7 +122,9 @@ class Start(AbstractCommand):
         parser.add_argument('-n', '--name', dest='cluster_name',
                             help='Name of the cluster.')
         parser.add_argument('--nodes', metavar='N1:GROUP[,N2:GROUP2,...]',
-                            help='Override the values in of the configuration file and starts `N1` nodes of group `GROUP`, N2 of GROUP2 etc...')
+                            help='Override the values in of the configuration '
+                                 'file and starts `N1` nodes of group `GROUP`,'
+                                 'N2 of GROUP2 etc...')
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Only start the cluster, do not configure it")
 
@@ -150,7 +152,15 @@ class Start(AbstractCommand):
         else:
             cluster_name = self.params.cluster
 
-        configurator = Configurator.fromConfig(self.params.config, cluster_template=cluster_template)
+        configurator = Configurator.fromConfig(self.params.config,
+                                               cluster_template=cluster_template)
+
+        # overwrite configuration
+        for option, value in self.params.extra_conf.iteritems():
+            if option in configurator.cluster_conf[cluster_template][
+                'cluster']:
+                configurator.cluster_conf[cluster_template]['cluster'][
+                    option] = value
 
         # First, check if the cluster is already created.
         try:
@@ -219,7 +229,8 @@ class Stop(AbstractCommand):
             return
 
         if not self.params.yes:
-            yesno = raw_input("Do you want really want to stop cluster %s? [yN] " % cluster_name)
+            yesno = raw_input(
+                "Do you want really want to stop cluster %s? [yN] " % cluster_name)
             if yesno.lower() not in ['yes', 'y']:
                 print("Aborting as per user request.")
                 sys.exit(0)
@@ -346,7 +357,8 @@ class ListTemplates(AbstractCommand):
     def setup(self, subparsers):
         parser = subparsers.add_parser(
             "list-templates", help="Show the templates defined in the "
-                                   "configuration file.", description=self.__doc__)
+                                   "configuration file.",
+            description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
@@ -534,7 +546,8 @@ class SftpFrontend(AbstractCommand):
         sftp_cmdline = [
                            "sftp",
                            "-i", frontend.user_key_private,
-                       ] + (['-v'] * self.params.verbose) + self.params.sftp_args + [
+                       ] + ([
+                                '-v'] * self.params.verbose) + self.params.sftp_args + [
                            '%s@%s' % (username, host),
                        ]
         os.execlp("sftp", *sftp_cmdline)

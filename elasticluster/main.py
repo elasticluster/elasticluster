@@ -15,6 +15,8 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+from voluptuous.voluptuous import MultipleInvalid
+
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 # System imports
@@ -40,7 +42,11 @@ from elasticluster.subcommands import SftpFrontend
 from elasticluster.conf import Configurator
 
 
-class Elasticluster(cli.app.CommandLineApp):
+class Elasticluster():
+    pass
+
+
+class ElasticCloud(cli.app.CommandLineApp):
     name = "elasticluster"
 
     default_configuration_file = os.path.expanduser(
@@ -137,12 +143,16 @@ class Elasticluster(cli.app.CommandLineApp):
         log.setLevel(loglevel)
 
         # call the subcommand function (ususally execute)
-        return self.params.func()
+        try:
+            return self.params.func()
+        except MultipleInvalid as e:
+            print "Error validating the configuration file `%s`" % e
+            sys.exit(1)
 
 
 def main():
     try:
-        app = Elasticluster()
+        app = ElasticCloud()
         app.run()
     except KeyboardInterrupt:
         sys.stderr.write("""
