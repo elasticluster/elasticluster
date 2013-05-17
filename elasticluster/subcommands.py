@@ -160,7 +160,7 @@ class Start(AbstractCommand):
         for option, value in self.params.extra_conf.iteritems():
             cconf = configurator.cluster_conf[cluster_template]['cluster']
             if option in cconf:
-                clusterconf[option] = value
+                cconf[option] = value
 
         # First, check if the cluster is already created.
         try:
@@ -213,10 +213,10 @@ class Stop(AbstractCommand):
                             help="Increase verbosity.")
         parser.add_argument('--force', action="store_true", default=False,
                             help="Remove the cluster even if not all the nodes"
-                            " have been terminated properly.")
+                                 " have been terminated properly.")
         parser.add_argument('--yes', action="store_true", default=False,
                             help="Assume `yes` to all queries and "
-                            "do not prompt.")
+                                 "do not prompt.")
 
     def execute(self):
         """
@@ -256,17 +256,17 @@ class ResizeCluster(AbstractCommand):
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-a', '--add', metavar='N1:GROUP1[,N2:GROUP2]',
                             help="Add N1 nodes of group GROUP1, "
-                            "N2 of group GROUP2 etc...")
+                                 "N2 of group GROUP2 etc...")
         parser.add_argument('-r', '--remove', metavar='N1:GROUP1[,N2:GROUP2]',
                             help="Remove N1 nodes of group GROUP1, "
-                            "N2 of group GROUP2 etc...")
+                                 "N2 of group GROUP2 etc...")
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Only start the cluster, do not configure it")
         parser.add_argument('--yes', action="store_true", default=False,
                             help="Assume `yes` to all queries and "
-                            "do not prompt.")
+                                 "do not prompt.")
 
     def pre_run(self):
         self.params.nodes_to_add = {}
@@ -391,7 +391,7 @@ class ListTemplates(AbstractCommand):
         parser.set_defaults(func=self)
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
-        parser.add_argument('clusters',  nargs="*",
+        parser.add_argument('clusters', nargs="*",
                             help="List only this cluster. Accepts globbing.")
 
     def execute(self):
@@ -435,8 +435,8 @@ class ListNodes(AbstractCommand):
         parser.add_argument(
             '-u', '--update', action='store_true', default=False,
             help="By default `elasticluster list-nodes` will not contact the "
-            "EC2 provider to get up-to-date information, unless `-u` option "
-            "is given.")
+                 "EC2 provider to get up-to-date information, unless `-u` option "
+                 "is given.")
 
     def execute(self):
         """
@@ -513,7 +513,7 @@ class SshFrontend(AbstractCommand):
                             help="Increase verbosity.")
         parser.add_argument('ssh_args', metavar='args', nargs='*',
                             help="Execute the following command on the remote "
-                            "machine instead of opening an interactive shell.")
+                                 "machine instead of opening an interactive shell.")
 
     def execute(self):
         configurator = Configurator.fromConfig(self.params.config)
@@ -539,7 +539,7 @@ class SshFrontend(AbstractCommand):
                        "-o", "UserKnownHostsFile=/dev/null",
                        "-o", "StrictHostKeyChecking=no",
                        '%s@%s' % (username, host),
-                       ]
+        ]
         ssh_cmdline.extend(self.params.ssh_args)
         log.debug("Running command `%s`" % str.join(' ', ssh_cmdline))
         os.execlp("ssh", *ssh_cmdline)
@@ -585,7 +585,7 @@ class SftpFrontend(AbstractCommand):
                         "-i", frontend.user_key_private,
                         "-o", "UserKnownHostsFile=/dev/null",
                         "-o", "StrictHostKeyChecking=no",
-                        ]
+        ]
         sftp_cmdline.extend(self.params.sftp_args)
         sftp_cmdline.append('%s@%s' % (username, host))
         os.execlp("sftp", *sftp_cmdline)
