@@ -19,13 +19,11 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 # stdlib imports
 from abc import ABCMeta, abstractmethod
-from fnmatch import fnmatch
 import os
 import sys
 
 # local imports
 from elasticluster.conf import Configurator
-from elasticluster.conf import Configuration
 from elasticluster import log
 from elasticluster.exceptions import ClusterNotFound, ConfigurationError
 from elasticluster.exceptions import ImageError, SecurityGroupError
@@ -234,7 +232,8 @@ class Stop(AbstractCommand):
 
         if not self.params.yes:
             # Ask for confirmation
-            yesno = raw_input("Do you want really want to stop cluster %s? [yN] " % cluster_name)
+            yesno = raw_input(
+                "Do you want really want to stop cluster %s? [yN] " % cluster_name)
             if yesno.lower() not in ['yes', 'y']:
                 print("Aborting as per user request.")
                 sys.exit(0)
@@ -313,7 +312,8 @@ class ResizeCluster(AbstractCommand):
 
             if not self.params.yes:
                 # Ask for confirmation.
-                yesno = raw_input("Do you want really want to remove them? [yN] ")
+                yesno = raw_input(
+                    "Do you want really want to remove them? [yN] ")
                 if yesno.lower() not in ['yes', 'y']:
                     print("Aborting as per user request.")
                     sys.exit(0)
