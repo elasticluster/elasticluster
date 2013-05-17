@@ -154,8 +154,7 @@ class Start(AbstractCommand):
             cluster_name = self.params.cluster
 
         configurator = Configurator.fromConfig(
-            self.params.config,
-            cluster_template=cluster_template)
+            self.params.config)
 
         # overwrite configuration
         for option, value in self.params.extra_conf.iteritems():
@@ -169,7 +168,7 @@ class Start(AbstractCommand):
         except ClusterNotFound, ex:
             try:
                 cluster = configurator.create_cluster(
-                    cluster_name, cluster_template)
+                    cluster_template, cluster_name)
             except ConfigurationError, ex:
                 log.error("Starting cluster %s: %s\n",
                           cluster_template, ex)
@@ -584,6 +583,8 @@ class SftpFrontend(AbstractCommand):
         username = frontend.image_user
         sftp_cmdline = ["sftp",
                         "-i", frontend.user_key_private,
+                        "-o", "UserKnownHostsFile=/dev/null",
+                        "-o", "StrictHostKeyChecking=no",
                         ]
         sftp_cmdline.extend(self.params.sftp_args)
         sftp_cmdline.append('%s@%s' % (username, host))

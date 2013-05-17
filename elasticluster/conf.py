@@ -49,34 +49,31 @@ class Configurator(object):
     default_storage_dir = os.path.expanduser(
         "~/.elasticluster/storage")
 
-    def __init__(self, cluster_conf, cluster_template=None):
+    def __init__(self, cluster_conf):
         """
         Default constructor to initialize a Configurator.
         :param cluster_conf: configuration dictionary
-        :param cluster_template: name of the cluster template
         :raises MultipleInvalid: configuration validation
         """
         self.general_conf = dict()
         self.general_conf['storage'] = Configurator.default_storage_dir
         self.cluster_conf = cluster_conf
-        self.cluster_template = cluster_template
 
         validator = ConfigValidator(self.cluster_conf)
         validator.validate()
 
     @classmethod
-    def fromConfig(cls, configfile, cluster_template=None):
+    def fromConfig(cls, configfile):
         """
         Helper method to initialize Configurator from an ini file.
         :param configfile: path to the ini file
-        :param cluster_template: name of the cluster template to use
         :return: configurator object
         """
         config_reader = ConfigReader(configfile)
         conf = config_reader.read_config()
-        return Configurator(conf, cluster_template)
+        return Configurator(conf)
 
-    def create_cloud_provider(self, cluster_template=None):
+    def create_cloud_provider(self, cluster_template):
         """
         Creates a cloud provider by inspecting the configuration properties
         of the given cluster template.
@@ -85,46 +82,46 @@ class Configurator(object):
         :return: object that fulfills the contract of
             :py:class:`elasticluster.providers.AbstractSetupProvider`
         """
-        if not cluster_template:
-            cluster_template = self.cluster_template
-
         conf = self.cluster_conf[cluster_template]['cloud']
 
-        provider = Configurator.cloud_providers_map[conf["provider"]]
-        conf.pop('provider')
+        provider = Configurator.cloud_providers_map[conf['provider']]
+        providerconf = conf.copy()
+        providerconf.pop('provider')
 
-        return provider(**conf)
+        return provider(**providerconf)
 
-    def create_cluster(self, cluster_name, cluster_template=None):
+    def create_cluster(self, template, name=None):
         """
         Creates a cluster by inspecting the configuration properties of the
             given cluster template.
-        :param cluster_name: name of the cluster
-        :param cluster_template: name of the cluster template
+        :param template: name of the cluster template
+
+        :param name: name of the cluster. If not defined, the cluster
+        will be named after the template.
+
         :return: :py:class:`elasticluster.cluster.cluster` instance
+
         :raises ConfigurationError: cluster template not found in config
         """
-        if not cluster_template:
-            cluster_template = self.cluster_template
+        if not name:
+            name = template
 
-        if cluster_template not in self.cluster_conf:
+        if template not in self.cluster_conf:
             raise ConfigurationError(
                 "Invalid configuration for cluster `%s`: %s"
-                "" % (cluster_template, cluster_name))
+                "" % (template, name))
 
-        conf = self.cluster_conf[cluster_template]
+        conf = self.cluster_conf[template]
 
         nodes = dict(
             (k[:-6], int(v)) for k, v in conf['cluster'].iteritems() if
             k.endswith('_nodes'))
 
-        return Cluster(cluster_template,
-                       cluster_name,
+        return Cluster(template,
+                       name,
                        conf['cluster']['cloud'],
-                       self.create_cloud_provider(
-                           cluster_template=cluster_template),
-                       self.create_setup_provider(
-                           cluster_template=cluster_template),
+                       self.create_cloud_provider(template),
+                       self.create_setup_provider(template),
                        nodes,
                        self,
                        )
@@ -139,7 +136,7 @@ class Configurator(object):
         information = storage.load_cluster(cluster_name)
 
         cluster = self.create_cluster(
-            information['name'], information['template'])
+            information['template'], information['name'])
 
         # Clear cluster nodes.
         cluster.nodes = dict((k, []) for k in cluster.nodes)
@@ -181,10 +178,7 @@ class Configurator(object):
         """
         return ClusterStorage(self.general_conf['storage'])
 
-    def create_setup_provider(self, cluster_template=None):
-        if not cluster_template:
-            cluster_template = self.cluster_template
-
+    def create_setup_provider(self, cluster_template):
         conf = self.cluster_conf[cluster_template]['setup']
         conf_login = self.cluster_conf[cluster_template]['login']
 
