@@ -18,12 +18,20 @@
 # - setup   (define a way to setup the cluster)
 # - cluster (define the composition of a cluster. It contains
 #            references to the other sections.)
+# - cluster/<clustername> 
+#            (override configuration for specific group
+#            of nodes within a cluster)
+#
 #
 # You must define at least one for each section types in order to have
 # a valid configuration file.
 
 # Cloud Section
 # =============
+#
+# A `cloud` section named `<name>` starts with:
+#
+# [cloud/<name>]
 #
 # The cloud section defines all properties needed to connect to a
 # specific cloud provider.
@@ -91,6 +99,10 @@ ec2_region=us-east-1
 # Login Section
 # ===============
 #
+# A `login` section named `<name>` starts with:
+#
+# [login/<name>]
+#
 # This section contains information on how to access the instances
 # started on the cloud, including the user and the SSH keys to use.
 # 
@@ -150,6 +162,10 @@ user_key_public=~/.ssh/id_dsa.cloud.pub
 
 # Setup Section
 # =============
+#
+# A `setup` section named `<name>` starts with:
+#
+# [setup/<name>]
 #
 # This section contain information on *how to setup* a cluster. After
 # the cluster is started, elasticluster will run a `setup provider` in
@@ -230,8 +246,20 @@ playbook_path=%(ansible_pb_dir)s/site.yml
 frontend_groups=pbs_master,maui_master
 compute_groups=pbs_clients
 
+[setup/ansible_matlab]
+# Please note that this setup assumes you already have matlab
+# installed on the image that is being used.
+provider=ansible
+playbook_path=%(ansible_pb_dir)s/site.yml
+frontend_groups=mdce_master,mdce_worker,ganglia_monitor,ganglia_master
+worker_groups=mdce_worker,ganglia_monitor
+
 # Cluster Section
 # ===============
+#
+# A `cluster` section named `<name>` starts with:
+#
+# [cluster/<name>]
 #
 # The cluster section defines a `template` for a cluster. This section
 # has references to each one of the other sections and define the
@@ -330,3 +358,45 @@ image_id=ami-90a21cf9
 flavor=m1.small
 frontend=1
 compute=2
+
+[cluster/matlab]
+cloud=hobbes
+setup_provider=ansible_matlab
+security_group=default
+image_id=ami-00000099
+flavor=m1.medium
+frontend_nodes=1
+worker_nodes=10
+image_userdata=
+ssh_to=frontend
+
+# Cluster node section
+# ====================
+#
+# A `cluster node` for the node type `<nodetype>` of the cluster
+# `<name>` starts with:
+#
+# [cluster/<name>/<nodetype>]
+#
+# This section allows you to override some configuration values for
+# specific group of nodes. Assume you have a standard slurm cluster
+# with a frontend which is used as manager node and nfs server for the
+# home directories, and a set of compute nodes.
+#
+# You may want to use different flavors for the frontend and the
+# compute nodes, since for the first you need more space and you don't
+# need many cores or much memory, while the compute nodes may requires
+# more memory and more cores but are not eager about disk space.
+#
+# This is achieved defining, for instance, a `bigdisk` flavor (the
+# name is just fictional) for the frontend and `8cpu32g` for the
+# compute nodes. Your configuration will thus look like:
+#
+# [cluster/slurm]
+# ...
+# flavor=8cpu32g
+# frontend_nodes=1
+# compute_nodes=10
+#
+# [cluster/slurm/frontend]
+# flavor=bigdisk
