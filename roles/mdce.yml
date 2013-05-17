@@ -12,7 +12,7 @@
       action: command hostname $inventory_hostname
     - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
     - action: file path=/usr/local/MATLAB state=directory
-    - include: slurm/tasks/nfs-clients.yml
+    - include: common/tasks/nfs-clients.yml
   handlers:
     - include: common/handlers/main.yml
 

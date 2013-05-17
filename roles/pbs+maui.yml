@@ -38,7 +38,7 @@
   vars_files:
     - vars/os
   tasks: 
-    - include: slurm/tasks/nfs-clients.yml nfsserver=${groups.pbs_master[0]} nfspath=/home nfsmount=/home
+    - include: common/tasks/nfs-clients.yml nfsserver=${groups.pbs_master[0]} nfspath=/home nfsmount=/home
     - include: pbs+maui/tasks/clients.yml
     - include: cluster/tasks/packages.yml
   handlers:
