@@ -1,8 +1,13 @@
 ## Parameters to run the MATLAB Compiler Runtime in unattended mode
 
-destinationFolder=/opt/MATLAB/MATLAB_Compiler_Runtime
+destinationFolder={{ installdir }}
 agreeToLicense=yes
 outputFile=/tmp/MCRInstaller.log
+
+{% if installkey -%} fileInstallationKey={{ installkey }} {% endif %}
+
+{% if licensefile -%} licensePath=license.dat {% endif %}
+
 
 # Installer mode
 # --------------
