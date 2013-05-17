@@ -27,7 +27,8 @@ import time
 import paramiko
 
 from elasticluster import log
-from elasticluster.exceptions import TimeoutError, ClusterNotFound, NodeNotFound
+from elasticluster.exceptions import TimeoutError, ClusterNotFound, \
+    NodeNotFound
 
 
 class Cluster(object):
@@ -192,7 +193,7 @@ class Cluster(object):
         """
         Returns the first node of the class specified in the
         configuration file as `ssh_to`, or the first node of
-        the first class in alphabetic order.  
+        the first class in alphabetic order.
         """
         if self.ssh_to:
             if self.ssh_to in self.nodes:
@@ -386,8 +387,8 @@ class ClusterStorage(object):
              'name': node.name,
              'type': node.type,
              'ip_public': node.ip_public,
-             'ip_private': node.ip_private} for node in
-            cluster.get_all_nodes()]
+             'ip_private': node.ip_private} for node in \
+                cluster.get_all_nodes()]
 
         db_json = json.dumps(db)
 
