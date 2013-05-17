@@ -411,13 +411,14 @@ class ConfigReader(object):
                 values['nodes'] = dict()
                 for node in nodes.iterkeys():
                     node_name = re.search("(.*)_nodes", node).groups()[0]
-                    property_name = ConfigReader.node_section + "/" + node
+                    property_name = ConfigReader.node_section + "/" + \
+                                    node_name
                     if property_name in self.conf:
                         node_values = dict(
                             (key, value.strip("'").strip('"')) for key, value
                             in self.conf[property_name].iteritems())
                         node_values = dict(
-                            node_values.items() + values['cluster'].items())
+                            values['cluster'].items() + node_values.items())
                         values['nodes'][node_name] = node_values
                     else:
                         values['nodes'][node_name] = values['cluster']
