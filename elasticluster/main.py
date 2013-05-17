@@ -146,7 +146,7 @@ class ElasticCloud(cli.app.CommandLineApp):
         try:
             return self.params.func()
         except MultipleInvalid as e:
-            print "Error validating the configuration file `%s`" % e
+            print "Error validating the configuration file `%s`" % e.errors
             sys.exit(1)
 
 

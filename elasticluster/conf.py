@@ -240,7 +240,6 @@ class ConfigValidator(object):
                     self.config[cluster]['setup']['playbook_path'] = \
                         props['setup']['playbook_path'] \
                             .replace("%(ansible_pb_dir)s", str(ansible_pb_dir))
-                    print self.config[cluster]['setup']['playbook_path']
 
     def _post_validate(self):
         """
@@ -322,6 +321,10 @@ class ConfigValidator(object):
         # validation
         validator = Schema(schema, required=True, extra=True)
         validator_node = Schema(node_schema, required=True, extra=True)
+
+        if not self.config:
+            raise MultipleInvalid("No clusters found in configuration.")
+
         for cluster, properties in self.config.iteritems():
             validator(properties)
 
@@ -330,6 +333,13 @@ class ConfigValidator(object):
                     "No nodes configured for cluster `%s`" % cluster)
 
             for node, props in properties['nodes'].iteritems():
+                # check name pattern to conform hostnames
+                match = re.search(r'^[a-zA-Z0-9-]*$', node)
+                if not match:
+                    raise MultipleInvalid('Node group name `%s` must only '
+                                          'consist of letters, numbers or `-`'
+                                          % node)
+
                 validator_node(props)
 
         self._post_validate()
