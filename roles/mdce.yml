@@ -45,5 +45,8 @@
     nfsmount: /usr/local/MATLAB
     mbin: $nfsmount/R2013a/toolbox/distcomp/bin/
   tasks:
-    - action: shell for i in `seq 1 $(nproc)`; do nohup $mbin/startworker -jobmanager AnsibleMatlabCluster -jobmanagerhost ${groups.mdce_master[0]} ; done; echo "done"
+    # I don't know if it's necessary to run a worker per core or just one per machine
+    # - action: shell for i in `seq 1 $(nproc)`; do nohup $mbin/startworker -jobmanager AnsibleMatlabCluster -jobmanagerhost ${groups.mdce_master[0]} ; done; echo "done"
+    #   ignore_errors: true
+    - action: shell nohup $mbin/startworker -jobmanager AnsibleMatlabCluster -jobmanagerhost ${groups.mdce_master[0]}
       ignore_errors: true
