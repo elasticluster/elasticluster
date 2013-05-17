@@ -376,7 +376,8 @@ class ConfigReader(object):
             between secitons
         """
         clusters = dict((key, value) for key, value in self.conf.iteritems() if
-                        re.search(ConfigReader.cluster_section + "/(.*)", key))
+                        re.search(ConfigReader.cluster_section + "/(.*)", key)
+                        and key.count("/") == 1)
 
         conf_values = dict()
 
@@ -411,8 +412,8 @@ class ConfigReader(object):
                 values['nodes'] = dict()
                 for node in nodes.iterkeys():
                     node_name = re.search("(.*)_nodes", node).groups()[0]
-                    property_name = ConfigReader.node_section + "/" + \
-                                    node_name
+                    property_name = ConfigReader.cluster_section + "/" \
+                                    + name + "/" + node_name
                     if property_name in self.conf:
                         node_values = dict(
                             (key, value.strip("'").strip('"')) for key, value

@@ -131,7 +131,7 @@ for details and further options::
     ssh_to=frontend
     image_userdata=
 
-    [node/compute]
+    [cluster/mycluster/compute]
     # This section is used to override values in "cluster/mycluster"
     # for any `compute` node.
     flavor=m1.large
