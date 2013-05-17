@@ -37,17 +37,14 @@ from elasticluster.subcommands import ListTemplates
 from elasticluster.subcommands import ResizeCluster
 from elasticluster.subcommands import SshFrontend
 from elasticluster.subcommands import SftpFrontend
-from elasticluster.conf import Configuration
+from elasticluster.conf import Configurator
 
 
-class ElasticCloud(cli.app.CommandLineApp):
-
+class Elasticluster(cli.app.CommandLineApp):
     name = "elasticluster"
 
     default_configuration_file = os.path.expanduser(
         "~/.elasticluster/config")
-    default_storage_dir = os.path.expanduser(
-        "~/.elasticluster/storage")
 
     def setup(self):
         cli.app.CommandLineApp.setup(self)
@@ -64,25 +61,25 @@ class ElasticCloud(cli.app.CommandLineApp):
                     ResizeCluster(self.params),
                     SshFrontend(self.params),
                     SftpFrontend(self.params),
-                    ]
+        ]
 
         # global parameters
         self.add_param('-v', '--verbose', action='count', default=0,
                        help="Increase verbosity.")
         self.add_param('-s', '--storage', metavar="PATH",
                        help="Path to the storage folder. Default: `%s`" %
-                       self.default_storage_dir,
-                       default=self.default_storage_dir)
+                            Configurator.default_storage_dir,
+                       default=Configurator.default_storage_dir)
         self.add_param('-c', '--config', metavar='PATH',
                        help="Path to the configuration file. Default: `%s`" %
-                       self.default_configuration_file,
+                            self.default_configuration_file,
                        default=self.default_configuration_file)
 
         # to parse subcommands
         self.subparsers = self.argparser.add_subparsers(
             title="COMMANDS",
             help="Available commands. Run `elasticluster cmd --help` "
-            "to have information on command `cmd`.")
+                 "to have information on command `cmd`.")
 
         for command in commands:
             if isinstance(command, AbstractCommand):
@@ -138,13 +135,6 @@ class ElasticCloud(cli.app.CommandLineApp):
         # Set verbosity level
         loglevel = max(1, logging.WARNING - 10 * max(0, self.params.verbose))
         log.setLevel(loglevel)
-        # initialize configuration singleton with given global parameters
-        try:
-            Configuration.Instance().file_path = self.params.config
-            Configuration.Instance().storage_path = self.params.storage
-        except Exception as ex:
-            print "please specify a valid configuration file"
-            sys.exit(1)
 
         # call the subcommand function (ususally execute)
         return self.params.func()
@@ -152,7 +142,7 @@ class ElasticCloud(cli.app.CommandLineApp):
 
 def main():
     try:
-        app = ElasticCloud()
+        app = Elasticluster()
         app.run()
     except KeyboardInterrupt:
         sys.stderr.write("""

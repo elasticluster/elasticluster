@@ -35,16 +35,15 @@ class Cluster(object):
     Handles all cluster related functionality such as start, setup,
     load, stop, storage etc.
     """
-    startup_timeout = 60*10
+    startup_timeout = 60 * 10
 
     def __init__(self, template, name, cloud, cloud_provider, setup_provider,
                  nodes, configurator, **extra):
         self.template = template
         self.name = name
-        self._cloud = cloud
         self._cloud_provider = cloud_provider
         self._setup_provider = setup_provider
-
+        self._cloud = cloud
         self._configurator = configurator
         self._storage = configurator.create_cluster_storage()
         self.nodes = dict((k, []) for k in nodes)
@@ -60,7 +59,7 @@ class Cluster(object):
         Adds a new node, but doesn't start the instance on the cloud.
         Returns the created node instance
         """
-        name = "%s%03d" % (node_type, len(self.nodes[node_type])+1) 
+        name = "%s%03d" % (node_type, len(self.nodes[node_type]) + 1)
 
         node = self._configurator.create_node(self.template, node_type,
                                               self._cloud_provider, name)
@@ -191,26 +190,26 @@ class Cluster(object):
         the first class in alphabetic order.  
         """
         if self.ssh_to:
-           if self.ssh_to in self.nodes:
-               cls = self.nodes[self.ssh_to]
-               if cls:
-                   return cls[0]
-               else:
-                   log.warning(
-                       "preferred `ssh_to` `%s` is empty: unable to "
-                       "get the choosen frontend node from that class.",
-                       self.ssh_to)
-           else:
-               raise NodeNotFound(
-                   "Invalid ssh_to `%s`. Please check your "
-                   "configuration file." % self.ssh_to)
+            if self.ssh_to in self.nodes:
+                cls = self.nodes[self.ssh_to]
+                if cls:
+                    return cls[0]
+                else:
+                    log.warning(
+                        "preferred `ssh_to` `%s` is empty: unable to "
+                        "get the choosen frontend node from that class.",
+                        self.ssh_to)
+            else:
+                raise NodeNotFound(
+                    "Invalid ssh_to `%s`. Please check your "
+                    "configuration file." % self.ssh_to)
 
         # If we reach this point, the preferred class was empty. Pick
         # one using the default logic.
         for cls in sorted(self.nodes.keys()):
             if self.nodes[cls]:
                 return self.nodes[cls][0]
-        # Uh-oh, no nodes in this cluster.
+            # Uh-oh, no nodes in this cluster.
         raise NodeNotFound("Unable to find a valid frontend: "
                            "cluster has no nodes!")
 

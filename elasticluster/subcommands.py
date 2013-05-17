@@ -19,13 +19,11 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 # stdlib imports
 from abc import ABCMeta, abstractmethod
-from fnmatch import fnmatch
 import os
 import sys
 
 # local imports
 from elasticluster.conf import Configurator
-from elasticluster.conf import Configuration
 from elasticluster import log
 from elasticluster.exceptions import ClusterNotFound, ConfigurationError
 from elasticluster.exceptions import ImageError, SecurityGroupError
@@ -34,7 +32,7 @@ from elasticluster.exceptions import NodeNotFound
 
 class AbstractCommand():
     """
-    Defines the general contract every command has to fullfill in
+    Defines the general contract every command has to fulfill in
     order to be recognized by the arguments list and executed
     afterwards.
     """
@@ -105,10 +103,12 @@ To upload or download files to the cluster, use the command:
 """ % (cluster.name, cluster.name )
     return msg
 
+
 class Start(AbstractCommand):
     """
     Create a new cluster using the given cluster template.
     """
+
     def setup(self, subparsers):
         parser = subparsers.add_parser(
             "start", help="Create a cluster using the supplied configuration.",
@@ -116,12 +116,12 @@ class Start(AbstractCommand):
         parser.set_defaults(func=self)
         parser.add_argument('cluster',
                             help="Type of cluster. It refers to a "
-                            "configuration stanza [cluster/<name>]")
+                                 "configuration stanza [cluster/<name>]")
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
         parser.add_argument('-n', '--name', dest='cluster_name',
                             help='Name of the cluster.')
-        parser.add_argument('--nodes', metavar='N1:GROUP[,N2:GROUP2,...]', 
+        parser.add_argument('--nodes', metavar='N1:GROUP[,N2:GROUP2,...]',
                             help='Override the values in of the configuration file and starts `N1` nodes of group `GROUP`, N2 of GROUP2 etc...')
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Only start the cluster, do not configure it")
@@ -134,7 +134,7 @@ class Start(AbstractCommand):
                 for nspec in nodes:
                     n, group = nspec.split(':')
                     n = int(n)
-                    self.params.extra_conf[group+'_nodes'] = n
+                    self.params.extra_conf[group + '_nodes'] = n
         except ValueError:
             raise ConfigurationError(
                 "Invalid argument for option --nodes: %s" % self.params.nodes)
@@ -150,16 +150,15 @@ class Start(AbstractCommand):
         else:
             cluster_name = self.params.cluster
 
+        configurator = Configurator.fromConfig(self.params.config, cluster_template=cluster_template)
+
         # First, check if the cluster is already created.
         try:
-            cluster = Configurator().load_cluster(cluster_name)
+            cluster = configurator.load_cluster(cluster_name)
         except ClusterNotFound, ex:
-            if self.params.cluster_name:
-                self.params.extra_conf['name'] = self.params.cluster_name
-
             try:
-                cluster = Configurator().create_cluster(
-                    cluster_template, **self.params.extra_conf)
+                cluster = configurator.create_cluster(
+                    cluster_name, cluster_template)
             except ConfigurationError, ex:
                 log.error("Starting cluster %s: %s\n",
                           cluster_template, ex)
@@ -168,7 +167,7 @@ class Start(AbstractCommand):
         try:
             for cls in cluster.nodes:
                 print("Starting cluster `%s` with %d %s nodes." % (
-                cluster.name, len(cluster.nodes[cls]), cls))
+                    cluster.name, len(cluster.nodes[cls]), cls))
             print("(this may take a while...)")
             cluster.start()
             if self.params.no_setup:
@@ -188,6 +187,7 @@ class Stop(AbstractCommand):
     """
     Stop a cluster and terminate all associated virtual machines.
     """
+
     def setup(self, subparsers):
         """
         @see abstract_command contract
@@ -201,7 +201,7 @@ class Stop(AbstractCommand):
                             help="Increase verbosity.")
         parser.add_argument('--force', action="store_true", default=False,
                             help="Remove the cluster even if not all the nodes"
-                            " have been terminated properly.")
+                                 " have been terminated properly.")
         parser.add_argument('--yes', action="store_true", default=False,
                             help="Assume `yes` to all queries and do not prompt.")
 
@@ -210,8 +210,9 @@ class Stop(AbstractCommand):
         Stops the cluster if it's running.
         """
         cluster_name = self.params.cluster
+        configurator = Configurator.fromConfig(self.params.config)
         try:
-            cluster = Configurator().load_cluster(cluster_name)
+            cluster = configurator.load_cluster(cluster_name)
         except (ClusterNotFound, ConfigurationError), ex:
             log.error("Stopping cluster %s: %s\n" %
                       (cluster_name, ex))
@@ -230,10 +231,11 @@ class ResizeCluster(AbstractCommand):
     """
     Resize the cluster by adding or removing compute nodes.
     """
+
     def setup(self, subparsers):
         parser = subparsers.add_parser(
             "resize", help="Resize a cluster by adding or removing "
-            "compute nodes.", description=self.__doc__)
+                           "compute nodes.", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('--nodes', metavar='+-N1:GROUP1[,+-N2:GROUP2]',
@@ -260,10 +262,13 @@ class ResizeCluster(AbstractCommand):
                 "Invalid syntax for argument: %s" % self.params.nodes)
 
     def execute(self):
+        configurator = Configurator.fromConfig(self.params.config)
+
         # Get current cluster configuration
         cluster_name = self.params.cluster
+
         try:
-            cluster = Configurator().load_cluster(cluster_name)
+            cluster = configurator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError), ex:
             log.error("Listing nodes from cluster %s: %s\n" %
@@ -295,6 +300,7 @@ class ListClusters(AbstractCommand):
     """
     Print a list of all clusters that have been started.
     """
+
     def setup(self, subparsers):
         parser = subparsers.add_parser(
             "list", help="List all started clusters.",
@@ -304,7 +310,8 @@ class ListClusters(AbstractCommand):
                             help="Increase verbosity.")
 
     def execute(self):
-        storage = Configurator().create_cluster_storage()
+        configurator = Configurator.fromConfig(self.params.config)
+        storage = configurator.create_cluster_storage()
         cluster_names = storage.get_stored_clusters()
 
         if not cluster_names:
@@ -316,13 +323,13 @@ Please note that there's no guarantee that they are fully configured:
 """)
             for name in sorted(cluster_names):
                 try:
-                    cluster = Configurator().load_cluster(name)
+                    cluster = configurator.load_cluster(name)
                 except ConfigurationError, ex:
                     log.error("gettin information from cluster `%s`: %s",
                               name, ex)
                     continue
                 print("%s " % name)
-                print("-"*len(name))
+                print("-" * len(name))
                 print("  name:           %s" % cluster.name)
                 print("  template:       %s" % cluster.template)
                 print("  cloud:          %s " % cluster._cloud)
@@ -335,37 +342,37 @@ class ListTemplates(AbstractCommand):
     """
     List the available templates defined in the configuration file.
     """
+
     def setup(self, subparsers):
         parser = subparsers.add_parser(
             "list-templates", help="Show the templates defined in the "
-            "configuration file.", description=self.__doc__)
+                                   "configuration file.", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
         parser.add_argument('clusters', help="List only this cluster. "
-                            "Accepts globbing.", nargs="*")
+                                             "Accepts globbing.", nargs="*")
 
     def execute(self):
-        templates = Configuration.Instance().list_cluster_templates()
-        for pattern in self.params.clusters:
-            templates = [t for t in templates if fnmatch(t, pattern)]
-        print("""%d cluster templates found.""" % len(templates))
-        for template in templates:
+
+        configurator = Configurator.fromConfig(self.params.config)
+        config = configurator.cluster_conf
+
+        print("""%d cluster templates found.""" % len(config))
+        for template in config.iterkeys():
             try:
-                cluster = Configurator().create_cluster(template)
+                cluster = configurator.create_cluster(template, template)
                 print("""
-name:     %s
-image id: %s
-flavor:   %s
-cloud:    %s""" % (template, cluster.extra['image_id'],
-                   cluster.extra['flavor'],
-                   cluster._cloud))
+name:     %s,
+cloud:     %s,
+""" % (template, cluster._cloud))
                 for nodetype in cluster.nodes:
                     print("%s nodes: %d" % (
-                            nodetype,
-                            len(cluster.nodes[nodetype])))
+                        nodetype,
+                        len(cluster.nodes[nodetype])))
             except ConfigurationError, ex:
                 log.warning("unable to load cluster `%s`: %s", template, ex)
+
 
 class ListNodes(AbstractCommand):
     """
@@ -376,7 +383,7 @@ class ListNodes(AbstractCommand):
     def setup(self, subparsers):
         parser = subparsers.add_parser(
             "list-nodes", help="Show information about the nodes in the "
-            "cluster", description=self.__doc__)
+                               "cluster", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
@@ -384,18 +391,18 @@ class ListNodes(AbstractCommand):
         parser.add_argument(
             '-u', '--update', action='store_true', default=False,
             help="By default `elasticluster list-nodes` will not contact the "
-            "EC2 provider to get up-to-date information, unless `-u` option "
-            "is given.")
+                 "EC2 provider to get up-to-date information, unless `-u` option "
+                 "is given.")
 
     def execute(self):
         """
         Lists all nodes within the specified cluster with certain
         information like id and ip.
         """
-        Configuration.Instance().cluster_name = self.params.cluster
+        configurator = Configurator.fromConfig(self.params.config)
         cluster_name = self.params.cluster
         try:
-            cluster = Configurator().load_cluster(cluster_name)
+            cluster = configurator.load_cluster(cluster_name)
             if self.params.update:
                 cluster.update()
         except (ClusterNotFound, ConfigurationError), ex:
@@ -418,6 +425,7 @@ class SetupCluster(AbstractCommand):
     Setup the given cluster by calling the setup provider defined for
     this cluster.
     """
+
     def setup(self, subparsers):
         parser = subparsers.add_parser(
             "setup", help="Configure the cluster.", description=self.__doc__)
@@ -427,10 +435,10 @@ class SetupCluster(AbstractCommand):
                             help="Increase verbosity.")
 
     def execute(self):
-        Configuration.Instance().cluster_name = self.params.cluster
+        configurator = Configurator.fromConfig(self.params.config)
         cluster_name = self.params.cluster
         try:
-            cluster = Configurator().load_cluster(cluster_name)
+            cluster = configurator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError), ex:
             log.error("Setting up cluster %s: %s\n" %
@@ -447,23 +455,24 @@ class SshFrontend(AbstractCommand):
     """
     Connect to the frontend of the cluster using `ssh`.
     """
+
     def setup(self, subparsers):
         parser = subparsers.add_parser(
             "ssh", help="Connect to the frontend of the cluster using the "
-            "`ssh` command", description=self.__doc__)
+                        "`ssh` command", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
         parser.add_argument('ssh_args', metavar='args', nargs='*',
                             help="Execute the following command on the remote "
-                            "machine instead of opening an interactive shell.")
+                                 "machine instead of opening an interactive shell.")
 
     def execute(self):
-        Configuration.Instance().cluster_name = self.params.cluster
+        configurator = Configurator.fromConfig(self.params.config)
         cluster_name = self.params.cluster
         try:
-            cluster = Configurator().load_cluster(cluster_name)
+            cluster = configurator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError), ex:
             log.error("Setting up cluster %s: %s\n" %
@@ -478,11 +487,11 @@ class SshFrontend(AbstractCommand):
         host = frontend.ip_public
         username = frontend.image_user
         ssh_cmdline = [
-            "ssh",
-            "-i", frontend.user_key_private,
-        ] + (['-v'] * self.params.verbose) + [
-            '%s@%s' % (username, host),
-        ] + self.params.ssh_args
+                          "ssh",
+                          "-i", frontend.user_key_private,
+                      ] + (['-v'] * self.params.verbose) + [
+                          '%s@%s' % (username, host),
+                      ] + self.params.ssh_args
         os.execlp("ssh", *ssh_cmdline)
 
 
@@ -490,6 +499,7 @@ class SftpFrontend(AbstractCommand):
     """
     Open an SFTP session to the cluster frontend host.
     """
+
     def setup(self, subparsers):
         parser = subparsers.add_parser(
             "sftp",
@@ -501,13 +511,13 @@ class SftpFrontend(AbstractCommand):
                             help="Increase verbosity.")
         parser.add_argument('sftp_args', metavar='args', nargs='*',
                             help="Arguments to pass to ftp, instead of "
-                            "opening an interactive shell.")
+                                 "opening an interactive shell.")
 
     def execute(self):
-        Configuration.Instance().cluster_name = self.params.cluster
+        configurator = Configurator.fromConfig(self.params.config)
         cluster_name = self.params.cluster
         try:
-            cluster = Configurator().load_cluster(cluster_name)
+            cluster = configurator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError), ex:
             log.error("Setting up cluster %s: %s\n" %
@@ -522,9 +532,9 @@ class SftpFrontend(AbstractCommand):
         host = frontend.ip_public
         username = frontend.image_user
         sftp_cmdline = [
-            "sftp",
-            "-i", frontend.user_key_private,
-        ] + (['-v'] * self.params.verbose) + self.params.sftp_args + [
-            '%s@%s' % (username, host),
-        ]
+                           "sftp",
+                           "-i", frontend.user_key_private,
+                       ] + (['-v'] * self.params.verbose) + self.params.sftp_args + [
+                           '%s@%s' % (username, host),
+                       ]
         os.execlp("sftp", *sftp_cmdline)

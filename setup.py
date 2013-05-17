@@ -27,9 +27,11 @@ import sys
 import shutil
 
 from setuptools.command import sdist
+
 del sdist.finders[:]
 
 ANSIBLE_PB_DIR = 'elasticluster/providers/ansible-playbooks'
+
 
 def ansible_pb_files():
     basedir = os.path.dirname(__file__)
@@ -42,18 +44,20 @@ def ansible_pb_files():
         ansible_data.append((os.path.join('share', dirname), tmp))
     return ansible_data
 
+
 from setuptools import setup, find_packages
+
 setup(
-    name = "elasticluster",
-    version = "0.2",
-    description = "A command line tool to create, manage and setup computing clusters hosted on a public or private cloud infrastructure.",
-    long_description = open('README.rst').read(),
-    author = "Grid Computing Competence Centre, University of Zurich",
-    author_email = "info@gc3.lists.uzh.ch",
-    license = "LGPL",
-    keywords = "cloud openstack amazon ec2 ssh hpc gridengine torque slurm batch job elastic",
-    url = "https://github.com/gc3-uzh-ch/elasticluster",
-    classifiers = [
+    name="elasticluster",
+    version="0.2",
+    description="A command line tool to create, manage and setup computing clusters hosted on a public or private cloud infrastructure.",
+    long_description=open('README.rst').read(),
+    author="Grid Computing Competence Centre, University of Zurich",
+    author_email="info@gc3.lists.uzh.ch",
+    license="LGPL",
+    keywords="cloud openstack amazon ec2 ssh hpc gridengine torque slurm batch job elastic",
+    url="https://github.com/gc3-uzh-ch/elasticluster",
+    classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",
         "Intended Audience :: Developers",
@@ -72,9 +76,9 @@ setup(
         "Topic :: Education",
         "Topic :: Scientific/Engineering",
         "Topic :: System :: Distributed Computing",
-        ],
-    packages = find_packages(),
-    install_requires = [
+    ],
+    packages=find_packages(),
+    install_requires=[
         'boto',
         'PyCLI',
         'paramiko',
@@ -83,14 +87,16 @@ setup(
         'google-api-python-client',
         'oauth2client',
         'httplib2',
-        ],
-    data_files = ansible_pb_files(),
-    entry_points = {
+        'voluptuous',
+        'configobj'
+    ],
+    data_files=ansible_pb_files(),
+    entry_points={
         'console_scripts': [
             'elasticluster = elasticluster.main:main',
-            ]
-        },
-    )
+        ]
+    },
+)
 
 if __name__ == "__main__":
     if sys.argv[1] in ['develop', 'install']:
