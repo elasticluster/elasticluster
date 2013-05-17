@@ -220,6 +220,7 @@ class Stop(AbstractCommand):
             return
 
         if not self.params.yes:
+            # Ask for confirmation
             yesno = raw_input("Do you want really want to stop cluster %s? [yN] " % cluster_name)
             if yesno.lower() not in ['yes', 'y']:
                 print("Aborting as per user request.")
@@ -244,6 +245,8 @@ class ResizeCluster(AbstractCommand):
                             help="Increase verbosity.")
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Only start the cluster, do not configure it")
+        parser.add_argument('--yes', action="store_true", default=False,
+                            help="Assume `yes` to all queries and do not prompt.")
 
     def pre_run(self):
         self.params.nodes_to_add = {}
@@ -278,10 +281,22 @@ class ResizeCluster(AbstractCommand):
                 cluster.add_node(grp)
 
         for grp in self.params.nodes_to_remove:
+            n_to_rm = self.params.nodes_to_remove[grp]
             print("Removing %d %s node(s) from the cluster."
-                  "" % (self.params.nodes_to_remove[grp], grp))
-            for i in range(self.params.nodes_to_remove[grp]):
-                node = cluster.nodes[grp].pop()
+                  "" % (n_to_rm, grp))
+            to_remove = cluster.nodes[grp][-n_to_rm:]
+            print("The following nodes will be removed from the cluster.")
+            print("    " + str.join("\n    ", [n.name for n in to_remove]))
+
+            if not self.params.yes:
+                # Ask for confirmation.
+                yesno = raw_input("Do you want really want to remove them? [yN] ")
+                if yesno.lower() not in ['yes', 'y']:
+                    print("Aborting as per user request.")
+                    sys.exit(0)
+
+            for node in to_remove:
+                cluster.nodes[grp].remove(node)
                 node.stop()
 
         cluster.start()
