@@ -100,7 +100,7 @@ To login on the frontend node, run the command:
 To upload or download files to the cluster, use the command:
 
     elasticluster sftp %s
-""" % (cluster.name, cluster.name )
+""" % (cluster.name, cluster.name)
     return msg
 
 
@@ -152,15 +152,15 @@ class Start(AbstractCommand):
         else:
             cluster_name = self.params.cluster
 
-        configurator = Configurator.fromConfig(self.params.config,
-                                               cluster_template=cluster_template)
+        configurator = Configurator.fromConfig(
+            self.params.config,
+            cluster_template=cluster_template)
 
         # overwrite configuration
         for option, value in self.params.extra_conf.iteritems():
-            if option in configurator.cluster_conf[cluster_template][
-                'cluster']:
-                configurator.cluster_conf[cluster_template]['cluster'][
-                    option] = value
+            cconf = configurator.cluster_conf[cluster_template]['cluster']
+            if option in cconf:
+                clusterconf[option] = value
 
         # First, check if the cluster is already created.
         try:
@@ -213,9 +213,10 @@ class Stop(AbstractCommand):
                             help="Increase verbosity.")
         parser.add_argument('--force', action="store_true", default=False,
                             help="Remove the cluster even if not all the nodes"
-                                 " have been terminated properly.")
+                            " have been terminated properly.")
         parser.add_argument('--yes', action="store_true", default=False,
-                            help="Assume `yes` to all queries and do not prompt.")
+                            help="Assume `yes` to all queries and "
+                            "do not prompt.")
 
     def execute(self):
         """
@@ -233,7 +234,8 @@ class Stop(AbstractCommand):
         if not self.params.yes:
             # Ask for confirmation
             yesno = raw_input(
-                "Do you want really want to stop cluster %s? [yN] " % cluster_name)
+                "Do you want really want to stop "
+                "cluster %s? [yN] " % cluster_name)
             if yesno.lower() not in ['yes', 'y']:
                 print("Aborting as per user request.")
                 sys.exit(0)
@@ -253,15 +255,18 @@ class ResizeCluster(AbstractCommand):
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-a', '--add', metavar='N1:GROUP1[,N2:GROUP2]',
-                            help="Add N1 nodes of group GROUP1, N2 of group GROUP2 etc...")
+                            help="Add N1 nodes of group GROUP1, "
+                            "N2 of group GROUP2 etc...")
         parser.add_argument('-r', '--remove', metavar='N1:GROUP1[,N2:GROUP2]',
-                            help="Remove N1 nodes of group GROUP1, N2 of group GROUP2 etc...")
+                            help="Remove N1 nodes of group GROUP1, "
+                            "N2 of group GROUP2 etc...")
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Only start the cluster, do not configure it")
         parser.add_argument('--yes', action="store_true", default=False,
-                            help="Assume `yes` to all queries and do not prompt.")
+                            help="Assume `yes` to all queries and "
+                            "do not prompt.")
 
     def pre_run(self):
         self.params.nodes_to_add = {}
@@ -427,8 +432,8 @@ class ListNodes(AbstractCommand):
         parser.add_argument(
             '-u', '--update', action='store_true', default=False,
             help="By default `elasticluster list-nodes` will not contact the "
-                 "EC2 provider to get up-to-date information, unless `-u` option "
-                 "is given.")
+            "EC2 provider to get up-to-date information, unless `-u` option "
+            "is given.")
 
     def execute(self):
         """
@@ -505,7 +510,7 @@ class SshFrontend(AbstractCommand):
                             help="Increase verbosity.")
         parser.add_argument('ssh_args', metavar='args', nargs='*',
                             help="Execute the following command on the remote "
-                                 "machine instead of opening an interactive shell.")
+                            "machine instead of opening an interactive shell.")
 
     def execute(self):
         configurator = Configurator.fromConfig(self.params.config)
@@ -525,12 +530,12 @@ class SshFrontend(AbstractCommand):
             sys.exit(1)
         host = frontend.ip_public
         username = frontend.image_user
-        ssh_cmdline = [
-                          "ssh",
-                          "-i", frontend.user_key_private,
-                      ] + (['-v'] * self.params.verbose) + [
-                          '%s@%s' % (username, host),
-                      ] + self.params.ssh_args
+        ssh_cmdline = ["ssh",
+                       "-i", frontend.user_key_private,
+                       '- ' + 'v' * self.params.verbose,
+                       '%s@%s' % (username, host),
+                       ]
+        ssh_cmdline.extend(self.params.ssh_args)
         os.execlp("ssh", *ssh_cmdline)
 
 
@@ -570,11 +575,10 @@ class SftpFrontend(AbstractCommand):
             sys.exit(1)
         host = frontend.ip_public
         username = frontend.image_user
-        sftp_cmdline = [
-                           "sftp",
-                           "-i", frontend.user_key_private,
-                       ] + ([
-                                '-v'] * self.params.verbose) + self.params.sftp_args + [
-                           '%s@%s' % (username, host),
-                       ]
+        sftp_cmdline = ["sftp",
+                        "-i", frontend.user_key_private,
+                        '- ' + 'v' * self.params.verbose,
+                        ]
+        sftp_cmdline.extend(self.params.sftp_args)
+        sftp_cmdline.append('%s@%s' % (username, host))
         os.execlp("sftp", *sftp_cmdline)
