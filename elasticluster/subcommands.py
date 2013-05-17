@@ -19,6 +19,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 # stdlib imports
 from abc import ABCMeta, abstractmethod
+from fnmatch import fnmatch
 import os
 import sys
 
@@ -385,14 +386,14 @@ class ListTemplates(AbstractCommand):
 
     def setup(self, subparsers):
         parser = subparsers.add_parser(
-            "list-templates", help="Show the templates defined in the "
-                                   "configuration file.",
-            description=self.__doc__)
+            "list-templates", description=self.__doc__,
+            help="Show the templates defined in the configuration file.",
+            )
         parser.set_defaults(func=self)
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
-        parser.add_argument('clusters', help="List only this cluster. "
-                                             "Accepts globbing.", nargs="*")
+        parser.add_argument('clusters',  nargs="*",
+                            help="List only this cluster. Accepts globbing.")
 
     def execute(self):
 
@@ -400,7 +401,11 @@ class ListTemplates(AbstractCommand):
         config = configurator.cluster_conf
 
         print("""%d cluster templates found.""" % len(config))
-        for template in config.iterkeys():
+        templates = config.keys()
+        for pattern in self.params.clusters:
+            templates = [t for t in templates if fnmatch(t, pattern)]
+
+        for template in templates:
             try:
                 cluster = configurator.create_cluster(template, template)
                 print("""
