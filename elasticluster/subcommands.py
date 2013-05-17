@@ -239,8 +239,10 @@ class ResizeCluster(AbstractCommand):
             "compute nodes.", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('--nodes', metavar='+-N1:GROUP1[,+-N2:GROUP2]',
-                            help="Add/remove N1 nodes of group GROUP1, N2 of group GROUP2 etc...")
+        parser.add_argument('-a', '--add', metavar='N1:GROUP1[,N2:GROUP2]',
+                            help="Add N1 nodes of group GROUP1, N2 of group GROUP2 etc...")
+        parser.add_argument('-r', '--remove', metavar='N1:GROUP1[,N2:GROUP2]',
+                            help="Remove N1 nodes of group GROUP1, N2 of group GROUP2 etc...")
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
         parser.add_argument('--no-setup', action="store_true", default=False,
@@ -252,14 +254,18 @@ class ResizeCluster(AbstractCommand):
         self.params.nodes_to_add = {}
         self.params.nodes_to_remove = {}
         try:
-            if self.params.nodes:
+            if self.params.add:
                 nodes = self.params.nodes.split(',')
                 for nspec in nodes:
                     n, group = nspec.split(':')
-                    if n[0] == '-':
-                        self.params.nodes_to_remove[group] = int(n[1:])
-                    else:
-                        self.params.nodes_to_add[group] = int(n)
+                    self.params.nodes_to_add[group] = int(n)
+
+            if self.params.remove:
+                nodes = self.params.nodes.split(',')
+                for nspec in nodes:
+                    n, group = nspec.split(':')
+                    self.params.nodes_to_remove[group] = int(n[1:])
+
         except ValueError:
             raise ConfigurationError(
                 "Invalid syntax for argument: %s" % self.params.nodes)
