@@ -37,6 +37,22 @@ class Configurator(object):
     The Configurator is responsible for (I) keeping track of the
     configuration and (II) offer factory methods to create all kind of
     objects that need information from the configuration.
+
+
+    The cluster configuration dictionary is structured in the following way:
+    { "<cluster_name>" : {
+        "setup" : { properties of the setup section },
+        "cloud" : { properties of the cloud section },
+        "login" : { properties of the login section },
+        "cluster" : { properties of the cluster section },
+        "nodes": {  "<node_type>" : { properties of the node},
+                    "<node_type>" : { properties of the node},
+                },
+        },
+     "<cluster_name>" : {
+        (see above)
+        }
+     }
     """
 
     cloud_providers_map = {
@@ -124,7 +140,7 @@ class Configurator(object):
                        self.create_setup_provider(template),
                        nodes,
                        self,
-                       )
+        )
 
     def load_cluster(self, cluster_name):
         """
@@ -278,28 +294,28 @@ class ConfigValidator(object):
                                 "ec2_access_key": All(str, Length(min=1)),
                                 "ec2_secret_key": All(str, Length(min=1)),
                                 "ec2_region": All(str, Length(min=1)),
-                                },
+                               },
                                {"provider": 'google',
                                 "client_id": All(str, Length(min=1)),
                                 "client_secret": All(str, Length(min=1)),
                                 "project_id": All(str, Length(min=1)),
-                                }
-                               ),
+                               }
+        ),
                   "cluster": {"cloud": All(str, Length(min=1)),
                               "setup_provider": All(str, Length(min=1)),
                               "login": All(str, Length(min=1)),
-                              },
+                  },
                   "setup": {"provider": All(str, Length(min=1)),
                             "playbook_path": check_file(),
-                            },
+                  },
                   "login": {"image_user": All(str, Length(min=1)),
                             "image_user_sudo": All(str, Length(min=1)),
                             "image_sudo": Boolean(str),
                             "user_key_name": All(str, Length(min=1)),
                             "user_key_private": check_file(),
                             "user_key_public": check_file(),
-                            }
                   }
+        }
 
         node_schema = {
             "flavor": All(str, Length(min=1)),
