@@ -250,8 +250,8 @@ class ConfigValidator(object):
         - expanding file paths
         """
         # expand all paths
-        conf = self.config[cluster]
         for cluster, values in self.config.iteritems():
+            conf = self.config[cluster]
             pbpath = os.path.expanduser(values['setup']['playbook_path'])
             conf['setup']['playbook_path'] = pbpath
 
