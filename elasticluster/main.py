@@ -42,11 +42,7 @@ from elasticluster.subcommands import SftpFrontend
 from elasticluster.conf import Configurator
 
 
-class Elasticluster():
-    pass
-
-
-class ElasticCloud(cli.app.CommandLineApp):
+class ElastiCluster(cli.app.CommandLineApp):
     name = "elasticluster"
 
     default_configuration_file = os.path.expanduser(
@@ -152,7 +148,7 @@ class ElasticCloud(cli.app.CommandLineApp):
 
 def main():
     try:
-        app = ElasticCloud()
+        app = ElastiCluster()
         app.run()
     except KeyboardInterrupt:
         sys.stderr.write("""
