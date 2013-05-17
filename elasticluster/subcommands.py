@@ -19,11 +19,13 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 # stdlib imports
 from abc import ABCMeta, abstractmethod
+from fnmatch import fnmatch
 import os
 import sys
 
 # local imports
 from elasticluster.conf import Configurator
+from elasticluster.conf import Configuration
 from elasticluster import log
 from elasticluster.exceptions import ClusterNotFound, ConfigurationError
 from elasticluster.exceptions import ImageError, SecurityGroupError
@@ -188,6 +190,8 @@ class Start(AbstractCommand):
                 ret = cluster.setup()
                 if ret:
                     print("Your cluster is ready!")
+                else:
+                    print("\nWARNING: YOUR CLUSTER IS NOT READY YET!")
             print(cluster_summary(cluster))
         except (KeyError, ImageError, SecurityGroupError) as e:
             print("Your cluster could not start `%s`" % e)
@@ -229,8 +233,8 @@ class Stop(AbstractCommand):
             return
 
         if not self.params.yes:
-            yesno = raw_input(
-                "Do you want really want to stop cluster %s? [yN] " % cluster_name)
+            # Ask for confirmation
+            yesno = raw_input("Do you want really want to stop cluster %s? [yN] " % cluster_name)
             if yesno.lower() not in ['yes', 'y']:
                 print("Aborting as per user request.")
                 sys.exit(0)
@@ -249,25 +253,33 @@ class ResizeCluster(AbstractCommand):
                            "compute nodes.", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('--nodes', metavar='+-N1:GROUP1[,+-N2:GROUP2]',
-                            help="Add/remove N1 nodes of group GROUP1, N2 of group GROUP2 etc...")
+        parser.add_argument('-a', '--add', metavar='N1:GROUP1[,N2:GROUP2]',
+                            help="Add N1 nodes of group GROUP1, N2 of group GROUP2 etc...")
+        parser.add_argument('-r', '--remove', metavar='N1:GROUP1[,N2:GROUP2]',
+                            help="Remove N1 nodes of group GROUP1, N2 of group GROUP2 etc...")
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Only start the cluster, do not configure it")
+        parser.add_argument('--yes', action="store_true", default=False,
+                            help="Assume `yes` to all queries and do not prompt.")
 
     def pre_run(self):
         self.params.nodes_to_add = {}
         self.params.nodes_to_remove = {}
         try:
-            if self.params.nodes:
+            if self.params.add:
                 nodes = self.params.nodes.split(',')
                 for nspec in nodes:
                     n, group = nspec.split(':')
-                    if n[0] == '-':
-                        self.params.nodes_to_remove[group] = int(n[1:])
-                    else:
-                        self.params.nodes_to_add[group] = int(n)
+                    self.params.nodes_to_add[group] = int(n)
+
+            if self.params.remove:
+                nodes = self.params.nodes.split(',')
+                for nspec in nodes:
+                    n, group = nspec.split(':')
+                    self.params.nodes_to_remove[group] = int(n[1:])
+
         except ValueError:
             raise ConfigurationError(
                 "Invalid syntax for argument: %s" % self.params.nodes)
@@ -292,10 +304,22 @@ class ResizeCluster(AbstractCommand):
                 cluster.add_node(grp)
 
         for grp in self.params.nodes_to_remove:
+            n_to_rm = self.params.nodes_to_remove[grp]
             print("Removing %d %s node(s) from the cluster."
-                  "" % (self.params.nodes_to_remove[grp], grp))
-            for i in range(self.params.nodes_to_remove[grp]):
-                node = cluster.nodes[grp].pop()
+                  "" % (n_to_rm, grp))
+            to_remove = cluster.nodes[grp][-n_to_rm:]
+            print("The following nodes will be removed from the cluster.")
+            print("    " + str.join("\n    ", [n.name for n in to_remove]))
+
+            if not self.params.yes:
+                # Ask for confirmation.
+                yesno = raw_input("Do you want really want to remove them? [yN] ")
+                if yesno.lower() not in ['yes', 'y']:
+                    print("Aborting as per user request.")
+                    sys.exit(0)
+
+            for node in to_remove:
+                cluster.nodes[grp].remove(node)
                 node.stop()
 
         cluster.start()
@@ -458,8 +482,11 @@ class SetupCluster(AbstractCommand):
             return
 
         print("Configuring cluster `%s`..." % cluster_name)
-        cluster.setup()
-        print("Your cluster is ready!")
+        ret = cluster.setup()
+        if ret:
+            print("Your cluster is ready!")
+        else:
+            print("\nWARNING: YOUR CLUSTER IS NOT READY YET!")
         print(cluster_summary(cluster))
 
 
