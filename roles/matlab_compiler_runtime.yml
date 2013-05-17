@@ -1,0 +1,35 @@
+---
+- 
+
+  hosts: all
+
+  vars:
+  - tmpdir: /tmp
+
+  name: Install the MATLAB Compiler Runtime
+
+  tasks:
+  - name: make temp directory
+    action: file dest=$tmpdir/MCRInstaller state=directory
+
+  - name: copy MCR installer zipfile
+    action: copy src=mcr/files/MCRInstaller.zip dest=$tmpdir/MCRInstaller/MCRInstaller.zip force=yes backup=no 
+
+  - name: copy installation response file
+    action: copy src=mcr/files/input.txt dest=$tmpdir/MCRInstaller/MCRInstaller.input force=yes backup=no
+ 
+  - name: unzip installation files (may fail if `unzip` is not installed)
+    action: command unzip -q -o $tmpdir/MCRInstaller/MCRInstaller.zip -d $tmpdir/MCRInstaller
+
+  - name: run MCR Installer
+    action: command $tmpdir/MCRInstaller/install $tmpdir/MCRInstaller/MCRInstaller.input
+
+  - name: copy profile setup script
+    action: copy src=mcr/files/profile.sh dest=/etc/profile.d/MATLAB_Compiler_Runtime.sh force=yes backup=no
+ 
+  - name: cleanup temporary installation files
+    action: command rm -r -f -v $tmpdir/MCRInstaller
+
+  tags:
+    - matlab
+    - mcr

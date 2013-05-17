@@ -1,0 +1,19 @@
+## Parameters to run the MATLAB Compiler Runtime in unattended mode
+
+destinationFolder=/opt/MATLAB/MATLAB_Compiler_Runtime
+agreeToLicense=yes
+outputFile=/tmp/MCRInstaller.log
+
+# Installer mode
+# --------------
+#
+# interactive: Run the installer GUI, waiting for user input on all
+#              dialog boxes.
+#
+# silent:      Run the installer without displaying the GUI.
+#
+# automated:   Run the installer GUI, displaying all dialog boxes, but only
+#              waiting for user input on dialogs that are missing required
+#              input.
+#
+mode=silent
