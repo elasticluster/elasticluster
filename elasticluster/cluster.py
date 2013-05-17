@@ -215,7 +215,7 @@ class Cluster(object):
         for cls in sorted(self.nodes.keys()):
             if self.nodes[cls]:
                 return self.nodes[cls][0]
-            # Uh-oh, no nodes in this cluster.
+                # Uh-oh, no nodes in this cluster.
         raise NodeNotFound("Unable to find a valid frontend: "
                            "cluster has no nodes!")
 
@@ -279,7 +279,8 @@ class Node(object):
         """
         log.info("Starting node %s.", self.name)
         self.instance_id = self._cloud_provider.start_instance(
-            self.user_key_name, self.user_key_public, self.security_group,
+            self.user_key_name, self.user_key_public, self.user_key_private,
+            self.security_group,
             self.flavor, self.image, self.image_userdata)
         log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
 

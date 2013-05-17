@@ -15,17 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
+from paramiko.ssh_exception import SSHException
 
-import os
-import urllib
+__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 from boto import ec2
 import boto
+import os
+from paramiko import DSSKey, RSAKey
+import urllib
 
 from elasticluster import log
 from elasticluster.providers import AbstractCloudProvider
-from elasticluster.exceptions import SecurityGroupError, KeypairError,\
+from elasticluster.exceptions import SecurityGroupError, KeypairError, \
     ImageError
 from elasticluster.exceptions import InstanceError
 
@@ -97,8 +99,8 @@ class BotoCloudProvider(AbstractCloudProvider):
 
         return self._connection
 
-    def start_instance(self, key_name, key_path, security_group, flavor,
-                       image_id, image_userdata):
+    def start_instance(self, key_name, public_key_path, private_key_path,
+                       security_group, flavor, image_id, image_userdata):
         """
         Starts an instance in the cloud on the specified cloud
         provider (configuration option) and returns the id of the
@@ -107,7 +109,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         connection = self._connect()
 
         log.debug("Checking keypair `%s`.", key_name)
-        self._check_keypair(key_name, key_path)
+        self._check_keypair(key_name, public_key_path, private_key_path)
         log.debug("Checking security group `%s`.", security_group)
         self._check_security_group(security_group)
         # image_id = self._find_image_id(image_id)
@@ -183,7 +185,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         raise InstanceError("the given instance `%s` was not found "
                             "on the coud" % instance_id)
 
-    def _check_keypair(self, name, path):
+    def _check_keypair(self, name, public_key_path, private_key_path):
         connection = self._connect()
         keypairs = connection.get_all_key_pairs()
         keypairs = dict((k.name, k) for k in keypairs)
@@ -193,7 +195,7 @@ class BotoCloudProvider(AbstractCloudProvider):
             log.warning(
                 "Keypair `%s` not found on resource `%s`, Creating a new one",
                 name, self._url)
-            with open(os.path.expanduser(path)) as f:
+            with open(os.path.expanduser(public_key_path)) as f:
                 key_material = f.read()
                 try:
                     # TODO check if given key is a public key file
@@ -201,9 +203,32 @@ class BotoCloudProvider(AbstractCloudProvider):
                 except Exception, ex:
                     log.error(
                         "Could not import key `%s` with name `%s` to `%s`",
-                        name, path, self._url)
+                        name, public_key_path, self._url)
                     raise KeypairError(
                         "could not create keypair `%s`: %s" % (name, ex))
+        else:
+            # check fingerprint
+            cloud_keypair = keypairs[name]
+            local_key_file = file(private_key_path)
+
+            # decide if dsa or rsa, any better ideas? :)
+            pkey = None
+            try:
+                pkey = DSSKey.from_private_key_file(private_key_path)
+            except SSHException:
+                try:
+                    pkey = RSAKey.from_private_key_file(private_key_path)
+                except SSHException:
+                    raise KeypairError('File `%s` is neither a valid DSA key '
+                                       'or RSA key.' % private_key_path)
+
+            if pkey:
+                fingerprint = str.join(
+                    ':', (i.encode('hex') for i in pkey.get_fingerprint()))
+
+                if fingerprint != cloud_keypair.fingerprint:
+                    raise KeypairError(' Keypair `%s` is present but has '
+                                       'different fingerprint. Aborting!"' % name)
 
     def _check_security_group(self, name):
         """
