@@ -22,7 +22,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 from boto import ec2
 import boto
 import os
-from paramiko import DSSKey, RSAKey
+from paramiko import DSSKey, RSAKey, PasswordRequiredException
 import urllib
 
 from elasticluster import log
@@ -200,6 +200,10 @@ class BotoCloudProvider(AbstractCloudProvider):
                 try:
                     # TODO check if given key is a public key file
                     connection.import_key_pair(name, key_material)
+                except PasswordRequiredException:
+                    raise RuntimeError(
+                        "Key %s is encripted with a password. Please, use"
+                        " an unencrypted key or use ssh-agent" % keyfile)
                 except Exception, ex:
                     log.error(
                         "Could not import key `%s` with name `%s` to `%s`",
@@ -215,9 +219,19 @@ class BotoCloudProvider(AbstractCloudProvider):
             pkey = None
             try:
                 pkey = DSSKey.from_private_key_file(private_key_path)
+            except PasswordRequiredException:
+                raise KeypairError(
+                    "Key `%s` is encrypted with a password. Please, use"
+                    "an unencrypted key or use ssh-agent" %
+                    private_key_path)
             except SSHException:
                 try:
                     pkey = RSAKey.from_private_key_file(private_key_path)
+                except PasswordRequiredException:
+                    raise KeypairError(
+                        "Key `%s` is encrypted with a password. Please, use"
+                        "an unencrypted key or use ssh-agent" %
+                        private_key_path)
                 except SSHException:
                     raise KeypairError('File `%s` is neither a valid DSA key '
                                        'or RSA key.' % private_key_path)
