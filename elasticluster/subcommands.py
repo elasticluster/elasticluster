@@ -23,12 +23,11 @@ from fnmatch import fnmatch
 import os
 import sys
 
-# local imports
+# Elasticluster imports
 from elasticluster.conf import Configurator
 from elasticluster import log
-from elasticluster.exceptions import ClusterNotFound, ConfigurationError
-from elasticluster.exceptions import ImageError, SecurityGroupError
-from elasticluster.exceptions import NodeNotFound
+from elasticluster.exceptions import ClusterNotFound, ConfigurationError \
+    ImageError, SecurityGroupError, NodeNotFound
 
 
 class AbstractCommand():
@@ -434,8 +433,8 @@ class ListNodes(AbstractCommand):
         parser.add_argument(
             '-u', '--update', action='store_true', default=False,
             help="By default `elasticluster list-nodes` will not contact the "
-                 "EC2 provider to get up-to-date information, unless `-u` option "
-                 "is given.")
+                 "EC2 provider to get up-to-date information, unless `-u` "
+                 "option is given.")
 
     def execute(self):
         """
@@ -512,7 +511,7 @@ class SshFrontend(AbstractCommand):
                             help="Increase verbosity.")
         parser.add_argument('ssh_args', metavar='args', nargs='*',
                             help="Execute the following command on the remote "
-                                 "machine instead of opening an interactive shell.")
+                            "machine instead of opening an interactive shell.")
 
     def execute(self):
         configurator = Configurator.fromConfig(self.params.config)

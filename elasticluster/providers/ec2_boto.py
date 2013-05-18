@@ -15,21 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from paramiko.ssh_exception import SSHException
-
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
-from boto import ec2
-import boto
+# System imports
 import os
-from paramiko import DSSKey, RSAKey, PasswordRequiredException
 import urllib
 
+# External modules
+import boto
+from paramiko import DSSKey, RSAKey, PasswordRequiredException
+from paramiko.ssh_exception import SSHException
+
+# Elasticluster imports
 from elasticluster import log
 from elasticluster.providers import AbstractCloudProvider
 from elasticluster.exceptions import SecurityGroupError, KeypairError, \
-    ImageError
-from elasticluster.exceptions import InstanceError
+    ImageError, InstanceError
 
 
 class BotoCloudProvider(AbstractCloudProvider):
@@ -75,7 +76,7 @@ class BotoCloudProvider(AbstractCloudProvider):
 
         try:
             log.debug("Connecting to ec2 host %s", self._ec2host)
-            region = ec2.regioninfo.RegionInfo(name=self._region_name,
+            region = boto.ec2.regioninfo.RegionInfo(name=self._region_name,
                                                endpoint=self._ec2host)
 
             # connect to webservice

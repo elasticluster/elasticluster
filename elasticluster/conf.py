@@ -17,14 +17,17 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
+# System imports
 import os
 import re
 import sys
 
+# External modules
 from configobj import ConfigObj
 from voluptuous.voluptuous import message, MultipleInvalid, Invalid
 from voluptuous import Schema, All, Length, Any, Url, Boolean
 
+# Elasticluster imports
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 from elasticluster.providers.gce import GoogleCloudProvider

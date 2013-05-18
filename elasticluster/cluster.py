@@ -17,6 +17,7 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
+# System imports
 import json
 import operator
 import os
@@ -24,8 +25,10 @@ import signal
 import socket
 import time
 
+# External modules
 import paramiko
 
+# Elasticluster imports
 from elasticluster import log
 from elasticluster.exceptions import TimeoutError, ClusterNotFound, \
     NodeNotFound
@@ -215,7 +218,7 @@ class Cluster(object):
         for cls in sorted(self.nodes.keys()):
             if self.nodes[cls]:
                 return self.nodes[cls][0]
-                # Uh-oh, no nodes in this cluster.
+        # Uh-oh, no nodes in this cluster.
         raise NodeNotFound("Unable to find a valid frontend: "
                            "cluster has no nodes!")
 
