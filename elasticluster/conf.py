@@ -69,21 +69,25 @@ class Configurator(object):
     default_storage_dir = os.path.expanduser(
         "~/.elasticluster/storage")
 
-    def __init__(self, cluster_conf):
+    def __init__(self, cluster_conf, storage_path=None):
         """
         Default constructor to initialize a Configurator.
         :param cluster_conf: configuration dictionary
         :raises MultipleInvalid: configuration validation
         """
         self.general_conf = dict()
-        self.general_conf['storage'] = Configurator.default_storage_dir
         self.cluster_conf = cluster_conf
+
+        if storage_path:
+            self.general_conf['storage'] = storage_path
+        else:
+            self.general_conf['storage'] = Configurator.default_storage_dir
 
         validator = ConfigValidator(self.cluster_conf)
         validator.validate()
 
     @classmethod
-    def fromConfig(cls, configfile):
+    def fromConfig(cls, configfile, storage_path=None):
         """
         Helper method to initialize Configurator from an ini file.
         :param configfile: path to the ini file
@@ -91,7 +95,7 @@ class Configurator(object):
         """
         config_reader = ConfigReader(configfile)
         conf = config_reader.read_config()
-        return Configurator(conf)
+        return Configurator(conf, storage_path=storage_path)
 
     def create_cloud_provider(self, cluster_template):
         """
