@@ -153,7 +153,7 @@ class Start(AbstractCommand):
             cluster_name = self.params.cluster
 
         configurator = Configurator.fromConfig(
-            self.params.config)
+            self.params.config, storage_path=self.params.storage)
 
         # overwrite configuration
         for option, value in self.params.extra_conf.iteritems():
@@ -221,7 +221,8 @@ class Stop(AbstractCommand):
         Stops the cluster if it's running.
         """
         cluster_name = self.params.cluster
-        configurator = Configurator.fromConfig(self.params.config)
+        configurator = Configurator.fromConfig(
+            self.params.config, storage_path=self.params.storage)
         try:
             cluster = configurator.load_cluster(cluster_name)
         except (ClusterNotFound, ConfigurationError), ex:
@@ -287,7 +288,8 @@ class ResizeCluster(AbstractCommand):
                 "Invalid syntax for argument: %s" % self.params.nodes)
 
     def execute(self):
-        configurator = Configurator.fromConfig(self.params.config)
+        configurator = Configurator.fromConfig(
+            self.params.config, storage_path=self.params.storage)
 
         # Get current cluster configuration
         cluster_name = self.params.cluster
@@ -348,7 +350,8 @@ class ListClusters(AbstractCommand):
                             help="Increase verbosity.")
 
     def execute(self):
-        configurator = Configurator.fromConfig(self.params.config)
+        configurator = Configurator.fromConfig(
+            self.params.config, storage_path=self.params.storage)
         storage = configurator.create_cluster_storage()
         cluster_names = storage.get_stored_clusters()
 
@@ -394,7 +397,8 @@ class ListTemplates(AbstractCommand):
 
     def execute(self):
 
-        configurator = Configurator.fromConfig(self.params.config)
+        configurator = Configurator.fromConfig(
+            self.params.config, storage_path=self.params.storage)
         config = configurator.cluster_conf
 
         print("""%d cluster templates found.""" % len(config))
@@ -441,7 +445,8 @@ class ListNodes(AbstractCommand):
         Lists all nodes within the specified cluster with certain
         information like id and ip.
         """
-        configurator = Configurator.fromConfig(self.params.config)
+        configurator = Configurator.fromConfig(
+            self.params.config, storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -477,7 +482,8 @@ class SetupCluster(AbstractCommand):
                             help="Increase verbosity.")
 
     def execute(self):
-        configurator = Configurator.fromConfig(self.params.config)
+        configurator = Configurator.fromConfig(
+            self.params.config, storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -514,7 +520,8 @@ class SshFrontend(AbstractCommand):
                             "machine instead of opening an interactive shell.")
 
     def execute(self):
-        configurator = Configurator.fromConfig(self.params.config)
+        configurator = Configurator.fromConfig(
+            self.params.config, storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -562,7 +569,8 @@ class SftpFrontend(AbstractCommand):
                                  "opening an interactive shell.")
 
     def execute(self):
-        configurator = Configurator.fromConfig(self.params.config)
+        configurator = Configurator.fromConfig(
+            self.params.config, storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
