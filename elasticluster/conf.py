@@ -38,9 +38,10 @@ class Configurator(object):
     configuration and (II) offer factory methods to create all kind of
     objects that need information from the configuration.
 
-
     The cluster configuration dictionary is structured in the following way:
-    { "<cluster_name>" : {
+    (see an example @
+     https://github.com/gc3-uzh-ch/elasticluster/wiki/Configuration-Module)
+    { "<cluster_template>" : {
         "setup" : { properties of the setup section },
         "cloud" : { properties of the cloud section },
         "login" : { properties of the login section },
@@ -49,7 +50,7 @@ class Configurator(object):
                     "<node_type>" : { properties of the node},
                 },
         },
-     "<cluster_name>" : {
+     "<cluster_template>" : {
         (see above)
         }
      }
@@ -251,7 +252,10 @@ class ConfigValidator(object):
                     self.config[cluster]['setup']['playbook_path'] = pbpath
 
             elif 'setup' in props:
-                self.config[cluster]['setup']['playbook_path'] = ansible_pb_dir
+                # set default playbook directory if none specified
+                setup_conf = self.config[cluster]['setup']
+                setup_conf['playbook_path'] = ansible_pb_dir + os.sep + \
+                                              "site.yml"
 
     def _post_validate(self):
         """
