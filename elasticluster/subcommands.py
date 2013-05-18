@@ -26,7 +26,7 @@ import sys
 # Elasticluster imports
 from elasticluster.conf import Configurator
 from elasticluster import log
-from elasticluster.exceptions import ClusterNotFound, ConfigurationError \
+from elasticluster.exceptions import ClusterNotFound, ConfigurationError, \
     ImageError, SecurityGroupError, NodeNotFound
 
 
