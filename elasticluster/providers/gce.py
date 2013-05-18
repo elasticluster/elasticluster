@@ -24,16 +24,16 @@ __author__ = 'Riccardo Murri <riccardo.murri@uzh.ch>'
 
 
 # stdlib imports
-import httplib2
 import random
-import sys
 import time
 import uuid
+import os
+import httplib2
+
 
 # 3rd party imports
 from apiclient.discovery import build
 from oauth2client.file import Storage
-from oauth2client.client import AccessTokenRefreshError
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.tools import run
 
@@ -165,8 +165,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
     def start_instance(self,
                        # these are common to any
                        # CloudProvider.start_instance() call
-                       key_name, key_path, security_group,
-                       flavor, image_name, image_userdata,
+                       key_name, public_key_path, private_key_path,
+                       security_group, flavor, image_name, image_userdata,
                        # these params are specific to the
                        # GoogleCloudProvider
                        instance_name=None):
@@ -260,7 +260,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         Return True/False depending on whether the instance with the
         given id is up and running.
         """
-        items = self.list_images(filter=('name eq "%s"' % instance_id))
+        items = self.list_instances(filter=('name eq "%s"' % instance_id))
         for item in items:
             if item['status'] == 'RUNNING':
                 return True

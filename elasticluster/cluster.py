@@ -56,7 +56,7 @@ class Cluster(object):
             for i in range(nodes[cls]):
                 self.add_node(cls)
 
-    def add_node(self, node_type, name=""):
+    def add_node(self, node_type):
         """
         Adds a new node, but doesn't start the instance on the cloud.
         Returns the created node instance
@@ -76,7 +76,7 @@ class Cluster(object):
             log.error("Unable to remove node %s: invalid node type `%s`.",
                       node.name, node.type)
         else:
-            self.nodes.remove(node)
+            del self.nodes[node]
 
     def start(self):
         """

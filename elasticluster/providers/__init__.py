@@ -30,8 +30,8 @@ class AbstractCloudProvider:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def start_instance(self, key_name, key_path, security_group,
-                       flavor, image_name, image_userdata):
+    def start_instance(self, key_name, public_key_path, private_key_path,
+                       security_group, flavor, image_name, image_userdata):
         """
         Starts a new instance with the given properties and returns
         the instance id.

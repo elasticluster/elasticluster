@@ -31,9 +31,9 @@ import ansible.utils
 from ansible.callbacks import call_callback_module
 
 # local imports
-from elasticluster.providers import AbstractSetupProvider
-from elasticluster.cluster import Node
 import elasticluster
+from elasticluster import log
+from elasticluster.providers import AbstractSetupProvider
 
 
 class ElasticlusterPbCallbacks(ansible.callbacks.PlaybookCallbacks):
@@ -219,7 +219,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 if hosts:
                     for host in hosts:
                         hostline = "%s ansible_ssh_host=%s %s\n" \
-                            % (host)
+                            % host
                         fd.write(hostline)
 
             fd.close()

@@ -165,13 +165,12 @@ class Start(AbstractCommand):
         # First, check if the cluster is already created.
         try:
             cluster = configurator.load_cluster(cluster_name)
-        except ClusterNotFound, ex:
+        except ClusterNotFound as e:
             try:
                 cluster = configurator.create_cluster(
                     cluster_template, cluster_name)
-            except ConfigurationError, ex:
-                log.error("Starting cluster %s: %s\n",
-                          cluster_template, ex)
+            except ConfigurationError, e:
+                log.error("Starting cluster %s: %s\n" % (cluster_template, e))
                 return
 
         try:

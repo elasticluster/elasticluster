@@ -200,10 +200,6 @@ class BotoCloudProvider(AbstractCloudProvider):
                 try:
                     # TODO check if given key is a public key file
                     connection.import_key_pair(name, key_material)
-                except PasswordRequiredException:
-                    raise RuntimeError(
-                        "Key %s is encripted with a password. Please, use"
-                        " an unencrypted key or use ssh-agent" % keyfile)
                 except Exception, ex:
                     log.error(
                         "Could not import key `%s` with name `%s` to `%s`",
@@ -213,7 +209,6 @@ class BotoCloudProvider(AbstractCloudProvider):
         else:
             # check fingerprint
             cloud_keypair = keypairs[name]
-            local_key_file = file(private_key_path)
 
             # decide if dsa or rsa, any better ideas? :)
             pkey = None
