@@ -23,14 +23,14 @@ import os
 import tempfile
 
 # external imports
-from ansible.playbook import PlayBook
+import ansible.callbacks
+from ansible.callbacks import call_callback_module
 import ansible.constants as ansible_constants
 from ansible.errors import AnsibleError
-import ansible.callbacks
+from ansible.playbook import PlayBook
 import ansible.utils
-from ansible.callbacks import call_callback_module
 
-# local imports
+# Elasticluster imports
 import elasticluster
 from elasticluster import log
 from elasticluster.providers import AbstractSetupProvider

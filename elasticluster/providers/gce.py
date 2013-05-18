@@ -24,20 +24,19 @@ __author__ = 'Riccardo Murri <riccardo.murri@uzh.ch>'
 
 
 # stdlib imports
+import httplib2
+import os
 import random
 import time
 import uuid
-import os
-import httplib2
 
-
-# 3rd party imports
+# External modules
 from apiclient.discovery import build
 from oauth2client.file import Storage
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.tools import run
 
-# local imports
+# Elasticluster imports
 from elasticluster.providers import AbstractCloudProvider
 
 
