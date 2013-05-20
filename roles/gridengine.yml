@@ -5,8 +5,9 @@
     - vars/os
   tasks:
     - include: common/tasks/hosts.yml hosts=${groups.all}
-    - name: set hostname
-      action: command hostname $inventory_hostname
+    - include: common/tasks/hostname.yml
+    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+    - include: cluster/tasks/packages.yml
 
 - name: GridEngine masternode Playbook
   hosts: gridengine_master

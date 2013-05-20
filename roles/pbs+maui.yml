@@ -6,8 +6,8 @@
   tasks:
     - include: common/tasks/gc3repo.yml
     - include: common/tasks/hosts.yml hosts=${groups.all}
-    - name: set hostname
-      action: command hostname $inventory_hostname
+    - include: common/tasks/hostname.yml
+    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
 
 - name: PBS masternode Playbook
   hosts: pbs_master

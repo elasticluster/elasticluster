@@ -9,33 +9,37 @@
     licensefile: ''
     # licensefile: "~/matlab/license.dat"
     # installkey: xxxxx-xxxxx-xxxxx-xxxxx.....
+
   tasks:
-  - name: make temp directory
-    action: file dest=$tmpdir/MCRInstaller state=directory
+    - include: common/tasks/hosts.yml hosts=${groups.all}
+    - include: common/tasks/hostname.yml
 
-  - name: copy MCR installer zipfile
-    action: copy src=$mcr_installer dest=$tmpdir/MCRInstaller/MCRInstaller.zip force=yes backup=no 
+    - name: make temp directory
+      action: file dest=$tmpdir/MCRInstaller state=directory
 
-  - name: copy installation response file
-    action: template src=mcr/templates/input.txt.j2 dest=$tmpdir/MCRInstaller/MCRInstaller.input force=yes backup=no
+    - name: copy MCR installer zipfile
+      action: copy src=$mcr_installer dest=$tmpdir/MCRInstaller/MCRInstaller.zip force=yes backup=no 
 
-  - name: unzip installation files (may fail if `unzip` is not installed)
-    action: command unzip -q -o $tmpdir/MCRInstaller/MCRInstaller.zip -d $tmpdir/MCRInstaller
-    
-  - name: Install license file, if present
-    action: copy src=$licensefile dest=$tmpdir/MCRInstaller/license.dat force=yes backup=no
-    only_if: "'$licensefile' != ''"
+    - name: copy installation response file
+      action: template src=mcr/templates/input.txt.j2 dest=$tmpdir/MCRInstaller/MCRInstaller.input force=yes backup=no
 
-  - name: run MCR Installer
-    action: command $tmpdir/MCRInstaller/install -inputFile $tmpdir/MCRInstaller/MCRInstaller.input
+    - name: unzip installation files (may fail if `unzip` is not installed)
+      action: command unzip -q -o $tmpdir/MCRInstaller/MCRInstaller.zip -d $tmpdir/MCRInstaller
+      
+    - name: Install license file, if present
+      action: copy src=$licensefile dest=$tmpdir/MCRInstaller/license.dat force=yes backup=no
+      only_if: "'$licensefile' != ''"
 
-  - name: copy profile setup script
-    action: template src=mcr/templates/profile.sh.j2 dest=/etc/profile.d/MATLAB_Compiler_Runtime.sh force=yes backup=no
-    # Ignore errors since we may not be root on the remote machine
-    ignore_errors: yes
+    - name: run MCR Installer
+      action: command $tmpdir/MCRInstaller/install -inputFile $tmpdir/MCRInstaller/MCRInstaller.input
 
-  - name: cleanup temporary installation files
-    action: command rm -r -f -v $tmpdir/MCRInstaller
+    - name: copy profile setup script
+      action: template src=mcr/templates/profile.sh.j2 dest=/etc/profile.d/MATLAB_Compiler_Runtime.sh force=yes backup=no
+      # Ignore errors since we may not be root on the remote machine
+      ignore_errors: yes
+
+    - name: cleanup temporary installation files
+      action: command rm -r -f -v $tmpdir/MCRInstaller
 
   tags:
     - matlab

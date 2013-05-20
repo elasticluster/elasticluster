@@ -1,0 +1,3 @@
+---
+- name: Set hostname to the current ansible name
+  action: command hostname $inventory_hostname

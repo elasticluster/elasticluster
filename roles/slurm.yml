@@ -5,6 +5,8 @@
     - vars/os
   tasks: 
     - include: common/tasks/hosts.yml hosts=${groups.all}
+    - include: common/tasks/hostname.yml
+    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
     - include: slurm/tasks/main.yml
     - include: slurm/tasks/nfs.yml
 
@@ -22,6 +24,8 @@
     - vars/os
   tasks: 
     - include: common/tasks/hosts.yml hosts=${groups.all}
+    - include: common/tasks/hostname.yml
+    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
     - include: slurm/tasks/main.yml
     - include: common/tasks/nfs-clients.yml nfsserver=${groups.slurm_master[0]} nfspath=/home nfsmount=/home
     - include: cluster/tasks/packages.yml

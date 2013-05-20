@@ -1,7 +1,4 @@
 ---
-- name: set hostname
-  action: command hostname $inventory_hostname
-
 - name: install packages
   action: apt pkg=$item update_cache=yes force=yes state=latest
   with_items:

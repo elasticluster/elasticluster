@@ -2,6 +2,8 @@
 - name: Jenkins CIS Playbook
   hosts: jenkins
   tasks: 
+    - include: common/tasks/hosts.yml hosts=${groups.all}
+    - include: common/tasks/hostname.yml
     - include: jenkins/tasks/main.yml
   handlers:
     - include: jenkins/handlers/main.yml
