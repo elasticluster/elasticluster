@@ -1,0 +1,12 @@
+---
+- name: Ensure all needed packages are installed
+  only_if: $is_centos
+  action: apt pkg=$item state=installed
+  with_items:
+    - default-jdk
+    - sudo
+
+- name: Install hadoop APT repository
+  action: apt_repository ppa:hadoop-ubuntu/stable
+  only_if: $is_centos
+

@@ -1,0 +1,13 @@
+---
+- name: Create hadoop user
+  action: user name=hadoop state=present comment="Hadoop user" system=yes
+
+- name: Ensure /etc/sudoers.d directory is present
+  file: path=/etc/sudoerds.d state=directory
+
+- name: Ensure /etc/sudoers.d is scanned by sudo
+  lineinfile: dest=/etc/sudoers regexp="#includedir\s+/etc/sudoers.d" line="#includedir /etc/sudoers.d"
+
+- name: Add hadoop user to the sudoers
+  lineinfile: dest=/etc/sudoers.d/hadoop state=present create=yes regexp="hadoop (ALL)=(ALL) NOPASSWD: ALL" line="hadoop (ALL)=(ALL) NOPASSWD: ALL"
+

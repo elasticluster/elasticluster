@@ -12,3 +12,4 @@
 - include: roles/pbs+maui.yml
 - include: roles/gridengine.yml
 - include: roles/mdce.yml
+- include: roles/hadoop.yml

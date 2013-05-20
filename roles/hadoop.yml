@@ -1,0 +1,41 @@
+---
+- hosts: hadoop_namenode:hadoop_datanode:hadoop_jobtracker:hadoop_tasktracker
+  name: Install HADOOP
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: common/tasks/hosts.yml hosts=${groups.all}
+    - include: common/tasks/hostname.yml
+    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+    - include: hadoop/tasks/packages.yml
+  handlers:
+    - include: common/handlers/main.yml
+
+
+- hosts: hadoop_namenode
+  vars:
+    hdfsdatadir: /srv/data
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: hadoop/tasks/namenode.yml
+
+- hosts: hadoop_datanode
+  vars:
+    hdfsdatadir: /srv/data
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: hadoop/tasks/datanode.yml
+
+- hosts: hadoop_jobtracker
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: hadoop/tasks/jobtracker.yml
+
+- hosts: hadoop_tasktracker
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: hadoop/tasks/tasktracker.yml
