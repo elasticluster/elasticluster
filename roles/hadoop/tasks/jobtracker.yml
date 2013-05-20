@@ -1,0 +1,4 @@
+---
+- name: Install Ubuntu jobtracker package
+  action: apt pkg=hadoop-jobtracker state=latest
+  only_if: $is_ubuntu
