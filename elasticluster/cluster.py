@@ -59,12 +59,13 @@ class Cluster(object):
             for i in range(nodes[cls]):
                 self.add_node(cls)
 
-    def add_node(self, node_type):
+    def add_node(self, node_type, name=None):
         """
         Adds a new node, but doesn't start the instance on the cloud.
         Returns the created node instance
         """
-        name = "%s%03d" % (node_type, len(self.nodes[node_type]) + 1)
+        if not name:
+            name = "%s%03d" % (node_type, len(self.nodes[node_type]) + 1)
 
         node = self._configurator.create_node(self.template, node_type,
                                               self._cloud_provider, name)

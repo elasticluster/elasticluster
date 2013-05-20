@@ -23,6 +23,7 @@ import urllib
 
 # External modules
 import boto
+from boto import ec2
 from paramiko import DSSKey, RSAKey, PasswordRequiredException
 from paramiko.ssh_exception import SSHException
 
@@ -76,7 +77,7 @@ class BotoCloudProvider(AbstractCloudProvider):
 
         try:
             log.debug("Connecting to ec2 host %s", self._ec2host)
-            region = boto.ec2.regioninfo.RegionInfo(name=self._region_name,
+            region = ec2.regioninfo.RegionInfo(name=self._region_name,
                                                endpoint=self._ec2host)
 
             # connect to webservice
