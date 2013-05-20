@@ -8,16 +8,16 @@
 - name: Setup /root/.shosts file
   action: template dest=/root/.shosts src=common/templates/etc/ssh/shosts.equiv.j2 owner=root group=root
 
-- name: Setup SSH host based authentication (server configuration file)
+- name: Setup SSH host based authentication (server configuration file: enable `HostbasedAuthentication` option)
   action: lineinfile dest=/etc/ssh/sshd_config regexp='HostbasedAuthentication.*' line="HostbasedAuthentication yes"
   notify: restart sshd
 
-- name: Setup SSH host based authentication (server configuration file)
+- name: Setup SSH host based authentication (server configuration file: disable `IgnoreRhosts` option)
   action: lineinfile dest=/etc/ssh/sshd_config regexp='IgnoreRhosts.*' line="IgnoreRhosts no"
   notify: restart sshd
 
-- name: Setup SSH host based authentication (client configuration file)
+- name: Setup SSH host based authentication (client configuration file: enable `HostbasedAuthentication` option)
   action: lineinfile dest=/etc/ssh/ssh_config regexp='HostbasedAuthentication.*' line="HostbasedAuthentication yes"
 
-- name: Setup SSH host based authentication (client configuration file)
+- name: Setup SSH host based authentication (client configuration file: enable `EnableSSHKeysign` option)
   action: lineinfile dest=/etc/ssh/ssh_config regexp='EnableSSHKeysign.*' line="EnableSSHKeysign yes"
