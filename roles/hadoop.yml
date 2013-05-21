@@ -1,5 +1,18 @@
 ---
 - hosts: hadoop_namenode:hadoop_secnamenode:hadoop_datanode:hadoop_jobtracker:hadoop_tasktracker
+  name: Prerequisites for Hadoop
+  vars_files:
+    - vars/os
+  tasks:
+    - include: common/tasks/hosts.yml hosts=${groups.all}
+    - include: common/tasks/hostname.yml
+    # This must run *before* start-*.sh because otherwise passwordless
+    # authentication does not work.
+    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+  handlers:
+    - include: common/handlers/main.yml
+
+- hosts: hadoop_namenode:hadoop_secnamenode:hadoop_datanode:hadoop_jobtracker:hadoop_tasktracker
   name: Install Hadoop
   vars_files:
     - vars/os
@@ -13,9 +26,6 @@
     mapred_localdir: "${hd_tmpdir}/mapred"
     hdfs_replication: 3
   tasks: 
-    - include: common/tasks/hosts.yml hosts=${groups.all}
-    - include: common/tasks/hostname.yml
-    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
     - include: hadoop/tasks/packages.yml
     - include: hadoop/tasks/conf.yml
 
@@ -26,6 +36,7 @@
     - name: Start job tracker
       action: shell start-mapred.sh
       only_if: '"$ansible_hostname" in ${groups.hadoop_jobtracker}'
+      tags: test
 
     - name: Create hdfs:/tmp/hadoop-root/mapred directory
       action: shell hadoop dfs -mkdir /tmp/hadoop-root/mapred ; echo done
@@ -35,6 +46,4 @@
 
     - name: Make the hdfs:/ root world writable
       action: shell hadoop dfs -chmod 777 /
-  handlers:
-    - include: common/handlers/main.yml
 

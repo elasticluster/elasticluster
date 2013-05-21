@@ -3,7 +3,7 @@
 {{ host }}
 {% endfor %}
 {% elif inventory_hostname in groups.hadoop_jobtracker %}
-{% for host in groups.hadoop_trackernode %}
+{% for host in groups.hadoop_tasktracker %}
 {{ host }}
 {% endfor %}
 {% endif %}
