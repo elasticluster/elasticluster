@@ -33,6 +33,6 @@
 
 - name: Format name directory
   action: shell sudo -u hdfs hadoop namenode -format -force -nonInteractive creates=$hd_namedir/image/fsimage
-  only_if: '"$ansible_hostname" in ${groups.hadoop_namenode}'
+  only_if: '"$inventory_hostname" in ${groups.hadoop_namenode}'
 
 
