@@ -1,0 +1,42 @@
+---
+- name: Ensure directory $item exists
+  action: file path=$item state=directory owner=hdfs
+  with_items:
+    - ${hd_confdir}
+    - ${hd_tmpdir}
+    - ${hd_namedir}
+    - ${hd_datadir}
+
+- name: Ensure directory $item exists
+  action: file path=$item state=directory owner=mapred
+  with_items:
+    - ${mapred_localdir}
+  
+- name: configure masters file
+  action: template src=hadoop/templates/masters.j2 dest=$hd_confdir/masters
+
+- name: configure slaves file (namenode)
+  action: template src=hadoop/templates/slaves.j2 dest=$hd_confdir/slaves
+  only_if: '"$ansible_hostname" in ${groups.hadoop_namenode}'
+
+- name: configure slaves file (jobtracker)
+  action: template src=hadoop/templates/slaves.j2 dest=$hd_confdir/slaves
+  only_if: '"$ansible_hostname" in ${groups.hadoop_jobtracker}'
+
+- name: configure core-site.xml file
+  action: template src=hadoop/templates/core-site.xml.j2 dest=$hd_confdir/core-site.xml
+
+- name: configure hdfs-site.xml file
+  action: template src=hadoop/templates/hdfs-site.xml.j2 dest=$hd_confdir/hdfs-site.xml
+
+- name: configure mapred-site.xml file
+  action: template src=hadoop/templates/mapred-site.xml.j2 dest=$hd_confdir/mapred-site.xml
+
+- name: set JAVA_HOME environment variable
+  action: lineinfile dest=$hd_confdir/hadoop-env.sh regexp='export JAVA_HOME.*' line='export JAVA_HOME=/usr/lib/jvm/default-java'
+
+- name: Format name directory
+  action: shell sudo -u hdfs hadoop namenode -format -force -nonInteractive creates=$hd_namedir/image/fsimage
+  only_if: '"$ansible_hostname" in ${groups.hadoop_namenode}'
+
+

@@ -1,0 +1,4 @@
+{{ groups['hadoop_namenode'][0] }}
+{% if 'hadoop_secnamenode' in groups %}
+{{ groups['hadoop_secnamenode'][0] }}
+{% endif %}
