@@ -1,4 +1,0 @@
----
-- name: Install Ubuntu tasktracker package
-  action: apt pkg=hadoop-tasktracker state=latest
-  only_if: $is_ubuntu

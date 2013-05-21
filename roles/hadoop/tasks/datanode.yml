@@ -1,4 +1,0 @@
----
-- name: Install Ubuntu namenode package
-  action: apt pkg=hadoop-datanode state=latest
-  only_if: $is_ubuntu
