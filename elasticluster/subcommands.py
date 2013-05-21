@@ -281,11 +281,11 @@ class ResizeCluster(AbstractCommand):
                 nodes = self.params.remove.split(',')
                 for nspec in nodes:
                     n, group = nspec.split(':')
-                    self.params.nodes_to_remove[group] = int(n[1:])
+                    self.params.nodes_to_remove[group] = int(n)
 
-        except ValueError:
+        except ValueError as ex:
             raise ConfigurationError(
-                "Invalid syntax for argument: %s" % self.params.nodes)
+                "Invalid syntax for argument: %s" % ex)
 
     def execute(self):
         configurator = Configurator.fromConfig(
