@@ -31,11 +31,11 @@
 
     - name: Start name and data daemons
       action: shell start-dfs.sh
-      only_if: '"$ansible_hostname" in ${groups.hadoop_namenode}'
+      only_if: '"$inventory_hostname" in ${groups.hadoop_namenode}'
 
     - name: Start job tracker
       action: shell start-mapred.sh
-      only_if: '"$ansible_hostname" in ${groups.hadoop_jobtracker}'
+      only_if: '"$inventory_hostname" in ${groups.hadoop_jobtracker}'
       tags: test
 
     - name: Create hdfs:/tmp/hadoop-root/mapred directory

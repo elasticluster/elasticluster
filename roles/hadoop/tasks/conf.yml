@@ -17,7 +17,7 @@
 
 - name: configure slaves file
   action: template src=hadoop/templates/slaves.j2 dest=$hd_confdir/slaves
-  only_if: '"$ansible_hostname" in ${groups.hadoop_jobtracker} or "$ansible_hostname" in ${groups.hadoop_namenode}'
+  only_if: '"$inventory_hostname" in ${groups.hadoop_jobtracker} or "$inventory_hostname" in ${groups.hadoop_namenode}'
 
 - name: configure core-site.xml file
   action: template src=hadoop/templates/core-site.xml.j2 dest=$hd_confdir/core-site.xml
