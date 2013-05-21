@@ -272,13 +272,13 @@ class ResizeCluster(AbstractCommand):
         self.params.nodes_to_remove = {}
         try:
             if self.params.add:
-                nodes = self.params.nodes.split(',')
+                nodes = self.params.add.split(',')
                 for nspec in nodes:
                     n, group = nspec.split(':')
                     self.params.nodes_to_add[group] = int(n)
 
             if self.params.remove:
-                nodes = self.params.nodes.split(',')
+                nodes = self.params.remove.split(',')
                 for nspec in nodes:
                     n, group = nspec.split(':')
                     self.params.nodes_to_remove[group] = int(n[1:])
