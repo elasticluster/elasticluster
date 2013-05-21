@@ -141,13 +141,16 @@ class Configurator(object):
             (k[:-6], int(v)) for k, v in conf['cluster'].iteritems() if
             k.endswith('_nodes'))
 
+        extra = conf['cluster'].copy()
+        extra.pop('cloud')
+        extra.pop('setup_provider')
         return Cluster(template,
                        name,
                        conf['cluster']['cloud'],
                        self.create_cloud_provider(template),
                        self.create_setup_provider(template),
                        nodes,
-                       self)
+                       self, **extra)
 
     def load_cluster(self, cluster_name):
         """
@@ -246,9 +249,9 @@ class ConfigValidator(object):
 
         # interpolate ansible path manual, since configobj does not offer
         # an easy way to handle this
-        ansible_pb_dir = os.path.join(sys.prefix,
-                                      'share/elasticluster/providers/ansible-'
-                                      'playbooks')
+        ansible_pb_dir = os.path.join(
+            sys.prefix,
+            'share/elasticluster/providers/ansible-playbooks')
         for cluster, props in self.config.iteritems():
             if 'setup' in props and 'playbook_path' in props['setup']:
                 if props['setup']['playbook_path'].startswith(
