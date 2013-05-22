@@ -1,6 +1,6 @@
 ---
 - name: install ganglia server
-  action: apt pkg=$item state=latest
+  action: apt pkg=$item state=latest update_cache=yes
   with_items:
     - ganglia-monitor
   tags:

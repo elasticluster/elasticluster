@@ -1,13 +1,13 @@
 ---
 # Ubuntu-specific actions
 - name: install nfs server
-  action: apt pkg=nfs-kernel-server state=present
+  action: apt pkg=nfs-kernel-server state=present update_cache=yes
   only_if: $is_ubuntu
   tags:
     -nfs
 
 - name: install nfs server
-  action: apt pkg=nfs-utils state=present
+  action: yum pkg=nfs-utils state=present
   only_if: $is_centos
   tags:
     - nfs

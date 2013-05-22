@@ -16,7 +16,7 @@
 # openmpi1.5 => precise
 # openmpi1.6 => quantal
 - name: install compilers (Ubuntu)
-  action: apt name=$item state=present
+  action: apt name=$item state=present update_cache=yes
   with_items:
     - build-essential
     - openmpi1.5-checkpoint
