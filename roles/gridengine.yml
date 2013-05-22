@@ -30,6 +30,8 @@
     - vars/os
   tasks: 
     - include: common/tasks/nfs-clients.yml nfsserver=${groups.gridengine_master[0]} nfspath=/home nfsmount=/home
+    - include: common/tasks/nfs-clients.yml nfsserver=${groups.gridengine_master[0]} nfspath=/usr/share/gridengine/default/common nfsmount=/usr/share/gridengine/default/common
+      only_if: $is_centos
     - include: gridengine/tasks/clients.yml
   handlers:
     - include: gridengine/handlers/main.yml

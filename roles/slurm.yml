@@ -16,6 +16,7 @@
     - include: slurm/tasks/master.yml
     - include: cluster/tasks/packages.yml
   handlers:
+    - include: common/handlers/main.yml
     - include: slurm/handlers/main.yml
 
 - name: Slurm worker nodes Playbook
@@ -30,6 +31,7 @@
     - include: common/tasks/nfs-clients.yml nfsserver=${groups.slurm_master[0]} nfspath=/home nfsmount=/home
     - include: cluster/tasks/packages.yml
   handlers:
+    - include: common/handlers/main.yml
     - include: slurm/handlers/main.yml
 
 # Get infos with

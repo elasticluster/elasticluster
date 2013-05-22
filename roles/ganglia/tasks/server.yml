@@ -1,21 +1,55 @@
 ---
-- name: install ganglia server
+- name: Install ganglia server (Ubuntu)
   action: apt pkg=$item state=latest update_cache=yes
   with_items:
     - ganglia-monitor
     - ganglia-webfrontend
     - gmetad
+  only_if: $is_ubuntu
   tags:
     - ganglia
 
-- name: configure apache link
+- name: Install ganglia server (CentOS)
+  action: yum pkg=$item state=latest
+  with_items:
+    - ganglia-gmond
+    - ganglia-gmetad
+    - ganglia-web
+  only_if: $is_centos
+  tags:
+    - ganglia
+
+- name: Configure apache link
   action: file src=/etc/ganglia-webfrontend/apache.conf dest=/etc/apache2/conf.d/ganglia.conf state=link
   notify: restart apache
+  only_if: $is_ubuntu
   tags:
     - ganglia
 
-- name: configure gemetad
+- name: Configure apache to allow access to ganglia from everywere
+  action: copy src=ganglia/files/etc/httpd/conf.d/ganglia.conf dest=/etc/httpd/conf.d/ganglia.conf
+  notify: restart apache
+  only_if: $is_centos
+  tags:
+    - ganglia
+
+- name: Configure gemetad
   action: template src=ganglia/templates/gmetad.conf.j2 dest=/etc/ganglia/gmetad.conf
   notify: restart gmetad
+  tags:
+    - ganglia
+
+- name: Ensure httpd is running
+  action: service name=httpd state=started
+  only_if: $is_centos
+  tags:
+    - ganglia
+
+- name: Ensure ganglia daemons are running
+  action: service name=$item state=started
+  only_if: $is_centos
+  with_items:
+    - gmond
+    - gmetad
   tags:
     - ganglia

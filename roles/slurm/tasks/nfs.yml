@@ -26,7 +26,7 @@
     -nfs
 
 # CentOS does not start needed services after installation
-- name: ensure nfs service is running
+- name: ensure nfs service is running (CentOS)
   action: service name=$item state=started
   only_if: $is_centos
   tags:
@@ -35,3 +35,11 @@
     - rpcbind
     - nfslock
     - nfs
+
+- name: ensure nfs service is running (Ubuntu)
+  action: service name=$item state=started
+  only_if: $is_ubuntu
+  tags:
+    - nfs
+  with_items:
+    - nfs-kernel-server

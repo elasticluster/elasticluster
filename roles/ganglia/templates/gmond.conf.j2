@@ -75,7 +75,8 @@ tcp_accept_channel {
    loaded. If the module has been statically linked with gmond, it does not 
    require a load path. However all dynamically loadable modules must include 
    a load path. */ 
-modules { 
+{% if ansible_distribution == "Ubuntu" %}
+ modules { 
   module { 
     name = "core_metrics" 
   } 
@@ -108,6 +109,41 @@ modules {
     path = "/usr/lib/ganglia/modsys.so" 
   } 
 } 
+{% elif ansible_distribution == "CentOS" %}
+ modules { 
+  module { 
+    name = "core_metrics" 
+  } 
+  module { 
+    name = "cpu_module" 
+    path = "/usr/lib64/ganglia/modcpu.so" 
+  } 
+  module { 
+    name = "disk_module" 
+    path = "/usr/lib64/ganglia/moddisk.so" 
+  } 
+  module { 
+    name = "load_module" 
+    path = "/usr/lib64/ganglia/modload.so" 
+  } 
+  module { 
+    name = "mem_module" 
+    path = "/usr/lib64/ganglia/modmem.so" 
+  } 
+  module { 
+    name = "net_module" 
+    path = "/usr/lib64/ganglia/modnet.so" 
+  } 
+  module { 
+    name = "proc_module" 
+    path = "/usr/lib64/ganglia/modproc.so" 
+  } 
+  module { 
+    name = "sys_module" 
+    path = "/usr/lib64/ganglia/modsys.so" 
+  } 
+} 
+{% endif %}
 
 include ('/etc/ganglia/conf.d/*.conf') 
 

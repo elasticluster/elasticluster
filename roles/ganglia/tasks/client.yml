@@ -1,12 +1,21 @@
 ---
-- name: install ganglia server
+- name: Install ganglia monitor (Ubuntu)
   action: apt pkg=$item state=latest update_cache=yes
   with_items:
     - ganglia-monitor
+  only_if: $is_ubuntu
   tags:
     - ganglia
 
-- name: configure gmond
+- name: Install ganglia monitor (CentOS)
+  action: yum pkg=$item state=latest
+  with_items:
+    - ganglia-gmond
+  only_if: $is_centos
+  tags:
+    - ganglia
+
+- name: Configure gmond
   action: template src=ganglia/templates/gmond.conf.j2 dest=/etc/ganglia/gmond.conf
   notify:
     - restart gmond
@@ -14,3 +23,9 @@
   tags:
     - ganglia
     - gmond
+
+- name: Ensure gmond is running.
+  action: service name=gmond state=started
+  only_if: $is_centos
+  tags:
+    - ganglia

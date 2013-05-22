@@ -1,2 +1,4 @@
 is_ubuntu: "'${ansible_distribution}' == 'Ubuntu'"
 is_centos: "'${ansible_distribution}' == 'CentOS'"
+is_ubuntu_precise: "$is_ubuntu and '${ansible_distribution_release}' == 'precise'"
+is_ubuntu_raring: "$is_ubuntu and '${ansible_distribution_release}' == 'raring'"
