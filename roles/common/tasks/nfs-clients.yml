@@ -31,9 +31,10 @@
 
 - action: shell if [ -z "${nfsoptions}" ]; then  echo rw,sync; else echo ${nfsoptions}; fi
   register: nfsoptions
+  sudo: false
   connection: local
 
 - name: configure /etc/fstab on clients
-  action: mount name=${nfsmount} src=${nfsserver}:${nfspath} fstype=nfs opts=${nfsoptions}
+  action: mount name=${nfsmount} src=${nfsserver}:${nfspath} fstype=nfs opts=${nfsoptions.stdout} state=mounted
   tags:
     - nfs

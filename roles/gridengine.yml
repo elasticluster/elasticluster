@@ -18,7 +18,7 @@
   tasks: 
     - include: gridengine/tasks/master.yml
     - include: slurm/tasks/nfs.yml
-    - action: nfsexport path=/home dest=/etc/exports clients=${groups.slurm_clients} options=rw,no_root_squash,sync
+    - action: nfsexport path=/home dest=/etc/exports clients=${groups.gridengine_clients} options=rw,no_root_squash,sync
       notify: reload exports
   handlers:
     - include: slurm/handlers/main.yml
