@@ -1,0 +1,562 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Configuration of elasticluster &mdash; elasticluster 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="elasticluster 1.0 documentation" href="index.html" />
+    <link rel="next" title="Usage" href="usage.html" />
+    <link rel="prev" title="Installation of elasticluster" href="install.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="usage.html" title="Usage"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation of elasticluster"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">elasticluster 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="configuration-of-elasticluster">
+<h1>Configuration of elasticluster<a class="headerlink" href="#configuration-of-elasticluster" title="Permalink to this headline">¶</a></h1>
+<p>All the information about how to access a cloud provider and how to
+setup a cluster is stored in a configuration file. The default
+configuration file is stored in your home directory:
+<tt class="docutils literal"><span class="pre">~/.elasticluster/config</span></tt> but you can specify a different location
+from the command line with the <cite>-c</cite> option.</p>
+<p>When <cite>elasticluster</cite> is run for the first time, if no configuration
+file is found it will copy a <a class="reference external" href="https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template&gt;">template configuration file</a> in
+<tt class="docutils literal"><span class="pre">~/.elasticluster/config</span></tt>. Such template is fully commented and self
+documented.</p>
+<div class="section" id="syntax-of-the-configuration-file">
+<h2>Syntax of the configuration file<a class="headerlink" href="#syntax-of-the-configuration-file" title="Permalink to this headline">¶</a></h2>
+<p>The file is parsed by ConfigParser module and has a syntax similar
+to Microsoft Windows INI files.</p>
+<p>It consists of <cite>sections</cite> led by a <tt class="docutils literal"><span class="pre">[sectiontype/name]</span></tt> header and
+followed by lines in the form:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">key</span><span class="o">=</span><span class="n">value</span>
+</pre></div>
+</div>
+<p>Section names are in the form <tt class="docutils literal"><span class="pre">[type/name]</span></tt> wher <cite>type</cite> must be one of:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">cloud</span></tt></dt>
+<dd>define a cloud provider</dd>
+<dt><tt class="docutils literal"><span class="pre">login</span></tt></dt>
+<dd>define a way to access a virtual machine</dd>
+<dt><tt class="docutils literal"><span class="pre">setup</span></tt></dt>
+<dd>define a way to setup the cluster</dd>
+<dt><tt class="docutils literal"><span class="pre">cluster</span></tt></dt>
+<dd>define the composition of a cluster. It contains references to
+the other sections.</dd>
+<dt><tt class="docutils literal"><span class="pre">cluster/&lt;clustername&gt;</span></tt></dt>
+<dd>override configuration for specific group of nodes within a cluster</dd>
+</dl>
+<p>You must define at least one for each section types in order to have
+a valid configuration file.</p>
+<div class="section" id="cloud-section">
+<h3>Cloud Section<a class="headerlink" href="#cloud-section" title="Permalink to this headline">¶</a></h3>
+<p>A <tt class="docutils literal"><span class="pre">cloud</span></tt> section named <tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
+<div class="highlight-python"><pre>[cloud/&lt;name&gt;]</pre>
+</div>
+<p>The cloud section defines all properties needed to connect to a
+specific cloud provider.</p>
+<p>You can define as many cloud sections you want, assuming you have
+access to different cloud providers and want to deploy different
+clusters in different clouds. The mapping between cluster and cloud
+provider is done in the <cite>cluster</cite> section (see later).</p>
+<div class="section" id="valid-configuration-keys">
+<h4>Valid configuration keys<a class="headerlink" href="#valid-configuration-keys" title="Permalink to this headline">¶</a></h4>
+<p><tt class="docutils literal"><span class="pre">provider</span></tt></p>
+<blockquote>
+<div>the driver to use to connect to the cloud provider.
+So far, the only accepted value is <cite>boto</cite>.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">ec2_url</span></tt></p>
+<blockquote>
+<div><p>the url of the EC2 endpoint. For Amazon is probably
+something like:</p>
+<div class="highlight-python"><pre>https://ec2.us-east-1.amazonaws.com</pre>
+</div>
+<p>replace <tt class="docutils literal"><span class="pre">us-east-1</span></tt> with the zone you want to use
+while for OpenStack you can get it from the web interface</p>
+</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">ec2_access_key</span></tt></p>
+<blockquote>
+<div>the access key (also known as access id) your cloud
+provider gave you to access its cloud resources.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">ec2_secret_key</span></tt></p>
+<blockquote>
+<div>the secret key (also known as secret id) your cloud
+provider gave you to access its cloud resources.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">ec2_region</span></tt></p>
+<blockquote>
+<div>the availability zone you want to use.</div></blockquote>
+</div>
+<div class="section" id="examples">
+<h4>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h4>
+<p>For instance, to connect to the <a class="reference external" href="http://hobbes.gc3.uzh.ch">Hobbes private cloud</a> of the <a class="reference external" href="http://www.uzh.ch">University of Zurich</a> you can
+use the following:</p>
+<div class="highlight-python"><pre>[cloud/hobbes]
+provider=ec2_boto
+ec2_url=http://hobbes.gc3.uzh.ch:8773/services/Cloud
+ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
+ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
+ec2_region=nova</pre>
+</div>
+<p>For Amazon instead (region us-east-1) you can use:</p>
+<div class="highlight-python"><pre>[cloud/amazon-us-east-1]
+provider=ec2_boto
+ec2_url=https://ec2.us-east-1.amazonaws.com
+ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
+ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
+ec2_region=us-east-1</pre>
+</div>
+<div class="section" id="openstack-users">
+<h5>OpenStack users<a class="headerlink" href="#openstack-users" title="Permalink to this headline">¶</a></h5>
+<p>From the horizon web interface you can download a file containing your
+EC2 credentials by logging in in your provider web interface and
+clicking on:</p>
+<dl class="docutils">
+<dt>&#8220;<em>settings</em>&#8220;</dt>
+<dd><dl class="first last docutils">
+<dt>=&gt; &#8220;<em>EC2 Credentials</em>&#8220;</dt>
+<dd>=&gt; &#8220;<em>Download EC2 Credentials</em>&#8220;</dd>
+</dl>
+</dd>
+</dl>
+<p>The <tt class="docutils literal"><span class="pre">ec2rc.sh</span></tt> file will contain some values. Update the
+configuration file:</p>
+<p><cite>ec2_url</cite> using the value of the variable EC2_URL
+<cite>ec2_access_key</cite> using the value of the variable EC2_ACCESS_KEY
+<cite>ec2_secret_key</cite> using the value of the variable EC2_SECRET_KEY</p>
+</div>
+</div>
+</div>
+<div class="section" id="login-section">
+<h3>Login Section<a class="headerlink" href="#login-section" title="Permalink to this headline">¶</a></h3>
+<p>A <tt class="docutils literal"><span class="pre">login</span></tt> section named <tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
+<div class="highlight-python"><pre>[login/&lt;name&gt;]</pre>
+</div>
+<p>This section contains information on how to access the instances
+started on the cloud, including the user and the SSH keys to use.</p>
+<p>Some of the values depend on the image you specified in the
+<cite>cluster</cite> section. Values defined here also can affect the <cite>setup</cite>
+section and the way the system is setup.</p>
+<div class="section" id="mandatory-configuration-keys">
+<h4>Mandatory configuration keys<a class="headerlink" href="#mandatory-configuration-keys" title="Permalink to this headline">¶</a></h4>
+<p><tt class="docutils literal"><span class="pre">image_user</span></tt></p>
+<blockquote>
+<div>the remote user you must use to connect to the virtual machine</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">image_sudo</span></tt></p>
+<blockquote>
+<div>Can be <cite>True</cite> or <cite>False</cite>. <cite>True</cite> means that on the remote machine
+you can execute commands as root by running the <cite>sudo</cite> program.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">image_user_sudo</span></tt></p>
+<blockquote>
+<div>the login name of the administrator. Use <cite>root</cite> unless you know
+what you are doing...</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">user_key_name</span></tt></p>
+<blockquote>
+<div>name of the <em>keypair</em> to use on the cloud provider. If the keypair
+does not exist it will be created by elasticluster.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">user_key_private</span></tt></p>
+<blockquote>
+<div>file containing a valid RSA or DSA private key to be used to
+connect to the remote machine. Please note that this must match
+the <tt class="docutils literal"><span class="pre">user_key_public</span></tt> file (RSA and DSA keys go in pairs). Also
+note that Amazon does not accept DSA keys but only RSA ones.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">user_key_public</span></tt></p>
+<blockquote>
+<div>file containing the RSA/DSA public key corresponding to the
+<tt class="docutils literal"><span class="pre">user_key_private</span></tt> private key. See <tt class="docutils literal"><span class="pre">user_key_private</span></tt> for more
+details.</div></blockquote>
+</div>
+<div class="section" id="id1">
+<h4>Examples<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<p>For a typical Ubuntu machine, both on Amazon and most OpenStack
+providers, these values should be fine:</p>
+<div class="highlight-python"><pre>[login/ubuntu]
+image_user=ubuntu
+image_user_sudo=root
+image_sudo=True
+user_key_name=elasticluster
+user_key_private=~/.ssh/id_rsa
+user_key_public=~/.ssh/id_rsa.pub</pre>
+</div>
+<p>while for Hobbes appliances you will need to use the <cite>gc3-user</cite>
+instead:</p>
+<div class="highlight-python"><pre>[login/gc3-user]
+image_user=gc3-user
+image_user_sudo=root
+image_sudo=True
+user_key_name=elasticluster
+user_key_private=~/.ssh/id_rsa
+user_key_public=~/.ssh/id_rsa.pub</pre>
+</div>
+</div>
+</div>
+<div class="section" id="setup-section">
+<h3>Setup Section<a class="headerlink" href="#setup-section" title="Permalink to this headline">¶</a></h3>
+<p>A <tt class="docutils literal"><span class="pre">setup</span></tt> section named <tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
+<div class="highlight-python"><pre>[setup/&lt;name&gt;]</pre>
+</div>
+<p>This section contain information on <em>how to setup</em> a cluster. After
+the cluster is started, elasticluster will run a <tt class="docutils literal"><span class="pre">setup</span> <span class="pre">provider</span></tt> in
+order to configure it.</p>
+<div class="section" id="id2">
+<h4>Mandatory configuration keys<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<p><tt class="docutils literal"><span class="pre">provider</span></tt></p>
+<blockquote>
+<div>the type of setup provider. So far, only <cite>ansible</cite> is supported.</div></blockquote>
+</div>
+<div class="section" id="ansible-specific-mandatory-configuration-keys">
+<h4>Ansible-specific mandatory configuration keys<a class="headerlink" href="#ansible-specific-mandatory-configuration-keys" title="Permalink to this headline">¶</a></h4>
+<p>The following configuration keys are only valid if <cite>provider</cite> is
+<cite>ansible</cite>. They also are all <em>mandatory</em>.</p>
+<p><tt class="docutils literal"><span class="pre">playbook_path</span></tt></p>
+<blockquote>
+<div>Path to the playbook to use when configuring the system. The
+default value printed here points to the playbook distributed with
+elasticluster.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">&lt;class&gt;_groups</span></tt></p>
+<blockquote>
+<div><p>Comma separated list of ansible groups the specific &lt;class&gt; will
+belong to. For each &lt;class&gt;_nodes in a [cluster/] section there
+should be a &lt;class&gt;_groups option to configure that specific class
+of nodes with the ansible groups specified.</p>
+<p>If you are setting up a standard HPC cluster you probably want to
+have only two main groups: <cite>frontend_groups</cite> and <cite>compute_groups</cite>.</p>
+<p>To configure a slurm cluster, for instance, you have the following
+available groups:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">slurm_master</span></tt></dt>
+<dd>configure this machine as slurm masternode</dd>
+<dt><tt class="docutils literal"><span class="pre">slurm_clients</span></tt></dt>
+<dd>compute nodes of a slurm cluster</dd>
+<dt><tt class="docutils literal"><span class="pre">ganglia_master</span></tt></dt>
+<dd>configure as ganglia web frontend.  On the
+master, you probably want to define <cite>ganglia monitor</cite> as well</dd>
+<dt><tt class="docutils literal"><span class="pre">ganglia_monitor</span></tt></dt>
+<dd>configure as ganglia monitor.</dd>
+</dl>
+<p>You can combine more groups together, but of course not all
+combinations make sense. A common setup is, for instance:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">frontend_groups</span><span class="o">=</span><span class="n">slurm_master</span><span class="p">,</span><span class="n">ganglia_master</span><span class="p">,</span><span class="n">ganglia_monitor</span>
+<span class="n">compute_groups</span><span class="o">=</span><span class="n">slurm_clients</span><span class="p">,</span><span class="n">ganglia_monitor</span>
+</pre></div>
+</div>
+<p>This will configure the frontend node as slurm master and ganglia
+frontend, and the compute nodes as clients for both slurm and
+ganglia frontend.</p>
+<p>A full list of the available groups is available at the
+<a class="reference internal" href="playbooks.html#playbooks"><em>Available playbooks for elasticluster</em></a> page.</p>
+</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">&lt;class&gt;_var_&lt;varname&gt;</span></tt></p>
+<blockquote>
+<div>an entry of this type will define a variable called <tt class="docutils literal"><span class="pre">&lt;varname&gt;</span></tt>
+for the specific <tt class="docutils literal"><span class="pre">&lt;class&gt;</span></tt> and add it to the ansible inventory
+file.</div></blockquote>
+</div>
+<div class="section" id="id3">
+<h4>Examples<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+<p>Some (working) examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">setup</span><span class="o">/</span><span class="n">ansible</span><span class="o">-</span><span class="n">slurm</span><span class="p">]</span>
+<span class="n">provider</span><span class="o">=</span><span class="n">ansible</span>
+<span class="n">frontend_groups</span><span class="o">=</span><span class="n">slurm_master</span>
+<span class="n">compute_groups</span><span class="o">=</span><span class="n">slurm_clients</span>
+
+<span class="p">[</span><span class="n">setup</span><span class="o">/</span><span class="n">ansible</span><span class="o">-</span><span class="n">gridengine</span><span class="p">]</span>
+<span class="n">provider</span><span class="o">=</span><span class="n">ansible</span>
+<span class="n">frontend_groups</span><span class="o">=</span><span class="n">gridengine_master</span>
+<span class="n">compute_groups</span><span class="o">=</span><span class="n">gridengine_clients</span>
+
+<span class="p">[</span><span class="n">setup</span><span class="o">/</span><span class="n">ansible</span><span class="o">-</span><span class="n">pbs</span><span class="p">]</span>
+<span class="n">provider</span><span class="o">=</span><span class="n">ansible</span>
+<span class="n">frontend_groups</span><span class="o">=</span><span class="n">pbs_master</span><span class="p">,</span><span class="n">maui_master</span>
+<span class="n">compute_groups</span><span class="o">=</span><span class="n">pbs_clients</span>
+
+<span class="p">[</span><span class="n">setup</span><span class="o">/</span><span class="n">ansible_matlab</span><span class="p">]</span>
+<span class="c"># Please note that this setup assumes you already have matlab</span>
+<span class="c"># installed on the image that is being used.</span>
+<span class="n">provider</span><span class="o">=</span><span class="n">ansible</span>
+<span class="n">frontend_groups</span><span class="o">=</span><span class="n">mdce_master</span><span class="p">,</span><span class="n">mdce_worker</span><span class="p">,</span><span class="n">ganglia_monitor</span><span class="p">,</span><span class="n">ganglia_master</span>
+<span class="n">worker_groups</span><span class="o">=</span><span class="n">mdce_worker</span><span class="p">,</span><span class="n">ganglia_monitor</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="cluster-section">
+<h3>Cluster Section<a class="headerlink" href="#cluster-section" title="Permalink to this headline">¶</a></h3>
+<p>A <tt class="docutils literal"><span class="pre">cluster</span></tt> section named <tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
+<div class="highlight-python"><pre>[cluster/&lt;name&gt;]</pre>
+</div>
+<p>The cluster section defines a <cite>template</cite> for a cluster. This section
+has references to each one of the other sections and define the
+image to use, the default number of compute nodes and the security
+group.</p>
+<div class="section" id="id4">
+<h4>Mandatory configuration keys<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h4>
+<p><tt class="docutils literal"><span class="pre">cloud</span></tt></p>
+<blockquote>
+<div>the name of a valid <cite>cloud</cite> section. For instance <cite>hobbes</cite> or
+<cite>amazon-us-east-1</cite></div></blockquote>
+<p><tt class="docutils literal"><span class="pre">login</span></tt></p>
+<blockquote>
+<div>the name of a valid <cite>login</cite> section. For instance <cite>ubuntu</cite> or
+<cite>gc3-user</cite></div></blockquote>
+<p><tt class="docutils literal"><span class="pre">setup_provider</span></tt></p>
+<blockquote>
+<div>the name of a valid <cite>setup</cite> section. For instance, <cite>ansible-slurm</cite>
+or <cite>ansible-pbs</cite></div></blockquote>
+<p><tt class="docutils literal"><span class="pre">image_id</span></tt></p>
+<blockquote>
+<div>image id in <cite>ami</cite> format. If you are using OpenStack, you need to
+run <cite>euca-describe-images</cite> to get a valid <cite>ami-*</cite> id.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">flavor</span></tt></p>
+<blockquote>
+<div>the image type to use. Different cloud providers call it
+differently, could be <cite>instance type</cite>, <cite>instance size</cite> or
+<cite>flavor</cite>.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">security_group</span></tt></p>
+<blockquote>
+<div>Security group to use when starting the instance.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">&lt;class&gt;_nodes</span></tt></p>
+<blockquote>
+<div><p>the number of nodes of type <tt class="docutils literal"><span class="pre">&lt;class&gt;</span></tt>. These configuration
+options will define the composition of your cluster. A very common
+configuration will include only two group of nodes:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">frontend_nodes</span></tt></dt>
+<dd>the queue manager and frontend of the cluster. You
+probably want only one.</dd>
+<dt><tt class="docutils literal"><span class="pre">compute_nodes</span></tt></dt>
+<dd>the worker nodes of the cluster.</dd>
+</dl>
+<p>Each <tt class="docutils literal"><span class="pre">&lt;class&gt;_nodes</span></tt> group is configured using the corresponding
+<tt class="docutils literal"><span class="pre">&lt;class&gt;_groups</span></tt> configuration option in the <tt class="docutils literal"><span class="pre">[setup/...]</span></tt>
+section.</p>
+</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">ssh_to</span></tt></p>
+<blockquote>
+<div><cite>ssh</cite> and <cite>sftp</cite> nodes will connect to only one node. This is the
+first of the group specified in this configuration option, or the
+first node of the first group in alphabetical order.  For
+instance, if you don&#8217;t set any value for <cite>ssh_to</cite> and you defined
+two groups: <cite>frontend_nodes</cite> and <cite>compute_nodes</cite>, the ssh and sftp
+command will connect to <cite>compute001</cite> which is the first
+<cite>compute_nodes</cite> node. If you specify <cite>frontend</cite>, instead, it will
+connect to <cite>frontend001</cite> (or the first node of the <cite>frontend</cite>
+group).</div></blockquote>
+</div>
+<div class="section" id="optional-configuration-keys">
+<h4>Optional configuration keys<a class="headerlink" href="#optional-configuration-keys" title="Permalink to this headline">¶</a></h4>
+<p><tt class="docutils literal"><span class="pre">image_userdata</span></tt></p>
+<blockquote>
+<div>shell script to be executed (as root) when the machine
+starts. This is usually not needed because the <cite>ansible</cite> provider
+works on <em>vanilla</em> images, but if you are using other setup
+providers you may need to execute some command to bootstrap it.</div></blockquote>
+</div>
+<div class="section" id="id5">
+<h4>Examples<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h4>
+<p>Some (working) examples:</p>
+<div class="highlight-python"><pre>[cluster/slurm]
+cloud=hobbes
+login=gc3-user
+setup_provider=ansible-slurm
+security_group=default
+# Ubuntu image
+image_id=ami-00000048
+flavor=m1.small
+frontend_nodes=1
+compute_nodes=2
+frontend_class=frontend
+
+[cluster/torque]
+cloud=hobbes
+frontend_nodes=1
+compute_nodes=2
+frontend_class=frontend
+security_group=default
+# CentOS image
+image_id=ami-0000004f
+flavor=m1.small
+login=gc3-user
+setup_provider=ansible-pbs
+
+[cluster/aws-slurm]
+cloud=amazon-us-east-1
+login=ubuntu
+setup_provider=ansible-slurm
+security_group=default
+# ubuntu image
+image_id=ami-90a21cf9
+flavor=m1.small
+frontend=1
+compute=2
+
+[cluster/matlab]
+cloud=hobbes
+setup_provider=ansible_matlab
+security_group=default
+image_id=ami-00000099
+flavor=m1.medium
+frontend_nodes=1
+worker_nodes=10
+image_userdata=
+ssh_to=frontend</pre>
+</div>
+</div>
+</div>
+<div class="section" id="cluster-node-section">
+<h3>Cluster node section<a class="headerlink" href="#cluster-node-section" title="Permalink to this headline">¶</a></h3>
+<p>A <cite>cluster node</cite> for the node type <tt class="docutils literal"><span class="pre">&lt;nodetype&gt;</span></tt> of the cluster
+<tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
+<div class="highlight-python"><pre>[cluster/&lt;name&gt;/&lt;nodetype&gt;]</pre>
+</div>
+<p>This section allows you to override some configuration values for
+specific group of nodes. Assume you have a standard slurm cluster
+with a frontend which is used as manager node and nfs server for the
+home directories, and a set of compute nodes.</p>
+<p>You may want to use different flavors for the frontend and the
+compute nodes, since for the first you need more space and you don&#8217;t
+need many cores or much memory, while the compute nodes may requires
+more memory and more cores but are not eager about disk space.</p>
+<p>This is achieved defining, for instance, a <cite>bigdisk</cite> flavor (the
+name is just fictional) for the frontend and <cite>8cpu32g</cite> for the
+compute nodes. Your configuration will thus look like:</p>
+<div class="highlight-python"><pre>[cluster/slurm]
+...
+flavor=8cpu32g
+frontend_nodes=1
+compute_nodes=10
+
+[cluster/slurm/frontend]
+flavor=bigdisk</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Configuration of elasticluster</a><ul>
+<li><a class="reference internal" href="#syntax-of-the-configuration-file">Syntax of the configuration file</a><ul>
+<li><a class="reference internal" href="#cloud-section">Cloud Section</a><ul>
+<li><a class="reference internal" href="#valid-configuration-keys">Valid configuration keys</a></li>
+<li><a class="reference internal" href="#examples">Examples</a><ul>
+<li><a class="reference internal" href="#openstack-users">OpenStack users</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#login-section">Login Section</a><ul>
+<li><a class="reference internal" href="#mandatory-configuration-keys">Mandatory configuration keys</a></li>
+<li><a class="reference internal" href="#id1">Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#setup-section">Setup Section</a><ul>
+<li><a class="reference internal" href="#id2">Mandatory configuration keys</a></li>
+<li><a class="reference internal" href="#ansible-specific-mandatory-configuration-keys">Ansible-specific mandatory configuration keys</a></li>
+<li><a class="reference internal" href="#id3">Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cluster-section">Cluster Section</a><ul>
+<li><a class="reference internal" href="#id4">Mandatory configuration keys</a></li>
+<li><a class="reference internal" href="#optional-configuration-keys">Optional configuration keys</a></li>
+<li><a class="reference internal" href="#id5">Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cluster-node-section">Cluster node section</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="install.html"
+                        title="previous chapter">Installation of elasticluster</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="usage.html"
+                        title="next chapter">Usage</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/configure.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="usage.html" title="Usage"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation of elasticluster"
+             >previous</a> |</li>
+        <li><a href="index.html">elasticluster 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Grid Computing Competence Centre, University of Zurich.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
