@@ -30,11 +30,11 @@
     - include: hadoop/tasks/conf.yml
 
     - name: Start name and data daemons
-      action: shell start-dfs.sh && sleep 10
+      action: shell start-dfs.sh
       only_if: '"$inventory_hostname" in ${groups.hadoop_namenode}'
 
     - name: Start job tracker
-      action: shell start-mapred.sh && sleep 10
+      action: shell start-mapred.sh
       only_if: '"$inventory_hostname" in ${groups.hadoop_jobtracker}'
 
     - name: Create hdfs:/tmp/hadoop-root/mapred directory

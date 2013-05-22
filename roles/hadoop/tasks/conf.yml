@@ -30,9 +30,27 @@
 
 - name: set JAVA_HOME environment variable
   action: lineinfile dest=$hd_confdir/hadoop-env.sh regexp='export JAVA_HOME.*' line='export JAVA_HOME=/usr/lib/jvm/default-java'
+  only_if: "$is_ubuntu"
+
+- name: set JAVA_HOME environment variable
+  action: lineinfile dest=$hd_confdir/hadoop-env.sh regexp='export JAVA_HOME.*' line='export JAVA_HOME=/usr/lib/jvm/jre'
+  only_if: "$is_centos"
 
 - name: Format name directory
   action: shell sudo -u hdfs hadoop namenode -format -force -nonInteractive creates=$hd_namedir/image/fsimage
   only_if: '"$inventory_hostname" in ${groups.hadoop_namenode}'
 
-
+- name: Ensure startup scripts are executables
+  action: file path=/usr/sbin/$item mode=755 state=file
+  with_items:
+    - slaves.sh
+    - start-all.sh
+    - start-balancer.sh
+    - start-dfs.sh
+    - start-jobhistoryserver.sh
+    - start-mapred.sh
+    - stop-all.sh
+    - stop-balancer.sh
+    - stop-dfs.sh
+    - stop-jobhistoryserver.sh
+    - stop-mapred.sh

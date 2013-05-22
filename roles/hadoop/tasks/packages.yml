@@ -1,9 +1,16 @@
 ---
-- name: Ensure all needed packages are installed
+- name: Ensure all needed packages are installed (Ubuntu)
   only_if: $is_ubuntu
   action: apt pkg=$item state=installed update_cache=yes
   with_items:
     - default-jdk
+    - sudo
+
+- name: Ensure all needed packages are installed (CentOS)
+  only_if: $is_centos
+  action: yum pkg=$item state=installed
+  with_items:
+    - java-openjdk
     - sudo
 
 - name: download and install hadoop debian package
