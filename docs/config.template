@@ -234,19 +234,16 @@ user_key_public=~/.ssh/id_dsa.cloud.pub
 
 [setup/ansible-slurm]
 provider=ansible
-playbook_path=%(ansible_pb_dir)s/site.yml
 frontend_groups=slurm_master
 compute_groups=slurm_clients
 
 [setup/ansible-gridengine]
 provider=ansible
-playbook_path=%(ansible_pb_dir)s/site.yml
 frontend_groups=gridengine_master
 compute_groups=gridengine_clients
 
 [setup/ansible-pbs]
 provider=ansible
-playbook_path=%(ansible_pb_dir)s/site.yml
 frontend_groups=pbs_master,maui_master
 compute_groups=pbs_clients
 
@@ -254,7 +251,6 @@ compute_groups=pbs_clients
 # Please note that this setup assumes you already have matlab
 # installed on the image that is being used.
 provider=ansible
-playbook_path=%(ansible_pb_dir)s/site.yml
 frontend_groups=mdce_master,mdce_worker,ganglia_monitor,ganglia_master
 worker_groups=mdce_worker,ganglia_monitor
 
