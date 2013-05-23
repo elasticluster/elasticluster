@@ -480,5 +480,78 @@ The following options are available:
 The ``ssh`` command
 -------------------
 
+After a cluster is started, the easiest way to login on it is by using
+the **ssh** command. This command will run the `ssh` command with the
+correct options to connect to the cluster using the configured values
+for user and ssh key to use.
+
+If no ``ssh_to`` option is specified in the configuration file, the
+**ssh** command will connect to the first host belonging to the type
+which comes first in alphabetic order, otherwise it will connect to
+the first host of the group specified by the ``ssh_to`` option of the
+``cluster`` section. However, running the command ``elasticluster
+list-nodes <cluster>`` will show which host will be used as frontend
+node.
+
+The usage of the `ssh` command is as follow::
+
+    elasticluster ssh <clustername> [ -- ssh arguments]
+
+All the options and arguments following the ``--`` characters will be
+passed directly to the ``ssh`` command.
+
+For instance, if you just want to run the ``hostname -f`` command on
+the frontend of the cluster you can run::
+
+    elasticluster ssh <clustername> -- hostname -f
+
+Note that since the IP address of the virtual machines are likely to
+be reused by different virtual machines, in order to avoid annoying
+warning messages from ssh elasticluster will add the following options
+to the `ssh` command line:
+
+``-o UserKnownHostsFile=/dev/null``
+    Use an empty virtual file to check the host key of the remote
+    machine.
+
+``-o StrictHostKeyChecking=no``
+    Disable check of the host key of the remove machine, without
+    prompting to ask if the key can be accepted or not.
+
 The ``sftp`` command
---------------------
+-------------------
+
+After a cluster is started, the easiest way to upload or download
+files to and from the cluster is by using the **sftp** command. This
+command will run the `sftp` command with the correct options to
+connect to the cluster using the configured values for user and ssh
+key to use.
+
+If no ``ssh_to`` option is specified in the configuration file, the
+**sftp** command will connect to the first host belonging to the type
+which comes first in alphabetic order, otherwise it will connect to
+the first host of the group specified by the ``ssh_to`` option of the
+``cluster`` section. However, running the command ``elasticluster
+list-nodes <cluster>`` will show which host will be used as frontend
+node.
+
+The usage of the `sftp` command is as follow::
+
+    elasticluster sftp <clustername> [ -- sftp arguments]
+
+All the options and arguments following the ``--`` characters will be
+passed directly to the ``sftp`` command.
+
+Note that since the IP address of the virtual machines are likely to
+be reused by different virtual machines, in order to avoid annoying
+warning messages from ssh elasticluster will add the following options
+to the `sftp` command line:
+
+``-o UserKnownHostsFile=/dev/null``
+    Use an empty virtual file to check the host key of the remote
+    machine.
+
+``-o StrictHostKeyChecking=no``
+    Disable check of the host key of the remove machine, without
+    prompting to ask if the key can be accepted or not.
+
