@@ -16,15 +16,15 @@
 =============================================
 
 --------------
- Introduction
+ Introduction 
 --------------
 
 `elasticluster` aims to provide a user-friendly command line tool to
-create, manage and setup computing clusters hosted on cloud
-infrastructures (like `Amazon's Elastic Compute Cloud EC2`_)
-or a private `OpenStack`_ cloud). Its main goal
-is to get your own private cluster up and running with just a few commands; a `YouTube video`_
-demoes the basic features of elasticluster. 
+create, manage and setup computional clusters hosted on cloud
+infrastructures (like `Amazon's Elastic Compute Cloud EC2`_) or a
+private `OpenStack`_ cloud). Its main goal is to get your own private
+cluster up and running with just a few commands; a `YouTube video`_
+demoes the basic features of elasticluster.
 
 This project is an effort of the
 `Grid Computing Competence Center`_ at the
@@ -32,7 +32,7 @@ This project is an effort of the
 `GNU General Public License version 3`_.
 
 ----------
- Features
+ Features 
 ----------
 
 `elasticluster` is in active development, but the following features at the current state:
@@ -41,17 +41,42 @@ This project is an effort of the
 * Can start and manage multiple independent clusters at the same time
 * Automated cluster setup:
     * use `Debian GNU/Linux`_, `Ubuntu`_, or `CentOS`_ as a base operating system
-    * choose `SLURM`_, `Grid Engine`_ or `Torque/PBS`_ as a batch-queueing system
+    * supports multiple batch systems, including `SLURM`_, `Grid
+      Engine`_ or `Torque/PBS`_
+    * supports `Hadoop`_ clusters
     * add useful tools like `Ganglia`_ for monitoring...
     * ...or anything that you can install with an `Ansible`_ playbook!
-* Grow and shrink a running cluster
+* Grow a running cluster
 
 `elasticluster` is currently in active development: please use the
 GitHub issue tracker to `file enhancement requests and ideas`_
 
+--------------
+ Architecture 
+--------------
+
+The architecture of elasticluster is quite simple: the configuration
+file in ``~/.elasticluster/config`` defines a set of *cluster
+configurations* and information on how to access a specific cloud
+webservice (including access id and secret keys).
+
+Using the command line (or, very soon, a simple API), you can start a
+cluster and override some of the default values, like the number of
+nodes you want to fire up. Elasticluster will use the `boto library`_
+to connect to the desired cloud, start the virtual machines and wait
+until they are accessible via ssh.
+
+After all the virtual machines are up and running, elasticluster will
+use `ansible`_ to configure them.
+
+If you do a *resize* of the cluster (currently only growing a cluster
+is fully supported) new virtual machines will be created and again
+`ansible`_ will run for *all* of the virtual machines, in order to
+properly add the new hosts to the cluster.
+
 
 -------------------
- Table of Contents
+ Table of Contents 
 -------------------
 
 .. toctree::  :maxdepth: 2
@@ -60,11 +85,10 @@ GitHub issue tracker to `file enhancement requests and ideas`_
   configure
   usage
   playbooks
-  customize
 
 
 --------------------
- Indices and tables
+ Indices and tables 
 --------------------
 
 * :ref:`genindex`

@@ -3,7 +3,9 @@
    This file follows reStructuredText markup syntax; see
    http://docutils.sf.net/rst.html for more information.
 
+.. include:: global.inc
 
-==================================
-  How to customize elasticluster
-==================================
+=============================
+  Customizing elasticluster  
+=============================
+

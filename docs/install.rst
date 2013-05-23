@@ -5,9 +5,10 @@
 
 .. include:: global.inc
 
-=================================
-  Installation of elasticluster
-=================================
+================
+  Installation  
+================
+
 
 `elasticluster` is a `Python`_ program; Python version 2.6 is required
 to run it.

@@ -7,10 +7,24 @@
 
 .. _playbooks:
   
-=========================================
-  Available playbooks for elasticluster
-=========================================
+============================================
+  Playbooks distributed with elasticluster  
+============================================
 
+After the requested number of Virtual Machines have been started,
+elasticluster uses `Ansible`_ to configure them based on the
+configuration options defined in the configuration file.
+
+We distribute a few playbooks together with elasticluster to configure
+some of the most wanted clusters. The playbooks are available at the
+``share/elasticluster/providers/ansible-playbooks/`` directory inside
+your virtualenv if you installed using `pip`_, or in the
+``elasticluster/providers/ansible-playbooks`` directory of the github
+source code. You can copy, customize and redistribute them freely
+under the terms of the GPLv3 license.
+
+A list of the most used playbooks distributed with elasticluster and
+some explanation on how to use them follows.
 
 Slurm
 =====

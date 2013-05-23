@@ -13,6 +13,9 @@ This project is an effort of the
 `University of Zurich`_, licensed under the
 `GNU General Public License version 3`_.
 
+Documentation for elasticluster is available on the `Read The Docs
+<http://elasticluster.readthedocs.org/>`_ website
+
 Features
 ========
 
@@ -85,72 +88,6 @@ Then you have to download the software. We suggest you to download it
 
 Now the ``elasticluster`` should be available in your current
 environment.
-    
-
-Configuration
--------------
-
-After the software is installed you need to create a configuration
-file. A fully-commented `configuration template`_
-is available `here
-<https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template>`_.
-
-When `elasticluster` is run for the first time, it will copy the
-`configuration template`_ to the default
-configuration location ``~/.elasticluster/config``.
-
-The following shows a basic configuration to connect to the
-`GC3 Hobbes cloud`_;
-please have a look at the `configuration template`_
-for details and further options::
-
-    [cloud/hobbes]
-    provider=ec2_boto
-    ec2_url=http://cloud.gc3.uzh.ch:8773/services/Cloud
-    ec2_access_key=***fill in your data here***
-    ec2_secret_key=***fill in your data here***
-    ec2_region=nova
-
-    [login/gc3-user]
-    image_user=gc3-user
-    image_user_sudo=root
-    image_sudo=True
-    user_key_name=***name of SSH keypair on Hobbes***
-    user_key_private=~/.ssh/id_dsa
-    user_key_public=~/.ssh/id_dsa.pub
-
-    [cluster/mycluster]
-    cloud=hobbes
-    login=gc3-user
-    setup_provider=my-slurm-cluster
-    security_group=default
-    image_id=ami-00000048
-    flavor=m1.tiny
-    frontend_nodes=1
-    compute_nodes=2
-    ssh_to=frontend
-    image_userdata=
-
-    [cluster/mycluster/compute]
-    # This section is used to override values in "cluster/mycluster"
-    # for any `compute` node.
-    flavor=m1.large
-
-    [setup/my-slurm-cluster]
-    provider=ansible
-    playbook_path=%(ansible_pb_dir)s/site.yml
-    frontend_groups=slurm_master
-    compute_groups=slurm_clients
-
-`elasticluster` looks for a configuration file named
-``~/.elasticluster/config``; you can specify a different location
-with the `-c` option: for example, `elasticluster -c
-/path/to/another.cfg ...` makes `elasticluster` read the configuration
-file ``/path/to/another.cfg``
-
-When you are done configuring, you can start your first cluster with
-`elasticluster`: read the "*Start a cluster*" section below!
-
 
 How to...
 =========

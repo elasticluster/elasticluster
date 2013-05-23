@@ -5,9 +5,9 @@
 
 .. include:: global.inc
 
-==================================
-  Configuration of elasticluster
-==================================
+=================
+  Configuration  
+=================
 
 All the information about how to access a cloud provider and how to
 setup a cluster is stored in a configuration file. The default
@@ -21,9 +21,8 @@ file is found it will copy a `template configuration file`_ in
 documented.
 
 
-----------------------------------
- Syntax of the configuration file
-----------------------------------
+Basic syntax of the configuration file
+======================================
 
 The file is parsed by ConfigParser module and has a syntax similar
 to Microsoft Windows INI files. 

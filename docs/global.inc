@@ -28,6 +28,7 @@
 .. _`SLURM`: https://computing.llnl.gov/linux/slurm/
 .. _`Grid Engine`: http://gridengine.info
 .. _`Ganglia`: http://ganglia.info
+.. _`Hadoop`: http://hadoop.apache.org/
 .. _`Ansible`: http://ansible.cc 
 .. _`Python`: http://www.python.org
 .. _`pip`: https://pypi.python.org/pypi/pip
@@ -35,3 +36,4 @@
 .. _`github`: https://github.com/
 .. _`github elasticluster page`: https://github.com/gc3-uzh-ch/elasticluster
 .. _`python virtualenv`: https://pypi.python.org/pypi/virtualenv
+.. _`boto library`: https://github.com/boto/boto
