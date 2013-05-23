@@ -181,11 +181,7 @@ user_key_public=~/.ssh/id_dsa.cloud.pub
 # ----------------------------------------------
 #
 # The following configuration keys are only valid if `provider` is
-# `ansible`. They also are all *mandatory*.
-#
-# playbook_path: Path to the playbook to use when configuring the
-#                system. The default value printed here points to the
-#                playbook distributed with elasticluster.
+# `ansible`. 
 #
 # <class>_groups: Comma separated list of ansible groups the specific
 #                 <class> will belong to. For each <class>_nodes in a
@@ -228,6 +224,11 @@ user_key_public=~/.ssh/id_dsa.cloud.pub
 # <class>_var_<varname>: an entry of this type will define a variable
 #               called <varname> for the specific <class> and add it
 #               to the ansible inventory file.
+#
+# playbook_path: Path to the playbook to use when configuring the
+#                system. The default value printed here points to the
+#                playbook distributed with elasticluster. Default is
+#                to use the playbooks distributed with elasticluster
 #
 # Some (working) examples:
 

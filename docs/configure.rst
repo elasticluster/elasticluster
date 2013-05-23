@@ -242,13 +242,7 @@ Ansible-specific mandatory configuration keys
 ----------------------------------------------
 
 The following configuration keys are only valid if `provider` is
-`ansible`. They also are all *mandatory*.
-
-``playbook_path``
-
-    Path to the playbook to use when configuring the system. The
-    default value printed here points to the playbook distributed with
-    elasticluster.
+`ansible`.
 
 ``<class>_groups``
 
@@ -294,6 +288,13 @@ The following configuration keys are only valid if `provider` is
     an entry of this type will define a variable called ``<varname>``
     for the specific ``<class>`` and add it to the ansible inventory
     file.
+
+``playbook_path``
+
+    Path to the playbook to use when configuring the system. The
+    default value printed here points to the playbook distributed with
+    elasticluster. The default value points to the playbooks
+    distributed with elasticluster.
 
 Examples
 --------
