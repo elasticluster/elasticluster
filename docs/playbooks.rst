@@ -192,6 +192,7 @@ A *snippet* of a typical configuration for an Hadoop cluster is::
     hadoop-name_nodes=1
     hadoop-jobtracker_nodes=1
     hadoop-task-data_nodes=10
+    setup_provider=ansible_hadoop
     ssh_to=hadoop-name
     ...
 
@@ -200,3 +201,48 @@ A *snippet* of a typical configuration for an Hadoop cluster is::
     hadoop-jobtracker_groups=hadoop_jobtracker
     hadoop-task-data_groups=hadoop_tasktracker,hadoop_datanode
     ...
+
+OrangeFS/PVFS2
+==============
+
+Tested on:
+
+* Ubuntu 12.04
+
++-----------------+----------------------------------------------------+
+| ansible groups  | role                                               |
++=================+====================================================+
+|``pvfs2_meta``   | Run the pvfs2 metadata service                     |
++-----------------+----------------------------------------------------+
+|``pvfs2_data``   | Run the pvfs2 data node                            |
++-----------------+----------------------------------------------------+
+|``pvfs2_client`` | configure as pvfs2 client and mount the filesystem |
++-----------------+----------------------------------------------------+
+
+The OrangeFS/PVFS2 playbook will configure a pvfs2 cluster. It
+downloads the software from the `OrangeFS`_ website, compile and
+install it on all the machine, and run the various server and client daemons.
+
+In addiction, it will mount the filesystem in ``/pvfs2`` on all the clients.
+
+You can combine, for instance, a SLURM cluster with a PVFS2 cluster::
+
+    [cluster/slurm+pvfs2]
+    frontend_nodes=1
+    compute_nodes=10
+    pvfs2-nodes=10
+    ssh_to=frontend
+    setup_provider=ansible_slurm+pvfs2
+    ...
+
+    [setup/ansible_slurm+pvfs2]
+    frontend_groups=slurm_master,pvfs2_client
+    compute_groups=slurm_clients,pvfs2_client
+    pvfs-nodes_groups=pvfs2_meta,pvfs2_data
+    ...
+
+This configuration will create a SLURM cluster with 10 compute nodes,
+10 data nodes and a frontend, and will mount the ``/pvfs2`` directory
+from the data nodes to both the compute nodes and the frontend.
+
+.. _`OrangeFS`: http://orangefs.org/
