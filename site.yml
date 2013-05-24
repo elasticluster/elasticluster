@@ -13,3 +13,4 @@
 - include: roles/gridengine.yml
 - include: roles/mdce.yml
 - include: roles/hadoop.yml
+- include: roles/pvfs2.yml

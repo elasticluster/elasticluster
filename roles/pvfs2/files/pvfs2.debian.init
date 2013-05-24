@@ -1,0 +1,63 @@
+#!/bin/sh
+#
+# description: pvfs2-server is the server component of PVFS2
+#
+# chkconfig: 345 35 55
+
+. /lib/lsb/init-functions
+
+# set these if you want to hard code the location of the config files:
+PVFS2_FS_CONF=
+# override this if your server binary resides elsewhere
+PVFS2SERVER=/usr/local/sbin/pvfs2-server
+# override this if you want servers to automatically pick a conf file,
+#   but you just need to specify what directory they are in
+PVFS2_CONF_PATH=/etc
+
+# the server will record its PID in this file
+PVFS2_PIDFILE=/var/run/pvfs2.pid
+
+# verify presence of server binary
+if ! [ -x ${PVFS2SERVER} ]; then
+	echo "Error: could not find executable ${PVFS2SERVER}"
+	exit 1
+fi
+
+# look for fs conf
+if test "x$PVFS2_FS_CONF" = x
+then
+	PVFS2_FS_CONF=${PVFS2_CONF_PATH}/pvfs2-fs.conf
+fi
+if ! [ -r ${PVFS2_FS_CONF} ]; then
+	echo "Error: could not read ${PVFS2_FS_CONF}"
+	exit 1
+fi
+
+# See how we were called.
+case "$1" in
+  start)
+	echo -n "Starting PVFS2 server: "
+	start-stop-daemon --start --exec ${PVFS2SERVER} -- -p ${PVFS2_PIDFILE} ${PVFS2_FS_CONF}
+	echo
+	;;
+  stop)
+	echo -n "Stopping PVFS2 server: "
+	echo
+	start-stop-daemon --stop --oknodo  --pidfile ${PVFS2_PIDFILE}
+	;;
+  status)
+        status_of_proc -p ${PVFS2_PIDFILE} ${PVFS2SERVER} pvfs2-server && exit 0 || exit $?
+	;;
+  restart)
+	$0 stop
+	# give server time to die cleanly
+	sleep 2
+	$0 start
+	;;
+  *)
+	echo "Usage: $0 {start|stop|status|restart}"
+	exit 1
+esac
+
+exit 0
+
