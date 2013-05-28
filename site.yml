@@ -14,3 +14,4 @@
 - include: roles/mdce.yml
 - include: roles/hadoop.yml
 - include: roles/pvfs2.yml
+- include: roles/ceph.yml

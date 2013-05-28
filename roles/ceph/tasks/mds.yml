@@ -1,0 +1,5 @@
+---
+- action: file dest=/var/lib/ceph/mds/ceph-${ceph-idx} state=directory
+  tags:
+    - ceph
+  
