@@ -1,0 +1,267 @@
+Notes on deploying ceph *manually*
+==================================
+
+Most of the docs on setting up ceph either use `ceph-deploy` or
+`mkcephfs`. However, these tools are not suitable for an automatic
+deploying system like Ansible, CFEngie or Puppet, and they hide a lot
+of the complexity behind the process. However, hiding the complexity
+of the instlalation is good only when things goes smoothly, while when
+you are trying to understand why it didn't work you find yourself
+clueless on how to debug the problems.
+
+Here I'm writing a few notes on a *manual* ceph deployment, stuff I've
+found out trying to create the ansible playbooks.
+
+The stuff I am not sure about are marked as **NOT SURE:**. The other
+stuff I am pretty confident that, at the time of writing 
+(28.05.2013, ceph version 0.61.2), is working as I am saying.
+
+**NOT SURE:** however, I sometimes make mistakes too :)
+
+Background
+----------
+
+To setup ceph you need:
+
+1) one or more monitor nodes
+2) one or more osd nodes
+3) *optionally*, one or more mds nodes
+
+Unless you are explicitly disabling the ``cephx`` authentication
+(http://ceph.com/docs/next/rados/operations/authentication/#disabling-cephx),
+one of the things you can find tricky is setting up the monitor node,
+especially the keyring.
+
+The easiest way to create a working keyring is to create it on one of
+the node and then copying it in the correct locations of the various
+nodes. This is what I've done, and it work. I am pretty sure that I'm
+copying *more* information than the necessary though...
+
+Since a ceph cluster needs at least one monitor node, I am creating
+the keyring in the monitor node and then copying the file to the other
+nodes.
+
+Setting up the monitor node
+---------------------------
+
+Setting up a monitor (in our case) consists of the following steps:
+
+1) create a keyring. The keyring will have keys and correct
+   capabilities for the following services/clients:
+
+   ``mon.`` 
+       this is, as far as I understood, the key that will be
+       shared among all the monitor nodes. **NOT SURE:** I don't know
+       if you need one key for all of them or you may just have one
+       key for each one of them and share all of them. However, I have
+       both...
+
+   ``client.admin``
+       this will be used by the administrative commands,
+       and can be used to mount the ``cephfs`` filesystem.
+
+   ``osd.<name>``
+       one key for each osd node.
+
+   ``mds.<name>``
+       one key for each mds node.
+
+2) Bootstrapping the monitor
+   (http://ceph.com/docs/master/dev/mon-bootstrap/).
+
+Creating the keyring
+++++++++++++++++++++
+
+The first step is quite easy, I use ``/etc/ceph/ceph.mon.keyring`` as
+temporary keyring file, and then I will copy this file in the
+locations where the various daemons are expecting to find it. I run
+all these commands in the first monitor node.
+
+First of all you have to create a shared key with the special name
+``mon.`` (it's not a typo, it's exactly: `m`, `o`, `n` and `.` (dot))
+
+This is the command::
+
+  ceph-authtool /etc/ceph/ceph.mon.keyring --create-keyring \
+      --gen-key -n mon. \
+      --cap mon 'allow *'
+
+Since the file is missing, we use the ``-create-keyring`` option, and
+we also have to specify the capabilities with ``--cap mon 'allow *'``.
+
+Then we create a key for the ``client.admin`` user, which is used by
+the administrative commands and can be used to mount the cephfs
+filesystem::
+
+    ceph-authtool /etc/ceph/ceph.mon.keyring --gen-key \
+        -n client.admin \
+        --cap mon 'allow *' \
+        --cap osd 'allow *' \
+        --cap mds 'allow *'
+
+In this case the user will need to access all the various services,
+*mon*, *osd* and *mds*.
+
+Then, we need one mds key for each metadata server. They all need to
+access also the monitor and the OSDs::
+
+    for mdsname in $mdslist
+    do
+        ceph-authtool /etc/ceph/ceph.mon.keyring --gen-key \
+            -n mds.$mdsname \
+            --cap mds 'allow *' \
+            --cap osd 'allow *' \
+            --cap mon 'allow rwx'
+    done
+
+Do the same for the OSDs, but in this case the ``--cap`` options are
+different::
+
+    for osdname in $osdlist
+    do
+        ceph-authtool /etc/ceph/ceph.mon.keyring --gen-key \
+            -n osd.$osdname \
+            --cap osd 'allow *' \
+            --cap mon 'allow rwx'
+    done
+
+This file **must** be present in each ``mon data`` directory on each
+mon node. Usually, this is ``/var/lib/ceph/mon/ceph-<name>``, but *in
+principle* you should be able to change it.
+
+Bootstrapping the monitor
++++++++++++++++++++++++++
+
+This can be done in multiple ways. I used a *monmap* file, which
+contains information about the monitors belonging to the cluster (I
+will not enter in the discussion of quorum nodes, peers etc, please
+read the ceph documentation for that.)
+
+If you use the *monmap* way, you need to:
+
+1) create the *monmap* file
+2) run ``ceph-mon --mkfs --monmap <file> ...``
+
+There are a few issues with the *monmap* file, which is generated by
+the ``monmaptool``:
+
+* It does not take automatically information from the configuration
+  file ``/etc/ceph/ceph.conf``, you have to pass the ``-c`` option.
+
+* If you don't do it, and you use the ``--set-initial-members`` and
+  the ``-m`` option, it will use default values which are probably not
+  good for you.
+
+
+Before using the monmap file, I **strongly** suggest you to inspect
+its content with the ``monmaptool --print <filename>`` command. For
+instance, the following command::
+
+    root@ceph-mon001:~# monmaptool --create --generate -m ceph-mon001 /tmp/monmap.worng
+    monmaptool: monmap file /tmp/monmap.worng
+    monmaptool: generated fsid 5218f76d-ca8d-4f8d-8599-8802c327e7ae
+    monmaptool: writing epoch 0 to /tmp/monmap.worng (1 monitors)
+
+Will create a wrong file. To inspect its content run::
+
+    root@ceph-mon001:~# monmaptool --print /tmp/monmap.worng 
+    monmaptool: monmap file /tmp/monmap.worng
+    epoch 0
+    fsid 5218f76d-ca8d-4f8d-8599-8802c327e7ae
+    last_changed 2013-05-28 21:12:58.052174
+    created 2013-05-28 21:12:58.052174
+    0: 10.10.10.14:6789/0 mon.noname-a
+
+As you can see, the only monitor defined has the correct ip address but
+**wrong name**: ``mon.noname-a``.
+
+Also, the ``fsid`` is automatically generated every time you run the
+command, which means that if you already defined a ``fsid`` in the
+``/etc/ceph/ceph.conf`` configuration file, this *monmap* will **not**
+work!
+
+On the other hand, assuming the following snippet from the
+``/etc/ceph/ceph.conf``::
+
+    [global]
+        auth cluster required = cephx
+        auth service required = cephx
+        auth client required = cephx
+
+        fsid = 00baac7a-0ad4-4ab7-9d5e-fdaf7d122aee
+    [mon.0]
+        host = ceph-mon001
+        mon addr = 10.10.10.14:6789
+        mon data = /var/lib/ceph/mon/ceph-0
+    [mon.1]
+        host = ceph-mon002
+        mon addr = 10.10.10.17:6789
+        mon data = /var/lib/ceph/mon/ceph-1
+    [mon.2]
+        host = ceph-mon003
+        mon addr = 10.10.10.20:6789
+        mon data = /var/lib/ceph/mon/ceph-2
+
+Running ``monmaptool``::
+
+    root@ceph-mon001:~# monmaptool  --create --generate -c /etc/ceph/ceph.conf /tmp/monmap.right
+    monmaptool: monmap file /tmp/monmap.right
+    monmaptool: set fsid to 00baac7a-0ad4-4ab7-9d5e-fdaf7d122aee
+    monmaptool: writing epoch 0 to /tmp/monmap.right (3 monitors)
+
+Will correctly generate the monmap file::
+
+    root@ceph-mon001:~# monmaptool --print /tmp/monmap.right 
+    monmaptool: monmap file /tmp/monmap.right
+    epoch 0
+    fsid 00baac7a-0ad4-4ab7-9d5e-fdaf7d122aee
+    last_changed 2013-05-28 21:20:41.032373
+    created 2013-05-28 21:20:41.032373
+    0: 10.10.10.14:6789/0 mon.0
+    1: 10.10.10.17:6789/0 mon.1
+    2: 10.10.10.20:6789/0 mon.2
+
+After creating the *monmap* file you can create the *filesystem* in
+the ``mon data`` directory. This command has to be run **on each
+monitor node**, and replace ``$monname`` with the correct name (in the
+previous configuration, it would be `0`, `1` or `1`)::
+
+    ceph-mon --mkfs -i $monname --monmap /etc/ceph/monmap \
+        --keyring /etc/ceph/ceph.mon.keyring
+
+Now you should have a ``store.db`` directory in ``mon data``, and you
+should be able to run the mon with ``service ceph start``.
+
+Commands to check the status of the monitor:
+
+``ceph auth list``
+    prints the list of keys and their capabilites
+
+``ceph mon dump``
+    prints a list of the mon nodes, similar to the output of
+    ``monmaptool --print``
+
+``ceph status``
+    prints information about the status of the cluster.
+
+If something went wrong, follow the instructions on how to increase
+the debugging level at
+http://ceph.com/docs/master/rados/troubleshooting/log-and-debug/ and
+in case you need to run using strace, all the various ``ceph-mon``,
+``ceph-osd`` and ``ceph-mds`` daemon accept a ``-d`` option to run in
+foreground and print information on the standard output instaead of
+the log file. Unfortunately not all the messages are meaningful...
+
+
+Setting up the OSD
+------------------
+
+1) Copy the key from the monitor node
+2) create the filesystem.
+   ceph-disk does not create all the needed files! I had to run also
+   ceph-osd --mkfs --mkjournal
+3) run ``ceph osd create``
+
+ceph-disk list show information on the disk
+
+

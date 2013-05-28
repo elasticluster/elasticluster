@@ -26,6 +26,15 @@
   vars_files:
     - vars/os
   tasks:
+    - include: ceph/tasks/mon_0.yml
+  handlers:
+    - include: common/handlers/main.yml
+    - include: ceph/handlers/main.yml
+
+- hosts: ceph_mon
+  vars_files:
+    - vars/os
+  tasks:
     - include: ceph/tasks/mon.yml
   handlers:
     - include: common/handlers/main.yml
