@@ -32,13 +32,14 @@
 
     osd mkfs type = xfs
     devs = /dev/vdb1
-    osd data = /var/lib/ceph/osd/ceph-{{ loop.index0 }}
     osd addr = {{ hostvars[host].ansible_default_ipv4.address }}:6789
+    osd data = /var/lib/ceph/osd/ceph-{{ loop.index0 }}
 
 {% endfor %}
 
 {% for host in groups['ceph_mds']|sort %}
 [mds.{{ loop.index0 }}]
     host = {{ host }}
+    mds addr = {{ hostvars[host].ansible_default_ipv4.address }}:6789
     mds data = /var/lib/ceph/mds/ceph-{{ loop.index0 }}
 {% endfor %}

@@ -17,6 +17,7 @@
   with_items:
     - ceph
     - pdsh
+    - linux-image-extra-$ansible_kernel
   tags:
     - ceph
 
