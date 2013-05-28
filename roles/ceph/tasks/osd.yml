@@ -1,47 +1,59 @@
 ---
-# TEST
-- name: unmount ephemeral disk
-  action: shell umount /mnt ; true
+- name: Check if partition is ceph-active
+  only_if: '"${ceph-devs.{$devs}.state}" != "active"'
+  action: shell umount $devs; umount $osd_disk; ceph-disk-prepare --zap-disk $osd_disk
   tags:
     - ceph
-# END TEST
 
 - name: create osd directory
-  action: file dest=/var/lib/ceph/osd/ceph-${ceph-idx} state=directory
+  action: file dest=${osd-data} state=directory
   tags:
     - ceph
 
-- name: Check if device exists
-  action: shell ceph-disk list | grep "/dev/vdb"
-  ignore_errors: yes
-  register: device_is_created
+- name: Mount osd disk
+  action: shell mount | grep ${devs} || mount ${devs} ${osd-data}
   tags:
     - ceph
+    - test
 
-- name: Ensure the filesystem is not mounted
-  action: shell umount /dev/vdb1 ; true
-  only_if: '"${device_is_created.stdout}".find("ceph data, prepared") == -1'
-  tags:
-    - ceph
+# - name: Check if device exists
+#   action: shell ceph-disk list | grep "/dev/vdb"
+#   ignore_errors: yes
+#   register: device_is_created
+#   tags:
+#     - ceph
+
+# - name: Ensure the filesystem is not mounted
+#   action: shell umount /dev/vdb1 ; true
+#   only_if: '"${device_is_created.stdout}".find("ceph data, prepared") == -1'
+#   tags:
+#     - ceph
     
 
-- name: Prepare disk
-  action: shell ceph-disk-prepare --zap-disk /dev/vdb
-  only_if: '"${device_is_created.stdout}".find("ceph data, prepared") == -1'
-  tags:
-    - ceph
+# - name: Prepare disk
+#   action: shell ceph-disk-prepare --zap-disk /dev/vdb
+#   only_if: '"${device_is_created.stdout}".find("ceph data, prepared") == -1'
+#   tags:
+#     - ceph
 
-- name: Prepare to write whoami file
-  action: shell umount /dev/vdb1; mount /dev/vdb1 /var/lib/ceph/osd/ceph-${ceph-idx}
+# - name: Prepare to write whoami file
+#   action: shell umount /dev/vdb1; mount /dev/vdb1 /var/lib/ceph/osd/ceph-${ceph-idx}
+#   tags:
+#     - ceph
+
+- name: Copying keyring from mon.0
+  action: shell scp root@${groups.ceph_mon[0]}:/etc/ceph/ceph.mon.keyring /etc/ceph/keyring
+          creates=/etc/ceph/keyring
   tags:
     - ceph
+    - test
 
 - name: Copy mon keyring
-  action: shell cp -a /etc/ceph/keyring /var/lib/ceph/osd/ceph-${ceph-idx}/keyring
-          creates=/var/lib/ceph/osd/ceph-${ceph-idx}/keyring
+  action: shell cp -a /etc/ceph/keyring ${osd-data}/keyring
+          creates=${osd-data}/keyring
   tags:
     - ceph
-
+    - test
 
 # - name: Create whoami file
 #   action: copy content=${ceph-idx} dest=/var/lib/ceph/osd/ceph-${ceph-idx}/whoami force=yes
@@ -54,19 +66,27 @@
 # (containing the id of the node) and the `current` dir. However, the
 # ceph-osd --mkfs command does...
 
-- name: Copy mon keyring
+- name: 'Create (once more!) the fs on the osd data directory'
   action: shell ceph-osd -i ${ceph-idx}  -c /etc/ceph/ceph.conf -d --mkfs --mkjournal
-          creates=/var/lib/ceph/osd/ceph-${ceph-idx}/current
+          creates=${osd-data}/current
   tags:
     - ceph
+    - test
 
-- name: Unmount ceph fs
-  action: shell unmount /dev/vdb1 ; true
+- name: Create OSD
+  action: shell ceph osd dump | grep ^osd.${ceph-idx} || ceph osd create
   tags:
     - ceph
+    - test
+
+# - name: Unmount ceph fs
+#   action: shell unmount /dev/vdb1 ; true
+#   tags:
+#     - ceph
 
 
 - name: Ensure ceph-osd is running
   action: service name=ceph state=started
   tags:
     - ceph
+    - test

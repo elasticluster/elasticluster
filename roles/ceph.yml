@@ -4,6 +4,7 @@
     - vars/os
   vars:
     - fsid: 00baac7a-0ad4-4ab7-9d5e-fdaf7d122aee
+    - osd_devs: /dev/vdb1
   tasks:
     - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: common/tasks/hostname.yml
@@ -33,6 +34,8 @@
 - hosts: ceph_osd
   vars_files:
     - vars/os
+  vars:
+    - osd_disk: /dev/vdb
   tasks:
     - include: ceph/tasks/osd.yml
   handlers:

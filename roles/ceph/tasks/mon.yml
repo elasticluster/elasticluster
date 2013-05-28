@@ -78,14 +78,14 @@
   tags:
     - ceph
 
-- name: Copy keyring to the mon nodes
-  action: shell scp /etc/ceph/ceph.mon.keyring root@$item:/etc/ceph/
-  with_items: ${groups.ceph_mon}
-  register: client_admin_key 
-  only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
-  tags:
-    - ceph
-    - test
+# - name: Copy keyring to the mon nodes
+#   action: shell scp /etc/ceph/ceph.mon.keyring root@$item:/etc/ceph/
+#   with_items: ${groups.ceph_mon}
+#   register: client_admin_key 
+#   only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
+#   tags:
+#     - ceph
+#     - test
 
 - name: copy keyring in /etc/ceph/keyring
   action: shell cp -a /etc/ceph/ceph.mon.keyring /etc/ceph/keyring
@@ -99,21 +99,21 @@
   tags:
     - ceph
 
-- name: Copy keyring to the osd nodes
-  action: shell scp /etc/ceph/ceph.mon.keyring root@$item:/etc/ceph/keyring
-  with_items: ${groups.ceph_osd}
-  register: client_admin_key 
-  only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
-  tags:
-    - ceph
+# - name: Copy keyring to the osd nodes
+#   action: shell scp /etc/ceph/ceph.mon.keyring root@$item:/etc/ceph/keyring
+#   with_items: ${groups.ceph_osd}
+#   register: client_admin_key 
+#   only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
+#   tags:
+#     - ceph
 
-- name: Copy keyring to the mds nodes
-  action: shell scp /etc/ceph/ceph.mon.keyring root@$item:/etc/ceph/keyring
-  with_items: ${groups.ceph_mds}
-  register: client_admin_key 
-  only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
-  tags:
-    - ceph
+# - name: Copy keyring to the mds nodes
+#   action: shell scp /etc/ceph/ceph.mon.keyring root@$item:/etc/ceph/keyring
+#   with_items: ${groups.ceph_mds}
+#   register: client_admin_key 
+#   only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
+#   tags:
+#     - ceph
 
 - name: Create monmapfile
   action: shell  monmaptool --create --generate -c /etc/ceph/ceph.conf /etc/ceph/monmap
@@ -132,10 +132,10 @@
   tags:
     - ceph
 
-- name: Create OSDs
-  action: shell ceph osd ls | egrep ^${hostvars.{$item}.ceph-idx}$ ||  ceph osd create; sleep 1
-  with_items: ${groups.ceph_osd}
-  only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
-  tags:
-    - ceph
+# - name: Create OSDs
+#   action: shell ceph osd dump | egrep "^osd.${hostvars.{$item}.ceph-idx} " ||  ceph osd create; sleep 2
+#   with_items: ${groups.ceph_osd}
+#   only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
+#   tags:
+#     - ceph
 
