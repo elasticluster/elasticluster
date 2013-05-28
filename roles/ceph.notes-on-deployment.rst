@@ -67,7 +67,7 @@ Setting up a monitor (in our case) consists of the following steps:
        one key for each mds node.
 
 2) Bootstrapping the monitor
-   (http://ceph.com/docs/master/dev/mon-bootstrap/).
+   (cfr. also http://ceph.com/docs/master/dev/mon-bootstrap/)
 
 Creating the keyring
 ++++++++++++++++++++
@@ -256,6 +256,8 @@ the log file. Unfortunately not all the messages are meaningful...
 Setting up the OSD
 ------------------
 
+**TODO**
+
 1) Copy the key from the monitor node
 2) create the filesystem.
    ceph-disk does not create all the needed files! I had to run also
@@ -264,4 +266,98 @@ Setting up the OSD
 
 ceph-disk list show information on the disk
 
+In principle you don't need to store ``osd data`` on a different disk,
+but:
 
+* /etc/init.d/ceph assumes it and tries to mount the filesystem if
+  it's not mounted, and fails if no ``devs`` is defined.
+
+* for the same reason, the init script fails if no ``osd mkfs type``
+  is defined, because it uses it to know how to mount the device in
+  the ``osd data`` directory.
+
+* you need specific features of the filesystem that may not be present
+  in the default filesystem.
+
+* I am not sure how ceph deal with the available space if you have a
+  promiscuous data directory.
+
+* I think that some other parts of the code is assuming that the data
+  directory is on a separate filesystem.
+
+Setting up the MDS
+------------------
+
+This is the easiest step. You only have to copy the related key in
+``mds data``.
+
+**TODO**
+
+Notes on the configuration file
+-------------------------------
+
+A few random remarks:
+
+* I had to **remove** the ``mon initial members`` option from the
+  configuration file. Apparently, having this option caused the
+  monitors to *never* establish the quorum, even when it was the only
+  monitor node.
+
+* I put ``osd addr``, ``mon addr`` and ``mds addr`` for all the
+  hosts. I had a few problems not putting them in the configuration
+  file, not sure which ones though, and I am still not sure they are
+  needed.
+
+* **NOT SURE** I am not sure if you can actually use the same
+  directory for all the services, or all the osd services. You
+  probably can, but I still feel that some parts of the code is
+  looking for ``/var/lib/ceph/osd/ceph-<name>``, for instance for
+  OSDs, so I followed the same syntax.
+
+* *in principle*, you don't need to dedicate a volume for the osd data
+  dir; however, the init script in ``/etc/init.d/ceph`` will file if
+  you don't use one, and I think that other parts of the code is
+  assuming the the data directory actually resides on an external
+  filesystem. This means that **you need** to define ``devs`` and
+  ``osd mkfs type`` in the configuration file.
+
+Mounting CephFS
+---------------
+
+Assuming everything went well, assuming you have at least *one*
+**mds** node, mounting the ceph filesystem is quite easy.
+
+1) First of all, you need to load the ``ceph`` kernel module::
+
+       module load ceph
+
+2) then, you need to use a key of an usre that has the right
+   capabilites. **NOT SURE** which these are, but the ``client.admin``
+   user we created at the beginning works. Run the command::
+
+       ceph auth list
+
+   and then look for an output similar to::
+
+       client.admin
+        key: AQCQH6VRQEAPBxAAro3n7bvA8oYUKt5CevCdDg==
+
+   The base64-encoded string after ``key: `` is the key.
+
+3) mount the filesystem using the key of the ``client.admin`` user::
+
+       mount -t ceph <mon-ip>:6789:/ /mnt -o name=admin,secret=<key>
+
+   where:
+
+   ``<mon-ip>``
+       is the ip or the hostname of one of the monitor hosts
+
+   ``name=admin``
+       is the user you want to use. In this case, ``name=admin`` means
+       that the monitor will check that the following ``secret``
+       corresponds to the key of the ``client.admin`` user.
+
+   ``secret=<key>``
+       is the key of the ``client.admin`` user (or ``client.<foo>`` if
+       you specified the ``name=<foo>`` option)
