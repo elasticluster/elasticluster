@@ -1,11 +1,12 @@
 ---
-- name: Install gluster
+- name: Install glusterfs packages
   action: apt name=$item state=installed update_cache=yes
   with_items:
     - glusterfs-server
     - glusterfs-client
   tags:
     - gluster
+  only_if: $is_ubuntu
 # add-apt-repository ppa:semiosis/ubuntu-glusterfs-3.3
 # apt-get update
 
