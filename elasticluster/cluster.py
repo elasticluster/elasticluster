@@ -137,7 +137,7 @@ class Cluster(object):
         # we successfully connect to all of them.
         signal.signal(signal.SIGALRM, timeout_handler)
         signal.alarm(Cluster.startup_timeout)
-        pending_nodes = self.get_all_nodes()
+        pending_nodes = self.get_all_nodes()[:]
 
         try:
             while pending_nodes:
@@ -398,7 +398,6 @@ class ClusterStorage(object):
         db_json = json.dumps(db)
 
         db_path = self._get_json_path(cluster.name)
-        self._clear_storage(db_path)
 
         f = open(db_path, 'w')
         f.write(unicode(db_json))
