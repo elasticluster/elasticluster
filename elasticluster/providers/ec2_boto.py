@@ -192,6 +192,29 @@ class BotoCloudProvider(AbstractCloudProvider):
         keypairs = connection.get_all_key_pairs()
         keypairs = dict((k.name, k) for k in keypairs)
 
+        # decide if dsa or rsa key is provided
+        pkey = None
+        is_dsa_key = False
+        try:
+            pkey = DSSKey.from_private_key_file(private_key_path)
+            is_dsa_key = True
+        except PasswordRequiredException:
+            raise KeypairError(
+                "Key `%s` is encrypted with a password. Please, use"
+                "an unencrypted key or use ssh-agent" %
+                private_key_path)
+        except SSHException:
+            try:
+                pkey = RSAKey.from_private_key_file(private_key_path)
+            except PasswordRequiredException:
+                raise KeypairError(
+                    "Key `%s` is encrypted with a password. Please, use"
+                    "an unencrypted key or use ssh-agent" %
+                    private_key_path)
+            except SSHException:
+                raise KeypairError('File `%s` is neither a valid DSA key '
+                                   'or RSA key.' % private_key_path)
+
         # create keys that don't exist yet
         if name not in keypairs:
             log.warning(
@@ -200,7 +223,15 @@ class BotoCloudProvider(AbstractCloudProvider):
             with open(os.path.expanduser(public_key_path)) as f:
                 key_material = f.read()
                 try:
-                    # TODO check if given key is a public key file
+                    # check for DSA on amazon
+                    if "amazon" in self._ec2host and is_dsa_key:
+                        log.error(
+                            "Apparently, amazon does not support DSA keys. "
+                            "Please specify a valid RSA key.")
+                        raise KeypairError(
+                            "Apparently, amazon does not support DSA keys."
+                            "Please specify a valid RSA key.")
+
                     connection.import_key_pair(name, key_material)
                 except Exception, ex:
                     log.error(
@@ -211,27 +242,6 @@ class BotoCloudProvider(AbstractCloudProvider):
         else:
             # check fingerprint
             cloud_keypair = keypairs[name]
-
-            # decide if dsa or rsa, any better ideas? :)
-            pkey = None
-            try:
-                pkey = DSSKey.from_private_key_file(private_key_path)
-            except PasswordRequiredException:
-                raise KeypairError(
-                    "Key `%s` is encrypted with a password. Please, use"
-                    "an unencrypted key or use ssh-agent" %
-                    private_key_path)
-            except SSHException:
-                try:
-                    pkey = RSAKey.from_private_key_file(private_key_path)
-                except PasswordRequiredException:
-                    raise KeypairError(
-                        "Key `%s` is encrypted with a password. Please, use"
-                        "an unencrypted key or use ssh-agent" %
-                        private_key_path)
-                except SSHException:
-                    raise KeypairError('File `%s` is neither a valid DSA key '
-                                       'or RSA key.' % private_key_path)
 
             if pkey:
                 fingerprint = str.join(
