@@ -361,6 +361,7 @@ compute=2
 
 [cluster/matlab]
 cloud=hobbes
+login=gc3-user
 setup_provider=ansible_matlab
 security_group=default
 image_id=ami-00000099
