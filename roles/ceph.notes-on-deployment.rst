@@ -25,9 +25,10 @@ To setup ceph you need:
 
 1) one or more monitor nodes
 2) one or more osd nodes
-3) *optionally*, one or more mds nodes
+3) *optionally*, one or more mds nodes (they are needed for cephfs,
+   but not for rados/rbd)
 
-Unless you are explicitly disabling the ``cephx`` authentication
+Unless you are explicitly disabled the ``cephx`` authentication
 (http://ceph.com/docs/next/rados/operations/authentication/#disabling-cephx),
 one of the things you can find tricky is setting up the monitor node,
 especially the keyring.
@@ -35,11 +36,11 @@ especially the keyring.
 The easiest way to create a working keyring is to create it on one of
 the node and then copying it in the correct locations of the various
 nodes. This is what I've done, and it work. I am pretty sure that I'm
-copying *more* information than the necessary though...
+copying *more* stuff than the necessary though...
 
 Since a ceph cluster needs at least one monitor node, I am creating
-the keyring in the monitor node and then copying the file to the other
-nodes.
+the keyring in the first monitor node and then copying the file to the
+other nodes.
 
 Setting up the monitor node
 ---------------------------
@@ -127,7 +128,13 @@ different::
 
 This file **must** be present in each ``mon data`` directory on each
 mon node. Usually, this is ``/var/lib/ceph/mon/ceph-<name>``, but *in
-principle* you should be able to change it.
+principle* you should be able to change it. For instances, if the
+monitor ``mon.0`` has ``mon data`` equals to
+``/var/lib/ceph/mon/ceph-0``, you are supposed to copy the
+``/etc/ceph/ceph.mon.keyring`` file to
+``/var/lib/ceph/mon/ceph-0/keyring``
+
+The same of course applies for *all* the various monitor nodes.
 
 Bootstrapping the monitor
 +++++++++++++++++++++++++
@@ -256,20 +263,13 @@ the log file. Unfortunately not all the messages are meaningful...
 Setting up the OSD
 ------------------
 
-**TODO**
+Setting up the OSD can be tricky because even though in principle you
+don't need to store the ``osd data`` directory on a dedicated
+filesystem, this is what you are *supposed* to do, so if you try to
+just use a directory on the filesystem as osd data directory, you will
+find out that:
 
-1) Copy the key from the monitor node
-2) create the filesystem.
-   ceph-disk does not create all the needed files! I had to run also
-   ceph-osd --mkfs --mkjournal
-3) run ``ceph osd create``
-
-ceph-disk list show information on the disk
-
-In principle you don't need to store ``osd data`` on a different disk,
-but:
-
-* /etc/init.d/ceph assumes it and tries to mount the filesystem if
+* ``/etc/init.d/ceph`` assumes it and tries to mount the filesystem if
   it's not mounted, and fails if no ``devs`` is defined.
 
 * for the same reason, the init script fails if no ``osd mkfs type``
@@ -283,15 +283,175 @@ but:
   promiscuous data directory.
 
 * I think that some other parts of the code is assuming that the data
-  directory is on a separate filesystem.
+  directory is on a separate filesystem, so if you don't do it
+  something strange could happen...
+
+The following steps assume, therefore, that we are going to use a
+whole disk for the osd. The configuration file used for the following
+example is as follow::
+
+    [osd.0]
+        host = ceph-osd001
+
+        osd journal size = 1000
+
+        osd mkfs type = xfs
+        devs = /dev/sdb1
+        osd addr = 10.10.10.25:6789
+        osd data = /var/lib/ceph/osd/ceph-0
+
+
+Preparing the data directory
+++++++++++++++++++++++++++++
+
+So, the first problem is setting up the filesystem. There is a tool,
+``ceph-disk`` that should take care of:
+
+* partitioning the disk (two partitions are required, one for data and
+  the other for the journal file)
+* formatting them (xfs is the preferred filesystem so far)
+* creating the directories the osd daemon is expecting to
+  find.
+
+Unfortunately the last step is not done correctly, and if you only use
+``ceph-disk`` to format the disk the osd daemon will complain that the
+``whoami`` file and the ``current`` directory are not found. However,
+the ``ceph-osd`` daemon also accept two options: ``--mkfs`` and
+``-mkjournal`` which allows you to create all the missing
+directories.
+
+To recap, assuming that you want to use ``/dev/sdb1`` partition for
+ceph data directory, and thus you are using the whole ``/dev/sdb``
+disk for ceph (data and journal), you have to run::
+
+    ceph-disk-prepare --zap-disk /dev/sdb
+
+The ``--zap-disk`` option will delete all the existing partitions, and
+it's not needed if the disk is unpartitioned.
+
+Running ``ceph-disk list`` will show you the various disk available on
+the machine and some more information on the ceph partitions::
+
+    ceph-disk list
+    /dev/sda :
+     /dev/sda1 other, ext4, mounted on /
+    /dev/sdb :
+     /dev/sdb1 ceph data, prepared, cluster ceph, journal /dev/sdb2
+     /dev/sdb2 ceph journal, for /dev/sdb1
+
+As you can see, two partitions have been created. Please note that
+only the first partition will be actually mounted, while the second
+one will be used *raw*, with a link ``journal`` on the filesystem of
+the first device pointing to the raw device.
+
+As stated before, this is not enough to make ``ceph-osd`` happy, so
+you have to also run the following command::
+
+    ceph-osd -i $osdname -c /etc/ceph/ceph.conf --mkfs --mkjournal
+
+As usual, replace ``$osdname`` with the name of the osd. In my case,
+this was ``0`` for the first osd.
+
+The above command will create on the ``osd data`` directory a file
+called ``whoami`` (which only contain the name of the osd) and a
+directory ``current`` which will contain the actual objects stored in
+the osd.
+
+Now you can copy the keyring on the osd
+
+Copying the keyring
++++++++++++++++++++
+
+Like we did for the monitor node, also the OSDs need a keyring in the
+``osd data`` directory. In this case, however, you don't need the
+whole keyring, but just the osd key. For semplicity I've copied the
+whole keyring file instead in
+``/var/lib/ceph/osd/ceph-$osdname/keyring``.
+
+
+Create the osd also on the monitor node
++++++++++++++++++++++++++++++++++++++++
+
+Apart from the configuration file, the monitor nodes does not know
+anything about the osd you just installed, so you have to create
+one. This can be done on any machine that can access as administrator
+to the monitors, which means that the machine must have:
+
+1) the correct ``/etc/ceph/ceph.conf`` file, with the list of the
+   monitor nodes
+2) a keyring in ``/etc/ceph/keyring`` with the key named
+   ``client.admin``. This key must have the  correct capabilites on
+   the monitor nodes; in the section `Setting up the monitor node`_
+   section we already created this user.
+
+Assuming the authentication work the command to issue is::
+
+    ceph osd create
+
+This will create *the next* osd. For instance, the first time you run
+it it will create the ``osd.0`` osd, the second time it will create
+``osd.1`` etc. Don't ask me why it does not accept a name, and what
+happen if you call your osd differently. If you named your osd like I
+did (osd.0, osd.1, osd.2 ...) it will work.
+
+To display information about the OSDs you can run the following
+commands::
+
+    root@ceph-osd001:~# ceph osd dump
+     
+    epoch 8
+    fsid 00baac7a-0ad4-4ab7-9d5e-fdaf7d122aee
+    created 2013-05-28 21:34:46.652843
+    modified 2013-05-28 21:37:38.239213
+    flags 
+
+    pool 0 'data' rep size 2 min_size 1 crush_ruleset 0 object_hash rjenkins pg_num 64 pgp_num 64 last_change 1 owner 0 crash_replay_interval 45
+    pool 1 'metadata' rep size 2 min_size 1 crush_ruleset 1 object_hash rjenkins pg_num 64 pgp_num 64 last_change 1 owner 0
+    pool 2 'rbd' rep size 2 min_size 1 crush_ruleset 2 object_hash rjenkins pg_num 64 pgp_num 64 last_change 1 owner 0
+
+    max_osd 5
+    osd.0 up   in  weight 1 up_from 6 up_thru 7 down_at 0 last_clean_interval [0,0) 10.10.10.25:6800/23196 10.10.10.25:6801/23196 10.10.10.25:6802/23196 exists,up 894de0fa-a274-4d6b-b658-7fe3b193299f
+    osd.1 up   in  weight 1 up_from 6 up_thru 7 down_at 0 last_clean_interval [0,0) 10.10.10.29:6800/23309 10.10.10.29:6801/23309 10.10.10.29:6802/23309 exists,up 63cd9719-2028-4c2d-a907-b510bffc4151
+    osd.2 up   in  weight 1 up_from 5 up_thru 7 down_at 0 last_clean_interval [0,0) 10.10.10.32:6800/23335 10.10.10.32:6801/23335 10.10.10.32:6802/23335 exists,up 1554a8b7-a202-47d8-b7ed-abe9b715bda4
+    osd.3 up   in  weight 1 up_from 6 up_thru 6 down_at 0 last_clean_interval [0,0) 10.10.10.34:6800/23348 10.10.10.34:6801/23348 10.10.10.34:6802/23348 exists,up 3c56ee02-1740-4615-aef3-a0d0f25e09b0
+    osd.4 up   in  weight 1 up_from 6 up_thru 7 down_at 0 last_clean_interval [0,0) 10.10.10.36:6800/23410 10.10.10.36:6801/23410 10.10.10.36:6802/23410 exists,up f522dd99-c8b2-411e-88d9-d4bda8b940a1
+
+or::
+
+    root@ceph-osd001:~# ceph osd tree
+
+    # id	weight	type name	up/down	reweight
+    -1	0.04997	root default
+    -2	0.009995		host ceph-osd003
+    2	0.009995			osd.2	up	1	
+    -3	0.009995		host ceph-osd005
+    4	0.009995			osd.4	up	1	
+    -4	0.009995		host ceph-osd002
+    1	0.009995			osd.1	up	1	
+    -5	0.009995		host ceph-osd001
+    0	0.009995			osd.0	up	1	
+    -6	0.009995		host ceph-osd004
+    3	0.009995			osd.3	up	1	
+
 
 Setting up the MDS
 ------------------
 
 This is the easiest step. You only have to copy the related key in
-``mds data``.
+``mds data``. Also for the mds you don't need the whole keyring, but
+only the key related to the specific mds. I've copied the whole
+keyring though...
 
-**TODO**
+Assuming this is the piece of the configuration file related to the
+mds::
+
+    [mds.0]
+        host = ceph-mds001
+        mds addr = 10.10.10.21:6789
+        mds data = /var/lib/ceph/mds/ceph-0
+
+you have to copy the keyring in ``/var/lib/ceph/mds/ceph-0/keyring``
+
 
 Notes on the configuration file
 -------------------------------
