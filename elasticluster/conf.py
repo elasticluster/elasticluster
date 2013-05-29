@@ -299,21 +299,15 @@ class ConfigValidator(object):
             if os.path.exists(f):
                 return f
             else:
-                raise MultipleInvalid("file could not be found `%s`" % v)
+                raise Invalid("file could not be found `%s`" % v)
 
         # schema to validate all cluster properties
-        schema = {"cloud": Any({"provider": 'ec2_boto',
-                                "ec2_url": Url(str),
-                                "ec2_access_key": All(str, Length(min=1)),
-                                "ec2_secret_key": All(str, Length(min=1)),
-                                "ec2_region": All(str, Length(min=1)),
-                                },
-                               {"provider": 'google',
-                                "client_id": All(str, Length(min=1)),
-                                "client_secret": All(str, Length(min=1)),
-                                "project_id": All(str, Length(min=1)),
-                                }
-                               ),
+        schema = {"cloud": {"provider": 'ec2_boto',
+                            "ec2_url": Url(str),
+                            "ec2_access_key": All(str, Length(min=1)),
+                            "ec2_secret_key": All(str, Length(min=1)),
+                            "ec2_region": All(str, Length(min=1)),
+                            },
                   "cluster": {"cloud": All(str, Length(min=1)),
                               "setup_provider": All(str, Length(min=1)),
                               "login": All(str, Length(min=1)),
@@ -341,13 +335,13 @@ class ConfigValidator(object):
         validator_node = Schema(node_schema, required=True, extra=True)
 
         if not self.config:
-            raise MultipleInvalid("No clusters found in configuration.")
+            raise Invalid("No clusters found in configuration.")
 
         for cluster, properties in self.config.iteritems():
             validator(properties)
 
             if 'nodes' not in properties or len(properties['nodes']) == 0:
-                raise MultipleInvalid(
+                raise Invalid(
                     "No nodes configured for cluster `%s`" % cluster)
 
             for node, props in properties['nodes'].iteritems():

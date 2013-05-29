@@ -17,155 +17,362 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
-
-
-import unittest
+import copy
 import os
+import tempfile
+import unittest
 
-from elasticluster.conf import Configuration, Configurator
-from elasticluster.cluster import Node, Cluster, ClusterStorage
-from elasticluster.providers import AbstractCloudProvider, AbstractSetupProvider
-from elasticluster.providers.cloud_providers import BotoCloudProvider
-
-from test import config_cloud_ec2_url, config_cloud_provider,\
-    config_cloud_ec2_access_key, config_cloud_ec2_secret_key,\
-    config_cloud_ec2_region, config_setup_provider, config_setup_playbook_path,\
-    config_cloud_name, config_cluster_name, config_cluster_cloud,\
-    config_cluster_frontend, config_cluster_compute,\
-    config_login_user_key_public, config_login_user_key_name,\
-    config_login_image_user, config_frontend_security_group,\
-    config_frontend_image, config_frontend_image_userdata,\
-    config_frontend_flavor,\
-    config_compute_security_group, config_compute_image,\
-    config_compute_image_userdata, config_compute_flavor,\
-    config_storage_path, config_setup_name,\
-    config_cluster_setup_provider, config_cluster_login, config_login_name,\
-    config_login_image_user_sudo, config_login_image_sudo,\
-    config_login_user_key_private, config_setup_frontend_groups,\
-    config_setup_compute_groups
-    
-
-class TestConfigurator(unittest.TestCase):
+from voluptuous.voluptuous import MultipleInvalid
 
 
-    def test_create_cloud_provider(self):
-        configurator = Configurator()
-        cloud_provider = configurator.create_cloud_provider(config_cloud_name)
-        
-        assert cloud_provider
-        assert isinstance(cloud_provider, AbstractCloudProvider)
-        assert cloud_provider._url == config_cloud_ec2_url
-        assert cloud_provider._region_name == config_cloud_ec2_region
-        assert cloud_provider._access_key == config_cloud_ec2_access_key
-        assert cloud_provider._secret_key == config_cloud_ec2_secret_key
-        
-    def test_create_cluster(self):
-        configurator = Configurator()
-        cluster = configurator.create_cluster(config_cluster_name)
-        
-        assert cluster
-        assert isinstance(cluster, Cluster)
-        assert cluster.name == config_cluster_name
-        assert cluster._cloud == config_cluster_cloud
-        assert isinstance(cluster._cloud_provider, AbstractCloudProvider)
-        assert cluster._frontend == int(config_cluster_frontend)
-        assert cluster._compute == int(config_cluster_compute)
-        assert isinstance(cluster._setup_provider, AbstractSetupProvider)
+from elasticluster.conf import ConfigReader, ConfigValidator
 
 
-    def test_create_node(self):
-        configurator = Configurator()
-        cloud_provider = BotoCloudProvider(config_cloud_ec2_url, config_cloud_ec2_region, config_cloud_ec2_access_key, config_cloud_ec2_secret_key)
-        node_frontend = configurator.create_node(config_cluster_name, Node.frontend_type, cloud_provider, "node001")
-        assert node_frontend
-        assert isinstance(node_frontend, Node)
-        assert node_frontend.name == "node001"
-        assert node_frontend.type == Node.frontend_type
-        assert node_frontend._cloud_provider == cloud_provider
-        assert node_frontend.user_key_public == os.path.expanduser(config_login_user_key_public)
-        assert node_frontend.user_key_name == os.path.expanduser(config_login_user_key_name)
-        assert node_frontend.image_user == config_login_image_user
-        assert node_frontend.security_group == config_frontend_security_group
-        assert node_frontend.image == config_frontend_image
-        assert node_frontend.image_userdata == config_frontend_image_userdata
-        assert node_frontend.flavor == config_frontend_flavor
-        
-        node_compute = configurator.create_node(config_cluster_name, Node.compute_type, cloud_provider, "node001")
-        assert node_compute
-        assert isinstance(node_compute, Node)
-        assert node_compute.name == "node001"
-        assert node_compute.type == Node.compute_type
-        assert node_compute._cloud_provider == cloud_provider
-        assert node_compute.user_key_public == os.path.expanduser(config_login_user_key_public)
-        assert node_compute.user_key_name == config_login_user_key_name
-        assert node_compute.image_user == config_login_image_user
-        assert node_compute.security_group == config_compute_security_group
-        assert node_compute.image == config_compute_image
-        assert node_compute.image_userdata == config_compute_image_userdata
-        assert node_compute.flavor == config_compute_flavor
-        
-    def test_create_cluster_storage(self):
-        configurator = Configurator()
-        storage = configurator.create_cluster_storage()
-        assert storage
-        assert isinstance(storage, ClusterStorage)
-        assert storage._storage_dir == config_storage_path
-        
-    def test_create_setup_provider(self):
-        configurator = Configurator()
-        setup_provider = configurator.create_setup_provider(config_setup_name, config_cluster_name)
-        
-        assert setup_provider
-        assert isinstance(setup_provider, AbstractSetupProvider)
-        
+class TestConfigValidator(unittest.TestCase):
 
-class TestConfiguration(unittest.TestCase):
-    
-    def test_read_cloud_section(self):        
-        cloud = Configuration.Instance().read_cloud_section(config_cloud_name)
-        assert cloud["provider"] == config_cloud_provider
-        assert cloud["ec2_url"] == config_cloud_ec2_url
-        assert cloud["ec2_access_key"] == config_cloud_ec2_access_key
-        assert cloud["ec2_secret_key"] == config_cloud_ec2_secret_key
-        assert cloud["ec2_region"] == config_cloud_ec2_region
-        
-        
-    def test_read_cluster_section(self):
-        cluster = Configuration.Instance().read_cluster_section(config_cluster_name)
-        assert cluster["cloud"] == config_cluster_cloud
-        assert cluster["setup_provider"] == config_cluster_setup_provider
-        assert cluster["frontend"] == config_cluster_frontend
-        assert cluster["compute"] == config_cluster_compute
-        assert cluster["login"] == config_cluster_login
-        
-        
-    def test_read_node_section(self):
-        node_frontend = Configuration.Instance().read_node_section(config_cluster_name, Node.frontend_type)
-        assert node_frontend["security_group"] == config_frontend_security_group
-        assert node_frontend["image_id"] == config_frontend_image
-        assert node_frontend["flavor"] == config_frontend_flavor
-        
-        node_compute = Configuration.Instance().read_node_section(config_cluster_name, Node.compute_type)
-        assert node_compute["security_group"] == config_compute_security_group
-        assert node_compute["image_id"] == config_compute_image
-        assert node_compute["flavor"] == config_compute_flavor
-        
-    
-    def test_read_login_section(self):
-        login = Configuration.Instance().read_login_section(config_login_name)
-        assert login["image_user"] == config_login_image_user
-        assert login["image_user_sudo"] == config_login_image_user_sudo
-        assert login["image_sudo"] == config_login_image_sudo
-        assert login["user_key_name"] == config_login_user_key_name
-        assert login["user_key_private"] == os.path.expanduser(config_login_user_key_private)
-        assert login["user_key_public"] == os.path.expanduser(config_login_user_key_public)
-        
-    def test_read_setup_section(self):
-        setup = Configuration.Instance().read_setup_section(config_setup_name, config_cluster_name)
-        assert setup["provider"] == config_setup_provider
-        assert setup["playbook_path"] == os.path.expanduser(os.path.expandvars(config_setup_playbook_path))
-        assert setup["frontend_groups"] == config_setup_frontend_groups
-        assert setup["compute_groups"] == config_setup_compute_groups
-        
-        
-        
+    def setUp(self):
+        # create a file to pass the checks
+        file, path = tempfile.mkstemp()
+        self.path = path
+        self.config = {
+            "mycluster" : {
+                "setup" : {
+                    "provider" : "ansible",
+                    "playbook_path" : "%(ansible_pb_dir)s/site.yml",
+                    "frontend_groups" : "slurm_master",
+                    "compute_groups" : "slurm_clients",
+                    },
+                "cloud" : {
+                    "provider" : "ec2_boto",
+                    "ec2_url" : "http://cloud.gc3.uzh.ch:8773/services/Cloud",
+                    "ec2_access_key" : "***fill in your data here***",
+                    "ec2_secret_key" : "***fill in your data here***",
+                    "ec2_region" : "nova",
+                    },
+                "login" : {
+                    "image_user" : "gc3-user",
+                    "image_user_sudo" : "root",
+                    "image_sudo" : True,
+                    "user_key_name" : "***name of SSH keypair on Hobbes***",
+                    "user_key_private" : self.path,
+                    "user_key_public" : self.path,
+                    },
+                "cluster" : {
+                    "cloud" : "hobbes",
+                    "login" : "gc3-user",
+                    "setup_provider" : "my-slurm-cluster",
+                    "frontend_nodes" : "1",
+                    "compute_nodes" : "2",
+                    },
+                "nodes": {
+                    "frontend" : {
+                        "security_group" : "default",
+                        "flavor" : "m1.tiny",
+                        "image_id" : "ami-00000048",
+                        },
+                    "compute" : {
+                        "security_group" : "default",
+                        "flavor" : "m1.large",
+                        "image_id" : "ami-00000048",
+                        }
+                }
+            }
+        }
+
+    def tearDown(self):
+        os.unlink(self.path)
+
+
+
+
+
+    def test_valid_config(self):
+        '''
+        Valid configuration
+        '''
+        validator = ConfigValidator(self.config)
+        validator.validate()
+
+    def test_invalid_config(self):
+        '''
+        Invalid configuration
+        '''
+        # check wrong file path
+        config = copy.deepcopy(self.config)
+        config["mycluster"]["login"]["user_key_public"] = "/tmp/elastic-test"
+        validator = ConfigValidator(config)
+        with self.assertRaises(MultipleInvalid):
+            validator.validate()
+
+        # check wrong url
+        config = copy.deepcopy(config)
+        config["mycluster"]["setup"]["ec2_host"] = "www.elasticluster"
+        validator = ConfigValidator(config)
+        with self.assertRaises(MultipleInvalid):
+            validator.validate()
+
+        # check all mandatory properties
+        optional = ["frontend_groups", "compute_groups", "frontend_nodes",
+                    "compute_nodes", "security_group", "flavor", "image_id",
+                    "playbook_path", "frontend", "compute"]
+        config = copy.deepcopy(config)
+        for cluster, sections in config.iteritems():
+            for section, properties in sections.iteritems():
+                for property, value in properties.iteritems():
+                    if property not in optional:
+                        config_tmp = copy.deepcopy(config)
+                        del config_tmp[cluster][section][property]
+                        validator = ConfigValidator(config_tmp)
+                        with self.assertRaises(MultipleInvalid):
+                            validator.validate()
+
+        # check all node properties
+        mandatory = ["flavor", "image_id", "security_group"]
+        config = copy.deepcopy(config)
+        for node, properties in config["mycluster"]["nodes"].iteritems():
+            for property in properties.iterkeys():
+                if property in mandatory:
+                    config_tmp = copy.deepcopy(config)
+                    del config_tmp["mycluster"]["nodes"][node][property]
+                    validator = ConfigValidator(config_tmp)
+                    with self.assertRaises(MultipleInvalid):
+                        validator.validate()
+
+
+
+
+
+
+
+
+
+class TestConfigReader(unittest.TestCase):
+
+    def _check_read_config(self, config):
+        (conf_file, conf_path) = tempfile.mkstemp()
+        conf_file = os.fdopen(conf_file, 'w+')
+        conf_file.write(config)
+        conf_file.close()
+
+        result = None
+        try:
+            config_reader = ConfigReader(conf_path)
+            result =  config_reader.read_config()
+            os.unlink(conf_path)
+        except:
+            os.unlink(conf_path)
+            raise
+
+        return result
+
+    def test_read_valid_config(self):
+        '''
+        Read valid config into dictionary
+        '''
+
+        config = """
+            [cloud/hobbes]
+            provider=ec2_boto
+            ec2_url=http://hobbes.gc3.uzh.ch:8773/services/Cloud
+            ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
+            ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
+            ec2_region=nova
+
+            [cloud/amazon-us-east-1]
+            provider=ec2_boto
+            ec2_url=https://ec2.us-east-1.amazonaws.com
+            ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
+            ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
+            ec2_region=us-east-1
+
+            [login/ubuntu]
+            image_user=ubuntu
+            image_user_sudo=root
+            image_sudo=True
+            user_key_name=elasticluster
+            user_key_private=~/.ssh/id_rsa
+            user_key_public=~/.ssh/id_rsa.pub
+
+            [login/gc3-user]
+            image_user=gc3-user
+            image_user_sudo=root
+            image_sudo=True
+            user_key_name=elasticluster
+            user_key_private=~/.ssh/id_dsa.cloud
+            user_key_public=~/.ssh/id_dsa.cloud.pub
+
+            [setup/ansible-slurm]
+            provider=ansible
+            frontend_groups=slurm_master
+            compute_groups=slurm_clients
+
+            [setup/ansible-gridengine]
+            provider=ansible
+            frontend_groups=gridengine_master
+            compute_groups=gridengine_clients
+
+            [setup/ansible-pbs]
+            provider=ansible
+            frontend_groups=pbs_master,maui_master
+            compute_groups=pbs_clients
+
+            [setup/ansible_matlab]
+            provider=ansible
+            frontend_groups=mdce_master,mdce_worker,ganglia_monitor,ganglia_master
+            worker_groups=mdce_worker,ganglia_monitor
+
+            [cluster/slurm]
+            cloud=hobbes
+            login=gc3-user
+            setup_provider=ansible-slurm
+            security_group=default
+            image_id=ami-00000048
+            flavor=m1.small
+            frontend_nodes=1
+            compute_nodes=2
+            frontend_class=frontend
+
+            [cluster/torque]
+            cloud=hobbes
+            frontend_nodes=1
+            compute_nodes=2
+            frontend_class=frontend
+            security_group=default
+            # CentOS image
+            image_id=ami-0000004f
+            flavor=m1.small
+            login=gc3-user
+            setup_provider=ansible-pbs
+
+            [cluster/aws-slurm]
+            cloud=amazon-us-east-1
+            login=ubuntu
+            setup_provider=ansible-slurm
+            security_group=default
+            # ubuntu image
+            image_id=ami-90a21cf9
+            flavor=m1.small
+            frontend=1
+            compute=2
+
+            [cluster/matlab]
+            cloud=hobbes
+            login=gc3-user
+            setup_provider=ansible_matlab
+            security_group=default
+            image_id=ami-00000099
+            flavor=m1.medium
+            frontend_nodes=1
+            worker_nodes=10
+            image_userdata=
+            ssh_to=frontend
+
+            [cluster/slurm/frontend]
+            flavor=bigdisk
+            """
+        cfg = self._check_read_config(config)
+
+        # check all clusters are there
+        self.assertTrue(("matlab" in cfg and "aws-slurm" in cfg
+                         and "torque" in cfg and "slurm" in cfg))
+
+        # check for nodes
+        self.assertTrue("frontend" in cfg["matlab"]["nodes"])
+        self.assertTrue("worker" in cfg["matlab"]["nodes"])
+
+        # check one property in each category
+        self.assertTrue(cfg["matlab"]["cluster"]["security_group"] ==
+                        "default")
+        self.assertTrue(cfg["matlab"]["login"]["image_user"] == "gc3-user")
+        self.assertTrue(cfg["matlab"]["setup"]["provider"] == "ansible")
+        self.assertTrue(cfg["matlab"]["cloud"]["ec2_region"] == "nova")
+
+        # check frontend overwrite in slurm cluster
+        self.assertTrue(cfg["slurm"]["nodes"]["frontend"]["flavor"] ==
+                        "bigdisk")
+
+
+
+    def test_read_missing_section(self):
+        '''
+        Read config with missing section
+        '''
+        config = """
+            [login/gc3-user]
+            image_user=gc3-user
+            image_user_sudo=root
+            image_sudo=True
+            user_key_name=elasticluster
+            user_key_private=~/.ssh/id_dsa.cloud
+            user_key_public=~/.ssh/id_dsa.cloud.pub
+
+            [setup/ansible-slurm]
+            provider=ansible
+            frontend_groups=slurm_master
+            compute_groups=slurm_clients
+
+            [cluster/slurm]
+            cloud=hobbes
+            login=gc3-user
+            setup_provider=ansible-slurm
+            security_group=default
+            # Ubuntu image
+            image_id=ami-00000048
+            flavor=m1.small
+            frontend_nodes=1
+            compute_nodes=2
+            frontend_class=frontend
+            """
+        with self.assertRaises(MultipleInvalid):
+            cfg = self._check_read_config(config)
+
+    def test_read_section_linking(self):
+        '''
+        Read config with wrong section links
+        '''
+        config = """
+            [cloud/hobbes]
+            provider=ec2_boto
+            ec2_url=http://hobbes.gc3.uzh.ch:8773/services/Cloud
+            ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
+            ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
+            ec2_region=nova
+
+            [login/gc3-user]
+            image_user=gc3-user
+            image_user_sudo=root
+            image_sudo=True
+            user_key_name=elasticluster
+            user_key_private=~/.ssh/id_dsa.cloud
+            user_key_public=~/.ssh/id_dsa.cloud.pub
+
+            [setup/ansible-slurm]
+            provider=ansible
+            frontend_groups=slurm_master
+            compute_groups=slurm_clients
+
+            [cluster/slurm]
+            cloud=hobbes-new
+            login=gc3-user
+            setup_provider=ansible-slurm
+            security_group=default
+            # Ubuntu image
+            image_id=ami-00000048
+            flavor=m1.small
+            frontend_nodes=1
+            compute_nodes=2
+            frontend_class=frontend
+            """
+        with self.assertRaises(MultipleInvalid):
+            cfg = self._check_read_config(config)
+
+
+
+
+
+
+
+
+
+
+
