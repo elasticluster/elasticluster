@@ -63,7 +63,16 @@ class TestBotoCloudProvider(unittest.TestCase):
         provider._connection = connection
         provider._ec2host = host
 
-        provider._check_keypair(key_name, key_pub, key_prv)
+        try:
+            provider._check_keypair(key_name, key_pub, key_prv)
+            os.unlink(key_prv)
+            os.unlink(key_pub)
+        except:
+            os.unlink(key_prv)
+            os.unlink(key_pub)
+            raise
+
+
 
     def test_check_keypair_rsa(self):
         '''
