@@ -14,7 +14,7 @@
     - include: common/handlers/main.yml
     - include: ceph/handlers/main.yml
 
-- hosts: all
+- hosts: ceph_osd:ceph_mon:ceph_mds
   name: get facts
   tasks:
     - action: ceph_facts
