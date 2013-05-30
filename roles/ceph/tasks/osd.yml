@@ -1,0 +1,49 @@
+---
+- name: Check if partition is ceph-active
+  only_if: '"${ceph-devs.{$devs}.state}" != "active"'
+  action: shell umount $devs; umount $osd_disk; ceph-disk-prepare --zap-disk $osd_disk
+  tags:
+    - ceph
+
+- name: create osd directory
+  action: file dest=${osd-data} state=directory
+  tags:
+    - ceph
+
+- name: Mount osd disk
+  action: shell mount | grep ${devs} || mount ${devs} ${osd-data}
+  tags:
+    - ceph
+
+- name: Copying keyring from mon.0
+  action: shell scp root@${groups.ceph_mon[0]}:/etc/ceph/ceph.mon.keyring /etc/ceph/keyring
+          creates=/etc/ceph/keyring
+  tags:
+    - ceph
+
+- name: Copy mon keyring
+  action: shell cp -a /etc/ceph/keyring ${osd-data}/keyring
+          creates=${osd-data}/keyring
+  tags:
+    - ceph
+
+# ceph-disk prepare does not create all the files needed by
+# ceph-osd. Specifically, it does not create the whoami file
+# (containing the id of the node) and the `current` dir. However, the
+# ceph-osd --mkfs command does...
+
+- name: 'Create (once more!) the fs on the osd data directory'
+  action: shell ceph-osd -i ${ceph-idx}  -c /etc/ceph/ceph.conf -d --mkfs --mkjournal
+          creates=${osd-data}/current
+  tags:
+    - ceph
+
+- name: Create OSD
+  action: shell ceph osd dump | grep ^osd.${ceph-idx} || ceph osd create
+  tags:
+    - ceph
+
+- name: Ensure ceph-osd is running
+  action: service name=ceph state=started
+  tags:
+    - ceph

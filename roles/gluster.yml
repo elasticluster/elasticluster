@@ -1,0 +1,30 @@
+---
+- hosts: gluster_data:gluster_client
+  name: Basic setup
+  vars_files:
+    - vars/os
+  tasks:
+    - include: common/tasks/hosts.yml hosts=${groups.all}
+    - include: common/tasks/hostname.yml
+    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+  handlers:
+    - include: common/handlers/main.yml
+
+- hosts: gluster_data
+  name: Gluster configuration
+  vars_files:
+    - vars/os
+  vars:
+    - gluster_brick_dir: /srv/gluster/brick
+    - gluster_volume: default
+  tasks:
+    - include: gluster/tasks/main.yml
+
+- hosts: gluster_client
+  name: Mount gluster filesystem
+  vars_files:
+    - vars/os
+  vars:
+    - gluster_volume: default
+  tasks:
+    - include: gluster/tasks/client.yml

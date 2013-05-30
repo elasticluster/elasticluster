@@ -1,0 +1,22 @@
+---
+- name: configure ppa
+  action: apt_repository repo=ppa:semiosis/ubuntu-glusterfs-3.3
+  only_if: '"${gluster_dev}".lower() == "true"'
+  tags:
+    - gluster
+
+- name: Install glusterfs client
+  action: apt name=glusterfs-client state=installed update_cache=yes
+  only_if: $is_ubuntu
+  tags:
+    - gluster
+
+- name: Create mountpoing
+  action: file path=/glusterfs state=directory
+  tags:
+    - gluster
+
+- name: Mount the glusterfs filesystem
+  action: mount name=/glusterfs fstype=glusterfs src=${groups.gluster_data[0]}:${gluster_volume} state=mounted
+  tags:
+    - gluster

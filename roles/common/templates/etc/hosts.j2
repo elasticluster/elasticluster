@@ -2,14 +2,14 @@
 127.0.0.1 localhost.localdomain localhost
 
 {% if hosts %}
-{% for host in hosts %}
+{% for host in hosts|sort %}
 {% if host != 'localhost' %}
 {{ hostvars[host].ansible_default_ipv4.address }} {{ host }}
 {% endif %}
 {% endfor -%}
 
 {% else %}
-{% for host in groups['all'] %}
+{% for host in groups['all']|sort %}
 {% if host != 'localhost' %}
 {{ hostvars[host].ansible_default_ipv4.address }} {{ host }}
 {% endif %}

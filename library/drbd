@@ -106,8 +106,8 @@ options:
 notes:
     - This module does not install the `drbd-utils` package, so you
     - have to install it by yourself.
-"""
-EXAMPLES = """
+
+examples:
     - code: drbd name=myresource disk=/dev/sdb device=/dev/drbd1 address0=10.0.0.1:7789 address1=10.0.0.2:7789
 """
 import os

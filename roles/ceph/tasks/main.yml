@@ -1,0 +1,35 @@
+---
+- name: configure apt key for CEPH repository
+  action: apt_key url=https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc state=present
+  only_if: $is_ubuntu
+  tags:
+    - ceph
+
+- name: add CEPH apt public repository
+  action: apt_repository repo='deb http://ceph.com/debian/ precise main' state=present
+  only_if: $is_ubuntu
+  tags:
+    - ceph
+
+- name: Install required package for apt_repository.
+  action: apt pkg=$item state=present
+  only_if: $is_ubuntu
+  with_items:
+    - ceph
+    - pdsh
+    - linux-image-extra-$ansible_kernel
+  tags:
+    - ceph
+
+- action: file dest=/etc/ceph state=directory
+  tags:
+    - ceph
+
+- action: file dest=/var/run/ceph state=directory
+  tags:
+    - ceph
+
+- name: configure ceph
+  action: template src=ceph/templates/etc/ceph/ceph.conf.j2 dest=/etc/ceph/ceph.conf
+  tags:
+    - ceph

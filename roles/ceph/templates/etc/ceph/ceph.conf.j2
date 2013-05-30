@@ -1,0 +1,51 @@
+[global]
+    auth cluster required = cephx
+    auth service required = cephx
+    auth client required = cephx
+
+    fsid = ${fsid}
+
+    # mon initial members = {% for host in groups['ceph_mon']|sort %}{{ host }}{% if not loop.last %},{% endif %}{% endfor %}
+
+    # debug ms = 1
+
+{% for host in groups['ceph_mon']|sort %}
+[mon.{{ loop.index0 }}]
+    # debug mon = 20
+    # debug paxos = 20
+    # debug auth = 20
+
+    host = {{ host }}
+    mon addr = {{ hostvars[host].ansible_default_ipv4.address }}:6789
+    mon data = /var/lib/ceph/mon/ceph-{{ loop.index0 }}
+{% endfor %}
+
+{% for host in groups['ceph_osd']|sort %}
+[osd.{{ loop.index0 }}]
+    host = {{ host }}
+
+    osd journal size = 1000
+
+    osd mkfs type = xfs
+    devs = ${osd_devs}
+    osd addr = {{ hostvars[host].ansible_default_ipv4.address }}:6789
+    osd data = /var/lib/ceph/osd/ceph-{{ loop.index0 }}
+
+{% endfor %}
+
+{% for host in groups['ceph_mds']|sort %}
+[mds.{{ loop.index0 }}]
+    host = {{ host }}
+    mds addr = {{ hostvars[host].ansible_default_ipv4.address }}:6789
+    mds data = /var/lib/ceph/mds/ceph-{{ loop.index0 }}
+{% endfor %}
+
+{% if 'ceph_rgw' in groups %}
+[client.radosgw.gateway]
+    host = {{ groups['ceph_rgw'] }}
+    keyring = /etc/ceph/keyring
+    rgw socket path = /tmp/radosgw.sock
+    log file = /var/log/ceph/radosgw.log
+    rgw print continue = false
+{% endif %}
+

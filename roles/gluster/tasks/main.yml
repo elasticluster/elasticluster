@@ -1,0 +1,75 @@
+---
+- name: configure ppa
+  action: apt_repository repo=ppa:semiosis/ubuntu-glusterfs-3.3
+  only_if: '"${gluster_dev}".lower() == "true"'
+  tags:
+    - gluster
+
+- name: Install glusterfs packages
+  action: apt name=$item state=installed update_cache=yes
+  with_items:
+    - glusterfs-server
+    - glusterfs-client
+  only_if: $is_ubuntu
+  tags:
+    - gluster
+
+- action: file path=${gluster_brick_dir} state=directory
+  tags:
+    - gluster
+
+- name: Configure peers (Only on the first host)
+  action: shell gluster peer probe $item
+  with_items: ${groups.gluster_data}
+  only_if: '"$inventory_hostname" == "${groups.gluster_data[0]}"'
+  tags:
+    - gluster
+
+- name: Set default stripe options
+  action: shell if [ -z "${gluster_stripes}" ]; then echo ""; else echo "stripe ${gluster_stripes}"; fi
+  register: gluster_stripes
+  connection: local
+  sudo: false
+  tags:
+    - gluster
+
+- name: Set default replica options
+  action: shell if [ -z "${gluster_replicas}" ]; then echo ""; else echo "replica ${gluster_replicas}"; fi
+  register: gluster_replicas
+  connection: local
+  sudo: false
+  tags:
+    - gluster
+
+- name: Set default transport options
+  action: shell if [ -z "${gluster_transport}" ]; then echo "transport tcp"; else echo "transport ${gluster_transport}"; fi
+  register: gluster_transport
+  connection: local
+  sudo: false
+  tags:
+    - gluster
+
+- name: Build bricks list
+  action: shell echo ${groups.gluster_data} | sed "s%,%:${gluster_brick_dir} %g; s%$%:${gluster_brick_dir}%"
+  register: gluster_bricks
+  connection: local
+  sudo: false
+  tags:
+    - gluster
+
+- name: Create default volume
+  action: shell gluster volume info ${gluster_volume} || 
+          gluster volume create ${gluster_volume} ${gluster_stripes.stdout}
+          ${gluster_replicas.stdout} ${gluster_transport.stdout}
+          ${gluster_bricks.stdout}
+  only_if: '"$inventory_hostname" == "${groups.gluster_data[0]}"'
+  tags:
+    - gluster
+
+- name: Start default volume
+  action: 'shell gluster volume info ${gluster_volume} | grep "Status: Started" || 
+          gluster volume start ${gluster_volume}'
+  only_if: '"$inventory_hostname" == "${groups.gluster_data[0]}"'
+  tags:
+    - gluster
+
