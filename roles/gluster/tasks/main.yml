@@ -1,14 +1,18 @@
 ---
+- name: configure ppa
+  action: apt_repository repo=ppa:semiosis/ubuntu-glusterfs-3.3
+  only_if: '"${gluster_dev}".lower() == "true"'
+  tags:
+    - gluster
+
 - name: Install glusterfs packages
   action: apt name=$item state=installed update_cache=yes
   with_items:
     - glusterfs-server
     - glusterfs-client
+  only_if: $is_ubuntu
   tags:
     - gluster
-  only_if: $is_ubuntu
-# add-apt-repository ppa:semiosis/ubuntu-glusterfs-3.3
-# apt-get update
 
 - action: file path=${gluster_brick_dir} state=directory
   tags:
