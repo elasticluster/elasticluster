@@ -3,20 +3,33 @@ Notes on deploying ceph *manually*
 
 Most of the docs on setting up ceph either use `ceph-deploy` or
 `mkcephfs`. However, these tools are not suitable for an automatic
-deploying system like Ansible, CFEngie or Puppet, and they hide a lot
-of the complexity behind the process. However, hiding the complexity
-of the instlalation is good only when things goes smoothly, while when
-you are trying to understand why it didn't work you find yourself
-clueless on how to debug the problems.
+deploying system like Ansible, CFEngie or Puppet, because by hiding
+the complexity behind the installation and configuration process, they
+don't give you the flexibility you would need to use these tools.
 
-Here I'm writing a few notes on a *manual* ceph deployment, stuff I've
-found out trying to create the ansible playbooks.
+Also, when these automatic installation tools does not work as
+expected, you find yourself clueless about what went wrong and how to
+fix it, which is something as a system administrator I find very
+frustrating...
+
+This is why I wrote few notes on how to *manually* deploy ceph, stuff
+I've found out trying to create the ansible playbooks but for which I
+haven't found any good documentation on the official website or the
+documentation.
+
+This page, therefore, is not intended to be a guide to deploy ceph,
+because I am not explaining what ceph is for and how does it work, so
+*before* reading this, you are supposed to have already tried to set
+up ceph and at least having looked at the official documentation,
+including the following links:
+
+* http://ceph.com/docs/master/start/
+* http://ceph.com/docs/master/architecture/
+* http://ceph.com/docs/next/rados/operations/authentication/
 
 The stuff I am not sure about are marked as **NOT SURE:**. The other
 stuff I am pretty confident that, at the time of writing 
 (28.05.2013, ceph version 0.61.2), is working as I am saying.
-
-**NOT SURE:** however, I sometimes make mistakes too :)
 
 Background
 ----------
