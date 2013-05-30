@@ -39,3 +39,13 @@
     mds addr = {{ hostvars[host].ansible_default_ipv4.address }}:6789
     mds data = /var/lib/ceph/mds/ceph-{{ loop.index0 }}
 {% endfor %}
+
+{% if 'ceph_rgw' in groups %}
+[client.radosgw.gateway]
+    host = {{ groups['ceph_rgw'] }}
+    keyring = /etc/ceph/keyring
+    rgw socket path = /tmp/radosgw.sock
+    log file = /var/log/ceph/radosgw.log
+    rgw print continue = false
+{% endif %}
+
