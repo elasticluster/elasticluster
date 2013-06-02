@@ -15,8 +15,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from elasticluster.exceptions import KeypairError
-
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 import os
@@ -25,6 +23,7 @@ import unittest
 
 from mock import MagicMock
 
+from elasticluster.exceptions import KeypairError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 
 

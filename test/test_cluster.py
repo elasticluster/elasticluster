@@ -17,163 +17,69 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
+import os
+import tempfile
 import unittest
-from test import config_cluster_name, config_cloud_ec2_url,\
-    config_cloud_ec2_region, config_cloud_ec2_access_key,\
-    config_cloud_ec2_secret_key, config_login_user_key_private,\
-    config_login_image_user, config_login_image_user_sudo,\
-    config_login_image_sudo, config_setup_playbook_path, config_cloud_name,\
-    config_setup_frontend_groups, config_setup_compute_groups
-from elasticluster.providers.ec2_boto import BotoCloudProvider
-from elasticluster.providers.ansible_provider import AnsibleSetupProvider
+
+
+
+from mock import Mock
+
+
 from elasticluster.conf import Configurator
-from elasticluster.cluster import Cluster, Node
-
-
-from mock import Mock, MagicMock
+from elasticluster.cluster import Cluster
+from elasticluster.providers.ec2_boto import BotoCloudProvider
+from test.test_conf import Configuration
 
 
 class TestCluster(unittest.TestCase):
 
-    def test_init(self):
-        cloud_provider = BotoCloudProvider(config_cloud_ec2_url, config_cloud_ec2_region, config_cloud_ec2_access_key, config_cloud_ec2_secret_key)
-        setup_provider = AnsibleSetupProvider(config_login_user_key_private, config_login_image_user, config_login_image_user_sudo, config_login_image_sudo, config_setup_playbook_path, config_setup_frontend_groups, config_setup_compute_groups)
-        
-        frontend_amount = 1
-        compute_amount = 2
-        
-        cluster = Cluster(config_cluster_name, config_cloud_name, cloud_provider, setup_provider, frontend_amount, compute_amount, Configurator())
-        
-        assert len(cluster.frontend_nodes) == frontend_amount
-        assert len(cluster.compute_nodes) == compute_amount
-        
-        for node in cluster.frontend_nodes:
-            assert node.type == Node.frontend_type
-        
-        for node in cluster.compute_nodes:
-            assert node.type == Node.compute_type
-        
-        
+    def setUp(self):
+        file, path = tempfile.mkstemp()
+        self.path = path
+
+
+    def tearDown(self):
+        os.unlink(self.path)
+
+    def get_cluster(self):
+        cloud = BotoCloudProvider("http://test.os.com", "nova", "a-key",
+                                    "s-key")
+        setup = Mock()
+        configurator = Configurator(Configuration().get_config(self.path))
+        nodes = {"compute": 2, "frontend": 1}
+        cluster = Cluster("mycluster", "mycluster", "hobbes", cloud, setup,
+                          nodes, configurator)
+        return cluster
 
     def test_add_node(self):
-        cloud_provider = BotoCloudProvider(config_cloud_ec2_url, config_cloud_ec2_region, config_cloud_ec2_access_key, config_cloud_ec2_secret_key)
-        setup_provider = AnsibleSetupProvider(config_login_user_key_private, config_login_image_user, config_login_image_user_sudo, config_login_image_sudo, config_setup_playbook_path, config_setup_frontend_groups, config_setup_compute_groups)
-        
-        cluster = Cluster(config_cluster_name, config_cloud_name, cloud_provider, setup_provider, 1, 2, Configurator())
-        
-        frontend_amount = len(cluster.frontend_nodes)
-        frontend_node = cluster.add_node(Node.frontend_type)
-        
-        assert frontend_amount == (len(cluster.frontend_nodes) - 1)
-        assert frontend_node == cluster.frontend_nodes[-1]
-        assert frontend_node.type == Node.frontend_type
-        
-        compute_amount = len(cluster.compute_nodes)
-        compute_node = cluster.add_node(Node.compute_type)
-        
-        assert compute_amount == (len(cluster.compute_nodes) - 1)
-        assert compute_node == cluster.compute_nodes[-1]
-        assert compute_node.type == Node.compute_type
+        cluster = self.get_cluster()
+
+        # without name
+        size = len(cluster.nodes['compute'])
+        cluster.add_node("compute")
+        self.assertEqual(size + 1, len(cluster.nodes['compute']))
+        new_node = cluster.nodes['compute'][2]
+        self.assertEqual(new_node.name, 'compute003')
+        self.assertEqual(new_node.type, 'compute')
+
+        # with custom name
+        name = "test-node"
+        size = len(cluster.nodes['compute'])
+        cluster.add_node("compute", name=name)
+        self.assertEqual(size + 1, len(cluster.nodes['compute']))
+        self.assertEqual(cluster.nodes['compute'][3].name, name)
 
 
     def test_remove_node(self):
-        cloud_provider = BotoCloudProvider(config_cloud_ec2_url, config_cloud_ec2_region, config_cloud_ec2_access_key, config_cloud_ec2_secret_key)
-        setup_provider = AnsibleSetupProvider(config_login_user_key_private, config_login_image_user, config_login_image_user_sudo, config_login_image_sudo, config_setup_playbook_path, config_setup_frontend_groups, config_setup_compute_groups)
-        
-        cluster = Cluster(config_cluster_name, config_cloud_name, cloud_provider, setup_provider, 1, 2, Configurator())
-        
-        frontend_amount = len(cluster.frontend_nodes)
-        frontend_node = cluster.frontend_nodes[-1]
-        frontend_node_name = frontend_node.name
-        cluster.remove_node(frontend_node)
-        
-        assert frontend_amount == (len(cluster.frontend_nodes) + 1)
-        for node in cluster.frontend_nodes:
-            assert node.name != frontend_node_name
+        cluster = self.get_cluster()
 
-        compute_amount = len(cluster.compute_nodes)
-        compute_node = cluster.compute_nodes[-1]
-        compute_node_name = compute_node.name
-        cluster.remove_node(compute_node)
-        
-        assert compute_amount == (len(cluster.compute_nodes) + 1)
-        for node in cluster.compute_nodes:
-            assert node.name != compute_node_name
-    
-    
-    def test_start(self):
-        cloud_provider = MagicMock()
-        cloud_provider.start_instance.return_value = u'test-id'
-        cloud_provider.get_ips.return_value = ('127.0.0.1', '127.0.0.1')
-        running_states = [True, True, True, True, True, False, False, False, False, False]
-        def side_effect_is_instance_running(id):
-            return running_states.pop()
-        cloud_provider.is_instance_running.side_effect = side_effect_is_instance_running
-        setup_provider = MagicMock()
-        setup_provider.setup_cluster.return_value = True
-        
-        cluster = Cluster(config_cluster_name, config_cloud_name, cloud_provider, setup_provider, 1, 2, Configurator())
-        cluster._storage = MagicMock()
+        size = len(cluster.nodes['compute'])
+        cluster.remove_node(cluster.nodes['compute'][1])
+        self.assertEqual(size - 1, len(cluster.nodes['compute']))
 
-        cluster.start()
-        
-        cluster._storage.dump_cluster.assert_called_once_with(cluster)
 
-        for node in cluster.frontend_nodes + cluster.compute_nodes:
-            assert node.instance_id == u'test-id'
-            assert node.ip_public == '127.0.0.1'
-            assert node.ip_private == '127.0.0.1'
-            
-    
-    def test_stop(self):
-        cloud_provider = MagicMock()
-        cloud_provider.start_instance.return_value = u'test-id'
-        cloud_provider.get_ips.return_value = ('127.0.0.1', '127.0.0.1')
-        running_states = [True, True, True, True, True, False, False, False, False, False]
-        def side_effect_is_instance_running(id):
-            return running_states.pop()
-        cloud_provider.is_instance_running.side_effect = side_effect_is_instance_running
-        setup_provider = MagicMock()
-        
-        cluster = Cluster(config_cluster_name, config_cloud_name, cloud_provider, setup_provider, 1, 2, Configurator())
-        
-        
-        for node in cluster.frontend_nodes + cluster.compute_nodes:
-            node.instance_id = u'test-id'
-        
-        cluster._storage = MagicMock()
-            
-        cluster.stop()
-        
 
-        cloud_provider.stop_instance.assert_called_with(u'test-id')
-        cluster._storage.delete_cluster.assert_called_once_with(cluster.name)
-
-    
-    def test_load_from_storage(self):
-        cloud_provider = MagicMock()
-        cloud_provider.is_instance_running.return_value = True
-        cloud_provider.get_ips.return_value = ('127.0.0.1', '127.0.0.1')
-        setup_provider = MagicMock()
-        storage = MagicMock()
-        
-        cluster = Cluster(config_cluster_name, config_cloud_name, cloud_provider, setup_provider, 1, 2, Configurator())
-        cluster._storage = storage
-        cluster.load_from_storage()
-        
-        storage.load_cluster.assert_called_once_with(cluster)
-
-    
-    def setup(self):
-        cloud_provider = MagicMock()
-        setup_provider = MagicMock()
-        setup_provider.setup_cluster.return_value = True
-        
-        cluster = Cluster(config_cluster_name, config_cloud_name, cloud_provider, setup_provider, 1, 2, Configurator())
-        
-        cluster.setup()
-        
-        setup_provider.setup_cluster.assert_called_once_with(cluster)
         
         
         

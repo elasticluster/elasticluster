@@ -80,7 +80,9 @@ class Cluster(object):
             log.error("Unable to remove node %s: invalid node type `%s`.",
                       node.name, node.type)
         else:
-            del self.nodes[node]
+            index = self.nodes[node.type].index(node)
+            if self.nodes[node.type][index]:
+                del self.nodes[node.type][index]
 
     def start(self):
         """

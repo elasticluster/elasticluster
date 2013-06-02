@@ -15,11 +15,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from elasticluster.cluster import Node
-from elasticluster.exceptions import ClusterNotFound
-from elasticluster.providers.ansible_provider import AnsibleSetupProvider
-from elasticluster.providers.ec2_boto import BotoCloudProvider
-
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 import copy
@@ -31,6 +26,10 @@ from voluptuous.voluptuous import MultipleInvalid
 
 
 from elasticluster.conf import ConfigReader, ConfigValidator, Configurator
+from elasticluster.cluster import Node
+from elasticluster.exceptions import ClusterNotFound
+from elasticluster.providers.ansible_provider import AnsibleSetupProvider
+from elasticluster.providers.ec2_boto import BotoCloudProvider
 
 
 class Configuration(object):
