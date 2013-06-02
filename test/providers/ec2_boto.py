@@ -26,17 +26,13 @@ import unittest
 from mock import MagicMock
 
 from elasticluster.providers.ec2_boto import BotoCloudProvider
-from test import config_cloud_ec2_url, \
-    config_cloud_ec2_region, config_cloud_ec2_access_key, \
-    config_cloud_ec2_secret_key
 
 
 class TestBotoCloudProvider(unittest.TestCase):
 
     def _create_provider(self):
-        return BotoCloudProvider(config_cloud_ec2_url, config_cloud_ec2_region,
-                                 config_cloud_ec2_access_key,
-                                 config_cloud_ec2_secret_key)
+        return BotoCloudProvider("http://test.os.com", "nova", "a-key",
+                                 "s-key")
 
     def _check_keypair_helper(self, key_content_prv, key_content_pub,
                               fingerprint, key_exists=True, host="hobbes"):

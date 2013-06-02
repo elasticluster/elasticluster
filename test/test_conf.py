@@ -15,6 +15,11 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+from elasticluster.cluster import Node
+from elasticluster.exceptions import ClusterNotFound
+from elasticluster.providers.ansible_provider import AnsibleSetupProvider
+from elasticluster.providers.ec2_boto import BotoCloudProvider
+
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 import copy
@@ -25,65 +30,200 @@ import unittest
 from voluptuous.voluptuous import MultipleInvalid
 
 
-from elasticluster.conf import ConfigReader, ConfigValidator
+from elasticluster.conf import ConfigReader, ConfigValidator, Configurator
+
+
+class Configuration(object):
+
+    def get_config(self, path):
+        config = {
+            "mycluster": {
+                "setup": {
+                    "provider": "ansible",
+                    "playbook_path": "%(ansible_pb_dir)s/site.yml",
+                    "frontend_groups": "slurm_master",
+                    "compute_groups": "slurm_clients",
+                    },
+                "cloud": {
+                    "provider": "ec2_boto",
+                    "ec2_url": "http://cloud.gc3.uzh.ch:8773/services/Cloud",
+                    "ec2_access_key": "***fill in your data here***",
+                    "ec2_secret_key": "***fill in your data here***",
+                    "ec2_region": "nova",
+                    },
+                "login": {
+                    "image_user": "gc3-user",
+                    "image_user_sudo": "root",
+                    "image_sudo": True,
+                    "user_key_name": "***name of SSH keypair on Hobbes***",
+                    "user_key_private": path,
+                    "user_key_public": path,
+                    },
+                "cluster": {
+                    "cloud": "hobbes",
+                    "login": "gc3-user",
+                    "setup_provider": "my-slurm-cluster",
+                    "frontend_nodes": "1",
+                    "compute_nodes": "2",
+                    },
+                "nodes": {
+                    "frontend": {
+                        "security_group": "default",
+                        "flavor": "m1.tiny",
+                        "image_id": "ami-00000048",
+                        },
+                    "compute": {
+                        "security_group": "default",
+                        "flavor": "m1.large",
+                        "image_id": "ami-00000048",
+                        }
+                    }
+                }
+            }
+
+        return config
+
+
+class TestConfigurator(unittest.TestCase):
+
+    def setUp(self):
+        file, path = tempfile.mkstemp()
+        self.path = path
+        self.config = Configuration().get_config(self.path)
+
+
+    def tearDown(self):
+        os.unlink(self.path)
+
+    def test_create_cloud_provider(self):
+        configurator = Configurator(self.config)
+        provider = configurator.create_cloud_provider("mycluster")
+
+        url = self.config['mycluster']['cloud']['ec2_url']
+        self.assertEqual(provider._url, url)
+
+        access_key = self.config['mycluster']['cloud']['ec2_access_key']
+        self.assertEqual(provider._access_key, access_key)
+
+        secret_key = self.config['mycluster']['cloud']['ec2_secret_key']
+        self.assertEqual(provider._secret_key, secret_key)
+
+        region = self.config['mycluster']['cloud']['ec2_region']
+        self.assertEqual(provider._region_name, region)
+
+    def test_create_cluster(self):
+        configurator = Configurator(self.config)
+        cluster = configurator.create_cluster("mycluster")
+
+        self.assertEqual(cluster.template, "mycluster")
+        self.assertEqual(cluster.name, "mycluster")
+
+        cloud = self.config['mycluster']['cluster']['cloud']
+        self.assertEqual(cluster._cloud, cloud)
+
+        self.assertTrue(type(cluster._cloud_provider) is BotoCloudProvider)
+        self.assertTrue(type(cluster._setup_provider) is AnsibleSetupProvider)
+
+        self.assertTrue("compute" in cluster.nodes)
+        self.assertTrue("frontend" in cluster.nodes)
+
+        self.assertTrue(len(cluster.nodes["compute"]) == 2)
+        self.assertTrue(len(cluster.nodes["frontend"]) == 1)
+
+
+    def test_load_cluster(self):
+        # test without storage file
+        configurator = Configurator(self.config)
+        with self.assertRaises(ClusterNotFound):
+            configurator.load_cluster("mycluster")
+
+        # TODO: test with storage file; the problem is to give a fixed
+        # directory as a parameter to configurator, since it should work
+        # anywhere
+
+
+
+    def test_create_node(self):
+        configurator = Configurator(self.config)
+        node = configurator.create_node("mycluster", "compute", None,
+                                            "test-1")
+
+        self.assertTrue(type(node) is Node)
+        self.assertEqual(node.name, "test-1")
+        self.assertEqual(node.type, "compute")
+        self.assertEqual(node._cloud_provider, None)
+
+        pub_key = self.config['mycluster']['login']['user_key_public']
+        self.assertEqual(node.user_key_public, pub_key)
+
+        prv_key = self.config['mycluster']['login']['user_key_private']
+        self.assertEqual(node.user_key_private, prv_key)
+
+        key_name = self.config['mycluster']['login']['user_key_name']
+        self.assertEqual(node.user_key_name, key_name)
+
+        usr = self.config['mycluster']['login']['image_user']
+        self.assertEqual(node.image_user, usr)
+
+        sec_group = self.config['mycluster']['nodes']['compute'] \
+                                                        ['security_group']
+        self.assertEqual(node.security_group, sec_group)
+
+        image = self.config['mycluster']['nodes']['compute']['image_id']
+        self.assertEqual(node.image, image)
+
+        flavor = self.config['mycluster']['nodes']['compute']['flavor']
+        self.assertEqual(node.flavor, flavor)
+
+        self.assertEqual(node.image_userdata, '')
+
+
+
+    def test_create_cluster_storage(self):
+        # default storage path
+        configurator = Configurator(self.config)
+        storage = configurator.create_cluster_storage()
+        default_storage = configurator.general_conf['storage']
+        self.assertEqual(storage._storage_dir, default_storage)
+
+        # custom storage path
+        path = "/tmp"
+        configurator = Configurator(self.config, storage_path=path)
+        storage = configurator.create_cluster_storage()
+        self.assertEqual(storage._storage_dir, path)
+
+    def test_create_setup_provider(self):
+        configurator = Configurator(self.config)
+        provider = configurator.create_setup_provider("mycluster")
+
+        self.assertTrue(type(provider) is AnsibleSetupProvider)
+
+        prv_key = self.config['mycluster']['login']['user_key_private']
+        self.assertEqual(provider._private_key_file, prv_key)
+
+        usr = self.config['mycluster']['login']['image_user']
+        self.assertEqual(provider._remote_user, usr)
+
+        usr_sudo = self.config['mycluster']['login']['image_user_sudo']
+        self.assertEqual(provider._sudo_user, usr_sudo)
+
+        sudo = self.config['mycluster']['login']['image_sudo']
+        self.assertEqual(provider._sudo, sudo)
+
+        pb = self.config['mycluster']['setup']['playbook_path']
+        self.assertEqual(provider._playbook_path, pb)
+
 
 
 class TestConfigValidator(unittest.TestCase):
 
     def setUp(self):
-        # create a file to pass the checks
         file, path = tempfile.mkstemp()
         self.path = path
-        self.config = {
-            "mycluster" : {
-                "setup" : {
-                    "provider" : "ansible",
-                    "playbook_path" : "%(ansible_pb_dir)s/site.yml",
-                    "frontend_groups" : "slurm_master",
-                    "compute_groups" : "slurm_clients",
-                    },
-                "cloud" : {
-                    "provider" : "ec2_boto",
-                    "ec2_url" : "http://cloud.gc3.uzh.ch:8773/services/Cloud",
-                    "ec2_access_key" : "***fill in your data here***",
-                    "ec2_secret_key" : "***fill in your data here***",
-                    "ec2_region" : "nova",
-                    },
-                "login" : {
-                    "image_user" : "gc3-user",
-                    "image_user_sudo" : "root",
-                    "image_sudo" : True,
-                    "user_key_name" : "***name of SSH keypair on Hobbes***",
-                    "user_key_private" : self.path,
-                    "user_key_public" : self.path,
-                    },
-                "cluster" : {
-                    "cloud" : "hobbes",
-                    "login" : "gc3-user",
-                    "setup_provider" : "my-slurm-cluster",
-                    "frontend_nodes" : "1",
-                    "compute_nodes" : "2",
-                    },
-                "nodes": {
-                    "frontend" : {
-                        "security_group" : "default",
-                        "flavor" : "m1.tiny",
-                        "image_id" : "ami-00000048",
-                        },
-                    "compute" : {
-                        "security_group" : "default",
-                        "flavor" : "m1.large",
-                        "image_id" : "ami-00000048",
-                        }
-                }
-            }
-        }
+        self.config = Configuration().get_config(self.path)
 
     def tearDown(self):
         os.unlink(self.path)
-
-
-
 
 
     def test_valid_config(self):
@@ -137,13 +277,6 @@ class TestConfigValidator(unittest.TestCase):
                     validator = ConfigValidator(config_tmp)
                     with self.assertRaises(MultipleInvalid):
                         validator.validate()
-
-
-
-
-
-
-
 
 
 class TestConfigReader(unittest.TestCase):
