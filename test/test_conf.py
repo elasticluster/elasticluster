@@ -24,7 +24,6 @@ import unittest
 
 from voluptuous.voluptuous import MultipleInvalid
 
-
 from elasticluster.conf import ConfigReader, ConfigValidator, Configurator
 from elasticluster.cluster import Node
 from elasticluster.exceptions import ClusterNotFound
@@ -133,8 +132,8 @@ class TestConfigurator(unittest.TestCase):
     def test_load_cluster(self):
         # test without storage file
         configurator = Configurator(self.config)
-        with self.assertRaises(ClusterNotFound):
-            configurator.load_cluster("mycluster")
+        self.assertRaises(ClusterNotFound,
+                          configurator.load_cluster, "mycluster")
 
         # TODO: test with storage file; the problem is to give a fixed
         # directory as a parameter to configurator, since it should work
@@ -240,15 +239,13 @@ class TestConfigValidator(unittest.TestCase):
         config = copy.deepcopy(self.config)
         config["mycluster"]["login"]["user_key_public"] = "/tmp/elastic-test"
         validator = ConfigValidator(config)
-        with self.assertRaises(MultipleInvalid):
-            validator.validate()
+        self.assertRaises(MultipleInvalid, validator.validate)
 
         # check wrong url
         config = copy.deepcopy(config)
         config["mycluster"]["setup"]["ec2_host"] = "www.elasticluster"
         validator = ConfigValidator(config)
-        with self.assertRaises(MultipleInvalid):
-            validator.validate()
+        self.assertRaises(MultipleInvalid, validator.validate)
 
         # check all mandatory properties
         optional = ["frontend_groups", "compute_groups", "frontend_nodes",
@@ -262,8 +259,7 @@ class TestConfigValidator(unittest.TestCase):
                         config_tmp = copy.deepcopy(config)
                         del config_tmp[cluster][section][property]
                         validator = ConfigValidator(config_tmp)
-                        with self.assertRaises(MultipleInvalid):
-                            validator.validate()
+                        self.assertRaises(MultipleInvalid, validator.validate)
 
         # check all node properties
         mandatory = ["flavor", "image_id", "security_group"]
@@ -274,8 +270,7 @@ class TestConfigValidator(unittest.TestCase):
                     config_tmp = copy.deepcopy(config)
                     del config_tmp["mycluster"]["nodes"][node][property]
                     validator = ConfigValidator(config_tmp)
-                    with self.assertRaises(MultipleInvalid):
-                        validator.validate()
+                    self.assertRaises(MultipleInvalid, validator.validate)
 
 
 class TestConfigReader(unittest.TestCase):
@@ -455,8 +450,7 @@ class TestConfigReader(unittest.TestCase):
             compute_nodes=2
             frontend_class=frontend
             """
-        with self.assertRaises(MultipleInvalid):
-            cfg = self._check_read_config(config)
+        self.assertRaises(MultipleInvalid, self._check_read_config, config)
 
     def test_read_section_linking(self):
         '''
@@ -495,16 +489,4 @@ class TestConfigReader(unittest.TestCase):
             compute_nodes=2
             frontend_class=frontend
             """
-        with self.assertRaises(MultipleInvalid):
-            cfg = self._check_read_config(config)
-
-
-
-
-
-
-
-
-
-
-
+        self.assertRaises(MultipleInvalid, self._check_read_config, config)

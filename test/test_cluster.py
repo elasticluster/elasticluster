@@ -21,10 +21,7 @@ import os
 import tempfile
 import unittest
 
-
-
 from mock import Mock
-
 
 from elasticluster.conf import Configurator
 from elasticluster.cluster import Cluster
