@@ -135,6 +135,10 @@ class Start(AbstractCommand):
                 nodes = self.params.nodes.split(',')
                 for nspec in nodes:
                     n, group = nspec.split(':')
+                    if not n.isdigit():
+                        raise ConfigurationError(
+                            "Invalid syntax for option `--nodes`: "
+                            "`%s` is not an integer." % n)
                     n = int(n)
                     self.params.extra_conf[group + '_nodes'] = n
         except ValueError:
@@ -275,6 +279,10 @@ class ResizeCluster(AbstractCommand):
                 nodes = self.params.add.split(',')
                 for nspec in nodes:
                     n, group = nspec.split(':')
+                    if not n.isdigit():
+                        raise ConfigurationError(
+                            "Invalid syntax for option `--nodes`: "
+                            "`%s` is not an integer." % n)
                     self.params.nodes_to_add[group] = int(n)
 
             if self.params.remove:

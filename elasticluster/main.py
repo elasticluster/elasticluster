@@ -39,7 +39,7 @@ from elasticluster.subcommands import ResizeCluster
 from elasticluster.subcommands import SshFrontend
 from elasticluster.subcommands import SftpFrontend
 from elasticluster.conf import Configurator
-
+from elasticluster.exceptions import ConfigurationError
 
 class ElastiCluster(cli.app.CommandLineApp):
     name = "elasticluster"
@@ -120,7 +120,7 @@ class ElastiCluster(cli.app.CommandLineApp):
         if self.params.func:
             try:
                 self.params.func.pre_run()
-            except RuntimeError, ex:
+            except (RuntimeError, ConfigurationError) as ex:
                 sys.stderr.write(str(ex).strip() + '\n')
                 sys.exit(1)
 
