@@ -260,6 +260,10 @@ class BotoCloudProvider(AbstractCloudProvider):
         """
         connection = self._connect()
         security_groups = connection.get_all_security_groups()
+        if not security_groups:
+            raise SecurityGroupError(
+                "the specified security group %s does not exist" % name)
+
         security_groups = dict((s.name, s) for s in security_groups)
 
         if name not in security_groups:
@@ -268,7 +272,7 @@ class BotoCloudProvider(AbstractCloudProvider):
 
     def _find_image_id(self, image_id):
         """
-        Finds an image id to a given image_id.
+        Finds an image id to a given id or name.
         """
         if not self._images:
             connection = self._connect()

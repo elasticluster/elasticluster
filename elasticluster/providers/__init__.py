@@ -46,6 +46,14 @@ class AbstractCloudProvider:
         pass
 
     @abstractmethod
+    def get_ips(self, instance_id):
+        """
+        Finds the private and public ip addresses for a given instance.
+        :return tuple (ip_private, ip_public)
+        """
+        pass
+
+    @abstractmethod
     def is_instance_running(self, instance_id):
         """
         Checks if the instance with the given id is up and running.
