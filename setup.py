@@ -90,6 +90,7 @@ setup(
         'voluptuous',
         'configobj'
     ],
+    tests_require = ['tox', 'mock', 'nose'],
     data_files=ansible_pb_files(),
     entry_points={
         'console_scripts': [

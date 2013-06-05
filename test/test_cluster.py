@@ -34,7 +34,7 @@ from test.test_conf import Configuration
 class TestCluster(unittest.TestCase):
 
     def setUp(self):
-        file, path = tempfile.mkstemp()
+        f, path = tempfile.mkstemp()
         self.path = path
 
 
@@ -49,7 +49,7 @@ class TestCluster(unittest.TestCase):
             config = Configuration().get_config(self.path)
 
         setup = Mock()
-        configurator = Configurator(Configuration().get_config(self.path))
+        configurator = Configurator(config)
         nodes = {"compute": 2, "frontend": 1}
         cluster = Cluster("mycluster", "mycluster", "hobbes", cloud_provider,
                           setup, nodes, configurator)
@@ -90,15 +90,13 @@ class TestCluster(unittest.TestCase):
         """
         Start cluster
         """
-        cluster = self.get_cluster()
-
         cloud_provider = MagicMock()
         cloud_provider.start_instance.return_value = u'test-id'
         cloud_provider.get_ips.return_value = ('127.0.0.1', '127.0.0.1')
         states = [True, True, True, True, True, False, False, False,
                   False, False]
 
-        def is_running(id):
+        def is_running(instance_id):
             return states.pop()
 
         cloud_provider.is_instance_running.side_effect = is_running
@@ -132,7 +130,7 @@ class TestCluster(unittest.TestCase):
         states = [True, True, True, True, True, False, False, False, False,
                   False]
 
-        def is_running(id):
+        def is_running(instance_id):
             return states.pop()
 
         cloud_provider.is_instance_running.side_effect = is_running
@@ -194,7 +192,7 @@ class TestCluster(unittest.TestCase):
 class TestNode(unittest.TestCase):
 
     def setUp(self):
-        file, path = tempfile.mkstemp()
+        f, path = tempfile.mkstemp()
         self.path = path
 
         self.name = "test"
@@ -325,7 +323,7 @@ class TestClusterStorage(unittest.TestCase):
 
     def setUp(self):
         self.storage_path = tempfile.mkdtemp()
-        file, path = tempfile.mkstemp()
+        f, path = tempfile.mkstemp()
         self.path = path
 
     def tearDown(self):
@@ -453,7 +451,8 @@ class TestClusterStorage(unittest.TestCase):
             clusters.append("cluster0%i" % i)
 
         for cluster in clusters:
-            path = os.path.join(self.storage_path, cluster)
+            file_name = cluster + ".json"
+            path = os.path.join(self.storage_path, file_name)
             f = open(path, 'w')
             f.close()
 
@@ -465,7 +464,7 @@ class TestClusterStorage(unittest.TestCase):
 
         # directory cleanup
         for cluster in clusters:
-            path = os.path.join(self.storage_path, cluster)
+            path = os.path.join(self.storage_path, cluster + '.json')
             os.unlink(path)
 
     def test_get_json_path(self):
