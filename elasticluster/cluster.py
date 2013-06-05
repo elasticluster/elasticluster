@@ -148,7 +148,8 @@ class Cluster(object):
                         log.info("Connection to node %s (%s) successful.",
                                  node.name, node.ip_public)
                         pending_nodes.remove(node)
-                time.sleep(5)
+                if pending_nodes:
+                    time.sleep(5)
 
         except TimeoutError:
             log.error("Timeout occured after trying to connect to the nodes \
