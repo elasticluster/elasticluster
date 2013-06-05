@@ -24,7 +24,7 @@ import unittest
 from mock import Mock, MagicMock, patch
 
 from elasticluster.conf import Configurator
-from elasticluster.cluster import Cluster
+from elasticluster.cluster import Cluster, Node
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 from test.test_conf import Configuration
 
@@ -189,9 +189,136 @@ class TestCluster(unittest.TestCase):
             self.assertEqual(node.ip_private, node.ip_public, ip)
         
         
-        
-        
-        
-        
-        
-        
+class TestNode(unittest.TestCase):
+
+    def setUp(self):
+        file, path = tempfile.mkstemp()
+        self.path = path
+
+        self.name = "test"
+        self.node_type = "frontend"
+        self.user_key_public = self.path
+        self.user_key_private = self.path
+        self.user_key_name = "key"
+        self.image_user = "gc3-user"
+        self.security_group = "security"
+        self.image = "ami-000000"
+        self.flavor = "m1.tiny"
+        self.image_userdata = None
+
+    def tearDown(self):
+        os.unlink(self.path)
+
+
+    def get_node(self):
+        cloud_provider = MagicMock()
+        node = Node(self.name, self.node_type, cloud_provider,
+                    self.user_key_public, self.user_key_private,
+                    self.user_key_name, self.image_user,
+                    self.security_group, self.image, self.flavor,
+                    self.image_userdata)
+
+        return node
+
+    def test_start(self):
+        """
+        Start node
+        """
+        node = self.get_node()
+        instance_id = "test-id"
+
+        cloud_provider = node._cloud_provider
+
+        cloud_provider.start_instance.return_value = instance_id
+
+        node.start()
+
+        cloud_provider.start_instance.assert_called_once_with(
+            self.user_key_name, self.user_key_public, self.user_key_private,
+            self.security_group, self.flavor, self.image, self.image_userdata)
+        self.assertEqual(node.instance_id, instance_id)
+
+    def test_stop(self):
+        """
+        Stop Node
+        """
+        node = self.get_node()
+        instance_id = "test-id"
+        node.instance_id = instance_id
+
+        node.stop()
+
+        cloud_provider = node._cloud_provider
+        cloud_provider.stop_instance.assert_called_once_with(instance_id)
+
+    def test_is_alive(self):
+        """
+        Node is alive
+        """
+        # check without having any knowlegde of the node (e.g. instance id)
+        node = self.get_node()
+        self.assertFalse(node.is_alive())
+
+        # check with knowledge and cloud provider and mock ip update
+        instance_id = "test-id"
+        node.instance_id = instance_id
+
+        provider = node._cloud_provider
+        provider.is_instance_running.return_value = True
+        provider.get_ips.return_value = ('127.0.0.1', '127.0.0.1')
+
+        node.is_alive()
+
+        provider.is_instance_running.assert_called_once_with(instance_id)
+
+    def test_connect(self):
+        """
+        Connect to node
+        """
+        node = self.get_node()
+
+        # check without any ips set on the host
+        self.assertEqual(node.connect(), None)
+
+        # check with mocking the ssh connection
+        ssh_mock = MagicMock()
+        with patch('elasticluster.cluster.paramiko.SSHClient') as ssh_mock:
+            ssh_mock.connect.return_value = True
+            node.connect()
+
+    def test_update_ips(self):
+        """
+        Update node ip address
+        """
+        # check without any ip addresses set
+        node = self.get_node()
+        instance_id = "test-id"
+        node.instance_id = instance_id
+        provider = node._cloud_provider
+
+        node.ip_private = None
+        node.ip_public = None
+
+        ip_public = '127.0.0.1'
+        ip_private = '127.0.0.2'
+        provider.get_ips.return_value = (ip_private, ip_public)
+
+        node.update_ips()
+
+        self.assertEqual(node.ip_private, ip_private)
+        self.assertEqual(node.ip_public, ip_public)
+        provider.get_ips.assert_called_once_with(instance_id)
+
+        # check with already present ips
+        ip_unused = "127.0.0.3"
+        provider.get_ips.return_value = (ip_unused, ip_unused)
+
+        node.update_ips()
+
+        self.assertEqual(node.ip_private, ip_private)
+        self.assertEqual(node.ip_public, ip_public)
+
+
+
+
+
