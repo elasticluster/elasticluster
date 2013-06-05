@@ -17,14 +17,16 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
+import json
 import os
+import shutil
 import tempfile
 import unittest
 
 from mock import Mock, MagicMock, patch
 
 from elasticluster.conf import Configurator
-from elasticluster.cluster import Cluster, Node
+from elasticluster.cluster import Cluster, Node, ClusterStorage
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 from test.test_conf import Configuration
 
@@ -319,6 +321,161 @@ class TestNode(unittest.TestCase):
         self.assertEqual(node.ip_public, ip_public)
 
 
+class TestClusterStorage(unittest.TestCase):
 
+    def setUp(self):
+        self.storage_path = tempfile.mkdtemp()
+        file, path = tempfile.mkstemp()
+        self.path = path
 
+    def tearDown(self):
+        shutil.rmtree(self.storage_path)
+        os.unlink(self.path)
+
+    def get_cluster_storage(self):
+        storage = ClusterStorage(self.storage_path)
+        return storage
+
+    def test_dump_cluster(self):
+        """
+        Dump cluster to json
+        """
+        storage = self.get_cluster_storage()
+
+        configurator = Configurator(Configuration().get_config(self.path))
+        nodes = {"compute": 2, "frontend": 1}
+        cluster = Cluster("mycluster", "cluster_name", "hobbes", MagicMock(),
+                          MagicMock(), nodes, configurator)
+        instance_id = "test-id"
+        ip_public = "127.0.0.1"
+        ip_private = "127.0.0.2"
+        for node in cluster.get_all_nodes():
+            node.instance_id = instance_id
+            node.ip_public = ip_public
+            node.ip_private = ip_private
+
+        storage.dump_cluster(cluster)
+
+        dump = os.path.join(self.storage_path, "cluster_name.json")
+
+        f = open(dump, "r")
+        content = f.read()
+
+        expected = """
+            {"compute_nodes": 2, "nodes":
+                [{"instance_id": "test-id", "ip_public": "127.0.0.1",
+                    "type": "compute", "name": "compute001",
+                    "ip_private": "127.0.0.2"},
+                 {"instance_id": "test-id", "ip_public": "127.0.0.1",
+                    "type": "compute", "name": "compute002",
+                    "ip_private": "127.0.0.2"},
+                 {"instance_id": "test-id", "ip_public": "127.0.0.1",
+                    "type": "frontend", "name": "frontend001",
+                    "ip_private": "127.0.0.2"}],
+                "frontend_nodes": 1, "name": "cluster_name",
+                "template": "mycluster"}"""
+
+        self.assertEqual(json.loads(content), json.loads(expected))
+
+        os.unlink(dump)
+
+    def test_load_cluster(self):
+        content = """
+            {"compute_nodes": 2, "nodes":
+                [{"instance_id": "test-id", "ip_public": "127.0.0.1",
+                    "type": "compute", "name": "compute001",
+                    "ip_private": "127.0.0.2"},
+                 {"instance_id": "test-id", "ip_public": "127.0.0.1",
+                    "type": "compute", "name": "compute002",
+                    "ip_private": "127.0.0.2"},
+                 {"instance_id": "test-id", "ip_public": "127.0.0.1",
+                    "type": "frontend", "name": "frontend001",
+                    "ip_private": "127.0.0.2"}],
+                "frontend_nodes": 1, "name": "cluster_name",
+                "template": "mycluster"}"""
+        content = " ".join(content.split())
+
+        path = os.path.join(self.storage_path, "cluster_name.json")
+        f = open(path, 'w')
+        f.write(content)
+        f.close()
+
+        storage = self.get_cluster_storage()
+        cluster = storage.load_cluster("cluster_name")
+
+        self.assertEqual(cluster['name'], "cluster_name")
+        self.assertEqual(cluster['template'], "mycluster")
+
+        self.assertEqual(cluster['compute_nodes'], 2)
+        self.assertEqual(cluster['frontend_nodes'], 1)
+
+        self.assertEqual(len(cluster['nodes']), 3)
+
+        for i in range(2):
+            self.assertEqual(cluster['nodes'][i]['instance_id'], "test-id")
+            self.assertEqual(cluster['nodes'][i]['ip_public'], "127.0.0.1")
+            self.assertEqual(cluster['nodes'][i]['ip_private'], "127.0.0.2")
+
+        self.assertEqual(cluster['nodes'][0]['name'], "compute001")
+        self.assertEqual(cluster['nodes'][1]['name'], "compute002")
+        self.assertEqual(cluster['nodes'][2]['name'], "frontend001")
+
+        self.assertEqual(cluster['nodes'][0]['type'], "compute")
+        self.assertEqual(cluster['nodes'][1]['type'], "compute")
+        self.assertEqual(cluster['nodes'][2]['type'], "frontend")
+
+    def test_delete_cluster(self):
+        """
+        Delete cluster storage file
+        """
+        storage = self.get_cluster_storage()
+
+        path = os.path.join(self.storage_path, "cluster_name.json")
+        f = open(path, 'w')
+        f.write("test")
+        f.close()
+
+        storage.delete_cluster("cluster_name")
+
+        self.assertFalse(os.path.exists(path))
+
+        if os.path.exists(path):
+            os.unlink(path)
+
+    def test_get_stored_clusters(self):
+        """
+        Reading all stored clusters (json)
+        """
+        storage = self.get_cluster_storage()
+
+        clusters = []
+        for i in range(10):
+            clusters.append("cluster0%i" % i)
+
+        for cluster in clusters:
+            path = os.path.join(self.storage_path, cluster)
+            f = open(path, 'w')
+            f.close()
+
+        stored_clusters = storage.get_stored_clusters()
+
+        self.assertEqual(len(clusters), len(stored_clusters))
+        for cluster in stored_clusters:
+            self.assertTrue(cluster in clusters)
+
+        # directory cleanup
+        for cluster in clusters:
+            path = os.path.join(self.storage_path, cluster)
+            os.unlink(path)
+
+    def test_get_json_path(self):
+        """
+        Storage json path getter
+        """
+        storage = self.get_cluster_storage()
+
+        path = storage._get_json_path("cluster_name")
+        path_valid = os.path.join(self.storage_path, "cluster_name.json")
+
+        self.assertEqual(path, path_valid)
 
