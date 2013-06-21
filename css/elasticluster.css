@@ -8,7 +8,7 @@ div.container {
 }
 
 div.container div.hero-unit{
-    padding: 40px;
+    padding: 40px 40px 60px 40px;
 }
 
 div.demo {
@@ -32,4 +32,16 @@ h1, h2, h3, h4, h5, h6, div.hero-unit h1 {
 
 div.three-headings h3{
     text-align: left;
+}
+
+
+/* mobile customizations */
+@media (max-width: 480px) {
+    div.hero-unit h1{
+        font-size:40px;
+    }
+
+    div.demo ul.nav-tabs li a {
+        font-size:12px !important;
+    }
 }
