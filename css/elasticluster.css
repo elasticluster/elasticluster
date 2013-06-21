@@ -1,0 +1,35 @@
+
+/* structure */
+body{
+    padding-bottom:30px;
+}
+div.container {
+    margin-top: 50px;
+}
+
+div.container div.hero-unit{
+    padding: 40px;
+}
+
+div.demo {
+    margin-top: 30px;
+}
+
+div.commands h5 {
+    margin-top: 30px;
+}
+
+div.license {
+    margin-top: 50px;
+}
+
+
+
+/* fonts */
+h1, h2, h3, h4, h5, h6, div.hero-unit h1 {
+    color: #0028a5;
+}
+
+div.three-headings h3{
+    text-align: left;
+}
