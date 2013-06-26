@@ -187,14 +187,21 @@ class Cluster(object):
         deletes the cluster storage.
         """
         for node in self.get_all_nodes():
-            try:
-                node.stop()
+            if node.instance_id:
+                try:
+                    node.stop()
+                    self.nodes[node.type].remove(node)
+                    log.debug("Removed node with instance id %s from %s"
+                              % (node.instance_id, node.type))
+                except:
+                    # Boto does not always raises an `Exception` class!
+                    log.error("could not stop instance `%s`, it might "
+                              "already be down.", node.instance_id)
+            else:
+                log.debug("Not stopping node with no instance id. It seems "
+                          "like node `%s` did not start correctly."
+                          % node.name)
                 self.nodes[node.type].remove(node)
-                log.debug("Removed node with instance id %s from %s" % (node.instance_id, node.type))
-            except:
-                # Boto does not always raises an `Exception` class!
-                log.error("could not stop instance `%s`, it might "
-                          "already be down.", node.instance_id)
         if not self.get_all_nodes():
             log.debug("Removing cluster %s.", self.name)
             self._setup_provider.cleanup()
