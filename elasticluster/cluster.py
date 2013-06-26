@@ -177,7 +177,7 @@ class Cluster(object):
         """
         nodes = self.nodes.values()
         if nodes:
-            return reduce(operator.add, nodes)
+            return reduce(operator.add, nodes, list())
         else:
             return []
 
@@ -190,6 +190,7 @@ class Cluster(object):
             try:
                 node.stop()
                 self.nodes[node.type].remove(node)
+                log.debug("Removed node with instance id %s from %s" % (node.instance_id, node.type))
             except:
                 # Boto does not always raises an `Exception` class!
                 log.error("could not stop instance `%s`, it might "
