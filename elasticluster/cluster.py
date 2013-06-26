@@ -23,6 +23,7 @@ import operator
 import os
 import signal
 import socket
+import sys
 import time
 
 # External modules
@@ -89,23 +90,34 @@ class Cluster(object):
         Starts the cluster with the properties given in the
         constructor. It will create the nodes through the configurator
         and delegate all the work to them. After the identifiers of
-        all instances are available, it will save the cluster throgh
+        all instances are available, it will save the cluster through
         the cluster storage.
         """
 
-        # start every node
+        def sigint_handler(signal, frame):
+            """
+            Makes sure the cluster is stored, before the sigint results in
+            exiting during the node startup.
+            """
+            log.error("user interruption: saving cluster before exit.")
+            self._storage.dump_cluster(self)
+            sys.exit(1)
 
-        # ANTONIO: I don't think it's correct to stop all the nodes if
-        # something goes wrong here.
+        signal.signal(signal.SIGINT, sigint_handler)
+
+        # start every node
         for node in self.get_all_nodes():
             if node.is_alive():
                 log.info("Not starting node %s which is "
                          "already up&running.", node.name)
             else:
+                log.info("starting node...")
                 node.start()
 
-        # dump the cluster here, so we don't loose any knowledge about nodes
+        # dump the cluster here, so we don't loose any knowledge
         self._storage.dump_cluster(self)
+
+        signal.alarm(0)
 
         # check if all nodes are running, stop all nodes if the
         # timeout is reached
@@ -258,6 +270,7 @@ class Node(object):
     """
     frontend_type = 'frontend'
     compute_type = 'compute'
+    connection_timeout = 10
 
     def __init__(self, name, node_type, cloud_provider, user_key_public,
                  user_key_private, user_key_name, image_user, security_group,
@@ -336,7 +349,8 @@ class Node(object):
             ssh.connect(self.ip_public,
                         username=self.image_user,
                         allow_agent=True,
-                        key_filename=self.user_key_private)
+                        key_filename=self.user_key_private,
+                        timeout=Node.connection_timeout)
             log.debug("Connection to %s succeded!", self.ip_public)
             return ssh
         except socket.error, ex:
