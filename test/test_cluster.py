@@ -27,6 +27,7 @@ from mock import Mock, MagicMock, patch
 
 from elasticluster.conf import Configurator
 from elasticluster.cluster import Cluster, Node, ClusterStorage
+from elasticluster.exceptions import ClusterError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 from test.test_conf import Configuration
 
@@ -41,7 +42,7 @@ class TestCluster(unittest.TestCase):
     def tearDown(self):
         os.unlink(self.path)
 
-    def get_cluster(self, cloud_provider=None, config=None):
+    def get_cluster(self, cloud_provider=None, config=None, nodes=None):
         if not cloud_provider:
             cloud_provider = BotoCloudProvider("https://hobbes.gc3.uzh.ch/",
                                           "nova", "a-key", "s-key")
@@ -50,7 +51,8 @@ class TestCluster(unittest.TestCase):
 
         setup = Mock()
         configurator = Configurator(config)
-        nodes = {"compute": 2, "frontend": 1}
+        if not nodes:
+            nodes = {"compute": 2, "frontend": 1}
         cluster = Cluster("mycluster", "mycluster", "hobbes", cloud_provider,
                           setup, nodes, configurator)
         return cluster
@@ -115,6 +117,26 @@ class TestCluster(unittest.TestCase):
             assert node.instance_id == u'test-id'
             assert node.ip_public == '127.0.0.1'
             assert node.ip_private == '127.0.0.1'
+
+    def test_check_cluster_size(self):
+        nodes = {"compute": 3, "frontend": 1}
+        nodes_min = {"compute": 1, "frontend": 3}
+        cluster = self.get_cluster(nodes=nodes)
+        cluster.min_nodes = nodes_min
+
+        cluster._check_cluster_size()
+
+        self.assertEqual(len(cluster.nodes["frontend"]), 3)
+        self.assertTrue(len(cluster.nodes["compute"]) >= 1)
+
+        # not satisfiable cluster setup
+        nodes = {"compute": 3, "frontend": 1}
+        nodes_min = {"compute": 5, "frontend": 3}
+        cluster = self.get_cluster(nodes=nodes)
+        cluster.min_nodes = nodes_min
+
+        with self.assertRaises(ClusterError):
+            cluster._check_cluster_size()
 
     def test_get_all_nodes(self):
         """
@@ -187,6 +209,7 @@ class TestCluster(unittest.TestCase):
 
         for node in cluster.get_all_nodes():
             self.assertEqual(node.ip_private, node.ip_public, ip)
+
         
         
 class TestNode(unittest.TestCase):
