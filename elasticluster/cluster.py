@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 # System imports
@@ -25,6 +26,8 @@ import signal
 import socket
 import sys
 import time
+from multiprocessing.dummy import Manager, Pool
+from Queue import Empty
 
 # External modules
 import paramiko
@@ -32,7 +35,7 @@ import paramiko
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.exceptions import TimeoutError, ClusterNotFound, \
-    NodeNotFound
+    NodeNotFound, InstanceError
 
 
 class Cluster(object):
@@ -43,7 +46,7 @@ class Cluster(object):
     startup_timeout = 60 * 10
 
     def __init__(self, template, name, cloud, cloud_provider, setup_provider,
-                 nodes, configurator, **extra):
+                 nodes, configurator, min_nodes=None, **extra):
         self.template = template
         self.name = name
         self._cloud = cloud
@@ -53,6 +56,7 @@ class Cluster(object):
         self._configurator = configurator
         self._storage = configurator.create_cluster_storage()
         self.nodes = dict((k, []) for k in nodes)
+        self.min_nodes = min_nodes
         self.ssh_to = extra.get('ssh_to')
         self.extra = extra.copy()
         # initialize nodes
@@ -94,25 +98,64 @@ class Cluster(object):
         the cluster storage.
         """
 
+        # To not mess up the cluster management we start the nodes in a
+        # different thread. In this case the main thread receives the sigint
+        # and communicates to the `start_node` thread. The nodes to work on
+        # are passed in a managed queue.
+        self.keep_running = True
         def sigint_handler(signal, frame):
             """
             Makes sure the cluster is stored, before the sigint results in
             exiting during the node startup.
             """
             log.error("user interruption: saving cluster before exit.")
-            self._storage.dump_cluster(self)
-            sys.exit(1)
+            self.keep_running = False
+
+        # start every node
+        def start_node(node_queue):
+            try:
+                while not node_queue.empty():
+                    if not self.keep_running:
+                        log.error("Aborting excution upon CTRL-C")
+                        break
+                    node = node_queue.get()
+                    # TODO: the following check is not optimal yet. When a
+                    # node is still in a starting state,
+                    # it will start another node here,
+                    # since the `is_alive` method will only check for
+                    # running nodes (see issue #13)
+                    if node.is_alive():
+                        log.info("Not starting node %s which is "
+                                 "already up&running.", node.name)
+                    else:
+                        log.info("starting node...")
+                        node.start()
+            except Empty:
+                # nothing to do if the queue turns out to be empty.
+                pass
+
+        thread_pool = Pool(processes=1)
+        manager = Manager()
+        node_queue = manager.Queue()
+        for node in self.get_all_nodes():
+            node_queue.put(node)
 
         signal.signal(signal.SIGINT, sigint_handler)
 
-        # start every node
-        for node in self.get_all_nodes():
-            if node.is_alive():
-                log.info("Not starting node %s which is "
-                         "already up&running.", node.name)
-            else:
-                log.info("starting node...")
-                node.start()
+        result = thread_pool.apply_async(start_node, (node_queue,))
+
+        while not result.ready():
+            result.wait(1)
+            if not self.keep_running:
+                # the user did abort the start of the cluster. We finish the
+                #  current start of a node and save the status to the
+                # storage, so we don't have not managed instances laying
+                # around
+                log.error("Aborting upon Ctrl-C")
+                thread_pool.close()
+                thread_pool.join()
+                self._storage.dump_cluster(self)
+                sys.exit(1)
 
         # dump the cluster here, so we don't loose any knowledge
         self._storage.dump_cluster(self)
