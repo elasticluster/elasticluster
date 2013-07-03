@@ -19,6 +19,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 import copy
 import os
+import shutil
 import tempfile
 import unittest
 
@@ -131,9 +132,12 @@ class TestConfigurator(unittest.TestCase):
 
     def test_load_cluster(self):
         # test without storage file
-        configurator = Configurator(self.config)
+        storage_path = tempfile.mkdtemp()
+        configurator = Configurator(self.config, storage_path=storage_path)
         self.assertRaises(ClusterNotFound,
                           configurator.load_cluster, "mycluster")
+
+        shutil.rmtree(storage_path)
 
         # TODO: test with storage file; the problem is to give a fixed
         # directory as a parameter to configurator, since it should work
