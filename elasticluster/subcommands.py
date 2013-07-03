@@ -27,7 +27,7 @@ import sys
 from elasticluster.conf import Configurator
 from elasticluster import log
 from elasticluster.exceptions import ClusterNotFound, ConfigurationError, \
-    ImageError, SecurityGroupError, NodeNotFound
+    ImageError, SecurityGroupError, NodeNotFound, ClusterError
 
 
 class AbstractCommand():
@@ -193,8 +193,8 @@ class Start(AbstractCommand):
                 else:
                     print("\nWARNING: YOUR CLUSTER IS NOT READY YET!")
             print(cluster_summary(cluster))
-        except (KeyError, ImageError, SecurityGroupError) as e:
-            print("Your cluster could not start `%s`" % e)
+        except (KeyError, ImageError, SecurityGroupError, ClusterError) as ex:
+            print("Your cluster could not start `%s`" % ex)
 
 
 class Stop(AbstractCommand):

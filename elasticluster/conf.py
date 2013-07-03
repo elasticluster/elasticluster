@@ -140,6 +140,9 @@ class Configurator(object):
         nodes = dict(
             (k[:-6], int(v)) for k, v in conf['cluster'].iteritems() if
             k.endswith('_nodes'))
+        min_nodes = dict(
+            (k[:-10], int(v)) for k, v in conf['cluster'].iteritems() if
+            k.endswith('_nodes_min'))
 
         extra = conf['cluster'].copy()
         extra.pop('cloud')
@@ -150,7 +153,7 @@ class Configurator(object):
                        self.create_cloud_provider(template),
                        self.create_setup_provider(template),
                        nodes,
-                       self, **extra)
+                       self, min_nodes=min_nodes, **extra)
 
     def load_cluster(self, cluster_name):
         """

@@ -35,7 +35,8 @@ import paramiko
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.exceptions import TimeoutError, ClusterNotFound, \
-    NodeNotFound, InstanceError
+    NodeNotFound, InstanceError, SecurityGroupError, ImageError, KeypairError,\
+    ClusterError
 
 
 class Cluster(object):
@@ -56,13 +57,24 @@ class Cluster(object):
         self._configurator = configurator
         self._storage = configurator.create_cluster_storage()
         self.nodes = dict((k, []) for k in nodes)
-        self.min_nodes = min_nodes
         self.ssh_to = extra.get('ssh_to')
         self.extra = extra.copy()
         # initialize nodes
         for cls in nodes:
             for i in range(nodes[cls]):
                 self.add_node(cls)
+
+        # set the minimum number of nodes per group
+        self.min_nodes = min_nodes
+        if not self.min_nodes:
+            # the node minimum is implicit if not specified.
+            self.min_nodes = nodes
+        else:
+            # check that each group has a minimum value
+            for group, nodes in self.nodes.iteritems():
+                if group not in self.min_nodes:
+                    self.min_nodes[group] = len(nodes)
+
 
     def add_node(self, node_type, name=None):
         """
@@ -116,7 +128,7 @@ class Cluster(object):
             try:
                 while not node_queue.empty():
                     if not self.keep_running:
-                        log.error("Aborting excution upon CTRL-C")
+                        log.error("Aborting execution upon CTRL-C")
                         break
                     node = node_queue.get()
                     # TODO: the following check is not optimal yet. When a
@@ -129,9 +141,16 @@ class Cluster(object):
                                  "already up&running.", node.name)
                     else:
                         log.info("starting node...")
-                        node.start()
+                        try:
+                            node.start()
+                        except (InstanceError, SecurityGroupError,
+                        KeypairError, ImageError) as e:
+                            log.error("could not start node `%s` for reason "
+                                      "`%s`" % e)
+
             except Empty:
-                # nothing to do if the queue turns out to be empty.
+                # nothing to do if the queue turns out to be empty - the
+                # nodes are then already started.
                 pass
 
         thread_pool = Pool(processes=1)
@@ -162,6 +181,10 @@ class Cluster(object):
 
         signal.alarm(0)
 
+        def sigint_reset(signal, frame):
+            sys.exit(1)
+        signal.signal(signal.SIGINT, sigint_reset)
+
         # check if all nodes are running, stop all nodes if the
         # timeout is reached
         def timeout_handler(signum, frame):
@@ -171,18 +194,21 @@ class Cluster(object):
         signal.signal(signal.SIGALRM, timeout_handler)
         signal.alarm(Cluster.startup_timeout)
 
+        starting_nodes = self.get_all_nodes()
         try:
-            starting_nodes = self.get_all_nodes()
             while starting_nodes:
                 starting_nodes = [n for n in starting_nodes
                                   if not n.is_alive()]
                 if starting_nodes:
                     time.sleep(5)
         except TimeoutError as timeout:
-            log.error(timeout.message)
-            log.error("timeout error occured: "
-                      "stopping all nodes")
-            self.stop()
+            log.error("Not all nodes were started correctly within the given"
+                      " timeout `%s`" & Cluster.startup_timeout)
+            for node in starting_nodes:
+                log.error("Stopping node `%s`, since it could not start "
+                          "within the given timeout" % node.name)
+                node.stop()
+                self.remove_node(node)
 
         signal.alarm(0)
 
@@ -207,12 +233,75 @@ class Cluster(object):
                     time.sleep(5)
 
         except TimeoutError:
-            log.error("Timeout occured after trying to connect to the nodes \
-                        via ssh. The nodes are running, but no connection\
-                        could be established and the setup did not run. \
-                        Please re-run `elasticluster setup %s`", self.name)
+            # remove the pending nodes from the cluster
+            log.error("Could not connect to all the nodes of the "
+                      "cluster within the given timeout `%s`."
+                      % Cluster.startup_timeout)
+            for node in pending_nodes:
+                log.error("Stopping node `%s`, since we could not connect to"
+                          " it within the timeout." % node.name)
+                node.stop()
+                self.remove_node(node)
 
         signal.alarm(0)
+
+        # A lot of things could go wrong when starting the cluster. To
+        # ensure a stable cluster fitting the needs of the user in terms of
+        # cluster size, we check the minimum nodes within the node groups to
+        # match the current setup.
+        self._check_cluster_size()
+
+
+    def _check_cluster_size(self):
+        """
+        Checks the size of the cluster to fit the needs of the user. It
+        considers the minimum values for the node groups if present.
+        Otherwise it will assume the user wants the amount of specified
+        nodes.
+        :raises: ClusterError
+        """
+        # check the total sizes before moving the nodes around
+        minimum_nodes = 0
+        for group, size in self.min_nodes.iteritems():
+            minimum_nodes = minimum_nodes + size
+
+        if len(self.get_all_nodes()) < minimum_nodes:
+            raise ClusterError("The cluster does not provide the minimum "
+                               "amount of nodes specified in the "
+                               "configuration. The nodes are still running, "
+                               "but will not be setup yet. Please change the"
+                               " minimum amount of nodes in the "
+                               "configuration or try to start a new cluster "
+                               "after checking the cloud provider settings.")
+
+        # finding all node groups with an unsatisfied amount of nodes
+        unsatisfied_groups = []
+        for group, size in self.min_nodes.iteritems():
+            if len(self.nodes[group]) < size:
+                unsatisfied_groups.append(group)
+
+        # trying to move nodes around to fill the groups with missing nodes
+        for ugroup in unsatisfied_groups[:]:
+            missing = self.min_nodes[ugroup] - len(self.nodes[ugroup])
+            for group, nodes in self.nodes.iteritems():
+                spare = len(self.nodes[group]) - self.min_nodes[group]
+                while spare > 0 and missing > 0:
+                    self.nodes[ugroup].append(self.nodes[group][-1])
+                    del self.nodes[group][-1]
+                    spare = spare - 1
+                    missing = missing - 1
+
+                    if missing == 0:
+                        unsatisfied_groups.remove(ugroup)
+
+        if unsatisfied_groups:
+            raise ClusterError("Could not find an optimal solution to "
+                               "distribute the started nodes into the node "
+                               "groups to satisfy the minimum amount of "
+                               "nodes. Please change the minimum amount of "
+                               "nodes in the configuration or try to start a"
+                               " new clouster after checking the cloud "
+                               "provider settings")
 
     def get_all_nodes(self):
         """

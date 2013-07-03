@@ -42,6 +42,10 @@ class ClusterNotFound(Exception):
     pass
 
 
+class ClusterError(Exception):
+    pass
+
+
 class NodeNotFound(Exception):
     pass
 

@@ -122,7 +122,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                 instance_type=flavor, user_data=image_userdata)
         except Exception, ex:
             log.error("Error starting instance: %s", ex)
-            return
+            raise InstanceError(ex)
 
         vm = reservation.instances[-1]
 
