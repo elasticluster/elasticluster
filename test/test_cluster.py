@@ -135,8 +135,8 @@ class TestCluster(unittest.TestCase):
         cluster = self.get_cluster(nodes=nodes)
         cluster.min_nodes = nodes_min
 
-        with self.assertRaises(ClusterError):
-            cluster._check_cluster_size()
+        self.failUnlessRaises(ClusterError, cluster._check_cluster_size)
+
 
     def test_get_all_nodes(self):
         """
