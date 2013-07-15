@@ -1,3 +1,0 @@
-[submodule "elasticluster/providers/ansible-playbooks"]
-	path = elasticluster/providers/ansible-playbooks
-	url = git://github.com/gc3-uzh-ch/ansible-playbooks
