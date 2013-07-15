@@ -151,7 +151,7 @@ class Configurator(object):
                        name,
                        conf['cluster']['cloud'],
                        self.create_cloud_provider(template),
-                       self.create_setup_provider(template),
+                       self.create_setup_provider(template, name=name),
                        nodes,
                        self, min_nodes=min_nodes, **extra)
 
@@ -207,8 +207,11 @@ class Configurator(object):
         """
         return ClusterStorage(self.general_conf['storage'])
 
-    def create_setup_provider(self, cluster_template):
+    def create_setup_provider(self, cluster_template, name=None):
         conf = self.cluster_conf[cluster_template]['setup']
+        conf['general_conf'] = self.general_conf.copy()
+        if name:
+            conf['cluster_name'] = name
         conf_login = self.cluster_conf[cluster_template]['login']
 
         provider_name = conf.get('provider')

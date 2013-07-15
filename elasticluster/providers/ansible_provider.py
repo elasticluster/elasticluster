@@ -86,6 +86,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         self._sudo_user = sudo_user
         self._sudo = sudo
         self._playbook_path = playbook_path
+        self.extra_conf = extra_conf
         self.groups = dict((k[:-7], v) for k, v in extra_conf.items() if k.endswith('_groups'))
         self.environment = dict()
         for nodetype, grps in self.groups.iteritems():
@@ -101,6 +102,15 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                     self.environment[nodetype][var] = value
 
         self.inventory_path = None
+        if ('general_conf' not in extra_conf
+            or 'storage' not in extra_conf['general_conf']
+            or 'cluster_name' not in extra_conf):
+            log.error("Unable to store inventory file in elasticluster storage directory")
+        else:
+            self.inventory_path = os.path.join(
+                extra_conf['general_conf']['storage'],
+                "%s.ansible-inventory" % extra_conf['cluster_name'])
+
         module_dir = extra_conf.get('ansible_module_dir', None)
         if module_dir:
             for mdir in module_dir.split(','):
@@ -160,11 +170,8 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         except AnsibleError as e:
             elasticluster.log.error(
                 "could not execute ansible playbooks. message=`%s`", str(e))
-            self.cleanup()
             return False
 
-        # delete inventory file
-        self.cleanup()
 
         # Check ansible status.
         cluster_failures = False
@@ -209,11 +216,16 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         if inventory:
             # create a temporary file to pass to ansible, since the
             # api is not stable yet...
-            (fd, fname) = tempfile.mkstemp()
-            fd = os.fdopen(fd, 'w+')
-            elasticluster.log.debug("Writing invenetory file `%s`",
-                                    fname)
-
+            fname = self.inventory_path
+            if not self.inventory_path:
+                (fd, fname) = tempfile.mkstemp()
+                fd = os.fdopen(fd, 'w+')
+                elasticluster.log.warning(
+                    "Not using default storage directory for the inventory file.")
+                elasticluster.log.warning(
+                    "Writing invenetory file to `%s`", fname)
+            else:
+                fd = open(self.inventory_path, 'w+')
             for section, hosts in inventory.items():
                 fd.write("\n["+section+"]\n")
                 if hosts:
@@ -224,7 +236,10 @@ class AnsibleSetupProvider(AbstractSetupProvider):
 
             fd.close()
 
-            return fname
+            return self.inventory_path
+        else:
+            elasticluster.log.info("No inventory file was created.")
+            return None
 
     def cleanup(self):
         """
