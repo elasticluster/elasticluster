@@ -8,6 +8,8 @@
     - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: common/tasks/hostname.yml
     - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+  handlers:
+    - include: common/handlers/main.yml
 
 - name: PBS masternode Playbook
   hosts: pbs_master
