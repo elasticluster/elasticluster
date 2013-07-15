@@ -5,5 +5,5 @@
     - slurm-llnl
     - munge
 
-- include: slurm/tasks/slurm.yml
-- include: slurm/tasks/munge.yml
+- include: slurm.yml
+- include: munge.yml

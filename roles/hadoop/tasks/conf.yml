@@ -13,20 +13,20 @@
     - ${mapred_localdir}
   
 - name: configure masters file
-  action: template src=hadoop/templates/masters.j2 dest=$hd_confdir/masters
+  action: template src=hadoop/templates/masters.j2 dest=$hd_confdir/masters owner=root mode=0644
 
 - name: configure slaves file
-  action: template src=hadoop/templates/slaves.j2 dest=$hd_confdir/slaves
+  action: template src=hadoop/templates/slaves.j2 dest=$hd_confdir/slaves owner=root mode=0644
   only_if: '"$inventory_hostname" in ${groups.hadoop_jobtracker} or "$inventory_hostname" in ${groups.hadoop_namenode}'
 
 - name: configure core-site.xml file
-  action: template src=hadoop/templates/core-site.xml.j2 dest=$hd_confdir/core-site.xml
+  action: template src=hadoop/templates/core-site.xml.j2 dest=$hd_confdir/core-site.xml owner=root mode=0644
 
 - name: configure hdfs-site.xml file
-  action: template src=hadoop/templates/hdfs-site.xml.j2 dest=$hd_confdir/hdfs-site.xml
+  action: template src=hadoop/templates/hdfs-site.xml.j2 dest=$hd_confdir/hdfs-site.xml owner=root mode=0644
 
 - name: configure mapred-site.xml file
-  action: template src=hadoop/templates/mapred-site.xml.j2 dest=$hd_confdir/mapred-site.xml
+  action: template src=hadoop/templates/mapred-site.xml.j2 dest=$hd_confdir/mapred-site.xml owner=root mode=0644
 
 - name: set JAVA_HOME environment variable
   action: lineinfile dest=$hd_confdir/hadoop-env.sh regexp='export JAVA_HOME.*' line='export JAVA_HOME=/usr/lib/jvm/default-java'

@@ -22,6 +22,7 @@
     - include: cluster/tasks/packages.yml
   handlers:
     - include: slurm/handlers/main.yml
+    - include: common/handlers/main.yml
     - include: pbs+maui/handlers/main.yml
 
 - name: MAUI masternode Playbook
