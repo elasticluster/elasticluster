@@ -594,7 +594,7 @@ class ClusterStorage(object):
             if fname.endswith('.json') and os.path.isfile(fpath):
                 db_files.append(fname[:-5])
             else:
-                log.warning("Ignoring invalid storage file %s", fpath)
+                log.info("Ignoring invalid storage file %s", fpath)
 
         return db_files
 
