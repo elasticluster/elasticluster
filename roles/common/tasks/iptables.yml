@@ -1,0 +1,28 @@
+---
+# This task is used to set very simple firewall rules, allowing
+# everything from a set of hosts and denying everything but ssh
+# connections from any other host.
+#
+# Variables you need to define:
+# trusted_hosts:   list of ip addresses
+
+- action: apt pkg=$item update_cache=yes
+  only_if: $is_ubuntu
+  with_items:
+    - iptables
+    - iptables-persistent
+
+- action: yum pkg=iptables
+  only_if: $is_centos
+
+- action: set_fact destfile=/etc/iptables/rules.v4
+  only_if: $is_ubuntu
+  tags: iptables
+
+- action: set_fact destfile=/etc/sysconfig/iptables
+  only_if: $is_centos
+  tags: iptables
+
+- action: template dest={{ destfile }} src=common/templates/etc/iptables.d/rules.v4.j2 owner=root group=root mode=0644
+  notify: restart iptables
+  tags: iptables

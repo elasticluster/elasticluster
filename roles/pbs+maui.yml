@@ -8,6 +8,7 @@
     - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: common/tasks/hostname.yml
     - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+    - include: common/tasks/iptables.yml trusted_hosts=${groups.all}
   handlers:
     - include: common/handlers/main.yml
 
@@ -41,7 +42,7 @@
   vars_files:
     - vars/os
   tasks: 
-    - include: common/tasks/nfs-clients.yml nfsserver=${groups.pbs_master[0]} nfspath=/home nfsmount=/home
+    - include: common/tasks/nfs-clients.yml nfsserver=${groups.pbs_master[0]} nfspath=/home nfsmount=/home nfsoptions=rw,sync,nfsvers=3
     - include: pbs+maui/tasks/clients.yml
     - include: cluster/tasks/packages.yml
   handlers:

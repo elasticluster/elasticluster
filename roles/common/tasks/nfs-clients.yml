@@ -24,6 +24,14 @@
   tags:
     - nfs
 
+- name: Ensure rpcbind is running (CentOS)
+  action: service name=rpcbind state=started enabled=yes
+  only_if: $is_centos
+
+- name: Ensure portmap is running (Ubuntu)
+  action: service name=portmap state=started enabled=yes
+  only_if: $is_ubuntu
+
 - name: Ensure ${nfsmount} directory exists
   action: file path=${nfsmount} state=directory
   tags: 
