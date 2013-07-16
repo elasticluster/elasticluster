@@ -13,4 +13,4 @@
 
 - name: restart iptables
   action: service name=iptables state=restarted
-  only_if: $is_ubuntu
+  only_if: $is_centos
