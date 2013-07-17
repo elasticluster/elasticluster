@@ -37,7 +37,7 @@
   tags: 
     - nfs
 
-- action: shell if [ -z "${nfsoptions}" ]; then  echo rw,sync; else echo ${nfsoptions}; fi
+- action: shell if [ -z "${nfsoptions}" ]; then  echo rw,sync,nfsvers=3; else echo ${nfsoptions}; fi
   register: _nfsopts
   sudo: false
   connection: local
