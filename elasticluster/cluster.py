@@ -203,7 +203,7 @@ class Cluster(object):
                     time.sleep(5)
         except TimeoutError as timeout:
             log.error("Not all nodes were started correctly within the given"
-                      " timeout `%s`" & Cluster.startup_timeout)
+                      " timeout `%s`" % Cluster.startup_timeout)
             for node in starting_nodes:
                 log.error("Stopping node `%s`, since it could not start "
                           "within the given timeout" % node.name)
