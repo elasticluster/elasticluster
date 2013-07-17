@@ -9,10 +9,17 @@
 :FORWARD ACCEPT [0:0]
 
 ## INPUT queue -- inbound traffic
+# accept all inbound packets related to existing connections
+# (this rule comes first as it's likely the one that is hit most times)
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+# Allow all connection from the loopback device
+-A INPUT -i lo -j ACCEPT
+
 # Allow all incoming ssh connections
 -A INPUT -s 0.0.0.0/0 -p tcp --dport 22 -j ACCEPT
-# Allow all incoming connections from ``trusted_hosts``
 
+# Allow all incoming connections from ``trusted_hosts``
 {% if trusted_hosts %}
 {% for host in trusted_hosts  %}
 -A INPUT -s {{ host }} -j ACCEPT
@@ -24,6 +31,10 @@
 {% endfor %}
 
 {% endif %}
+
+# reject all other inbound, but limit the number of rejections to
+# avoid becoming a DDoS amplifier
+-A INPUT -m limit --limit 6/min -j REJECT --reject-with icmp-admin-prohibited
 
 ## OUTPUT queue -- outbound traffic
 # allow all outbound traffic
