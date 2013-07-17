@@ -119,7 +119,7 @@ environment.
 .. _`Python`: http://www.python.org
 .. _`pip`: https://pypi.python.org/pypi/pip
 .. _`github`: https://github.com/
-.. _`github elasticluster page`: https://github.com/gc3-uzh-ch/elasticluster
+.. _`github elasticluster repository`: https://github.com/gc3-uzh-ch/elasticluster
 .. _`python virtualenv`: https://pypi.python.org/pypi/virtualenv
 
 .. (for Emacs only)
