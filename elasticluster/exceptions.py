@@ -52,3 +52,6 @@ class NodeNotFound(Exception):
 
 class ImageError(Exception):
     pass
+
+class CloudProviderError(Exception):
+    pass

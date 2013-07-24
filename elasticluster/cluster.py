@@ -200,7 +200,7 @@ class Cluster(object):
                 starting_nodes = [n for n in starting_nodes
                                   if not n.is_alive()]
                 if starting_nodes:
-                    time.sleep(5)
+                    time.sleep(10)
         except TimeoutError as timeout:
             log.error("Not all nodes were started correctly within the given"
                       " timeout `%s`" % Cluster.startup_timeout)
@@ -441,7 +441,8 @@ class Node(object):
         self.instance_id = self._cloud_provider.start_instance(
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
-            self.flavor, self.image, self.image_userdata)
+            self.flavor, self.image, self.image_userdata,
+            username=self.image_user)
         log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
 
     def stop(self):

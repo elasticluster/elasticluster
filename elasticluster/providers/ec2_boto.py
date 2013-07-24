@@ -31,7 +31,7 @@ from paramiko.ssh_exception import SSHException
 from elasticluster import log
 from elasticluster.providers import AbstractCloudProvider
 from elasticluster.exceptions import SecurityGroupError, KeypairError, \
-    ImageError, InstanceError
+    ImageError, InstanceError, ClusterError
 
 
 class BotoCloudProvider(AbstractCloudProvider):
@@ -40,7 +40,8 @@ class BotoCloudProvider(AbstractCloudProvider):
     the virtual instances
     """
 
-    def __init__(self, ec2_url, ec2_region, ec2_access_key, ec2_secret_key):
+    def __init__(self, ec2_url, ec2_region, ec2_access_key, ec2_secret_key,
+                 storage_path=None):
         self._url = ec2_url
         self._region_name = ec2_region
         self._access_key = ec2_access_key
@@ -102,7 +103,8 @@ class BotoCloudProvider(AbstractCloudProvider):
         return self._connection
 
     def start_instance(self, key_name, public_key_path, private_key_path,
-                       security_group, flavor, image_id, image_userdata):
+                       security_group, flavor, image_id, image_userdata,
+                       username=None):
         """
         Starts an instance in the cloud on the specified cloud
         provider (configuration option) and returns the id of the
@@ -122,7 +124,10 @@ class BotoCloudProvider(AbstractCloudProvider):
                 instance_type=flavor, user_data=image_userdata)
         except Exception, ex:
             log.error("Error starting instance: %s", ex)
-            raise InstanceError(ex)
+            if "TooManyInstances" in ex:
+                raise ClusterError(ex)
+            else:
+                raise InstanceError(ex)
 
         vm = reservation.instances[-1]
 

@@ -227,6 +227,16 @@ class TestConfigValidator(unittest.TestCase):
     def tearDown(self):
         os.unlink(self.path)
 
+    def test_gce_config(self):
+        self.config['mycluster']['cloud'] = {
+            "provider": "google",
+            "gce_client_id": "***fill in your data here***",
+            "gce_client_secret": "***fill in your data here***",
+            "gce_project_id": "test-id"}
+
+        validator = ConfigValidator(self.config)
+        validator.validate()
+
 
     def test_valid_config(self):
         '''
