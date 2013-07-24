@@ -253,8 +253,15 @@ class BotoCloudProvider(AbstractCloudProvider):
                     ':', (i.encode('hex') for i in pkey.get_fingerprint()))
 
                 if fingerprint != cloud_keypair.fingerprint:
-                    raise KeypairError(' Keypair `%s` is present but has '
-                                       'different fingerprint. Aborting!"' % name)
+                    if "amazon" in self._ec2host:
+                        log.error(
+                            "Apparently, Amazon does not compute the RSA key "
+                            "fingerprint as we do! We cannot check if the "
+                            "uploaded keypair is correct!")
+                    else:
+                        raise KeypairError(
+                            "Keypair `%s` is present but has "
+                            "different fingerprint. Aborting!" % name)
 
     def _check_security_group(self, name):
         """

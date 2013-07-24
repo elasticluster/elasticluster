@@ -119,6 +119,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         ansible_constants.DEFAULT_PRIVATE_KEY_FILE = self._private_key_file
         ansible_constants.DEFAULT_REMOTE_USER = self._remote_user
         ansible_constants.DEFAULT_SUDO_USER = self._sudo_user
+        ansible_constants.HOST_KEY_CHECKING=False
 
     def setup_cluster(self, cluster):
         self.inventory_path = self._build_inventory(cluster)

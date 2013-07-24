@@ -146,7 +146,7 @@ class Cluster(object):
                         except (InstanceError, SecurityGroupError,
                         KeypairError, ImageError) as e:
                             log.error("could not start node `%s` for reason "
-                                      "`%s`" % e)
+                                      "`%s`" % (node.name, e))
 
             except Empty:
                 # nothing to do if the queue turns out to be empty - the

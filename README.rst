@@ -1,7 +1,12 @@
-elasticluster
-=============
+========================================================================
+    Elasticluster
+========================================================================
 
-`elasticluster` aims to provide a user-friendly command line tool to
+.. This file follows reStructuredText markup syntax; see
+   http://docutils.sf.net/rst.html for more information
+
+
+`Elasticluster` aims to provide a user-friendly command line tool to
 create, manage and setup computing clusters hosted on cloud
 infrastructures (like `Amazon's Elastic Compute Cloud EC2`_)
 or a private `OpenStack`_ cloud). Its main goal
@@ -19,7 +24,7 @@ Documentation for elasticluster is available on the `Read The Docs
 Features
 ========
 
-`elasticluster` is in active development, but the following features at the current state:
+`Elasticluster` is in active development, but the following features at the current state:
 
 * Simple configuration file to define cluster templates
 * Can start and manage multiple independent clusters at the same time
@@ -30,7 +35,7 @@ Features
     * ...or anything that you can install with an `Ansible`_ playbook!
 * Grow and shrink a running cluster
 
-`elasticluster` is currently in active development: please use the
+`Elasticluster` is currently in active development: please use the
 GitHub issue tracker to `file enhancement requests and ideas`_
 
 
@@ -40,7 +45,7 @@ Quickstart
 Installing from PyPI
 --------------------
 
-`elasticluster` is a `Python`_ program; Python
+`Elasticluster` is a `Python`_ program; Python
 version 2.6 is required to run it.
 
 It's quite easy to install `elasticluster` using
@@ -89,6 +94,8 @@ Then you have to download the software. We suggest you to download it
 Now the ``elasticluster`` should be available in your current
 environment.
 
+.. References
+
 .. _`Grid Computing Competence Center`: http://www.gc3.uzh.ch/
 .. _`University of Zurich`: http://www.uzh.ch
 .. _`GC3 Hobbes cloud`: http://www.gc3.uzh.ch/infrastructure/hobbes
@@ -112,5 +119,11 @@ environment.
 .. _`Python`: http://www.python.org
 .. _`pip`: https://pypi.python.org/pypi/pip
 .. _`github`: https://github.com/
-.. _`github elasticluster page`: https://github.com/gc3-uzh-ch/elasticluster
+.. _`github elasticluster repository`: https://github.com/gc3-uzh-ch/elasticluster
 .. _`python virtualenv`: https://pypi.python.org/pypi/virtualenv
+
+.. (for Emacs only)
+..
+  Local variables:
+  mode: rst
+  End:
