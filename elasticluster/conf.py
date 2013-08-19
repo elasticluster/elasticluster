@@ -24,8 +24,14 @@ import sys
 
 # External modules
 from configobj import ConfigObj
-from voluptuous.voluptuous import message, MultipleInvalid, Invalid
-from voluptuous import Schema, All, Length, Any, Url, Boolean
+try:
+    # Voluptuous version >= 0.8.1
+    from voluptuous import message, MultipleInvalid, Invalid, Schema
+    from voluptuous import All, Length, Any, Url, Boolean
+except ImportError:
+    # Voluptuous version <= 0.7.2
+    from voluptuous.voluptuous import message, MultipleInvalid, Invalid
+    from voluptuous import Schema, All, Length, Any, Url, Boolean
 
 # Elasticluster imports
 from elasticluster.exceptions import ConfigurationError
