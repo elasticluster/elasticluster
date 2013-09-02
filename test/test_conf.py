@@ -361,13 +361,13 @@ class TestConfigReader(unittest.TestCase):
             flavor=m1.small
             frontend_nodes=1
             compute_nodes=2
-            frontend_class=frontend
+            ssh_to=frontend
 
             [cluster/torque]
             cloud=hobbes
             frontend_nodes=1
             compute_nodes=2
-            frontend_class=frontend
+            ssh_to=frontend
             security_group=default
             # CentOS image
             image_id=ami-0000004f
@@ -452,7 +452,7 @@ class TestConfigReader(unittest.TestCase):
             flavor=m1.small
             frontend_nodes=1
             compute_nodes=2
-            frontend_class=frontend
+            ssh_to=frontend
             """
         self.assertRaises(MultipleInvalid, self._check_read_config, config)
 
@@ -491,6 +491,6 @@ class TestConfigReader(unittest.TestCase):
             flavor=m1.small
             frontend_nodes=1
             compute_nodes=2
-            frontend_class=frontend
+            ssh_to=frontend
             """
         self.assertRaises(MultipleInvalid, self._check_read_config, config)

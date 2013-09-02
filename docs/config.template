@@ -334,19 +334,19 @@ image_id=ami-00000048
 flavor=m1.small
 frontend_nodes=1
 compute_nodes=2
-frontend_class=frontend
+ssh_to=frontend
 
 [cluster/torque]
 cloud=hobbes
 frontend_nodes=1
 compute_nodes=2
-frontend_class=frontend
 security_group=default
 # CentOS image
 image_id=ami-0000004f
 flavor=m1.small
 login=gc3-user
 setup_provider=ansible-pbs
+ssh_to=frontend
 
 [cluster/aws-slurm]
 cloud=amazon-us-east-1
@@ -356,8 +356,9 @@ security_group=default
 # ubuntu image
 image_id=ami-90a21cf9
 flavor=m1.small
-frontend=1
-compute=2
+frontend_nodes=1
+compute_nodes=2
+ssh_to=frontend
 
 [cluster/matlab]
 cloud=hobbes
