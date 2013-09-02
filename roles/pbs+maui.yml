@@ -17,7 +17,7 @@
   vars_files:
     - vars/os
   tasks: 
-    - include: slurm/tasks/nfs.yml
+    - include: common/tasks/nfs.yml
     - action: nfsexport path=/home dest=/etc/exports clients=${groups.pbs_clients} options=rw,no_root_squash,sync
       notify: reload exports
 

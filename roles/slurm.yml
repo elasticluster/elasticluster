@@ -8,7 +8,7 @@
     - include: common/tasks/hostname.yml
     - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
     - include: slurm/tasks/main.yml
-    - include: slurm/tasks/nfs.yml
+    - include: common/tasks/nfs.yml
     - include: common/tasks/iptables.yml trusted_hosts=${groups.all}
 
     - action: nfsexport path=/home dest=/etc/exports clients=${groups.slurm_clients} options=rw,no_root_squash,sync
