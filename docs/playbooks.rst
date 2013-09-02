@@ -164,14 +164,14 @@ Tested on:
 * Ubuntu 12.04
 * CentOS 6.3
 
-+----------------------+------------------------------------+
-| ansible groups       | role                               |
-+======================+====================================+
-| ipython_controller   | Run an IPython cluster controller  |
-+----------------------+------------------------------------+
-| ipython_engine       | Run a number of ipython engine for |
-|                      | each core                          |
-+----------------------+------------------------------------+
++------------------------+------------------------------------+
+| ansible groups         | role                               |
++========================+====================================+
+| ``ipython_controller`` | Run an IPython cluster controller  |
++------------------------+------------------------------------+
+| ``ipython_engine``     | Run a number of ipython engine for |
+|                        | each core                          |
++------------------------+------------------------------------+
 
 This playbook will install an `IPython cluster`_ to run python code in
 parallel on multiple machines.
