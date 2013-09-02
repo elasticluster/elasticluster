@@ -399,7 +399,11 @@ class Cluster(object):
 
     def update(self):
         for node in self.get_all_nodes():
-            node.update_ips()
+            try:
+                node.update_ips()
+            except InstanceError, ex:
+                log.warning("Ignoring error updating information on node %s: %s",
+                          node, str(ex))
         self._storage.dump_cluster(self)
 
 
