@@ -30,7 +30,9 @@ Features
 * Can start and manage multiple independent clusters at the same time
 * Automated cluster setup:
     * use `Debian GNU/Linux`_, `Ubuntu`_, or `CentOS`_ as a base operating system
-    * choose `SLURM`_, `Grid Engine`_ or `TORQUE+MAUI`_ as a batch-queueing system
+    * choose `SLURM`_, `Grid Engine`_ or `TORQUE+MAUI`_ as a
+      batch-queueing system
+    * choose `Hadoop`_ MapReduce or `IPython cluster`_  computational cluster
     * add useful tools like `Ganglia`_ for monitoring...
     * ...or anything that you can install with an `Ansible`_ playbook!
 * Grow and shrink a running cluster
@@ -94,6 +96,13 @@ Then you have to download the software. We suggest you to download it
 Now the ``elasticluster`` should be available in your current
 environment.
 
+Changes from release 1.0.2
+==========================
+
+* Add support for `IPython cluster`
+* Add ``--version`` command line option
+* bugfixes
+
 .. References
 
 .. _`Grid Computing Competence Center`: http://www.gc3.uzh.ch/
@@ -115,6 +124,8 @@ environment.
 .. _`Ganglia`: http://ganglia.info
 .. _`Ansible`: http://ansible.cc 
 .. _`file enhancement requests and ideas`: https://github.com/gc3-uzh-ch/elasticluster/issues
+.. _`Hadoop`: http://hadoop.apache.org/
+.. _`IPython cluster`: http://ipython.org/ipython-doc/dev/parallel/
 
 .. _`Python`: http://www.python.org
 .. _`pip`: https://pypi.python.org/pypi/pip
