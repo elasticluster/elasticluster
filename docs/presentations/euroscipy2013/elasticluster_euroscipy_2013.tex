@@ -1,0 +1,370 @@
+\documentclass[english,serif,mathserif,usenames,dvipsnames]{beamer}
+\usetheme{gc3}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{babel}
+\usepackage{multimedia}
+
+%% This is optional: it adds a few commands and environment we
+%% regularly use in our slide sets
+\usepackage{gc3}
+
+% \renewcommand\uzhunit{GC3}
+ 
+
+\begin{document}
+
+%% Optional Argument in [Brackets]: Short Title for Footline
+\title{Elasticluster}
+\subtitle{Provisioning computational clusters in the cloud with Python}
+% \subtitle{Or: How to Demo the GC3 Beamer Theme}
+\author{\textbf{Antonio Messina
+    \texttt{<antonio.s.messina@gmail.com>}}\\
+Nicolas B\"ar \texttt{<nicolas.baer@gmail.com>}}
+\date{EuroScipy 2013\\
+  24 August 2013}
+
+%% Makes the title slide
+\maketitle
+
+\begin{frame}{Who we are}
+  
+  The GC3 group supports scientists who need to run large-scale data
+  processing.
+
+  \pause
+  \+
+
+  \textit{large-scale} means that one or just a few computers are not
+  enough
+
+  \pause
+  \+
+
+  so you need a \textit{cluster}, a group of computers acting like
+  just one system.
+
+  \pause
+  \+
+  but if you don't have one, or it does not fit your needs, what can
+  you do?
+\end{frame}
+
+\begin{frame}
+  {Three solutions}
+  \begin{enumerate}
+  \item Buy a cluster
+    \begin{itemize}
+    \item buy the machines
+    \item find a room
+    \item setup air conditioning and ensure you have enough power
+    \item hire a system administrator
+    \end{itemize}
+    \+
+    \pause
+  \item Run on someone else's cluster
+    \begin{itemize}
+    \item it may not have all the software you need
+    \item need to negotiate policies
+    \item resource usage conflicts
+    \end{itemize}
+    \+
+    \pause
+  \item Use \textbf{elasticluster} to create a cluster of virtual
+    machines \textit{in the Cloud}
+    \begin{itemize}
+    \item you choose the software and the configuration
+    \item as soon as you need it
+    \end{itemize}
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}
+  {How does elasticluster work?}
+  Command line tool
+\+
+  \begin{enumerate}
+  \item creates virtual machines in a cloud
+  \item installs and configures the software you want
+  \item add and remove nodes if needed
+  \end{enumerate}
+\+
+
+  customization is done by editing text files
+\end{frame}
+
+
+\begin{frame}
+  {elasticluster demo}
+
+  \begin{enumerate}
+  \item create 3 virtual machines on an OpenStack cloud.
+  \item install and configure the SLURM queue system on them.
+  \item connect to the cluster.
+  \item submit a simple job.
+  \item check that it is actually running :)
+  \item add one more worker node.
+  \item destroy the cluster.
+  \end{enumerate}
+  \pause
+  \begin{center}
+    \href{http://www.youtube.com/watch?v=cR3C7XCSMmArun}{\textit{show time!}}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  {Configuration and management}
+
+  We use \textbf{ansible} to deploy applications and perform
+  configuration:
+  \begin{itemize}
+  \item software configuration is encoded in a text file
+    % playbooks?
+    \begin{itemize}
+    \item everything is on the client machine
+    \item changes are \textit{reproducible} 
+    \end{itemize}
+  \item base OS images are used
+    \begin{itemize}
+    \item independent from the infrastructure
+    \end{itemize}
+  % \item easy configuration language (YAML)
+  \item the same configuration works also on \textit{real} machines
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  {elasticluster features (1)}
+
+  Different kind of computational clusters are supported:
+
+  \begin{itemize}
+    \item Batch systems:
+      \begin{itemize}
+      \item SLURM
+      \item OpenGridEngine
+      \item Torque+MAUI
+      \end{itemize}
+    \item Hadoop
+    \item Matlab Distributed Computing Servers
+    \end{itemize}
+
+  \+
+  \pause
+  Multiple distributed filesystems:
+
+  \begin{itemize}
+  \item OrangeFS/PVFS
+  \item GlusterFS
+  \item Ceph
+  \item HDFS
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  {elasticluster features (2)}
+
+  Run on multiple clouds:
+
+  \begin{itemize}
+  \item Amazon EC2
+  \item OpenStack
+  \item Google Compute Engine
+  \end{itemize}
+
+  \+
+
+  Works with multiple operating systems:
+
+  \begin{itemize}
+  \item Ubuntu
+  \item CentOS
+  \item Scientific Linux
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  {References}
+  \begin{itemize}
+  \item Elasticluster on PyPI:
+    \url{https://pypi.python.org/pypi/elasticluster}
+
+\begin{verbatim}
+    $ pip install elasticluster
+\end{verbatim}
+
+  \item Elasticluster github page: 
+    \url{https://github.com/gc3-uzh-ch/elasticluster/}
+  \item Elasticluster web page: 
+    \url{http://gc3-uzh-ch.github.io/elasticluster/}
+  \item Elasticluster documentation:
+    \url{https://elasticluster.readthedocs.org}
+  \item GC3 home page: \url{http://www.gc3.uzh.ch}
+  \item Ansible home page: \url{http://www.ansibleworks.com}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \begin{center}
+    \Huge Thank you
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  {elasticluster feature summary}
+  \begin{itemize}
+  \item works on Amazon EC2, OpenStack and Google GCE
+  \item Creates the cluster you need, when you need it, starting from
+    vanilla images
+  \item Typical use cases:
+    \begin{itemize}
+    \item On demand computational cluster provisioning
+    \item Testing of new infrastructures or configurations
+    \end{itemize}
+    
+  \item All the configuration is on your laptop.
+  \item easy to modify the setup of the virtual machines.
+  \item makes your results \textit{reproducible}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  {Ansible}
+  
+  Configuration and management system
+  \begin{itemize}
+  \item Goal oriented, not scripted
+  \item Agentless (only python 2.4 or greater is required in the
+    managed machine)
+  \item changes are reproducible and idempotents
+  \item smooth learning curve
+  \item very well documented
+  \item responsive community
+  \item actively developed
+  \end{itemize}
+
+  \+
+  website: \url{www.ansibleworks.com}
+
+\end{frame}
+
+% \begin{frame}
+%   {HPC Cluster issues}
+
+%   \begin{itemize}
+%   \item resources are limited.
+%   \item almost no control over the software installed.
+%   \item queue system: you don't run when you want.
+%   \item policies sometimes incompatible with specific computations.
+%   \item researchers run \textit{in bursts}: they either run the
+%     application, analyze the data or write the paper.
+%   \end{itemize}
+
+% \end{frame}
+
+% \begin{frame}{Running on the cloud}
+%   Running a cluster on a cloud allows you to:
+%   \begin{itemize}
+%   \item use an environment already known/tested.
+%   \item \textit{do not} change your applications.
+%   \item have customized policies.
+%   \item have customized software.
+%   \item provide the resources needed for a specific computation, only
+%     when needed.
+%   \end{itemize}
+% \end{frame}
+
+
+\begin{frame}
+  {Similar products}
+  \textbf{StarCluster}
+  \begin{itemize}
+  \item Setup is bound to pre-configured image
+  \item Not compatible with OpenStack or GCE (uses specific Amazon
+    functionality to identify clusters)
+  \end{itemize}
+
+  \+
+
+  \textbf{VirtualCluster}
+  \begin{itemize}
+  \item Setup is bound to pre-configured images
+  \item Makes many assumptions about the underlying OpenStack setup
+  \item Not sure about codebase maintenance
+  \end{itemize}
+\end{frame}
+
+% \begin{itemize}
+% \item We are a support group for scientists
+%   \begin{itemize}
+%   \item scientists already have use cases running on HPC
+%     clusters
+%   \item they usually don't have the expertises (nor the time nor they
+%     are supposed to do it) to setup HPC clusters
+%   \item the same apply for new infrastructures they might want to test
+%     (Hadoop mapreduce)
+%   \item elasticluster allows them to have the benefits of a
+%     computational cluster which fits *exactly* their needs, 
+%   \end{itemize}
+% \item system administrators too might need to test new infrastructures
+%   or configurations before deploying them on a production
+%   computational cluster
+% \end{itemize}
+
+
+% \begin{frame}[fragile,fragile]
+%   \frametitle{Features available in \texttt{gc3.sty}}
+
+%   \begin{python}
+% # blocks of Python code
+% def factorial(n):
+%   if n > 0:
+%     # with highlight too!
+%     ~\HL{return n*factorial(n-1)}~
+%   else:
+%     return 1
+%   \end{python}
+
+%   \+
+%   \HL{Highlighting} works in normal text as well, and
+%   in \HL[green!25]{different} \HL[yellow!25]{colors}.
+
+%   \+
+%   The \lstinline|\+| command inserts separates paragraphs with more
+%   vertical space.
+% \end{frame}
+
+% \begin{frame}[fragile]
+%   \frametitle{More features from gc3.sty}
+
+%   Environments for typesetting exercises, questions, and references to additional material.
+
+%   \begin{question}
+%     How do you typeset an exercise?
+%   \end{question}
+
+%   \+
+%   \begin{exercise}
+%     Use \lstinline|\begin{exercise}| and \lstinline|\end{exercise}| to
+%     typeset an exercise.
+%   \end{exercise}
+
+%   \begin{seealso}
+%     The \texttt{README.md} file in this directory.
+%   \end{seealso}
+
+%   \+
+%   To use the optional features, insert this in the \LaTeX{} preamble:
+% \begin{lstlisting}[language=tex]
+% \usepackage{gc3}
+% \end{lstlisting}
+% \end{frame}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
