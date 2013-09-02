@@ -1,0 +1,66 @@
+---
+- name: IPython cluster Playbook
+  hosts: ipython_controller:ipython_engine
+  vars_files:
+    - vars/os
+  handlers:
+    - include: common/handlers/main.yml
+
+  tasks:
+    - include: common/tasks/hosts.yml hosts=${groups.all}
+    - include: common/tasks/hostname.yml
+    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+    - include: common/tasks/iptables.yml trusted_hosts=${groups.all}
+
+    - name: Install PIP (Ubuntu)
+      action: apt name=$item
+      only_if: $is_ubuntu
+      with_items:
+        - build-essential
+        - python-pip
+        - python-dev
+
+    - name: Install PIP (CentOS)
+      action: yum name=$item
+      with_items:
+        - gcc
+        - gcc-c++
+        - python-pip
+        - python-devel
+      only_if: $is_centos
+
+    # Note: use_mirrors=yes (default) does not work with CentOS 6.3
+    # Note: ipython[all] does not seem to work.
+    - name: Install ipython
+      action: pip name=$item use_mirrors=no
+      with_items:
+        - ipython
+        - ipython-cluster-helper
+
+- name: IPython controller Playbook
+  hosts: ipython_controller:ipython_engine
+  sudo: False
+  tasks:
+
+    - name: create ipython profile
+      action: shell ipython profile create --parallel
+      # when: inventory_hostname in groups['ipython_controller']
+      tags: test
+
+    - name: Deploy ipcluster configuration file
+      action: template src=ipython/templates/ipcluster_config.py.j2 dest=~/.ipython/profile_default/ipcluster_config.py
+      # when: inventory_hostname in groups['ipython_controller']
+      tags: test
+
+    - name: Deploy ipcontroller configuration file
+      action: template src=ipython/templates/ipcontroller_config.py.j2 dest=~/.ipython/profile_default/ipcontroller_config.py
+      # when: inventory_hostname in groups['ipython_controller']
+      tags: test
+
+    - name: Create ipython cluster!
+      action: shell ipcluster start
+      when: inventory_hostname in groups['ipython_controller']
+      tags: test
+
+  handlers:
+    - include: common/handlers/main.yml

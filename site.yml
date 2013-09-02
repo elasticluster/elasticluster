@@ -16,3 +16,4 @@
 - include: roles/pvfs2.yml
 - include: roles/ceph.yml
 - include: roles/gluster.yml
+- include: roles/ipython.yml
