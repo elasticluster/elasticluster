@@ -156,6 +156,52 @@ address http://10.2.3.4/ganglia/
 
 This playbook is supposed to be compatible with all the other available playbooks.
 
+IPython cluster
+===============
+
+Tested on:
+
+* Ubuntu 12.04
+* CentOS 6.3
+
++----------------------+------------------------------------+
+| ansible groups       | role                               |
++======================+====================================+
+| ipython_controller   | Run an IPython cluster controller  |
++----------------------+------------------------------------+
+| ipython_engine       | Run a number of ipython engine for |
+|                      | each core                          |
++----------------------+------------------------------------+
+
+This playbook will install an `IPython cluster`_ to run python code in
+parallel on multiple machines.
+
+One of the nodes should act as *controller* of the cluster
+(``ipython_controller``), running the both the *hub* and the
+*scheduler*. Other nodes will act as *engine*, and will run one
+"ipython engine" per core. You can use the *controller* node for
+computation too by assigning the  ``ipython_engine`` class to it as
+well.
+
+A *snippet* of typical configuration for an Hadoop cluster is::
+
+    [cluster/ipython]
+    setup_provider=ansible_ipython
+    controller_nodes=1
+    worker_nodes=4
+    ssh_to=controller
+    ...
+    
+    [setup/ansible_ipython]
+    controller_groups=ipython_controller,ipython_engine
+    worker_groups=ipython_engine
+    ...
+
+In order to use the IPython cluster, using the default configuration,
+you are supposed to connect to the controller node via ssh and run
+your code from there.
+
+
 Hadoop
 ======
 
@@ -246,3 +292,4 @@ This configuration will create a SLURM cluster with 10 compute nodes,
 from the data nodes to both the compute nodes and the frontend.
 
 .. _`OrangeFS`: http://orangefs.org/
+.. _`IPython cluster`: http://ipython.org/ipython-doc/dev/parallel/
