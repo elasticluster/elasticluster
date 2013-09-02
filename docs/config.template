@@ -215,6 +215,12 @@ user_key_public=~/.ssh/id_dsa.cloud.pub
 #
 #                 - ganglia_monitor: configure as ganglia monitor.
 #
+#                 - ipython_controller: configure as a controller
+#                   (HUB) for an IPython cluster
+#
+#                 - ipython_engine: configure as an `engine` for an
+#                   IPython cluster
+#
 #                 You can combine more groups together, but of course
 #                 not all combinations make sense. A common setup is,
 #                 for instance, for `frontend_groups`: 
@@ -253,6 +259,11 @@ compute_groups=pbs_clients
 provider=ansible
 frontend_groups=mdce_master,mdce_worker,ganglia_monitor,ganglia_master
 worker_groups=mdce_worker,ganglia_monitor
+
+[setup/ipython]
+provider=ansible
+controller_groups=ipython_controller,ipython_engine
+worker_groups=ipython_engine
 
 # Cluster Section
 # ===============
@@ -371,6 +382,18 @@ frontend_nodes=1
 worker_nodes=10
 image_userdata=
 ssh_to=frontend
+
+[cluster/ipython]
+cloud=hobbes
+login=gc3-user
+setup_provider=ansible_ipython
+security_group=default
+image_id=ami-00000048
+flavor=m1.medium
+controller_nodes=1
+worker_nodes=4
+image_userdata=
+ssh_to=controller
 
 # Cluster node section
 # ====================
