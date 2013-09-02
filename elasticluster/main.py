@@ -15,7 +15,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
+__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
 
 # System imports
 import logging
@@ -75,6 +75,8 @@ class ElastiCluster(cli.app.CommandLineApp):
                        help="Path to the configuration file. Default: `%s`" %
                             self.default_configuration_file,
                        default=self.default_configuration_file)
+        self.add_param('--version', action='store_true',
+                       help="Print version information and exit.")
 
         # to parse subcommands
         self.subparsers = self.argparser.add_subparsers(
@@ -87,7 +89,18 @@ class ElastiCluster(cli.app.CommandLineApp):
                 command.setup(self.subparsers)
 
     def pre_run(self):
+        # Hack around http://bugs.python.org/issue9253 ?
+        if "--version" in sys.argv:
+            import pkg_resources
+            version = pkg_resources.get_distribution("elasticluster").version
+            print("elasticluster version %s" % version)
+            sys.exit(0)
+
         cli.app.CommandLineApp.pre_run(self)
+        # Set verbosity level
+        loglevel = max(1, logging.WARNING - 10 * max(0, self.params.verbose))
+        log.setLevel(loglevel)
+
         if not os.path.isdir(self.params.storage):
             # We do not create *all* the parents, but we do create the
             # directory if we can.
@@ -132,10 +145,6 @@ class ElastiCluster(cli.app.CommandLineApp):
         # central configuration is created, which can be altered through
         # the command line interface. Then the given command from the
         # command line interface is called.
-
-        # Set verbosity level
-        loglevel = max(1, logging.WARNING - 10 * max(0, self.params.verbose))
-        log.setLevel(loglevel)
 
         # call the subcommand function (ususally execute)
         try:
