@@ -14,3 +14,6 @@
 - name: restart iptables
   action: service name=iptables state=restarted
   only_if: $is_centos
+
+- name: set hostname to current ansible name
+  action: command hostname $inventory_hostname
