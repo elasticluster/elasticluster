@@ -30,6 +30,10 @@
       action: shell $mbin/mdce status | grep PID || (nohup $mbin/mdce start; sleep 10)
       ignore_errors: true
 
+    - include: common/tasks/iptables.yml trusted_hosts=${groups.all}
+  handlers:
+    - include: common/handlers/main.yml
+
 - hosts: mdce_master
   vars:
     nfsmount: /usr/local/MATLAB

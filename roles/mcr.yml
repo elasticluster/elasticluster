@@ -13,6 +13,7 @@
   tasks:
     - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: common/tasks/hostname.yml
+    - include: common/tasks/iptables.yml trusted_hosts=${groups.all}
 
     - name: make temp directory
       action: file dest=$tmpdir/MCRInstaller state=directory
@@ -40,6 +41,9 @@
 
     - name: cleanup temporary installation files
       action: command rm -r -f -v $tmpdir/MCRInstaller
+
+  handlers:
+    - include: common/handlers/main.yml
 
   tags:
     - matlab
