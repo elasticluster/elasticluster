@@ -1,6 +1,6 @@
 ---
 - name: Setup SSH known hosts file
-  action: template dest=/etc/ssh/ssh_known_hosts src=common/templates/etc/ssh/ssh_known_hosts.j2 owner=root group=root
+  action: template dest=/etc/ssh/ssh_known_hosts src=common/templates/etc/ssh/ssh_known_hosts.j2 owner=root group=root mode=0644
 
 - name: Setup /etc/ssh/shosts.equiv file
   action: template dest=/etc/ssh/shosts.equiv src=common/templates/etc/ssh/shosts.equiv.j2 owner=root group=root
