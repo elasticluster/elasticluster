@@ -23,7 +23,7 @@ import shutil
 import tempfile
 import unittest
 
-from voluptuous.voluptuous import MultipleInvalid
+from voluptuous import MultipleInvalid
 
 from elasticluster.conf import ConfigReader, ConfigValidator, Configurator
 from elasticluster.cluster import Node
