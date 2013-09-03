@@ -403,7 +403,6 @@ class ConfigReader(object):
                  }, required=True, extra=True),
             "setup": Schema(
                 {"provider": All(str, Length(min=1)),
-                 "playbook_path": check_file(),
                  }, required=True, extra=True),
             "login": Schema(
                 {"image_user": All(str, Length(min=1)),
@@ -456,17 +455,33 @@ class ConfigReader(object):
                 'setup_provider']
 
             values = dict()
+            values['cluster'] = cluster_conf
             try:
-                values['cluster'] = cluster_conf
                 values['setup'] = dict(self.conf[setup_name])
-                values['login'] = dict(self.conf[login_name])
-                values['cloud'] = dict(self.conf[cloud_name])
-
+                self.schemas['setup'](values['setup'])
             except KeyError, ex:
-                # raise Invalid(
-                #     "Error in section `%s`" % cluster)
-                errors.add("Error in section `%s`: missing section "
-                           "name `%s`" % (cluster, ex.args[0]))
+                errors.add("cluster `%s` setup section `%s` does not exists" % (cluster, setup_name))
+            except MultipleInvalid, ex:
+                for error in ex.errors:
+                    errors.add(error)
+
+            try:
+                values['login'] = dict(self.conf[login_name])
+                self.schemas['login'](values['login'])
+            except KeyError, ex:
+                errors.add("cluster `%s` login section `%s` does not exists" % (cluster, login_name))
+            except MultipleInvalid, ex:
+                for error in ex.errors:
+                    errors.add(error)
+
+            try:
+                values['cloud'] = dict(self.conf[cloud_name])
+                self.schemas['cloud'](values['cloud'])
+            except KeyError, ex:
+                errors.add("cluster `%s` cloud section `%s` does not exists" % (cluster, cloud_name))
+            except MultipleInvalid, ex:
+                for error in ex.errors:
+                    errors.add(error)
 
             try:
                 # nodes can inherit the properties of cluster or overwrite them
