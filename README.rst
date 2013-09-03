@@ -96,6 +96,14 @@ Then you have to download the software. We suggest you to download it
 Now the ``elasticluster`` should be available in your current
 environment.
 
+Changes from release 1.0.3
+==========================
+
+* Improve configuration file parsing and error handling
+* Improve error reporting
+* Update GlusterFS playbooks: now they work on both Ubuntu and CentOS
+* Update documentation: add information on GlusterFS and IPython clusters
+
 Changes from release 1.0.2
 ==========================
 
