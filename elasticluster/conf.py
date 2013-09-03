@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
+__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
 
 # System imports
 import os
@@ -297,7 +297,6 @@ class ConfigValidator(object):
         format if possible.
         """
         self._pre_validate()
-
         # custom validators
         @message("file could not be found")
         def check_file(v):
@@ -396,24 +395,37 @@ class ConfigReader(object):
 
         conf_values = dict()
 
+        errors = MultipleInvalid()
+
         for cluster in clusters:
             name = re.search(ConfigReader.cluster_section + "/(.*)",
                              cluster).groups()[0]
-            try:
-                cluster_conf = dict(self.conf[cluster])
-                cloud_name = ConfigReader.cloud_section + "/" + cluster_conf[
-                    'cloud']
-                login_name = ConfigReader.login_section + "/" + cluster_conf[
-                    'login']
-                setup_name = ConfigReader.setup_section + "/" + cluster_conf[
-                    'setup_provider']
+            if not name:
+                errors.add("Invalid section name `%s`" % cluster)
+                continue
 
-                values = dict()
+            cluster_conf = dict(self.conf[cluster])
+            cloud_name = ConfigReader.cloud_section + "/" + cluster_conf[
+                'cloud']
+            login_name = ConfigReader.login_section + "/" + cluster_conf[
+                'login']
+            setup_name = ConfigReader.setup_section + "/" + cluster_conf[
+                'setup_provider']
+
+            values = dict()
+            try:
                 values['cluster'] = cluster_conf
                 values['setup'] = dict(self.conf[setup_name])
                 values['login'] = dict(self.conf[login_name])
                 values['cloud'] = dict(self.conf[cloud_name])
 
+            except KeyError, ex:
+                # raise Invalid(
+                #     "Error in section `%s`" % cluster)
+                errors.add("Error in section `%s`: missing section "
+                           "name `%s`" % (cluster, ex.args[0]))
+
+            try:
                 # nodes can inherit the properties of cluster or overwrite them
                 nodes = dict((key, value) for key, value in
                              values['cluster'].items() if
@@ -435,7 +447,8 @@ class ConfigReader(object):
 
                 conf_values[name] = values
             except KeyError, ex:
-                raise Invalid(
-                    "Error in section `%s`" % cluster)
+                errors.add("Error in section `%s`" % cluster)
 
+        if errors.errors:
+            raise errors
         return conf_values
