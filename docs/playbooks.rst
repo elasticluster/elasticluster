@@ -254,6 +254,7 @@ GlusterFS
 Tested on:
 
 * Ubuntu 12.04
+* CentOS 6.3
 
 +--------------------+----------------------------------------------------+
 | ansible groups     | role                                               |
