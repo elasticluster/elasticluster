@@ -4,7 +4,7 @@
 *filter
 
 ## create queues and set policy
-:INPUT DROP [0:0]
+:INPUT {{ default_policy }} [0:0]
 :OUTPUT ACCEPT [0:0]
 :FORWARD ACCEPT [0:0]
 
@@ -34,7 +34,7 @@
 
 # reject all other inbound, but limit the number of rejections to
 # avoid becoming a DDoS amplifier
--A INPUT -m limit --limit 6/min -j REJECT --reject-with icmp-admin-prohibited
+-A INPUT -m limit -s {{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.netmask }} --limit 6/min -j REJECT --reject-with icmp-admin-prohibited
 
 ## OUTPUT queue -- outbound traffic
 # allow all outbound traffic

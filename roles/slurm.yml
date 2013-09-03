@@ -9,7 +9,7 @@
     - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
     - include: slurm/tasks/main.yml
     - include: common/tasks/nfs.yml
-    - include: common/tasks/iptables.yml trusted_hosts=${groups.all}
+    - include: common/tasks/iptables.yml trusted_hosts=${groups.all} default_accept=1
 
     - action: nfsexport path=/home dest=/etc/exports clients=${groups.slurm_clients} options=rw,no_root_squash,sync
       notify: reload exports
