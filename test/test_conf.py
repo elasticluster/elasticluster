@@ -23,7 +23,7 @@ import shutil
 import tempfile
 import unittest
 
-from voluptuous import MultipleInvalid
+from voluptuous import Invalid
 
 from elasticluster.conf import ConfigReader, ConfigValidator, Configurator
 from elasticluster.cluster import Node
@@ -243,13 +243,13 @@ class TestConfigValidator(unittest.TestCase):
         config = copy.deepcopy(self.config)
         config["mycluster"]["login"]["user_key_public"] = "/tmp/elastic-test"
         validator = ConfigValidator(config)
-        self.assertRaises(MultipleInvalid, validator.validate)
+        self.assertRaises(Invalid, validator.validate)
 
         # check wrong url
         config = copy.deepcopy(config)
         config["mycluster"]["setup"]["ec2_host"] = "www.elasticluster"
         validator = ConfigValidator(config)
-        self.assertRaises(MultipleInvalid, validator.validate)
+        self.assertRaises(Invalid, validator.validate)
 
         # check all mandatory properties
         optional = ["frontend_groups", "compute_groups", "frontend_nodes",
@@ -263,7 +263,7 @@ class TestConfigValidator(unittest.TestCase):
                         config_tmp = copy.deepcopy(config)
                         del config_tmp[cluster][section][property]
                         validator = ConfigValidator(config_tmp)
-                        self.assertRaises(MultipleInvalid, validator.validate)
+                        self.assertRaises(Invalid, validator.validate)
 
         # check all node properties
         mandatory = ["flavor", "image_id", "security_group"]
@@ -274,7 +274,7 @@ class TestConfigValidator(unittest.TestCase):
                     config_tmp = copy.deepcopy(config)
                     del config_tmp["mycluster"]["nodes"][node][property]
                     validator = ConfigValidator(config_tmp)
-                    self.assertRaises(MultipleInvalid, validator.validate)
+                    self.assertRaises(Invalid, validator.validate)
 
 
 class TestConfigReader(unittest.TestCase):
@@ -454,7 +454,7 @@ class TestConfigReader(unittest.TestCase):
             compute_nodes=2
             ssh_to=frontend
             """
-        self.assertRaises(MultipleInvalid, self._check_read_config, config)
+        self.assertRaises(Invalid, self._check_read_config, config)
 
     def test_read_section_linking(self):
         '''
@@ -493,4 +493,4 @@ class TestConfigReader(unittest.TestCase):
             compute_nodes=2
             ssh_to=frontend
             """
-        self.assertRaises(MultipleInvalid, self._check_read_config, config)
+        self.assertRaises(Invalid, self._check_read_config, config)
