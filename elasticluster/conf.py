@@ -434,7 +434,7 @@ class ConfigReader(object):
 
                 # nodes can inherit the properties of cluster or overwrite them
                 nodes = dict((key, value) for key, value in
-                             values['cluster'].iteritems() if
+                             values['cluster'].items() if
                              key.endswith('_nodes'))
                 values['nodes'] = dict()
                 for node in nodes.iterkeys():
@@ -452,9 +452,8 @@ class ConfigReader(object):
                         values['nodes'][node_name] = values['cluster']
 
                 conf_values[name] = values
-            except KeyError:
-                raise MultipleInvalid(
-                    "could not find all sections required `cluster`, "
-                    "`setup`, \ `login`, `cloud` for cluster `%s`" % name)
+            except KeyError, ex:
+                raise Invalid(
+                    "Error in section `%s`" % cluster)
 
         return conf_values
