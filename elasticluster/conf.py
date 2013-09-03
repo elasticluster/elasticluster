@@ -380,6 +380,41 @@ class ConfigReader(object):
         self.configfile = configfile
         self.conf = ConfigObj(self.configfile, interpolation=False)
 
+        @message("file could not be found")
+        def check_file(v):
+            f = os.path.expanduser(os.path.expanduser(v))
+            if os.path.exists(f):
+                return f
+            else:
+                raise Invalid("file could not be found `%s`" % v)
+
+        self.schemas = {
+            "cloud": Schema(
+                {"provider": 'ec2_boto',
+                "ec2_url": Url(str),
+                "ec2_access_key": All(str, Length(min=1)),
+                "ec2_secret_key": All(str, Length(min=1)),
+                "ec2_region": All(str, Length(min=1)),
+                }, required=True),
+            "cluster": Schema(
+                {"cloud": All(str, Length(min=1)),
+                 "setup_provider": All(str, Length(min=1)),
+                 "login": All(str, Length(min=1)),
+                 }, required=True, extra=True),
+            "setup": Schema(
+                {"provider": All(str, Length(min=1)),
+                 "playbook_path": check_file(),
+                 }, required=True, extra=True),
+            "login": Schema(
+                {"image_user": All(str, Length(min=1)),
+                 "image_user_sudo": All(str, Length(min=1)),
+                 "image_sudo": Boolean(str),
+                 "user_key_name": All(str, Length(min=1)),
+                 "user_key_private": check_file(),
+                 "user_key_public": check_file(),
+                 }, required=True)
+            }
+
     def read_config(self):
         """
         Reads the configuration properties from the ini file and links the
@@ -405,6 +440,14 @@ class ConfigReader(object):
                 continue
 
             cluster_conf = dict(self.conf[cluster])
+
+            try:
+                self.schemas['cluster'](cluster_conf)
+            except MultipleInvalid as ex:
+                for error in ex.errors:
+                    errors.add("Section `%s`: %s" % (cluster, error))
+                continue
+
             cloud_name = ConfigReader.cloud_section + "/" + cluster_conf[
                 'cloud']
             login_name = ConfigReader.login_section + "/" + cluster_conf[
