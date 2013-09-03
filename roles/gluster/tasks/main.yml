@@ -29,6 +29,12 @@
   tags:
     - gluster
 
+- name: Ensure the GlusterFS service is running (CentOS)
+  action: service name=glusterd state=started
+  only_if: $is_centos
+  tags:
+    - gluster
+
 - action: file path=${gluster_brick_dir} state=directory
   tags:
     - gluster
