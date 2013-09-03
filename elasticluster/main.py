@@ -154,9 +154,14 @@ class ElastiCluster(cli.app.CommandLineApp):
         # call the subcommand function (ususally execute)
         try:
             return self.params.func()
-        except (MultipleInvalid, Invalid) as e:
+        except MultipleInvalid as ex:
+            for error in ex.errors:
+                print("Error validating configuration file '%s': `%s`"
+                      % (self.params.config, error))
+            sys.exit(1)
+        except Invalid as ex:
             print("Error validating configuration file '%s': `%s`"
-                  % (self.params.config, e))
+                  % (self.params.config, ex))
             sys.exit(1)
 
 
