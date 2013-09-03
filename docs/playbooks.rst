@@ -248,6 +248,31 @@ A *snippet* of a typical configuration for an Hadoop cluster is::
     hadoop-task-data_groups=hadoop_tasktracker,hadoop_datanode
     ...
 
+GlusterFS
+=========
+
+Tested on:
+
+* Ubuntu 12.04
+
++--------------------+----------------------------------------------------+
+| ansible groups     | role                                               |
++====================+====================================================+
+| ``gluster_data``   | Run a gluster *brick*                              |
++--------------------+----------------------------------------------------+
+| ``gluster_client`` | Install gluster client and install a gluster       |
+|                    | filesystem on ``/glusterfs``                       |
++--------------------+----------------------------------------------------+
+
+This will install a GlusterFS using all the ``gluster_data`` nodes as
+*bricks*, and any ``gluster_client`` to mount this filesystem in
+``/glusterfs``.
+
+Setup is very basic, and by default no replicas is set.
+
+To manage the gluster filesystem you need to connect to a
+``gluster_data`` node.
+
 OrangeFS/PVFS2
 ==============
 
