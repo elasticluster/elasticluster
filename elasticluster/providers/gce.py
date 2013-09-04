@@ -21,7 +21,8 @@ Cloud provider for the Google Compute Engine.
 See <https://code.google.com/p/google-cloud-platform-samples/source/browse/python-client-library-example/gce.py?repo=compute> for reference.
 """
 __author__ = 'Riccardo Murri <riccardo.murri@uzh.ch>, ' \
-             'Nicolas Baer <nicolas.baer@gmail.com'
+             'Nicolas Baer <nicolas.baer@gmail.com>, '  \
+             'Antonio Messina <antonio.s.messina@gmail.com>'
 
 
 # stdlib imports
@@ -30,6 +31,7 @@ import os
 import random
 import time
 import uuid
+from multiprocessing import Lock
 
 # External modules
 from apiclient.discovery import build
@@ -87,6 +89,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         self._instances = {}
         self._cached_instances = []
         self._images = None
+        self._gce_lock = Lock()
 
     def _connect(self):
         """
@@ -96,35 +99,40 @@ class GoogleCloudProvider(AbstractCloudProvider):
         turn fire up a browser.
         """
         # check for existing connection
-        if self._gce:
+        with self._gce_lock:
+            if self._gce:
+                return self._gce
+
+            flow = OAuth2WebServerFlow(self._client_id, self._client_secret,
+                                       GCE_SCOPE)
+            # The `Storage` object holds the credentials that your
+            # application needs to authorize access to the user's
+            # data. The name of the credentials file is provided. If the
+            # file does not exist, it is created. This object can only
+            # hold credentials for a single user. It stores the access
+            # priviledges for the application, so a user only has to grant
+            # access through the web interface once.
+            storage_path = os.path.join(self._storage_path,
+                                        self._client_id + '.oauth.dat')
+            storage = Storage(storage_path)
+
+            credentials = storage.get()
+            if credentials is None or credentials.invalid:
+                # try to start a browser to have the user authenticate with Google
+                # TODO: what kind of exception is raised if the browser
+                #       cannot be started?
+                credentials = run(flow, storage)
+
+            http = httplib2.Http()
+            self._auth_http = credentials.authorize(http)
+
+            self._gce = build(GCE_API_NAME, GCE_API_VERSION, http=http)
+
             return self._gce
 
-        flow = OAuth2WebServerFlow(self._client_id, self._client_secret,
-                                   GCE_SCOPE)
-        # The `Storage` object holds the credentials that your
-        # application needs to authorize access to the user's
-        # data. The name of the credentials file is provided. If the
-        # file does not exist, it is created. This object can only
-        # hold credentials for a single user. It stores the access
-        # priviledges for the application, so a user only has to grant
-        # access through the web interface once.
-        storage_path = os.path.join(self._storage_path,
-                                    self._client_id + '.oauth.dat')
-        storage = Storage(storage_path)
-
-        credentials = storage.get()
-        if credentials is None or credentials.invalid:
-            # try to start a browser to have the user authenticate with Google
-            # TODO: what kind of exception is raised if the browser
-            #       cannot be started?
-            credentials = run(flow, storage)
-
-        http = httplib2.Http()
-        self._auth_http = credentials.authorize(http)
-
-        self._gce = build(GCE_API_NAME, GCE_API_VERSION, http=http)
-
-        return self._gce
+    def _execute_request(self, request):
+        with self._gce_lock:
+            return request.execute(http=self._auth_http)
 
     # The following function was adapted from
     # https://developers.google.com/compute/docs/api/python_guide
@@ -160,7 +168,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                     project=self._project_id,
                     operation=operation_id)
 
-            response = request.execute()
+            response = self._execute_request(request)
             if response:
                 status = response['status']
         return response
@@ -229,7 +237,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         request = gce.instances().insert(
             project=self._project_id, body=instance, zone=self._zone)
         try:
-            response = request.execute(http=self._auth_http)
+            response = self._execute_request(request)
             response = self._wait_until_done(response)
             self._check_response(response)
             return instance_name
@@ -247,7 +255,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         try:
             request = gce.instances().delete(project=self._project_id,
                                         instance=instance_id, zone=self._zone)
-            response = request.execute(http=self._auth_http)
+            response = self._execute_request(request)
             self._check_response(response)
         except (HttpError, CloudProviderError) as e:
             raise InstanceError("Could not stop instance `%s`: `%s`"
@@ -264,7 +272,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         try:
             request = gce.instances().list(
                 project=self._project_id, filter=filter, zone=self._zone)
-            response = request.execute(http=self._auth_http)
+            response = self._execute_request(request)
             self._check_response(response)
         except (HttpError, CloudProviderError) as e:
             raise InstanceError("could not retrieve all instances on the "
@@ -288,7 +296,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         try:
             request = instances.get(instance=instance_id,
                                     project=self._project_id, zone=self._zone)
-            response = request.execute(http=self._auth_http)
+            response = self._execute_request(request)
             ip_private = None
             ip_public = None
             if response and "networkInterfaces" in response:
@@ -333,7 +341,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         gce = self._connect()
         filter = "name eq %s" % image_id
         request = gce.images().list(project=self._project_id, filter=filter)
-        response = request.execute(http=self._auth_http)
+        response = self._execute_request(request)
         response = self._wait_until_done(response)
 
         image_url = None
