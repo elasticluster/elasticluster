@@ -408,12 +408,15 @@ class ConfigReader(object):
 
         self.schemas = {
             "cloud": Schema(
-                {"provider": 'ec2_boto',
+                {"provider": Any('ec2_boto', 'google'),
                 "ec2_url": Url(str),
                 "ec2_access_key": All(str, Length(min=1)),
                 "ec2_secret_key": All(str, Length(min=1)),
                 "ec2_region": All(str, Length(min=1)),
-                }, required=True),
+                "gce_project_id": All(str, Length(min=1)),
+                "gce_client_id": All(str, Length(min=1)),
+                "gce_client_secret": All(str, Length(min=1)),
+                }),
             "cluster": Schema(
                 {"cloud": All(str, Length(min=1)),
                  "setup_provider": All(str, Length(min=1)),
