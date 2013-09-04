@@ -16,7 +16,7 @@
 #                 network). Default is False
 
 - action: apt pkg=$item update_cache=yes
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   with_items:
     - iptables
     - iptables-persistent
@@ -25,7 +25,7 @@
   only_if: $is_centos
 
 - action: set_fact destfile=/etc/iptables/rules.v4
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   tags: iptables
 
 - action: set_fact destfile=/etc/sysconfig/iptables

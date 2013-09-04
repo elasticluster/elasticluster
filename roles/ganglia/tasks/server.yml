@@ -5,7 +5,7 @@
     - ganglia-monitor
     - ganglia-webfrontend
     - gmetad
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   tags:
     - ganglia
 
@@ -22,7 +22,7 @@
 - name: Configure apache link
   action: file src=/etc/ganglia-webfrontend/apache.conf dest=/etc/apache2/conf.d/ganglia.conf state=link
   notify: restart apache
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   tags:
     - ganglia
 

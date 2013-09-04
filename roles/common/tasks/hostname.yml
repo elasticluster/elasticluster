@@ -1,10 +1,11 @@
 ---
 - name: Update /etc/hostname file
-  only_if: $is_ubuntu
-  action: lineinfile dest=/etc/hostname regexp=.* line=${inventory_hostname}
-  notify: set hostname to current ansible name
+  only_if: $is_debian_or_ubuntu
+  action: lineinfile dest=/etc/hostname regexp=.* line=${inventory_hostname} create=yes
 
 - name: Update /etc/sysconfig/network file
   only_if: $is_centos
   action: lineinfile dest=/etc/sysconfig/network regexp=^HOSTNAME= line=HOSTNAME=${inventory_hostname}
-  notify: set hostname to current ansible name
+
+- name: set hostname to current ansible name
+  action: command hostname $inventory_hostname

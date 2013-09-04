@@ -1,7 +1,7 @@
 ---
 - name: restart sshd
   action: service name=ssh state=restarted
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
 
 - name: restart sshd
   action: service name=sshd state=restarted
@@ -9,11 +9,9 @@
 
 - name: restart iptables
   action: service name=iptables-persistent state=restarted
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
 
 - name: restart iptables
   action: service name=iptables state=restarted
   only_if: $is_centos
 
-- name: set hostname to current ansible name
-  action: command hostname $inventory_hostname

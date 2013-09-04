@@ -1,7 +1,7 @@
 ---
 - name: configure ppa
   action: apt_repository repo=ppa:semiosis/ubuntu-glusterfs-3.4
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   tags:
     - gluster
 
@@ -16,7 +16,7 @@
   with_items:
     - glusterfs-server
     - glusterfs-client
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   tags:
     - gluster
 

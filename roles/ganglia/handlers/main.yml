@@ -1,7 +1,7 @@
 ---
 - name: restart apache
   action: service name=apache2 state=restarted
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
 
 - name: restart apache
   action: service name=httpd state=restarted
@@ -11,7 +11,7 @@
 # argument.
 - name: restart gmond
   action: command service ganglia-monitor restart
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
 
 - name: restart gmond
   action: service name=gmond state=restarted

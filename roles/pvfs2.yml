@@ -5,6 +5,7 @@
   handlers:
     - include: common/handlers/main.yml
   tasks:
+    - include: common/tasks/deb.yml
     - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: common/tasks/hostname.yml
     - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
@@ -67,9 +68,9 @@
       only_if: $is_centos
 
     - action: copy src=pvfs2/files/pvfs2.debian.init dest=/etc/init.d/pvfs2
-      only_if: $is_ubuntu
+      only_if: $is_debian_or_ubuntu
     - action: file path=/etc/init.d/pvfs2 mode=755 state=file
-      only_if: $is_ubuntu
+      only_if: $is_debian_or_ubuntu
 
     - action: service name=pvfs2 state=started
 

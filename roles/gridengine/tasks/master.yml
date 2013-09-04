@@ -1,7 +1,7 @@
 ---
 - name: Install GridEngine APT packages
   action: apt pkg=$item state=latest
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   with_items:
     - gridengine-client
     - gridengine-common

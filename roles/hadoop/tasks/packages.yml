@@ -1,6 +1,6 @@
 ---
 - name: Ensure all needed packages are installed (Ubuntu)
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   action: apt pkg=$item state=installed update_cache=yes
   with_items:
     - default-jdk
@@ -14,7 +14,7 @@
     - sudo
 
 - name: download and install hadoop debian package
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   action: shell dpkg -l hadoop | grep ^ii || (tmpfile=$(mktemp tmp.XXXXXXXXX.deb); wget $deburl -O $tmpfile -o /dev/null; dpkg -i $tmpfile; rc=$?; rm -f $tmpfile; exit $rc)
 
 

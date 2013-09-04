@@ -1,19 +1,19 @@
 ---
 - name: configure apt key for CEPH repository
   action: apt_key url=https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc state=present
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   tags:
     - ceph
 
 - name: add CEPH apt public repository
   action: apt_repository repo='deb http://ceph.com/debian/ precise main' state=present
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   tags:
     - ceph
 
 - name: Install required package for apt_repository.
   action: apt pkg=$item state=present
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   with_items:
     - ceph
     - pdsh

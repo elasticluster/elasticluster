@@ -22,7 +22,7 @@
     - gfortran
     - libatlas-dev
     - libnetcdf-dev
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
 
 - name: install extra packages (Ubuntu precise)
   action: apt name=$item state=present update_cache=yes

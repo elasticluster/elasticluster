@@ -1,0 +1,7 @@
+# Ensure that python-apt is installed on a debian/ubuntu machine
+- name: Check that $item package is installed
+  action: shell dpkg -l $item | grep ^ii || aptitude install -y $item
+  with_items:
+    - python-apt
+    - sysvinit-utils
+  only_if: $is_debian_or_ubuntu

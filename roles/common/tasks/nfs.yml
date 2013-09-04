@@ -2,7 +2,7 @@
 # Ubuntu-specific actions
 - name: install nfs server
   action: apt pkg=nfs-kernel-server state=present update_cache=yes
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   tags:
     -nfs
 
@@ -14,7 +14,7 @@
 
 - name: install nfs client
   action: apt pkg=nfs-common state=present
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   tags:
     -nfs
 
@@ -38,7 +38,7 @@
 
 - name: ensure nfs service is running (Ubuntu)
   action: service name=$item state=started
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   tags:
     - nfs
   with_items:

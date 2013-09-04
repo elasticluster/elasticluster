@@ -2,24 +2,24 @@
 # Only if this is an ubuntu
 - name: Configure apt key for jenkins repository
   action: apt_key url=http://pkg.jenkins-ci.org/debian/jenkins-ci.org.key state=present
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
 
 - name: Add jenkins APT repository
   action: apt_repository repo='deb http://pkg.jenkins-ci.org/debian binary/' state=present
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
 
 - name: Remove non-existing src apt repository
   action: apt_repository repo='deb-src http://pkg.jenkins-ci.org/debian binary/' state=absent
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
 
 - name: Add old-python apt repository
   action: apt_repository repo=ppa:fkrull/deadsnakes state=present
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
 
 - name: Install jenkins
   action: apt pkg=$item update_cache=yes force=yes state=latest
   with_items: $j_packages
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
 
 # Only if this is a CentOS (NOT TESTED!)
 - name: Configure YUM repository

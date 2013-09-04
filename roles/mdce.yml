@@ -7,6 +7,7 @@
   vars_files:
     - vars/os
   tasks:
+    - include: common/tasks/deb.yml
     - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: common/tasks/hostname.yml
     - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
@@ -21,6 +22,7 @@
     nfsmount: /usr/local/MATLAB
     mbin: $nfsmount/R2013a/toolbox/distcomp/bin/
   tasks:
+    - include: common/tasks/deb.yml
     - name: install missing X11 packages
       action: apt pkg=$item state=installed
       with_items:

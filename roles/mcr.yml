@@ -11,6 +11,7 @@
     # installkey: xxxxx-xxxxx-xxxxx-xxxxx.....
 
   tasks:
+    - include: common/tasks/deb.yml
     - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: common/tasks/hostname.yml
     - include: common/tasks/iptables.yml trusted_hosts=${groups.all}

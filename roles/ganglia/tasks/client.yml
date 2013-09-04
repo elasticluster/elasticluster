@@ -3,7 +3,7 @@
   action: apt pkg=$item state=latest update_cache=yes
   with_items:
     - ganglia-monitor
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   tags:
     - ganglia
 

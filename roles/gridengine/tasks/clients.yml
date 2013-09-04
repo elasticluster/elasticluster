@@ -1,7 +1,7 @@
 ---
 - name: Install GridEngine APT packages
   action: apt pkg=$item state=latest
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   with_items:
     - gridengine-client
     - gridengine-exec
@@ -14,7 +14,7 @@
 
 - name: configure gridengine execd
   action: lineinfile dest=/var/lib/gridengine/default/common/act_qmaster regexp='.*' line="${groups.gridengine_master[0]}"
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   notify: restart execd
 
 - name: ensure execd daemon is running

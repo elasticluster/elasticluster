@@ -4,6 +4,7 @@
   vars_files:
     - vars/os
   tasks:
+    - include: common/tasks/deb.yml
     - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: common/tasks/hostname.yml
     # This must run *before* start-*.sh because otherwise passwordless

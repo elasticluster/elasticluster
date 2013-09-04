@@ -14,7 +14,7 @@
 
 - name: install nfs client
   action: apt pkg=nfs-common state=present
-  only_if: $is_ubuntu
+  only_if: $is_debian_or_ubuntu
   tags:
     - nfs
 
@@ -31,6 +31,10 @@
 - name: Ensure portmap is running (Ubuntu)
   action: service name=portmap state=started enabled=yes
   only_if: $is_ubuntu
+
+- name: Ensure rpcbind is running (Debian)
+  action: service name=rpcbind state=started enabled=yes
+  only_if: $is_debian
 
 - name: Ensure ${nfsmount} directory exists
   action: file path=${nfsmount} state=directory
