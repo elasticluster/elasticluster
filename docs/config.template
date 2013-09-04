@@ -104,9 +104,9 @@
 # ** Please note: you have to set your google username in the login section
 # below as image_user to be able to use Google Compute Engine
 #
-*
-*
-*
+#
+#
+#
 # Examples
 # --------
 # For instance, to connect to Hobbes <http://hobbes.gc3.uzh.ch> you
