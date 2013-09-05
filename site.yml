@@ -17,3 +17,4 @@
 - include: roles/ceph.yml
 - include: roles/gluster.yml
 - include: roles/ipython.yml
+- include: roles/htcondor.yml
