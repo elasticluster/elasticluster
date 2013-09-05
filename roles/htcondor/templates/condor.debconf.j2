@@ -1,0 +1,60 @@
+# see file debian/condor.template in the sources of the `condor` plg
+
+Name: adduser/homedir-permission
+Template: adduser/homedir-permission
+Value: true
+Owners: adduser
+
+Name: adduser/title
+Template: adduser/title
+Owners: adduser
+
+Name: anthy/dictionaries
+Template: anthy/dictionaries
+Value: base.t, extra.t
+Owners: anthy
+Variables:
+ dictionaries = 2ch.t, base.t, extra.t
+
+Name: condor/wantdebconf
+Template: condor/wantdebconf
+Value: true
+
+Name: condor/phonehome
+Template: condir/phonehome
+Value: false
+
+Name: condor/centralmanager
+Template: condor/centralmanager
+Value: ${condor_master}
+
+Name: condor/daemons
+Template: condor/daemons
+# this should be the good value for worker nodes
+Value: STARTD
+# this should be the value for the master node
+Value: SCHEDD, COLLECTOR:NEGOTIATOR
+
+Name: condor/uiddomain
+Template: condor/uiddomain
+Value: ${condor_master}
+
+Name: condor/filesystemdomain
+Template: condor/filesystemdomain
+Value: ${condor_master}
+
+Name: condor/personal
+Template: condor/personal
+Value: false
+
+Name: condor/reservedmemory
+Template: condor/reservedmemory
+Value: 0
+
+Name: condor/allowwrite
+Template: condor/allowwrite
+Value: ${all_cluster_nodes}
+
+Name: condor/startpolicy
+Template: condor/startpolicy
+Value: true

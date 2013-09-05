@@ -1,0 +1,75 @@
+---
+- name: HTCondor common Playbook
+  hosts: condor_master:condor_workers
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: common/tasks/deb.yml
+    - include: common/tasks/epel_repo.yml
+    - include: common/tasks/hosts.yml hosts=${groups.all}
+    - include: common/tasks/hostname.yml
+    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+    - include: common/tasks/iptables.yml trusted_hosts=${groups.all} default_accept=1
+    - include: cluster/tasks/packages.yml
+
+    - name: add HTCondor public package repositories
+      action: apt_repository repo='deb http://research.cs.wisc.edu/htcondor/debian/${item}/ ${ansible_distribution_release} contrib' state=present
+      with_items:
+        # to get the katest HTCondor release, *both* repos should be added
+        - stable
+        - development
+      only_if: $is_debian_or_ubuntu
+
+    - name: install HTCondor packages
+      action: apt pkg=$item update_cache=yes force=yes state=latest
+      with_items:
+        - condor
+        - condor-dev
+        - libclassad-dev
+      only_if: $is_debian_or_ubuntu
+    
+    - name: configure htcondor
+      action: template src=htcondor/templates/htcondor.conf.j2 dest=/etc/htcondor/htcondor.conf owner=root group=root mode=0644
+      notify: restart htcondor
+      tags: 
+        - htcondor
+
+    - name: start HTCondor daemon
+      action: service name=condor state=started
+      tags: 
+        - htcondor
+
+  handlers:
+    - include: common/handlers/main.yml
+    - include: htcondor/handlers/common.yml
+      
+
+- name: HTCondor master Playbook
+  hosts: condor_master
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: common/tasks/nfs.yml
+
+    - action: nfsexport path=/home dest=/etc/exports clients=${groups.condor_workers} options=rw,no_root_squash,sync
+      notify: 
+        - ensure nfs service is running
+        - reload exports
+
+  handlers:
+    - include: common/handlers/main.yml
+    - include: htcondor/handlers/common.yml
+
+
+- name: HTCondor worker nodes Playbook
+  hosts: condor_workers
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: common/tasks/nfs-clients.yml nfsserver=${groups.condor_master[0]} nfspath=/home nfsmount=/home
+  handlers:
+    - include: common/handlers/main.yml
+    - include: htcondor/handlers/common.yml
+
+# Get infos with
+# ansible -i hostsfile -m setup hostname
