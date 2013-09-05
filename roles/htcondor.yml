@@ -11,43 +11,11 @@
     - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
     - include: common/tasks/iptables.yml trusted_hosts=${groups.all} default_accept=1
     - include: cluster/tasks/packages.yml
-
-    - name: add HTCondor public package repositories
-      action: apt_repository repo='deb http://research.cs.wisc.edu/htcondor/debian/${item}/ ${ansible_distribution_release} contrib' state=present
-      with_items:
-        # to get the katest HTCondor release, *both* repos should be added
-        - stable
-        - development
-      only_if: $is_debian_or_ubuntu
-
-    - name: prepare HTCondor DebConf template
-      action: template src=htcondor/templates/htcondor.debconf.j2 dest=/tmp/htcondor.debconf owner=root group=root mode=0644
-      tags: 
-        - htcondor
-      only_if: $is_debian_or_ubuntu
-
-    - name: install HTCondor w/ preconfigured template
-      action: command env DEBCONF_DB_FALLBACK=File{/tmp/htcondor.debconf} apt-get install condor
-      tags: 
-        - htcondor
-      only_if: $is_debian_or_ubuntu
-
-    - name: install more HTCondor packages
-      action: apt pkg=$item update_cache=yes force=yes state=latest
-      with_items:
-        - condor-dev
-        - libclassad-dev
-      only_if: $is_debian_or_ubuntu
-    
-    - name: start HTCondor daemon
-      action: service name=condor state=started
-      tags: 
-        - htcondor
+    - include: htcondor/tasks/common.yml
 
   handlers:
     - include: common/handlers/main.yml
     - include: htcondor/handlers/common.yml
-      
 
 - name: HTCondor master Playbook
   hosts: condor_master
