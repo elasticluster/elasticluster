@@ -15,3 +15,14 @@
   action: service name=iptables state=restarted
   only_if: $is_centos
 
+- name: reload exports
+  action: shell exportfs -r
+
+- name: ensure nfs service is running
+  service: name=nfs-kernel-server state=started
+  only_if: $is_debian_or_ubuntu
+
+- name: ensure nfs service is running
+  service: name=nfs state=started
+  only_if: $is_centos
+

@@ -29,6 +29,7 @@ module: nfsexport
 short_description: This module will configure a nfs exports
 description:
     - This module will configure an export by writing an entry in the ``/etc/exports`` file.
+    - Please remember to restart the nfs service after updating the ``/etc/exports`` file.
 author: Antonio Messina <antonio.s.messina@gmail.com>
 options:
     path:

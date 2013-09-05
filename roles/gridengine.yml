@@ -5,6 +5,7 @@
     - vars/os
   tasks:
     - include: common/tasks/deb.yml
+    - include: common/tasks/epel_repo.yml
     - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: common/tasks/hostname.yml
     - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
@@ -21,8 +22,11 @@
     - include: gridengine/tasks/master.yml
     - include: common/tasks/nfs.yml
     - action: nfsexport path=/home dest=/etc/exports clients=${groups.gridengine_clients} options=rw,no_root_squash,sync
-      notify: reload exports
+      notify: 
+        - ensure nfs service is running
+        - reload exports
   handlers:
+    - include: common/handlers/main.yml
     - include: slurm/handlers/main.yml
     - include: gridengine/handlers/main.yml
 
@@ -36,5 +40,6 @@
       only_if: $is_centos
     - include: gridengine/tasks/clients.yml
   handlers:
+    - include: common/handlers/main.yml
     - include: gridengine/handlers/main.yml
 

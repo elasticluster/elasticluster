@@ -5,6 +5,7 @@
     - vars/os
   tasks: 
     - include: common/tasks/deb.yml
+    - include: common/tasks/epel_repo.yml
     - include: common/tasks/hosts.yml hosts=${groups.all}
     - include: common/tasks/hostname.yml
     - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
@@ -25,7 +26,9 @@
     - include: common/tasks/nfs.yml
 
     - action: nfsexport path=/home dest=/etc/exports clients=${groups.slurm_clients} options=rw,no_root_squash,sync
-      notify: reload exports
+      notify: 
+        - ensure nfs service is running
+        - reload exports
 
     - include: slurm/tasks/master.yml
   handlers:
