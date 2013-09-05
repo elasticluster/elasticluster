@@ -31,12 +31,18 @@ from Queue import Empty
 
 # External modules
 import paramiko
+from binascii import hexlify
 
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.exceptions import TimeoutError, ClusterNotFound, \
     NodeNotFound, InstanceError, SecurityGroupError, ImageError, KeypairError,\
     ClusterError
+
+class IgnorePolicy(paramiko.MissingHostKeyPolicy):
+    def missing_host_key(self, client, hostname, key):
+        log.info('Ignoring unknown %s host key for %s: %s' %
+                 (key.get_name(), hostname, hexlify(key.get_fingerprint())))
 
 
 class Cluster(object):
@@ -479,8 +485,7 @@ class Node(object):
         object, or None if we are unable to connect.
         """
         ssh = paramiko.SSHClient()
-        ssh.load_system_host_keys()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.set_missing_host_key_policy(IgnorePolicy())
         try:
             log.debug("Trying to connect to host %s (%s)",
                       self.name, self.ip_public)
