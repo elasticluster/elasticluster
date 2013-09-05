@@ -6,9 +6,10 @@
    http://docutils.sf.net/rst.html for more information
 
 
-`Elasticluster` aims to provide a user-friendly command line tool to
+`Elasticluster`_ aims to provide a user-friendly command line tool to
 create, manage and setup computing clusters hosted on cloud
-infrastructures (like `Amazon's Elastic Compute Cloud EC2`_)
+infrastructures (like `Amazon's Elastic Compute Cloud EC2`_ or `Google
+Compute Engine`_)
 or a private `OpenStack`_ cloud). Its main goal
 is to get your own private cluster up and running with just a few commands; a `YouTube video`_
 demoes the basic features of elasticluster. 
@@ -24,7 +25,7 @@ Documentation for elasticluster is available on the `Read The Docs
 Features
 ========
 
-`Elasticluster` is in active development, but the following features at the current state:
+`Elasticluster`_ is in active development, but the following features at the current state:
 
 * Simple configuration file to define cluster templates
 * Can start and manage multiple independent clusters at the same time
@@ -32,12 +33,16 @@ Features
     * use `Debian GNU/Linux`_, `Ubuntu`_, or `CentOS`_ as a base operating system
     * choose `SLURM`_, `Grid Engine`_ or `TORQUE+MAUI`_ as a
       batch-queueing system
-    * choose `Hadoop`_ MapReduce or `IPython cluster`_  computational cluster
+    * setup your `Hadoop`_ cluster to start your favorite map/reduce job
+    * or create your `IPython cluster`_ to run your python code in
+      parallel over multiple virtual machines
+    * configure a distributed storage like `GlusterFS`_ or `Ceph`_, or a
+      parallel filesystem like `OrangeFS`_ (formerly known as PVFS2)
     * add useful tools like `Ganglia`_ for monitoring...
     * ...or anything that you can install with an `Ansible`_ playbook!
 * Grow and shrink a running cluster
 
-`Elasticluster` is currently in active development: please use the
+`Elasticluster`_ is currently in active development: please use the
 GitHub issue tracker to `file enhancement requests and ideas`_
 
 
@@ -47,7 +52,7 @@ Quickstart
 Installing from PyPI
 --------------------
 
-`Elasticluster` is a `Python`_ program; Python
+`Elasticluster`_ is a `Python`_ program; Python
 version 2.6 is required to run it.
 
 It's quite easy to install `elasticluster` using
@@ -96,16 +101,22 @@ Then you have to download the software. We suggest you to download it
 Now the ``elasticluster`` should be available in your current
 environment.
 
-Changes from release 1.0.3
-==========================
+Changes since version 1.0.4
+===========================
+
+* Support for Google Compute Engine added
+* Start VMs in parallel to increase startup speed
+
+Changes since version 1.0.3
+===========================
 
 * Improve configuration file parsing and error handling
 * Improve error reporting
 * Update GlusterFS playbooks: now they work on both Ubuntu and CentOS
 * Update documentation: add information on GlusterFS and IPython clusters
 
-Changes from release 1.0.2
-==========================
+Changes since version 1.0.2
+===========================
 
 * Add support for `IPython cluster`
 * Add ``--version`` command line option
@@ -113,6 +124,7 @@ Changes from release 1.0.2
 
 .. References
 
+.. _`elasticluster`: http://gc3-uzh-ch.github.io/elasticluster/
 .. _`Grid Computing Competence Center`: http://www.gc3.uzh.ch/
 .. _`University of Zurich`: http://www.uzh.ch
 .. _`GC3 Hobbes cloud`: http://www.gc3.uzh.ch/infrastructure/hobbes
@@ -121,6 +133,7 @@ Changes from release 1.0.2
 .. _`YouTube video`: http://youtu.be/cR3C7XCSMmA
 
 .. _`Amazon's Elastic Compute Cloud EC2`: http://aws.amazon.com/ec2/
+.. _`Google Compute Engine`: https://cloud.google.com/products/compute-engine
 .. _`OpenStack`: http://www.openstack.org/
 
 .. _`Debian GNU/Linux`: http://www.debian.org
@@ -129,7 +142,12 @@ Changes from release 1.0.2
 .. _`SLURM`: https://computing.llnl.gov/linux/slurm/
 .. _`Grid Engine`: http://gridengine.info
 .. _`TORQUE+MAUI`: http://www.adaptivecomputing.com/products/open-source/torque/
+.. _`Hadoop`: http://hadoop.apache.org/
+.. _`IPython cluster`: http://ipython.org/ipython-doc/dev/parallel/
 .. _`Ganglia`: http://ganglia.info
+.. _`GlusterFS`: http://www.gluster.org/
+.. _`Ceph`: http://ceph.com/
+.. _`OrangeFS`: http://orangefs.org/
 .. _`Ansible`: http://ansible.cc 
 .. _`file enhancement requests and ideas`: https://github.com/gc3-uzh-ch/elasticluster/issues
 .. _`Hadoop`: http://hadoop.apache.org/

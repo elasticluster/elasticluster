@@ -31,12 +31,18 @@ from Queue import Empty
 
 # External modules
 import paramiko
+from binascii import hexlify
 
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.exceptions import TimeoutError, ClusterNotFound, \
     NodeNotFound, InstanceError, SecurityGroupError, ImageError, KeypairError,\
     ClusterError
+
+class IgnorePolicy(paramiko.MissingHostKeyPolicy):
+    def missing_host_key(self, client, hostname, key):
+        log.info('Ignoring unknown %s host key for %s: %s' %
+                 (key.get_name(), hostname, hexlify(key.get_fingerprint())))
 
 
 class Cluster(object):
@@ -101,6 +107,31 @@ class Cluster(object):
             if self.nodes[node.type][index]:
                 del self.nodes[node.type][index]
 
+    @staticmethod
+    def _start_node(node):
+        """
+        Static method to start a specific node on a cloud
+        """
+        log.debug("_start_node: working on node %s" % node.name)
+        # TODO: the following check is not optimal yet. When a
+        # node is still in a starting state,
+        # it will start another node here,
+        # since the `is_alive` method will only check for
+        # running nodes (see issue #13)
+        if node.is_alive():
+            log.info("Not starting node %s which is "
+                     "already up&running.", node.name)
+            return True
+        else:
+            try:
+                node.start()
+                log.info("_start_node: node has been started")
+                return True
+            except Exception as e:
+                log.error("could not start node `%s` for reason "
+                          "`%s`" % (node.name, e))
+                return None
+
     def start(self):
         """
         Starts the cluster with the properties given in the
@@ -123,45 +154,13 @@ class Cluster(object):
             log.error("user interruption: saving cluster before exit.")
             self.keep_running = False
 
-        # start every node
-        def start_node(node_queue):
-            try:
-                while not node_queue.empty():
-                    if not self.keep_running:
-                        log.error("Aborting execution upon CTRL-C")
-                        break
-                    node = node_queue.get()
-                    # TODO: the following check is not optimal yet. When a
-                    # node is still in a starting state,
-                    # it will start another node here,
-                    # since the `is_alive` method will only check for
-                    # running nodes (see issue #13)
-                    if node.is_alive():
-                        log.info("Not starting node %s which is "
-                                 "already up&running.", node.name)
-                    else:
-                        log.info("starting node...")
-                        try:
-                            node.start()
-                        except (InstanceError, SecurityGroupError,
-                        KeypairError, ImageError) as e:
-                            log.error("could not start node `%s` for reason "
-                                      "`%s`" % (node.name, e))
-
-            except Empty:
-                # nothing to do if the queue turns out to be empty - the
-                # nodes are then already started.
-                pass
-
-        thread_pool = Pool(processes=1)
-        manager = Manager()
-        node_queue = manager.Queue()
-        for node in self.get_all_nodes():
-            node_queue.put(node)
-
+        nodes = self.get_all_nodes()
+        thread_pool = Pool(processes=len(nodes))
+        log.debug("Created pool of %d threads" % len(nodes))
         signal.signal(signal.SIGINT, sigint_handler)
 
-        result = thread_pool.apply_async(start_node, (node_queue,))
+        # This is blocking
+        result = thread_pool.map_async(self._start_node, nodes)
 
         while not result.ready():
             result.wait(1)
@@ -200,7 +199,7 @@ class Cluster(object):
                 starting_nodes = [n for n in starting_nodes
                                   if not n.is_alive()]
                 if starting_nodes:
-                    time.sleep(5)
+                    time.sleep(10)
         except TimeoutError as timeout:
             log.error("Not all nodes were started correctly within the given"
                       " timeout `%s`" % Cluster.startup_timeout)
@@ -445,7 +444,8 @@ class Node(object):
         self.instance_id = self._cloud_provider.start_instance(
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
-            self.flavor, self.image, self.image_userdata)
+            self.flavor, self.image, self.image_userdata,
+            username=self.image_user)
         log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
 
     def stop(self):
@@ -485,8 +485,7 @@ class Node(object):
         object, or None if we are unable to connect.
         """
         ssh = paramiko.SSHClient()
-        ssh.load_system_host_keys()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.set_missing_host_key_policy(IgnorePolicy())
         try:
             log.debug("Trying to connect to host %s (%s)",
                       self.name, self.ip_public)

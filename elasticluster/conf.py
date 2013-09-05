@@ -24,8 +24,14 @@ import sys
 
 # External modules
 from configobj import ConfigObj
-from voluptuous.voluptuous import message, MultipleInvalid, Invalid
-from voluptuous import Schema, All, Length, Any, Url, Boolean
+try:
+    # Voluptuous version >= 0.8.1
+    from voluptuous import message, MultipleInvalid, Invalid, Schema
+    from voluptuous import All, Length, Any, Url, Boolean
+except ImportError:
+    # Voluptuous version <= 0.7.2
+    from voluptuous.voluptuous import message, MultipleInvalid, Invalid
+    from voluptuous import Schema, All, Length, Any, Url, Boolean
 
 # Elasticluster imports
 from elasticluster.exceptions import ConfigurationError
@@ -111,6 +117,7 @@ class Configurator(object):
         provider = Configurator.cloud_providers_map[conf['provider']]
         providerconf = conf.copy()
         providerconf.pop('provider')
+        providerconf['storage_path'] = self.general_conf['storage']
 
         return provider(**providerconf)
 
@@ -307,13 +314,7 @@ class ConfigValidator(object):
                 raise Invalid("file could not be found `%s`" % v)
 
         # schema to validate all cluster properties
-        schema = {"cloud": {"provider": 'ec2_boto',
-                            "ec2_url": Url(str),
-                            "ec2_access_key": All(str, Length(min=1)),
-                            "ec2_secret_key": All(str, Length(min=1)),
-                            "ec2_region": All(str, Length(min=1)),
-                            },
-                  "cluster": {"cloud": All(str, Length(min=1)),
+        schema = {"cluster": {"cloud": All(str, Length(min=1)),
                               "setup_provider": All(str, Length(min=1)),
                               "login": All(str, Length(min=1)),
                               },
@@ -329,6 +330,16 @@ class ConfigValidator(object):
                             }
                   }
 
+        cloud_schema_ec2 = {"provider": 'ec2_boto',
+                            "ec2_url": Url(str),
+                            "ec2_access_key": All(str, Length(min=1)),
+                            "ec2_secret_key": All(str, Length(min=1)),
+                            "ec2_region": All(str, Length(min=1))}
+        cloud_schema_gce = {"provider": 'google',
+                            "gce_client_id": All(str, Length(min=1)),
+                            "gce_client_secret": All(str, Length(min=1)),
+                            "gce_project_id": All(str, Length(min=1))}
+
         node_schema = {
             "flavor": All(str, Length(min=1)),
             "image_id": All(str, Length(min=1)),
@@ -338,12 +349,19 @@ class ConfigValidator(object):
         # validation
         validator = Schema(schema, required=True, extra=True)
         validator_node = Schema(node_schema, required=True, extra=True)
+        ec2_validator = Schema(cloud_schema_ec2, required=True, extra=False)
+        gce_validator = Schema(cloud_schema_gce, required=True, extra=False)
 
         if not self.config:
             raise Invalid("No clusters found in configuration.")
 
         for cluster, properties in self.config.iteritems():
             validator(properties)
+
+            if properties['cloud']['provider'] == "ec2":
+                ec2_validator(properties['cloud'])
+            elif properties['cloud']['provider'] == "google":
+                gce_validator(properties['cloud'])
 
             if 'nodes' not in properties or len(properties['nodes']) == 0:
                 raise Invalid(
@@ -390,12 +408,15 @@ class ConfigReader(object):
 
         self.schemas = {
             "cloud": Schema(
-                {"provider": 'ec2_boto',
+                {"provider": Any('ec2_boto', 'google'),
                 "ec2_url": Url(str),
                 "ec2_access_key": All(str, Length(min=1)),
                 "ec2_secret_key": All(str, Length(min=1)),
                 "ec2_region": All(str, Length(min=1)),
-                }, required=True),
+                "gce_project_id": All(str, Length(min=1)),
+                "gce_client_id": All(str, Length(min=1)),
+                "gce_client_secret": All(str, Length(min=1)),
+                }),
             "cluster": Schema(
                 {"cloud": All(str, Length(min=1)),
                  "setup_provider": All(str, Length(min=1)),

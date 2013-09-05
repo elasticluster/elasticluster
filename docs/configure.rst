@@ -71,13 +71,21 @@ access to different cloud providers and want to deploy different
 clusters in different clouds. The mapping between cluster and cloud
 provider is done in the `cluster` section (see later).
 
-Valid configuration keys
-------------------------
+Currently two cloud providers are available:
+- boto: supports OpenStack and Amazon EC2
+- google: supports Google Compute Engine
+Therefore the following configuration option needs to be set in the cloud
+section:
 
 ``provider``
 
     the driver to use to connect to the cloud provider.
-    So far, the only accepted value is `boto`.
+    `boto` or `google`
+
+
+
+Valid configuration keys for `boto`
+-----------------------------------
 
 ``ec2_url`` 
 
@@ -104,6 +112,22 @@ Valid configuration keys
     the availability zone you want to use.
 
 
+Valid configuration keys for `google`
+-------------------------------------
+
+``gce_client_id``
+
+    The API client id generated in the Google API Console
+
+``gce_client_secret``
+
+    The API client secret generated in the Google API Console
+
+``gce_project_id``
+
+    The project id of your Google Compute Engine project
+
+
 Examples
 --------
 
@@ -127,6 +151,14 @@ For Amazon instead (region us-east-1) you can use::
     ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
     ec2_region=us-east-1
 
+For Google Compute Engine you can use:
+
+    [cloud/google]
+    provider=google
+    gce_client_id=****REPLACE WITH YOUR CLIENT ID****
+    gce_client_secret=****REPLACE WITH YOUR SECRET KEY****
+    gce_project_id=****REPLACE WITH YOUR PROJECT ID****
+
 OpenStack users
 +++++++++++++++
 
@@ -144,6 +176,21 @@ configuration file:
 `ec2_url` using the value of the variable EC2_URL
 `ec2_access_key` using the value of the variable EC2_ACCESS_KEY
 `ec2_secret_key` using the value of the variable EC2_SECRET_KEY
+
+Google Compute Engine users
++++++++++++++++++++++++++++
+To generate a client_id and client_secret to access the Google Compute
+Engine visit the following page: https://code.google.com/apis/console/
+1. Select the project defined as gce_project_id
+2. Navigate to `API Access`
+3. Click create another client id
+4. Select `Installed Application` -> `Other`
+5. After clicking the `Create` button you'll see your client_id and
+   secret_key in the list of available client ids
+
+**Please note**: you have to set your google username in the login section
+                below as image_user to be able to use Google Compute Engine
+
 
 Login Section
 ===============
@@ -164,7 +211,10 @@ Mandatory configuration keys
 
 ``image_user``
 
-    the remote user you must use to connect to the virtual machine
+    the remote user you must use to connect to the virtual machine.
+    In case you're using Google Compute Engine you have to set your username
+     here. So if your gmail address is karl.marx@gmail.com,
+     your username is karl.marx
 
 ``image_sudo``
 

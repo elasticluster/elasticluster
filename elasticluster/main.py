@@ -25,7 +25,12 @@ import sys
 
 # External modules
 import cli.app
-from voluptuous.voluptuous import MultipleInvalid, Invalid
+try:
+    # Voluptuous version >= 0.8.1
+    from voluptuous import MultipleInvalid, Invalid
+except ImportError:
+    # Voluptuous version <= 0.7.2
+    from voluptuous.voluptuous import MultipleInvalid, Invalid
 
 # Elasticluster imports
 from elasticluster import log

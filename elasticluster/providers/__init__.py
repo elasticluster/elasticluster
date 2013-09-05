@@ -31,7 +31,8 @@ class AbstractCloudProvider:
 
     @abstractmethod
     def start_instance(self, key_name, public_key_path, private_key_path,
-                       security_group, flavor, image_name, image_userdata):
+                       security_group, flavor, image_name, image_userdata,
+                       username=None):
         """
         Starts a new instance with the given properties and returns
         the instance id.
