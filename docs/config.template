@@ -42,15 +42,16 @@
 # provider is done in the `cluster` section (see later).
 #
 # Currently two cloud providers are available:
-# - boto: supports OpenStack and Amazon EC2
-# - google: supports Google Compute Engine
+# - ec2_boto:  OpenStack and Amazon EC2
+# - google:    Google Compute Engine
+#
 # Therefore the following configuration option needs to be set in the cloud
 # section:
 # provider: the driver to use to connect to the cloud provider.
-#           `boto` or `google`
+#           `ec2_boto` or `google`
 #
 #
-# Valid configuration keys for *boto*
+# Valid configuration keys for *ec2_boto*
 # ---------------------------------
 # ec2_url: the url of the EC2 endpoint. For Amazon is probably
 #          something like:
@@ -85,15 +86,18 @@
 #
 # Valid configuration keys for *google*
 # -------------------------------------
-# gce_client_id: The API client id generated in the Google API Console
+# gce_client_id:     The API client id generated in the Google API Console
 #
 # gce_client_secret: The API client secret generated in the Google API Console
 #
-# gce_project_id: The project id of your Google Compute Engine project
+# gce_project_id:    The project id of your Google Compute Engine project
 #
-# ***API Console***:
+# API Console
+# +++++++++++
+#
 # To generate a client_id and client_secret to access the Google Compute
 # Engine visit the following page: https://code.google.com/apis/console/
+#
 # 1. Select the project defined as gce_project_id
 # 2. Navigate to `API Access`
 # 3. Click create another client id
@@ -101,8 +105,9 @@
 # 5. After clicking the `Create` button you'll see your client_id and
 #    secret_key in the list of available client ids
 #
-# ** Please note: you have to set your google username in the login section
-# below as image_user to be able to use Google Compute Engine
+# **Please note**: you have to set your google username in the login
+# section below as `image_user` to be able to use Google Compute
+# Engine
 #
 #
 #
@@ -196,6 +201,16 @@ user_key_public=~/.ssh/id_rsa.pub
 #
 [login/gc3-user]
 image_user=gc3-user
+image_user_sudo=root
+image_sudo=True
+user_key_name=elasticluster
+user_key_private=~/.ssh/id_dsa.cloud
+user_key_public=~/.ssh/id_dsa.cloud.pub
+
+# while for google
+#
+[login/google]
+image_user=***REPLACE WITH YOUR GOOGLE LOGIN***
 image_user_sudo=root
 image_sudo=True
 user_key_name=elasticluster
@@ -427,12 +442,12 @@ image_userdata=
 ssh_to=frontend
 
 [cluster/ipython]
-cloud=hobbes
-login=gc3-user
-setup_provider=ansible_ipython
+cloud=google
+login=google
+setup_provider=ipython
 security_group=default
-image_id=ami-00000048
-flavor=m1.medium
+image_id=debian-7-wheezy-v20130723
+flavor=n1-standard-1
 controller_nodes=1
 worker_nodes=4
 image_userdata=
