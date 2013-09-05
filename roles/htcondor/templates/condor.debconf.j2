@@ -31,9 +31,9 @@ Value: ${groups.condor_master[0]}
 Name: condor/daemons
 Template: condor/daemons
 {% if inventory_hostname in groups['condor_master'] %}
-Value: SCHEDD, COLLECTOR:NEGOTIATOR
+Value: MASTER,SCHEDD,COLLECTOR,NEGOTIATOR
 {% else %}
-Value: STARTD
+Value: MASTER,SCHEDD,STARTD
 {% endif %}
 
 Name: condor/uiddomain
