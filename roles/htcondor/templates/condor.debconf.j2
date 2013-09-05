@@ -26,22 +26,23 @@ Value: false
 
 Name: condor/centralmanager
 Template: condor/centralmanager
-Value: ${condor_master}
+Value: ${groups.condor_master[0]}
 
 Name: condor/daemons
 Template: condor/daemons
-# this should be the good value for worker nodes
-Value: STARTD
-# this should be the value for the master node
+{% if inventory_hostname in groups['condor_master'] %}
 Value: SCHEDD, COLLECTOR:NEGOTIATOR
+{% else %}
+Value: STARTD
+{% endif %}
 
 Name: condor/uiddomain
 Template: condor/uiddomain
-Value: ${condor_master}
+Value: ${groups.condor_master[0]}
 
 Name: condor/filesystemdomain
 Template: condor/filesystemdomain
-Value: ${condor_master}
+Value: ${groups.condor_master[0]}
 
 Name: condor/personal
 Template: condor/personal
@@ -53,7 +54,7 @@ Value: 0
 
 Name: condor/allowwrite
 Template: condor/allowwrite
-Value: ${all_cluster_nodes}
+Value: ${groups.all}
 
 Name: condor/startpolicy
 Template: condor/startpolicy
