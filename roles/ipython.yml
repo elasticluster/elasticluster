@@ -19,8 +19,11 @@
       only_if: $is_debian_or_ubuntu
       with_items:
         - build-essential
+        - gfortran
         - python-pip
         - python-dev
+        - libblas-dev
+        - liblapack-dev
 
     - name: Install PIP (CentOS)
       action: yum name=$item
@@ -29,15 +32,19 @@
         - gcc-c++
         - python-pip
         - python-devel
+        - blas-devel
+        - lapack-devel
       only_if: $is_centos
 
     # Note: use_mirrors=yes (default) does not work with CentOS 6.3
     # Note: ipython[all] does not seem to work.
-    - name: Install ipython
+    - name: Install ipython and commonly used Python packages
       action: pip name=$item use_mirrors=no
       with_items:
         - ipython
         - ipython-cluster-helper
+        - numpy
+        - scipy
 
     - name: Fix for GCE CentOS images
       action: shell find /usr/lib/python2.6/site-packages -name  top_level.txt -exec chmod a+r {} \;
