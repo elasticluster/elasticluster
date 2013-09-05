@@ -33,6 +33,7 @@ Tested on:
 
 * Ubuntu 12.04
 * Ubuntu 13.04
+* Debian 7.1 (GCE)
 
 +------------------+--------------------------------------+
 | ansible groups   | role                                 |
@@ -80,7 +81,8 @@ Gridengine
 Tested on:
  
 * Ubuntu 12.04
-* CentOS 6.3
+* CentOS 6.3 (except for GCE images)
+* Debian 7.1 (GCE)
 
 +-----------------------+--------------------------------------+
 | ansible groups        | role                                 |
@@ -124,6 +126,9 @@ You can combine the gridengine playbooks with ganglia. In this case the ``setup`
     compute_groups=gridengine_clients,ganglia_monitor
     ...
 
+Please note that Google Compute Engine provides Centos 6.2 images with
+a non-standard kernel which is **unsupported** by the gridengine
+packages.
 
 Ganglia
 =======
@@ -132,6 +137,8 @@ Tested on:
 
 * Ubuntu 12.04
 * CentOS 6.3
+* Debian 7.1 (GCE)
+* CentOS 6.2 (GCE)
 
 +--------------------+---------------------------------+
 | ansible groups     | role                            |
@@ -163,7 +170,8 @@ Tested on:
 
 * Ubuntu 12.04
 * CentOS 6.3
-
+* Debian 7.1 (GCE)
+* CentOS 6.2 (GCE)
 +------------------------+------------------------------------+
 | ansible groups         | role                               |
 +========================+====================================+
@@ -209,6 +217,7 @@ Tested on:
 
 * Ubuntu 12.04
 * CentOS 6.3
+* Debian 7.1 (GCE)
 
 +----------------------+-----------------------------------+
 | ansible groups       | role                              |
