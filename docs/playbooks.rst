@@ -130,6 +130,44 @@ Please note that Google Compute Engine provides Centos 6.2 images with
 a non-standard kernel which is **unsupported** by the gridengine
 packages.
 
+HTCondor
+========
+
+Tested on:
+
+* Ubuntu 12.04
+
++-------------------+----------------------------------+
+| ansible groups    | role                             |
++===================+==================================+
+|``condor_master``  | Act as scheduler, submission and |
+|                   | execution host.                  |
++-------------------+----------------------------------+
+|``condor_workers`` | Act as execution host only.      |
++-------------------+----------------------------------+
+
+This playbook will install the `HTCondor`_ workload management system
+using the packages provided by the Center for High Throughput
+Computing at UW-Madison.
+
+The ``/home`` filesystem is exported *from* the condor master to the
+compute nodes.
+
+A *snippet* of a typical configuration for a slurm cluster is::
+
+    [cluster/condor]
+    setup_provider=ansible_condor
+    frontend_nodes=1
+    compute_nodes=2
+    ssh_to=frontend
+    ...
+
+    [setup/ansible_condor]
+    frontend_groups=condor_master
+    compute_groups=condor_workers
+    ...
+
+
 Ganglia
 =======
 
@@ -172,6 +210,7 @@ Tested on:
 * CentOS 6.3
 * Debian 7.1 (GCE)
 * CentOS 6.2 (GCE)
+
 +------------------------+------------------------------------+
 | ansible groups         | role                               |
 +========================+====================================+
@@ -326,5 +365,3 @@ This configuration will create a SLURM cluster with 10 compute nodes,
 10 data nodes and a frontend, and will mount the ``/pvfs2`` directory
 from the data nodes to both the compute nodes and the frontend.
 
-.. _`OrangeFS`: http://orangefs.org/
-.. _`IPython cluster`: http://ipython.org/ipython-doc/dev/parallel/
