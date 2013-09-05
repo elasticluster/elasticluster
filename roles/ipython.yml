@@ -39,7 +39,12 @@
         - ipython
         - ipython-cluster-helper
 
-- name: IPython controller Playbook
+    - name: Fix for GCE CentOS images
+      action: shell find /usr/lib/python2.6/site-packages -name  top_level.txt -exec chmod a+r {} \;
+      ignore_errors: yes
+      only_if: $is_centos
+
+- name: IPython controller Playbook (standard user operations)
   hosts: ipython_controller:ipython_engine
   sudo: False
   tasks:
