@@ -198,6 +198,79 @@ ssh_to=frontend
                     </div>
                 </div>
             </div>
+            <div class="tab-pane" id="amazon-hadoop">
+                <div class="row-fluid">
+                    <div class="span6">
+                            <pre class="prettyprint languague-ini">
+[cloud/amazon-us-east-1]
+provider=ec2_boto
+ec2_url=https://ec2.us-east-1.amazonaws.com
+ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
+ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
+ec2_region=us-east-1
+
+[login/ubuntu]
+image_user=ubuntu
+
+[setup/ansible]
+provider=ansible
+hadoop-name_groups=hadoop_namenode
+hadoop-jobtracker_groups=hadoop_jobtracker
+hadoop-task-data_groups=hadoop_tasktracker,hadoop_datanode
+
+[cluster/hadoop]
+cloud=amazon-us-east-1
+login=ubuntu
+setup_provider=ansible
+security_group=all_tcp_ports
+image_id=ami-00000048
+flavor=m1.small
+hadoop-name_nodes=1
+hadoop-jobtracker_nodes=1
+hadoop-task-data_nodes=4
+ssh_to=hadoop-name
+
+
+                            </pre>
+                    </div>
+                    <div class="span6 commands">
+                        <h5>Start hadoop cluster with the name `mycluster`</h5>
+                        <code>
+                            $ elasticluster start hadoop -n mycluster
+                        </code>
+                        <h5>Start another hadoop cluster just for the fun of it</h5>
+                        <code>
+                            $ elasticluster start hadoop -n mysecondcluster
+                        </code>
+                        <h5>List all clusters</h5>
+                        <code>
+                            $ elasticluster list
+                        </code>
+
+                        <h5>List nodes</h5>
+                        <code>
+                            $ elasticluster list-nodes mycluster
+                        </code>
+
+                        <h5>Grow cluster by 10 data nodes</h5>
+                        <code>
+                            $ elasticluster resize mycluster -a 10:hadoop-task-data
+                        </code>
+
+                        <h5>SSH into frontend node</h5>
+                        <code>
+                            $ elasticluster ssh mycluster
+                        </code>
+
+                        <h5>SFTP connect</h5>
+                        <code>
+                            $ elasticluster sftp mycluster
+                        </code>
+
+                        <h5>Destroy cluster</h5>
+                    </div>
+                </div>
+            </div>
             <div class="tab-pane" id="gce-ipython">
                 <div class="row-fluid">
                     <div class="span6">
