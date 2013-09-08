@@ -84,7 +84,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             os.path.expandvars(private_key_file))
         self._remote_user = remote_user
         self._sudo_user = sudo_user
-        self._sudo = sudo
+        self._sudo = True if sudo.lower() in ['true', 'yes'] else False
         self._playbook_path = playbook_path
         self.extra_conf = extra_conf
         self.groups = dict((k[:-7], v) for k, v in extra_conf.items() if k.endswith('_groups'))
@@ -212,7 +212,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 for group in self.groups[node.type]:
                     if group not in inventory:
                         inventory[group] = []
-                    inventory[group].append((node.name, node.ip_public, extra_vars))
+                    inventory[group].append((node.name, node.ip_public, node.ssh_public_port, extra_vars))
 
         if inventory:
             # create a temporary file to pass to ansible, since the
@@ -231,7 +231,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 fd.write("\n["+section+"]\n")
                 if hosts:
                     for host in hosts:
-                        hostline = "%s ansible_ssh_host=%s %s\n" \
+                        hostline = "%s ansible_ssh_host=%s ansible_ssh_port=%s %s\n" \
                             % host
                         fd.write(hostline)
 

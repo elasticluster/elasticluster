@@ -433,6 +433,8 @@ class Node(object):
         self.instance_id = None
         self.ip_public = None
         self.ip_private = None
+        self.ssh_public_port = None
+        self.ssh_private_port = None
 
     def start(self):
         """
@@ -511,8 +513,11 @@ class Node(object):
         """
         if not self.ip_private or not self.ip_public:
             private, public = self._cloud_provider.get_ips(self.instance_id)
+            ssh_public_port, ssh_private_port = self._cloud_provider.get_ssh_ports(self.instance_id)
             self.ip_public = public
             self.ip_private = private
+            self.ssh_public_port = ssh_public_port
+            self.ssh_private_port = ssh_private_port
 
     def __str__(self):
         return "name=`%s`, id=`%s`, public_ip=`%s`, private_ip=`%s`" % (
@@ -552,7 +557,10 @@ class ClusterStorage(object):
              'name': node.name,
              'type': node.type,
              'ip_public': node.ip_public,
-             'ip_private': node.ip_private}
+             'ip_private': node.ip_private,
+             'ssh_public_port': node.ssh_public_port,
+             'ssh_private_port': node.ssh_private_port,
+             }
             for node in cluster.get_all_nodes()]
 
         db_json = json.dumps(db)

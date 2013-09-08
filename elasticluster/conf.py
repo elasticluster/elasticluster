@@ -37,6 +37,7 @@ except ImportError:
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 from elasticluster.providers.gce import GoogleCloudProvider
+from elasticluster.providers.docker_provider import DockerProvider
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.cluster import Cluster, ClusterStorage, Node
 
@@ -68,6 +69,7 @@ class Configurator(object):
     cloud_providers_map = {
         "ec2_boto": BotoCloudProvider,
         "google": GoogleCloudProvider,
+        "docker": DockerProvider,
     }
 
     setup_providers_map = {"ansible": AnsibleSetupProvider, }
@@ -183,6 +185,8 @@ class Configurator(object):
             node.instance_id = dnode['instance_id']
             node.ip_public = dnode['ip_public']
             node.ip_private = dnode['ip_private']
+            node.ssh_public_port = dnode['ssh_public_port']
+            node.ssh_private_port = dnode['ssh_private_port']
 
         return cluster
 
@@ -362,6 +366,7 @@ class ConfigValidator(object):
                 ec2_validator(properties['cloud'])
             elif properties['cloud']['provider'] == "google":
                 gce_validator(properties['cloud'])
+            # No validator for "docker" yet.
 
             if 'nodes' not in properties or len(properties['nodes']) == 0:
                 raise Invalid(
@@ -408,7 +413,7 @@ class ConfigReader(object):
 
         self.schemas = {
             "cloud": Schema(
-                {"provider": Any('ec2_boto', 'google'),
+                {"provider": Any('ec2_boto', 'google', 'docker'),
                 "ec2_url": Url(str),
                 "ec2_access_key": All(str, Length(min=1)),
                 "ec2_secret_key": All(str, Length(min=1)),
@@ -416,6 +421,7 @@ class ConfigReader(object):
                 "gce_project_id": All(str, Length(min=1)),
                 "gce_client_id": All(str, Length(min=1)),
                 "gce_client_secret": All(str, Length(min=1)),
+                "docker_url": Url(str),
                 }),
             "cluster": Schema(
                 {"cloud": All(str, Length(min=1)),

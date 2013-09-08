@@ -61,6 +61,14 @@ class AbstractCloudProvider:
         """
         pass
 
+    def get_ssh_ports(self, instance_id):
+        """
+        Method to get the tcp port where to connect, wherever it is
+        possible to get this value from the cloud provider.
+
+        @returns: (`ssh_public_port`, `ssh_private_port`)
+        """
+        return ('22', '22')
 
 class AbstractSetupProvider:
     """

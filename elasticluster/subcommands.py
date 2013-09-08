@@ -551,6 +551,7 @@ class SshFrontend(AbstractCommand):
                        "-i", frontend.user_key_private,
                        "-o", "UserKnownHostsFile=/dev/null",
                        "-o", "StrictHostKeyChecking=no",
+                       "-p", frontend.ssh_public_port,
                        '%s@%s' % (username, host),
         ]
         ssh_cmdline.extend(self.params.ssh_args)
@@ -599,6 +600,7 @@ class SftpFrontend(AbstractCommand):
                         "-i", frontend.user_key_private,
                         "-o", "UserKnownHostsFile=/dev/null",
                         "-o", "StrictHostKeyChecking=no",
+                        "-P", frontend.ssh_public_port,
         ]
         sftp_cmdline.extend(self.params.sftp_args)
         sftp_cmdline.append('%s@%s' % (username, host))
