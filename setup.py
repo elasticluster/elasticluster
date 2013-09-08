@@ -88,7 +88,9 @@ setup(
         'oauth2client',
         'httplib2',
         'voluptuous',
-        'configobj'
+        'configobj',
+        # Docker support
+        'docker-py',
     ],
     tests_require = ['tox', 'mock', 'nose'],
     data_files=ansible_pb_files(),
