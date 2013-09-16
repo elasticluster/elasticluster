@@ -33,6 +33,7 @@ from elasticluster.exceptions import ClusterNotFound
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 
+
 def minimal_configuration():
 
     cfg = ConfigParser.ConfigParser()
@@ -135,7 +136,6 @@ class TestConfigurator(unittest.TestCase):
         self.path = path
         self.config = Configuration().get_config(self.path)
 
-
     def tearDown(self):
         os.unlink(self.path)
 
@@ -174,7 +174,6 @@ class TestConfigurator(unittest.TestCase):
         self.assertTrue(len(cluster.nodes["compute"]) == 2)
         self.assertTrue(len(cluster.nodes["frontend"]) == 1)
 
-
     def test_load_cluster(self):
         # test without storage file
         storage_path = tempfile.mkdtemp()
@@ -188,12 +187,9 @@ class TestConfigurator(unittest.TestCase):
         # directory as a parameter to configurator, since it should work
         # anywhere
 
-
-
     def test_create_node(self):
         configurator = Configurator(self.config)
-        node = configurator.create_node("mycluster", "compute", None,
-                                            "test-1")
+        node = configurator.create_node("mycluster", "compute", None, "test-1")
 
         self.assertTrue(type(node) is Node)
         self.assertEqual(node.name, "test-1")
@@ -212,8 +208,8 @@ class TestConfigurator(unittest.TestCase):
         usr = self.config['mycluster']['login']['image_user']
         self.assertEqual(node.image_user, usr)
 
-        sec_group = self.config['mycluster']['nodes']['compute'] \
-                                                        ['security_group']
+        nodes = self.config['mycluster']['nodes']
+        sec_group = nodes['compute']['security_group']
         self.assertEqual(node.security_group, sec_group)
 
         image = self.config['mycluster']['nodes']['compute']['image_id']
@@ -223,8 +219,6 @@ class TestConfigurator(unittest.TestCase):
         self.assertEqual(node.flavor, flavor)
 
         self.assertEqual(node.image_userdata, '')
-
-
 
     def test_create_cluster_storage(self):
         # default storage path
@@ -261,7 +255,6 @@ class TestConfigurator(unittest.TestCase):
         self.assertEqual(provider._playbook_path, pb)
 
 
-
 class TestConfigValidator(unittest.TestCase):
 
     def setUp(self):
@@ -281,7 +274,6 @@ class TestConfigValidator(unittest.TestCase):
 
         validator = ConfigValidator(self.config)
         validator.validate()
-
 
     def test_valid_config(self):
         '''
@@ -361,104 +353,104 @@ class TestConfigReader(unittest.TestCase):
         '''
 
         config = """
-            [cloud/hobbes]
-            provider=ec2_boto
-            ec2_url=http://hobbes.gc3.uzh.ch:8773/services/Cloud
-            ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
-            ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
-            ec2_region=nova
+[cloud/hobbes]
+provider=ec2_boto
+ec2_url=http://hobbes.gc3.uzh.ch:8773/services/Cloud
+ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
+ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
+ec2_region=nova
 
-            [cloud/amazon-us-east-1]
-            provider=ec2_boto
-            ec2_url=https://ec2.us-east-1.amazonaws.com
-            ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
-            ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
-            ec2_region=us-east-1
+[cloud/amazon-us-east-1]
+provider=ec2_boto
+ec2_url=https://ec2.us-east-1.amazonaws.com
+ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
+ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
+ec2_region=us-east-1
 
-            [login/ubuntu]
-            image_user=ubuntu
-            image_user_sudo=root
-            image_sudo=True
-            user_key_name=elasticluster
-            user_key_private=~/.ssh/id_rsa
-            user_key_public=~/.ssh/id_rsa.pub
+[login/ubuntu]
+image_user=ubuntu
+image_user_sudo=root
+image_sudo=True
+user_key_name=elasticluster
+user_key_private=~/.ssh/id_rsa
+user_key_public=~/.ssh/id_rsa.pub
 
-            [login/gc3-user]
-            image_user=gc3-user
-            image_user_sudo=root
-            image_sudo=True
-            user_key_name=elasticluster
-            user_key_private=~/.ssh/id_dsa.cloud
-            user_key_public=~/.ssh/id_dsa.cloud.pub
+[login/gc3-user]
+image_user=gc3-user
+image_user_sudo=root
+image_sudo=True
+user_key_name=elasticluster
+user_key_private=~/.ssh/id_dsa.cloud
+user_key_public=~/.ssh/id_dsa.cloud.pub
 
-            [setup/ansible-slurm]
-            provider=ansible
-            frontend_groups=slurm_master
-            compute_groups=slurm_clients
+[setup/ansible-slurm]
+provider=ansible
+frontend_groups=slurm_master
+compute_groups=slurm_clients
 
-            [setup/ansible-gridengine]
-            provider=ansible
-            frontend_groups=gridengine_master
-            compute_groups=gridengine_clients
+[setup/ansible-gridengine]
+provider=ansible
+frontend_groups=gridengine_master
+compute_groups=gridengine_clients
 
-            [setup/ansible-pbs]
-            provider=ansible
-            frontend_groups=pbs_master,maui_master
-            compute_groups=pbs_clients
+[setup/ansible-pbs]
+provider=ansible
+frontend_groups=pbs_master,maui_master
+compute_groups=pbs_clients
 
-            [setup/ansible_matlab]
-            provider=ansible
-            frontend_groups=mdce_master,mdce_worker,ganglia_monitor,ganglia_master
-            worker_groups=mdce_worker,ganglia_monitor
+[setup/ansible_matlab]
+provider=ansible
+frontend_groups=mdce_master,mdce_worker,ganglia_monitor,ganglia_master
+worker_groups=mdce_worker,ganglia_monitor
 
-            [cluster/slurm]
-            cloud=hobbes
-            login=gc3-user
-            setup_provider=ansible-slurm
-            security_group=default
-            image_id=ami-00000048
-            flavor=m1.small
-            frontend_nodes=1
-            compute_nodes=2
-            ssh_to=frontend
+[cluster/slurm]
+cloud=hobbes
+login=gc3-user
+setup_provider=ansible-slurm
+security_group=default
+image_id=ami-00000048
+flavor=m1.small
+frontend_nodes=1
+compute_nodes=2
+ssh_to=frontend
 
-            [cluster/torque]
-            cloud=hobbes
-            frontend_nodes=1
-            compute_nodes=2
-            ssh_to=frontend
-            security_group=default
-            # CentOS image
-            image_id=ami-0000004f
-            flavor=m1.small
-            login=gc3-user
-            setup_provider=ansible-pbs
+[cluster/torque]
+cloud=hobbes
+frontend_nodes=1
+compute_nodes=2
+ssh_to=frontend
+security_group=default
+# CentOS image
+image_id=ami-0000004f
+flavor=m1.small
+login=gc3-user
+setup_provider=ansible-pbs
 
-            [cluster/aws-slurm]
-            cloud=amazon-us-east-1
-            login=ubuntu
-            setup_provider=ansible-slurm
-            security_group=default
-            # ubuntu image
-            image_id=ami-90a21cf9
-            flavor=m1.small
-            frontend_nodes=1
-            compute_nodes=2
+[cluster/aws-slurm]
+cloud=amazon-us-east-1
+login=ubuntu
+setup_provider=ansible-slurm
+security_group=default
+# ubuntu image
+image_id=ami-90a21cf9
+flavor=m1.small
+frontend_nodes=1
+compute_nodes=2
 
-            [cluster/matlab]
-            cloud=hobbes
-            login=gc3-user
-            setup_provider=ansible_matlab
-            security_group=default
-            image_id=ami-00000099
-            flavor=m1.medium
-            frontend_nodes=1
-            worker_nodes=10
-            image_userdata=
-            ssh_to=frontend
+[cluster/matlab]
+cloud=hobbes
+login=gc3-user
+setup_provider=ansible_matlab
+security_group=default
+image_id=ami-00000099
+flavor=m1.medium
+frontend_nodes=1
+worker_nodes=10
+image_userdata=
+ssh_to=frontend
 
-            [cluster/slurm/frontend]
-            flavor=bigdisk
+[cluster/slurm/frontend]
+flavor=bigdisk
             """
         config = self._check_read_config(config)
 
@@ -483,7 +475,6 @@ class TestConfigReader(unittest.TestCase):
         # check frontend overwrite in slurm cluster
         self.assertTrue(cfg["slurm"]["nodes"]["frontend"]["flavor"] ==
                         "bigdisk")
-
 
     def test_read_missing_section_cluster(self):
         '''
@@ -558,6 +549,7 @@ def test_missing_options():
     for section in cfg.sections():
         for option, value in cfg.items(section):
             yield missing_option, section, option
+
 
 class TestConfigurationFile(unittest.TestCase):
 

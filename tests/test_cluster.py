@@ -38,14 +38,13 @@ class TestCluster(unittest.TestCase):
         f, path = tempfile.mkstemp()
         self.path = path
 
-
     def tearDown(self):
         os.unlink(self.path)
 
     def get_cluster(self, cloud_provider=None, config=None, nodes=None):
         if not cloud_provider:
             cloud_provider = BotoCloudProvider("https://hobbes.gc3.uzh.ch/",
-                                          "nova", "a-key", "s-key")
+                                               "nova", "a-key", "s-key")
         if not config:
             config = Configuration().get_config(self.path)
 
@@ -134,7 +133,6 @@ class TestCluster(unittest.TestCase):
         cluster.min_nodes = nodes_min
 
         self.failUnlessRaises(ClusterError, cluster._check_cluster_size)
-
 
     def test_get_all_nodes(self):
         """
@@ -228,7 +226,6 @@ class TestNode(unittest.TestCase):
 
     def tearDown(self):
         os.unlink(self.path)
-
 
     def get_node(self):
         cloud_provider = MagicMock()
