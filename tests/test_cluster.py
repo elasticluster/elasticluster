@@ -94,18 +94,13 @@ class TestCluster(unittest.TestCase):
         cloud_provider = MagicMock()
         cloud_provider.start_instance.return_value = u'test-id'
         cloud_provider.get_ips.return_value = ('127.0.0.1', '127.0.0.1')
-
-        def is_running(instance_id):
-            return True
-
-        cloud_provider.is_instance_running.side_effect = is_running
+        cloud_provider.is_instance_running.return_value = True
 
         cluster = self.get_cluster(cloud_provider=cloud_provider)
         cluster._storage = MagicMock()
 
         ssh_mock = MagicMock()
-        with patch('elasticluster.cluster.paramiko.SSHClient') as ssh_mock:
-            ssh_mock.connect.return_value = True
+        with patch('paramiko.SSHClient') as ssh_mock:
             cluster.start()
 
         cluster._storage.dump_cluster.assert_called_with(cluster)
