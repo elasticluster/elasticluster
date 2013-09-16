@@ -29,7 +29,7 @@ from elasticluster.conf import Configurator
 from elasticluster.cluster import Cluster, Node, ClusterStorage
 from elasticluster.exceptions import ClusterError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
-from test.test_conf import Configuration
+from tests.test_conf import Configuration
 
 
 class TestCluster(unittest.TestCase):
@@ -95,11 +95,9 @@ class TestCluster(unittest.TestCase):
         cloud_provider = MagicMock()
         cloud_provider.start_instance.return_value = u'test-id'
         cloud_provider.get_ips.return_value = ('127.0.0.1', '127.0.0.1')
-        states = [True, True, True, True, True, False, False, False,
-                  False, False]
 
         def is_running(instance_id):
-            return states.pop()
+            return True
 
         cloud_provider.is_instance_running.side_effect = is_running
 
@@ -210,8 +208,7 @@ class TestCluster(unittest.TestCase):
         for node in cluster.get_all_nodes():
             self.assertEqual(node.ip_private, node.ip_public, ip)
 
-        
-        
+
 class TestNode(unittest.TestCase):
 
     def setUp(self):
@@ -501,4 +498,3 @@ class TestClusterStorage(unittest.TestCase):
         path_valid = os.path.join(self.storage_path, "cluster_name.json")
 
         self.assertEqual(path, path_valid)
-
