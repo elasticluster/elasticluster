@@ -359,7 +359,11 @@ class ConfigValidator(object):
         for cluster, properties in self.config.iteritems():
             validator(properties)
 
-            if properties['cloud']['provider'] == "ec2":
+            if 'provider' not in properties['cloud']:
+                raise Invalid(
+                    "Missing `provider` option in cluster `%s`" % cluster)
+
+            if properties['cloud']['provider'] ==  "ec2_boto":
                 ec2_validator(properties['cloud'])
             elif properties['cloud']['provider'] == "google":
                 gce_validator(properties['cloud'])
@@ -526,7 +530,7 @@ class ConfigReader(object):
 
                 if errors.errors:
                     for error in errors.errors:
-                        log.warning("Cluster `%s`: %s" % (name, error))
+                        log.warning("Ignoring Cluster `%s`: %s" % (name, error))
                     log.warning("Ignoring cluster `%s`." % name)
                 else:
                     conf_values[name] = values
