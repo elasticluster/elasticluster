@@ -22,14 +22,59 @@ import os
 import shutil
 import tempfile
 import unittest
+import ConfigParser
 
-from voluptuous import Invalid
+import nose.tools
+from voluptuous import Invalid, MultipleInvalid
 
 from elasticluster.conf import ConfigReader, ConfigValidator, Configurator
 from elasticluster.cluster import Node
 from elasticluster.exceptions import ClusterNotFound
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.providers.ec2_boto import BotoCloudProvider
+
+def minimal_configuration():
+
+    cfg = ConfigParser.ConfigParser()
+
+    # Create a valid, minimal configuration object.
+    cfg.add_section('cloud/boto1')
+    cfg.set('cloud/boto1', 'provider', 'ec2_boto')
+    cfg.set('cloud/boto1', 'ec2_url', 'https://ec2.us-east-1.amazonaws.com')
+    cfg.set('cloud/boto1', 'ec2_access_key', 'XXXXXX')
+    cfg.set('cloud/boto1', 'ec2_secret_key', 'XXXXXX')
+    cfg.set('cloud/boto1', 'ec2_region', 'us-east-1')
+
+    cfg.add_section('cloud/google1')
+    cfg.set('cloud/google1', 'provider', 'google')
+    cfg.set('cloud/google1', 'gce_project_id', 'gc3-uzh')
+    cfg.set('cloud/google1', 'gce_client_id', 'XXXXXX')
+    cfg.set('cloud/google1', 'gce_client_secret', 'XXXXXX')
+
+    cfg.add_section('cluster/c1')
+    cfg.set('cluster/c1', 'cloud', 'boto1')
+    cfg.set('cluster/c1', 'login', 'log1')
+    cfg.set('cluster/c1', 'setup_provider', 'sp1')
+    cfg.set('cluster/c1', 'login', 'log1')
+    cfg.set('cluster/c1', 'image_id', 'i-12345')
+    cfg.set('cluster/c1', 'flavor', 'm1.tiny')
+    cfg.set('cluster/c1', 'misc_nodes', '10')
+    cfg.set('cluster/c1', 'security_group', 'default')
+    cfg.set('cluster/c1', 'ssh_to', 'misc')
+
+    cfg.add_section('setup/sp1')
+    cfg.set('setup/sp1', 'provider', 'ansible_provider')
+    cfg.set('setup/sp1', 'misc_groups', 'misc_master,misc_client')
+
+    cfg.add_section('login/log1')
+    cfg.set('login/log1', 'image_user', 'ubuntu')
+    cfg.set('login/log1', 'image_user_sudo', 'root')
+    cfg.set('login/log1', 'image_sudo', False)
+    cfg.set('login/log1', 'user_key_name', 'keyname')
+    cfg.set('login/log1', 'user_key_private', '/etc/fstab')
+    cfg.set('login/log1', 'user_key_public', '/etc/fstab')
+
+    return cfg
 
 
 class Configuration(object):
@@ -288,23 +333,27 @@ class TestConfigValidator(unittest.TestCase):
 
 
 class TestConfigReader(unittest.TestCase):
+    def setUp(self):
+        file, path = tempfile.mkstemp()
+        self.cfgfile = path
+
+    def tearDown(self):
+        os.unlink(self.cfgfile)
 
     def _check_read_config(self, config):
-        (conf_file, conf_path) = tempfile.mkstemp()
-        conf_file = os.fdopen(conf_file, 'w+')
-        conf_file.write(config)
-        conf_file.close()
+        with open(self.cfgfile, 'wb') as fd:
+            fd.write(config)
 
-        result = None
-        try:
-            config_reader = ConfigReader(conf_path)
-            result =  config_reader.read_config()
-            os.unlink(conf_path)
-        except:
-            os.unlink(conf_path)
-            raise
+        return Configurator.fromConfig(self.cfgfile)
+        # config_reader = ConfigReader(self.cfgfile)
+        # return config_reader.read_config()
 
-        return result
+    def _check_read_config_object(self, cfgobj):
+        with open(self.cfgfile, 'wb') as fd:
+            cfgobj.write(fd)
+
+        ret = Configurator.fromConfig(self.cfgfile)
+        return ret
 
     def test_read_valid_config(self):
         '''
@@ -393,8 +442,8 @@ class TestConfigReader(unittest.TestCase):
             # ubuntu image
             image_id=ami-90a21cf9
             flavor=m1.small
-            frontend=1
-            compute=2
+            frontend_nodes=1
+            compute_nodes=2
 
             [cluster/matlab]
             cloud=hobbes
@@ -411,11 +460,14 @@ class TestConfigReader(unittest.TestCase):
             [cluster/slurm/frontend]
             flavor=bigdisk
             """
-        cfg = self._check_read_config(config)
+        config = self._check_read_config(config)
 
         # check all clusters are there
-        self.assertTrue(("matlab" in cfg and "aws-slurm" in cfg
-                         and "torque" in cfg and "slurm" in cfg))
+        cfg = config.cluster_conf
+        self.assertTrue("matlab" in cfg)
+        self.assertTrue("aws-slurm" in cfg)
+        self.assertTrue("torque" in cfg)
+        self.assertTrue("slurm" in cfg)
 
         # check for nodes
         self.assertTrue("frontend" in cfg["matlab"]["nodes"])
@@ -433,38 +485,21 @@ class TestConfigReader(unittest.TestCase):
                         "bigdisk")
 
 
-
-    def test_read_missing_section(self):
+    def test_read_missing_section_cluster(self):
         '''
         Read config with missing section
         '''
-        config = """
-            [login/gc3-user]
-            image_user=gc3-user
-            image_user_sudo=root
-            image_sudo=True
-            user_key_name=elasticluster
-            user_key_private=~/.ssh/id_dsa.cloud
-            user_key_public=~/.ssh/id_dsa.cloud.pub
+        cfg = minimal_configuration()
+        cfg.remove_section('cluster/c1')
+        self.assertRaises(Invalid, self._check_read_config_object, cfg)
 
-            [setup/ansible-slurm]
-            provider=ansible
-            frontend_groups=slurm_master
-            compute_groups=slurm_clients
-
-            [cluster/slurm]
-            cloud=hobbes
-            login=gc3-user
-            setup_provider=ansible-slurm
-            security_group=default
-            # Ubuntu image
-            image_id=ami-00000048
-            flavor=m1.small
-            frontend_nodes=1
-            compute_nodes=2
-            ssh_to=frontend
-            """
-        self.assertRaises(Invalid, self._check_read_config, config)
+    def test_read_missing_section_cloud(self):
+        '''
+        Read config with missing section
+        '''
+        cfg = minimal_configuration()
+        cfg.remove_section('cloud/boto1')
+        self.assertRaises(Invalid, self._check_read_config_object, cfg)
 
     def test_read_section_linking(self):
         '''
@@ -504,3 +539,41 @@ class TestConfigReader(unittest.TestCase):
             ssh_to=frontend
             """
         self.assertRaises(Invalid, self._check_read_config, config)
+
+
+def test_missing_options():
+    cfg = minimal_configuration()
+
+    @nose.tools.raises(Invalid, MultipleInvalid)
+    def missing_option(section, option):
+        _, cfgfile = tempfile.mkstemp()
+        cfg.remove_option(section, option)
+        with open(cfgfile, 'w') as fd:
+            cfg.write(fd)
+        try:
+            config = Configurator.fromConfig(cfgfile)
+        finally:
+            os.unlink(cfgfile)
+
+    for section in cfg.sections():
+        for option, value in cfg.items(section):
+            yield missing_option, section, option
+
+class TestConfigurationFile(unittest.TestCase):
+
+    def setUp(self):
+        file, path = tempfile.mkstemp()
+        self.cfgfile = path
+
+    def tearDown(self):
+        os.unlink(self.cfgfile)
+
+    def test_valid_minimal_configuration(self):
+        cfg = minimal_configuration()
+        with open(self.cfgfile, 'w') as fd:
+            cfg.write(fd)
+        config = Configurator.fromConfig(self.cfgfile)
+
+
+if __name__ == "__main__":
+    nose.runmodule()
