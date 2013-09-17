@@ -444,6 +444,7 @@ class Node(object):
         """
         log.info("Starting node %s.", self.name)
         self.instance_id = self._cloud_provider.start_instance(
+            self.name,
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
             self.flavor, self.image, self.image_userdata,

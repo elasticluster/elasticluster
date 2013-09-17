@@ -43,15 +43,16 @@ class DockerProvider(AbstractCloudProvider):
             self._client = docker.Client(self.docker_url, version="1.4")
         return self._client
 
-    def start_instance(self, key_name, public_key_path, private_key_path,
-                       security_group, flavor, image_name, image_userdata,
-                       username=None):
+    def start_instance(self, hostname, key_name, public_key_path,
+                       private_key_path, security_group, flavor, image_name,
+                       image_userdata, username=None):
         """
         Starts a new instance with the given properties and returns
         the instance id.
         """
         client = self._get_client()
-        container = client.create_container(image_name, None, detach=True)
+        container = client.create_container(image_name, None, detach=True, hostname=hostname)
+        # container = client.create_container(image_name, None, detach=True)
         client.start(container['Id'])
         return  container['Id']
 

@@ -176,7 +176,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
     def start_instance(self,
                        # these are common to any
                        # CloudProvider.start_instance() call
-                       key_name, public_key_path, private_key_path,
+                       hostname, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
                        username=None,
                        # these params are specific to the
