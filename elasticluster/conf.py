@@ -23,7 +23,7 @@ import re
 import sys
 
 # External modules
-from configobj import ConfigObj
+from ConfigParser import RawConfigParser
 try:
     # Voluptuous version >= 0.8.1
     from voluptuous import message, MultipleInvalid, Invalid, Schema
@@ -401,7 +401,14 @@ class ConfigReader(object):
         :param configfile: path to configfile
         """
         self.configfile = configfile
-        self.conf = ConfigObj(self.configfile, interpolation=False)
+
+        configparser = RawConfigParser()
+        config_tmp = configparser.read(self.configfile)
+        self.conf = dict()
+        for section in configparser.sections():
+            self.conf[section] = dict(configparser.items(section))
+
+        #self.conf = ConfigObj(self.configfile, interpolation=False)
 
         @message("file could not be found")
         def check_file(v):

@@ -327,6 +327,7 @@ class TestConfigValidator(unittest.TestCase):
 class TestConfigReader(unittest.TestCase):
     def setUp(self):
         file, path = tempfile.mkstemp()
+        self.path = path
         self.cfgfile = path
 
     def tearDown(self):
@@ -372,16 +373,16 @@ image_user=ubuntu
 image_user_sudo=root
 image_sudo=True
 user_key_name=elasticluster
-user_key_private=~/.ssh/id_rsa
-user_key_public=~/.ssh/id_rsa.pub
+user_key_private=""" + self.path + """
+user_key_public=""" + self.path + """
 
 [login/gc3-user]
 image_user=gc3-user
 image_user_sudo=root
 image_sudo=True
 user_key_name=elasticluster
-user_key_private=~/.ssh/id_dsa.cloud
-user_key_public=~/.ssh/id_dsa.cloud.pub
+user_key_private=""" + self.path + """
+user_key_public=""" + self.path + """
 
 [setup/ansible-slurm]
 provider=ansible
@@ -497,38 +498,38 @@ flavor=bigdisk
         Read config with wrong section links
         '''
         config = """
-            [cloud/hobbes]
-            provider=ec2_boto
-            ec2_url=http://hobbes.gc3.uzh.ch:8773/services/Cloud
-            ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
-            ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
-            ec2_region=nova
+[cloud/hobbes]
+provider=ec2_boto
+ec2_url=http://hobbes.gc3.uzh.ch:8773/services/Cloud
+ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
+ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
+ec2_region=nova
 
-            [login/gc3-user]
-            image_user=gc3-user
-            image_user_sudo=root
-            image_sudo=True
-            user_key_name=elasticluster
-            user_key_private=~/.ssh/id_dsa.cloud
-            user_key_public=~/.ssh/id_dsa.cloud.pub
+[login/gc3-user]
+image_user=gc3-user
+image_user_sudo=root
+image_sudo=True
+user_key_name=elasticluster
+user_key_private=~/.ssh/id_dsa.cloud
+user_key_public=~/.ssh/id_dsa.cloud.pub
 
-            [setup/ansible-slurm]
-            provider=ansible
-            frontend_groups=slurm_master
-            compute_groups=slurm_clients
+[setup/ansible-slurm]
+provider=ansible
+frontend_groups=slurm_master
+compute_groups=slurm_clients
 
-            [cluster/slurm]
-            cloud=hobbes-new
-            login=gc3-user
-            setup_provider=ansible-slurm
-            security_group=default
-            # Ubuntu image
-            image_id=ami-00000048
-            flavor=m1.small
-            frontend_nodes=1
-            compute_nodes=2
-            ssh_to=frontend
-            """
+[cluster/slurm]
+cloud=hobbes-new
+login=gc3-user
+setup_provider=ansible-slurm
+security_group=default
+# Ubuntu image
+image_id=ami-00000048
+flavor=m1.small
+frontend_nodes=1
+compute_nodes=2
+ssh_to=frontend
+"""
         self.assertRaises(Invalid, self._check_read_config, config)
 
 
