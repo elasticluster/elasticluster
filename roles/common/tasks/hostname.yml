@@ -9,3 +9,4 @@
 
 - name: set hostname to current ansible name
   action: command hostname $inventory_hostname
+  when: is_docker_container is not defined

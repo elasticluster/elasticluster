@@ -16,7 +16,7 @@
 #                 network). Default is False
 
 - action: apt pkg=$item update_cache=yes
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu and is_docker_container is not defined
   with_items:
     - iptables
     - iptables-persistent
@@ -25,7 +25,7 @@
   only_if: $is_centos
 
 - action: set_fact destfile=/etc/iptables/rules.v4
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu and is_docker_container is not defined
   tags: iptables
 
 - action: set_fact destfile=/etc/sysconfig/iptables
@@ -41,5 +41,6 @@
   tags: iptables
 
 - action: template dest={{ destfile }} src=common/templates/etc/iptables.d/rules.v4.j2 owner=root group=root mode=0644
+  when: is_docker_container is not defined
   notify: restart iptables
   tags: iptables
