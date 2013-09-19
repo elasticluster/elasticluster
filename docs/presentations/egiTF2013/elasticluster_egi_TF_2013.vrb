@@ -1,0 +1,17 @@
+\frametitle {References}\begin {itemize}
+  \item Elasticluster on PyPI:
+    \url{https://pypi.python.org/pypi/elasticluster}
+
+\begin{verbatim}
+    $ pip install elasticluster
+\end{verbatim}
+
+  \item Elasticluster github page:
+    \url{https://github.com/gc3-uzh-ch/elasticluster/}
+  \item Elasticluster web page:
+    \url{http://gc3-uzh-ch.github.io/elasticluster/}
+  \item Elasticluster documentation:
+    \url{https://elasticluster.readthedocs.org}
+  \item GC3 home page: \url{http://www.gc3.uzh.ch}
+  \item Ansible home page: \url{http://www.ansibleworks.com}
+  \end{itemize}

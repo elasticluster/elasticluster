@@ -1,0 +1,334 @@
+\documentclass[english,serif,mathserif,usenames,dvipsnames]{beamer}
+\usetheme{gc3}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{babel}
+\usepackage{multimedia}
+
+%% This is optional: it adds a few commands and environment we
+%% regularly use in our slide sets
+\usepackage{gc3}
+
+\begin{document}
+
+\title[elasticluster]{Elasticluster}
+\subtitle{\textbf{Automated provisioning \\ of computational clusters in the cloud}}
+
+\author[S. Maffioletti]{Sergio Maffioletti \texttt{<sergio.maffioletti@gc3.uzh.ch>} \\
+GC3: Grid Computing Competence Center \\
+University of Zurich.}
+\date{EGI TF2013 ~16-20 Sep. 2013}
+
+%% Makes the title slide
+\maketitle
+
+\begin{frame}
+  \frametitle{Do you need to deploy...}
+
+  \begin{block}{a SGE cluster}
+    \dots to cloud-enable your existing workload.
+  \end{block}
+
+  \begin{block}{a Matblab cluster}
+    \dots to run Matlab Distributed Computing Server.
+  \end{block}
+
+  \begin{block}{an Hadoop cluster}
+    \dots to scale your data processing.
+  \end{block}
+
+  \begin{block}{an Ipython cluster}
+    \dots parallelize the execution of your python code.
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{What issues you may find}
+  \begin{block}{}
+    Manual deployment and configuration is cumbersome and error prone
+  \end{block}
+  \begin{block}{}
+    Too many home made shell scripts with lot of assumptions on the local infrastructure
+  \end{block}
+  \begin{block}{}
+    Need to migrate deployment from one provider to another
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{What is elasticlluster}
+  \begin{block}{}
+    Elasticluster provides a user-friendly {\color{Blue}command line} tool to {\color{Blue}create, manage and setup} computing clusters hosted on cloud infrastructures like Amazon's Elastic Compute Cloud EC2, Google Compute Engine or a private OpenStack cloud). \\
+  \end{block}
+  \begin{block}{}
+    Its main goal is to get your compute cluster {\color{Blue}up and running} with just a few commands.
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  {How does elasticluster work?}
+  Command line tool
+\+
+  \begin{enumerate}
+  \item creates virtual machines in a cloud
+  \item {\color{Blue}installs and configures} the software you want
+  \item add and remove nodes if needed
+  \end{enumerate}
+\+
+
+  customization is done by editing {\color{Blue}text files}
+\end{frame}
+
+\begin{frame}
+  {elasticluster demo}
+
+  \begin{enumerate}
+  \item create 5 virtual machines on an OpenStack cloud.
+  \item install and configure Hadoop on them.
+  \item connect to the cluster.
+  \item Run an example.
+  %% \item check that it is actually running :)
+  %% \item add one more worker node.
+  \item destroy the cluster when done.
+  \end{enumerate}
+  \pause
+  \begin{center}
+    \href{http://youtu.be/-Z4FaXEivVo}{\textit{show time!}}
+  \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+  {References}
+  \begin{itemize}
+  \item Elasticluster on PyPI:
+    \url{https://pypi.python.org/pypi/elasticluster}
+
+\begin{verbatim}
+    $ pip install elasticluster
+\end{verbatim}
+
+  \item Elasticluster github page: 
+    \url{https://github.com/gc3-uzh-ch/elasticluster/}
+  \item Elasticluster web page: 
+    \url{http://gc3-uzh-ch.github.io/elasticluster/}
+  \item Elasticluster documentation:
+    \url{https://elasticluster.readthedocs.org}
+  \item GC3 home page: \url{http://www.gc3.uzh.ch}
+  \item Ansible home page: \url{http://www.ansibleworks.com}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  {Configuration and management}
+
+  We use \textbf{ansible} to deploy applications and perform
+  configuration:
+  \begin{itemize}
+  \item software configuration is encoded in a text file
+    % playbooks?
+    \begin{itemize}
+    \item everything is on the client machine
+    \item changes are \textit{reproducible} 
+    \end{itemize}
+  \item base OS images are used
+    \begin{itemize}
+    \item independent from the infrastructure
+    \end{itemize}
+  % \item easy configuration language (YAML)
+  \item the same configuration works also on \textit{real} machines
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  {elasticluster features (1)}
+
+  Different kind of computational clusters are supported:
+
+  \begin{itemize}
+    \item Batch systems:
+      \begin{itemize}
+      \item SLURM
+      \item OpenGridEngine
+      \item Torque+MAUI
+      \end{itemize}
+    \item Hadoop
+    \item Matlab Distributed Computing Servers
+    \end{itemize}
+
+  \+
+  \pause
+  Multiple distributed filesystems:
+
+  \begin{itemize}
+  \item OrangeFS/PVFS
+  \item GlusterFS
+  \item Ceph
+  \item HDFS
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  {elasticluster features (2)}
+
+  Run on multiple clouds:
+
+  \begin{itemize}
+  \item Amazon EC2
+  \item OpenStack
+  \item Google Compute Engine
+  \end{itemize}
+
+  \+
+
+  Works with multiple operating systems:
+
+  \begin{itemize}
+  \item Ubuntu
+  \item CentOS
+  \item Scientific Linux
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  {elasticluster feature summary}
+  \begin{itemize}
+  \item works on Amazon EC2, OpenStack and Google GCE
+  \item Creates the cluster you need, when you need it, starting from
+    vanilla images
+  \item Typical use cases:
+    \begin{itemize}
+    \item On demand computational cluster provisioning
+    \item Testing of new infrastructures or configurations
+    \end{itemize}
+    
+  \item All the configuration is on your laptop.
+  \item easy to modify the setup of the virtual machines.
+  \item makes your results \textit{reproducible}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  {Ansible}
+  
+  Configuration and management system
+  \begin{itemize}
+  \item Goal oriented, not scripted
+  \item Agentless (only python 2.4 or greater is required in the
+    managed machine)
+  \item changes are reproducible and idempotent
+  \item smooth learning curve
+  \item very well documented
+  \item responsive community
+  \item actively developed
+  \end{itemize}
+
+  \+
+  website: \url{www.ansibleworks.com}
+
+\end{frame}
+
+%% \begin{frame}
+%%   {Similar products}
+%%   \textbf{StarCluster}
+%%   \begin{itemize}
+%%   \item Setup is bound to pre-configured image
+%%   \item Not compatible with OpenStack or GCE (uses specific Amazon
+%%     functionality to identify clusters)
+%%   \end{itemize}
+
+%%   \+
+
+%%   \textbf{VirtualCluster}
+%%   \begin{itemize}
+%%   \item Setup is bound to pre-configured images
+%%   \item Makes many assumptions about the underlying OpenStack setup
+%%   \item Not sure about codebase maintenance
+%%   \end{itemize}
+%% \end{frame}
+
+% \begin{itemize}
+% \item We are a support group for scientists
+%   \begin{itemize}
+%   \item scientists already have use cases running on HPC
+%     clusters
+%   \item they usually don't have the expertises (nor the time nor they
+%     are supposed to do it) to setup HPC clusters
+%   \item the same apply for new infrastructures they might want to test
+%     (Hadoop mapreduce)
+%   \item elasticluster allows them to have the benefits of a
+%     computational cluster which fits *exactly* their needs, 
+%   \end{itemize}
+% \item system administrators too might need to test new infrastructures
+%   or configurations before deploying them on a production
+%   computational cluster
+% \end{itemize}
+
+\begin{frame}
+  {elasticluster demo continued... }
+
+  From a running Hadoop cluster \dots
+  \begin{enumerate}
+  \item add one more worker node.
+  \item re-run the example.
+  \item destroy the cluster when done.
+  \end{enumerate}
+  \pause
+  \begin{center}
+    \href{http://youtu.be/-Z4FaXEivVo\#t=2m12s}{\textit{show time!}}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  %% \frametitle{GC3: ``We help you bursting your research''}  %% Grid Computing Competence Center}
+  %% \frametitle{GC3: ``The bridge between research and computaional infrastructure''}
+  \frametitle{GC3: the Grid Computing Competence Center}
+    
+  \begin{block}{}
+     \begin{center}
+       \large {\color{Blue}``The bridge between research \\ and computational infrastructure''}
+     \end{center}
+     %% We foster research by {\color{Blue}facilitating} the access to {\color{Blue}computational} infrastructure.
+  \end{block} 
+
+  \begin{block}{How ?}
+    \begin{itemize}
+      %% \item {\color{Blue}Support} scientists by {\color{Blue}facilitating} the access to computational infrastructure.
+    \item {\color{Blue}Support} scientists who need to run large-scale data processing. \\
+    \item {\color{Blue}Develop} tools to better {\color{Blue}integrate} scientific usecases.
+    \item Provide access to {\color{Blue}innovative} infrastructures and technologies. \\
+      %% \item Engage at {\color{Blue}National} and {\color{Blue}International} level. 
+    \end{itemize}
+  \end{block}
+  
+  \begin{block}{}
+    {\color{Blue}\small{Want to know more ? }\url{http://www.gc3.uzh.ch}}
+  \end{block}
+  
+\end{frame}
+
+\begin{frame}[fragile]
+  {References}
+  \begin{itemize}
+  \item Elasticluster on PyPI:
+    \url{https://pypi.python.org/pypi/elasticluster}
+
+\begin{verbatim}
+    $ pip install elasticluster
+\end{verbatim}
+
+  \item Elasticluster github page: 
+    \url{https://github.com/gc3-uzh-ch/elasticluster/}
+  \item Elasticluster web page: 
+    \url{http://gc3-uzh-ch.github.io/elasticluster/}
+  \item Elasticluster documentation:
+    \url{https://elasticluster.readthedocs.org}
+  \item GC3 home page: \url{http://www.gc3.uzh.ch}
+  \item Ansible home page: \url{http://www.ansibleworks.com}
+  \end{itemize}
+\end{frame}
+
+\end{document}
