@@ -188,7 +188,7 @@ class Configurator(object):
             node.ip_private = dnode['ip_private']
             node.ssh_public_port = dnode['ssh_public_port']
             node.ssh_private_port = dnode['ssh_private_port']
-
+            node.private_vars = dnode.get('private_vars', {})
         return cluster
 
     def create_node(self, cluster_template, node_type, cloud_provider, name):

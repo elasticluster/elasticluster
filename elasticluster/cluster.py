@@ -435,6 +435,7 @@ class Node(object):
         self.ip_private = None
         self.ssh_public_port = None
         self.ssh_private_port = None
+        self.private_vars = dict()
 
     def start(self):
         """
@@ -443,12 +444,13 @@ class Node(object):
         node id is returned from the cloud provider, it will return.
         """
         log.info("Starting node %s.", self.name)
-        self.instance_id = self._cloud_provider.start_instance(
+        (self.instance_id, private_vars) = self._cloud_provider.start_instance(
             self.name,
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
             self.flavor, self.image, self.image_userdata,
             username=self.image_user)
+        self.private_vars.update(private_vars)
         log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
 
     def stop(self):
@@ -561,6 +563,7 @@ class ClusterStorage(object):
              'ip_private': node.ip_private,
              'ssh_public_port': node.ssh_public_port,
              'ssh_private_port': node.ssh_private_port,
+             'private_vars': node.private_vars,
              }
             for node in cluster.get_all_nodes()]
 

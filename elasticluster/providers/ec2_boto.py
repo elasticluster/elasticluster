@@ -103,7 +103,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         return self._connection
 
     def start_instance(self, hostname, key_name, public_key_path,
-                       private_key_path, security_group, flavor, image_name,
+                       private_key_path, security_group, flavor, image_id,
                        image_userdata, username=None):
         """
         Starts an instance in the cloud on the specified cloud
@@ -134,7 +134,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         # cache instance object locally for faster access later on
         self._instances[vm.id] = vm
 
-        return vm.id
+        return (vm.id, None)
 
     def stop_instance(self, instance_id):
         """

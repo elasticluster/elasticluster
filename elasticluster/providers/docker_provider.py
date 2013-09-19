@@ -54,7 +54,7 @@ class DockerProvider(AbstractCloudProvider):
         container = client.create_container(image_name, None, detach=True, hostname=hostname)
         # container = client.create_container(image_name, None, detach=True)
         client.start(container['Id'])
-        return  container['Id']
+        return  (container['Id'], {'is_docker_container': True})
 
     def stop_instance(self, instance_id):
         """
