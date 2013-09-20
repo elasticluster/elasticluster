@@ -30,7 +30,7 @@
       
     - name: Install license file, if present
       action: copy src=$licensefile dest=$tmpdir/MCRInstaller/license.dat force=yes backup=no
-      only_if: "'$licensefile' != ''"
+      when: licensefile
 
     - name: run MCR Installer
       action: command $tmpdir/MCRInstaller/install -inputFile $tmpdir/MCRInstaller/MCRInstaller.input

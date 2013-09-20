@@ -33,11 +33,11 @@
 
     - name: Start name and data daemons
       action: command /usr/sbin/start-dfs.sh
-      only_if: '"$inventory_hostname" in ${groups.hadoop_namenode}'
+      when: inventory_hostname in groups.hadoop_namenode
 
     - name: Start job tracker
       action: command /usr/sbin/start-mapred.sh
-      only_if: '"$inventory_hostname" in ${groups.hadoop_jobtracker}'
+      when: inventory_hostname in groups.hadoop_jobtracker
 
     - name: Create hdfs:/tmp/hadoop-root/mapred directory
       action: shell hadoop dfs -mkdir /tmp/hadoop-root/mapred ; echo done

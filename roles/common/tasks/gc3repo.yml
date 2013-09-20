@@ -1,22 +1,22 @@
 ---
 - name: configure apt key for GC3 repository
   action: apt_key url=http://www.gc3.uzh.ch/packages/public.gpg state=present
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
 
 - name: Install required package for apt_repository. BUG!
   action: apt pkg=python-software-properties state=present
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
 
 - name: add GC3 apt public repository
   action: apt_repository repo='deb http://www.gc3.uzh.ch/packages/ubuntu precise main' state=present
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
 
 - name: get base version for CentOS distribution
   action: shell echo $ansible_distribution_version | cut -d. -f1
   register: centos_base_version_cmd
-  only_if: $is_centos
+  when: is_centos
 
 - name: add GC3 yum public repository
   action: template src=common/files/etc/yum.repos.d/gc3.repo.j2 dest=/etc/yum.repos.d/gc3.repo
-  only_if: $is_centos
+  when: is_centos
 

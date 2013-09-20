@@ -1,13 +1,13 @@
 ---
 - name: configure ppa
   action: apt_repository repo=ppa:semiosis/ubuntu-glusterfs-3.4
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
   tags:
     - gluster
 
 - name: configure GlusterFS repository
   action: template src=gluster/templates/etc/yum.repos.d/gluster.repo.j2 dest=/etc/yum.repos.d/gluster.repo
-  only_if: $is_centos
+  when: is_centos
   tags:
     - gluster
 
@@ -16,7 +16,7 @@
   with_items:
     - glusterfs-server
     - glusterfs-client
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
   tags:
     - gluster
 
@@ -25,13 +25,13 @@
   with_items:
     - glusterfs-server
     - glusterfs-client
-  only_if: $is_centos
+  when: is_centos
   tags:
     - gluster
 
 - name: Ensure the GlusterFS service is running (CentOS)
   action: service name=glusterd state=started
-  only_if: $is_centos
+  when: is_centos
   tags:
     - gluster
 
@@ -42,7 +42,7 @@
 - name: Configure peers (Only on the first host)
   action: shell gluster peer probe $item
   with_items: ${groups.gluster_data}
-  only_if: '"$inventory_hostname" == "${groups.gluster_data[0]}"'
+  when: inventory_hostname == groups.gluster_data[0]
   tags:
     - gluster
 
@@ -83,14 +83,14 @@
           gluster volume create ${gluster_volume} ${gluster_stripes.stdout}
           ${gluster_replicas.stdout} ${gluster_transport.stdout}
           ${gluster_bricks.stdout}
-  only_if: '"$inventory_hostname" == "${groups.gluster_data[0]}"'
+  when: inventory_hostname == groups.gluster_data[0]
   tags:
     - gluster
 
 - name: Start default volume
   action: 'shell gluster volume info ${gluster_volume} | grep "Status: Started" || 
           gluster volume start ${gluster_volume}'
-  only_if: '"$inventory_hostname" == "${groups.gluster_data[0]}"'
+  when: inventory_hostname == groups.gluster_data[0]
   tags:
     - gluster
 

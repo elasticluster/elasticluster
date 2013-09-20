@@ -1,31 +1,31 @@
 ---
 - name: Install GridEngine APT packages
   action: apt pkg=$item state=latest
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
   with_items:
     - gridengine-client
     - gridengine-exec
 
 - name: Install GridEngine RPM packages
   action: yum pkg=$item state=latest
-  only_if: $is_centos
+  when: is_centos
   with_items:
     - gridengine-execd
 
 - name: configure gridengine execd
   action: lineinfile dest=/var/lib/gridengine/default/common/act_qmaster regexp='.*' line="${groups.gridengine_master[0]}"
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
   notify: restart execd
 
 - name: ensure execd daemon is running
   action: service name=sge_execd state=running
-  only_if: $is_centos
+  when: is_centos
 
 # - name: configure gridengine execd
 #   action: file path=/usr/share/gridengine/default/common/ state=directory
-#   only_if: $is_centos
+#   when: is_centos
 
 # - name: configure gridengine execd
 #   action: lineinfile dest=/usr/share/gridengine/default/common/act_qmaster regexp='.*' line="${groups.gridengine_master[0]}" create=yes state=present
-#   only_if: $is_centos
+#   when: is_centos
 #   notify: restart execd

@@ -17,7 +17,7 @@
 
 - name: configure slaves file
   action: template src=hadoop/templates/slaves.j2 dest=$hd_confdir/slaves owner=root mode=0644
-  only_if: '"$inventory_hostname" in ${groups.hadoop_jobtracker} or "$inventory_hostname" in ${groups.hadoop_namenode}'
+  when: inventory_hostname in groups.hadoop_jobtracker or inventory_hostname in groups.hadoop_namenode
 
 - name: configure core-site.xml file
   action: template src=hadoop/templates/core-site.xml.j2 dest=$hd_confdir/core-site.xml owner=root mode=0644
@@ -30,15 +30,15 @@
 
 - name: set JAVA_HOME environment variable
   action: lineinfile dest=$hd_confdir/hadoop-env.sh regexp='export JAVA_HOME.*' line='export JAVA_HOME=/usr/lib/jvm/default-java'
-  only_if: "$is_debian_or_ubuntu"
+  when: is_debian_or_ubuntu
 
 - name: set JAVA_HOME environment variable
   action: lineinfile dest=$hd_confdir/hadoop-env.sh regexp='export JAVA_HOME.*' line='export JAVA_HOME=/usr/lib/jvm/jre'
-  only_if: "$is_centos"
+  when: is_centos
 
 - name: Format name directory
   action: shell sudo -u hdfs hadoop namenode -format -force -nonInteractive creates=$hd_namedir/image/fsimage
-  only_if: '"$inventory_hostname" in ${groups.hadoop_namenode}'
+  when: inventory_hostname in groups.hadoop_namenode
 
 - name: Ensure startup scripts are executables
   action: file path=/usr/sbin/$item mode=755 state=file

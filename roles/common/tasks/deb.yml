@@ -6,17 +6,15 @@
     - sysvinit-utils
     - software-properties-common
     - python-software-properties
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
 
 - name: Ensure extra reposistories are present (Ubuntu)
-  action: apt_repository repo="deb http://archive.ubuntu.com/ubuntu ${ansible_distribution_release} universe" state=present
-  only_if: $is_ubuntu
+  action: apt_repository repo="deb http://archive.ubuntu.com/ubuntu ${ansible_distribution_release} universe multiverse" state=present
+  when: is_ubuntu
 
 - name: Ensure aptidude packages is installed
   action: apt name=aptitude state=installed update_cache=yes
+  when: is_debian_or_ubuntu
   with_items:
     - aptitude
 
-# - name: Ensure extra reposistories are present (Ubuntu)
-#   action: apt_repository repo="deb-src http://archive.canonical.com/ubuntu ${ansible_distribution_release} universe" state=absent
-#   only_if: $is_ubuntu

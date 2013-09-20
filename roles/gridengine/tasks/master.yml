@@ -1,7 +1,7 @@
 ---
 - name: Install GridEngine APT packages
   action: apt pkg=$item state=latest
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
   with_items:
     - gridengine-client
     - gridengine-common
@@ -10,7 +10,7 @@
 
 - name: Install GridEngine RPM packages
   action: yum pkg=$item state=latest
-  only_if: $is_centos
+  when: is_centos
   with_items:
     - gridengine-qmaster
     - gridengine-execd
@@ -18,7 +18,7 @@
 
 - name: qmaster installation (CentOS)
   action: shell cd /usr/share/gridengine; ./install_qmaster -auto ./my_configuration.conf creates=/usr/share/gridengine/default/common/cluster_name
-  only_if: $is_centos
+  when: is_centos
   tags:
     - sge
 
@@ -81,6 +81,6 @@
   notify: 
     - ensure nfs service is running
     - reload exports
-  only_if: $is_centos
+  when: is_centos
   tags:
     - sge

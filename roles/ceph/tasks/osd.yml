@@ -1,6 +1,6 @@
 ---
 - name: Check if partition is ceph-active
-  only_if: '"${ceph-devs.{$devs}.state}" != "active"'
+  when: 'ceph-devs.{$devs}.state != "active"'
   action: shell umount $devs; umount $osd_disk; ceph-disk-prepare --zap-disk $osd_disk
   tags:
     - ceph

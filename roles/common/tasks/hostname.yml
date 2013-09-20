@@ -1,12 +1,11 @@
 ---
 - name: Update /etc/hostname file
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
   action: lineinfile dest=/etc/hostname regexp=.* line=${inventory_hostname} create=yes
 
 - name: Update /etc/sysconfig/network file
-  only_if: $is_centos
+  when: is_centos
   action: lineinfile dest=/etc/sysconfig/network regexp=^HOSTNAME= line=HOSTNAME=${inventory_hostname}
 
 - name: set hostname to current ansible name
   action: command hostname $inventory_hostname
-  when: is_docker_container is not defined

@@ -3,7 +3,7 @@
   action: apt pkg=$item state=latest update_cache=yes
   with_items:
     - ganglia-monitor
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
   tags:
     - ganglia
 
@@ -11,7 +11,7 @@
   action: yum pkg=$item state=latest
   with_items:
     - ganglia-gmond
-  only_if: $is_centos
+  when: is_centos
   tags:
     - ganglia
 
@@ -26,6 +26,6 @@
 
 - name: Ensure gmond is running.
   action: service name=gmond state=started
-  only_if: $is_centos
+  when: is_centos
   tags:
     - ganglia

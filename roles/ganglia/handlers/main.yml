@@ -1,22 +1,22 @@
 ---
 - name: restart apache
   action: service name=apache2 state=restarted
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
 
 - name: restart apache
   action: service name=httpd state=restarted
-  only_if: $is_centos
+  when: is_centos
 
 # gmetad and ganglia-monitor init scripts does not support `status`
 # argument.
 - name: restart gmond
   action: command service ganglia-monitor restart
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
 
 - name: restart gmond
   action: service name=gmond state=restarted
-  only_if: $is_centos
+  when: is_centos
 
 - name: restart gmetad
   action: command service gmetad restart
-  only_if: "'ganglia_master' in $group_names"
+  when: '"ganglia_master" in group_names'

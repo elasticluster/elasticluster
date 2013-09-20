@@ -1,23 +1,23 @@
 ---
 - name: Ensure all needed packages are installed (Ubuntu)
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
   action: apt pkg=$item state=installed update_cache=yes
   with_items:
     - default-jdk
     - sudo
 
 - name: Ensure all needed packages are installed (CentOS)
-  only_if: $is_centos
+  when: is_centos
   action: yum pkg=$item state=installed
   with_items:
     - java-openjdk
     - sudo
 
 - name: download and install hadoop debian package
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
   action: shell dpkg -l hadoop | grep ^ii || (tmpfile=$(mktemp tmp.XXXXXXXXX.deb); wget $deburl -O $tmpfile -o /dev/null; dpkg -i $tmpfile; rc=$?; rm -f $tmpfile; exit $rc)
 
 
 - name: download and install hadoop debian package
-  only_if: $is_centos
+  when: is_centos
   action: shell rpm -q hadoop || rpm -i $rpmurl

@@ -16,7 +16,7 @@
 
     - name: Install PIP (Ubuntu)
       action: apt name=$item
-      only_if: $is_debian_or_ubuntu
+      when: is_debian_or_ubuntu
       with_items:
         - build-essential
         - gfortran
@@ -36,7 +36,7 @@
         - python-devel
         - blas-devel
         - lapack-devel
-      only_if: $is_centos
+      when: is_centos
       tags:
         - ipython
 
@@ -55,7 +55,7 @@
     - name: Fix for GCE CentOS images
       action: shell find /usr/lib/python2.6/site-packages -name  top_level.txt -exec chmod a+r {} \;
       ignore_errors: yes
-      only_if: $is_centos
+      when: is_centos
       tags:
         - ipython
 
@@ -81,7 +81,7 @@
 
     - name: Create ipython cluster!
       action: shell ipcluster start
-      when: inventory_hostname in groups['ipython_controller']
+      when: 'inventory_hostname in groups["ipython_controller"]'
       tags: 
         - ipython
 

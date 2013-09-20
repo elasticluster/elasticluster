@@ -8,7 +8,7 @@
           src=htcondor/templates/etc/apt/sources.list.d/htcondor.list.j2
           dest=/etc/apt/sources.list.d/htcondor.list
           owner=root group=root mode=0644
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
   register: repository_updated
   tags:
     - htcondor
@@ -26,13 +26,13 @@
           owner=root group=root mode=0644
   tags: 
     - htcondor
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
 
 - name: install HTCondor w/ preconfigured template
   action: command env DEBCONF_DB_FALLBACK=File{/tmp/htcondor.debconf} apt-get --yes --force-yes install condor
   tags: 
     - htcondor
-  only_if: $is_debian_or_ubuntu
+  when: is_debian_or_ubuntu
 
 - name: Fix configuration file
   action: template

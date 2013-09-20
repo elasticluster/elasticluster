@@ -40,7 +40,7 @@
     - action: shell chdir=/root/${pvfs_src} make kmod && make kmod_install && depmod -a
 
     - action: shell pvfs2-genconfig --quiet --protocol tcp --ioservers ${groups.pvfs2_data} --metaservers ${groups.pvfs2_meta}  --storage /srv/pvfs2 /etc/pvfs2-fs.conf creates=/etc/pvfs2-fs.conf
-      only_if: '"$inventory_hostname" == "${groups.pvfs2_meta[0]}"'
+      when: inventory_hostname == groups.pvfs2_meta[0]
 
 
 
@@ -55,7 +55,7 @@
       with_items: 
         - ${groups.pvfs2_meta}
         - ${groups.pvfs2_data}
-      only_if: '"$inventory_hostname" == "${groups.pvfs2_meta[0]}"'
+      when: inventory_hostname == groups.pvfs2_meta[0]
 
     - name: ensure the storage path is correct
       action: 'lineinfile dest=/etc/pvfs2-fs.conf regexp="StorageSpace ${pvfs2_storage}" line="	StorageSpace ${pvfs2_storage}"'
@@ -63,14 +63,14 @@
     - action: shell pvfs2-server /etc/pvfs2-fs.conf -f creates=/${pvfs2_storage}/collections.db
 
     - action: shell cp /root/${pvfs_src}/examples/pvfs2-server.rc /etc/init.d/pvfs2 creates=/etc/init.d/pvfs2
-      only_if: $is_centos
+      when: is_centos
     - action: file path=/etc/init.d/pvfs2 mode=755 state=file
-      only_if: $is_centos
+      when: is_centos
 
     - action: copy src=pvfs2/files/pvfs2.debian.init dest=/etc/init.d/pvfs2
-      only_if: $is_debian_or_ubuntu
+      when: is_debian_or_ubuntu
     - action: file path=/etc/init.d/pvfs2 mode=755 state=file
-      only_if: $is_debian_or_ubuntu
+      when: is_debian_or_ubuntu
 
     - action: service name=pvfs2 state=started
 
