@@ -66,7 +66,7 @@ class AbstractCloudProvider:
         Method to get the tcp port where to connect, wherever it is
         possible to get this value from the cloud provider.
 
-        @returns: (`ssh_public_port`, `ssh_private_port`)
+        @returns: (`ssh_private_port`, `ssh_public_port`)
         """
         return ('22', '22')
 

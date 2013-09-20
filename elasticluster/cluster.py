@@ -516,7 +516,7 @@ class Node(object):
         """
         if not self.ip_private or not self.ip_public:
             private, public = self._cloud_provider.get_ips(self.instance_id)
-            ssh_public_port, ssh_private_port = self._cloud_provider.get_ssh_ports(self.instance_id)
+            ssh_private_port, ssh_public_port = self._cloud_provider.get_ssh_ports(self.instance_id)
             self.ip_public = public
             self.ip_private = private
             self.ssh_public_port = ssh_public_port
