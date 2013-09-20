@@ -87,7 +87,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         self._sudo = sudo
         self._playbook_path = playbook_path
         self.extra_conf = extra_conf
-        self.groups = dict((k[:-7], v) for k, v in extra_conf.items() if k.endswith('_groups'))
+        self.groups = dict((k[:-7], v.split(',')) for k, v in extra_conf.items() if k.endswith('_groups'))
         self.environment = dict()
         for nodetype, grps in self.groups.iteritems():
             if not isinstance(grps, list):
