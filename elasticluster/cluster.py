@@ -125,7 +125,7 @@ class Cluster(object):
         else:
             try:
                 node.start()
-                log.info("_start_node: node has been started")
+                log.info("_start_node: node `%s` has been started" % node.name)
                 return True
             except Exception as e:
                 log.error("could not start node `%s` for reason "
@@ -450,7 +450,8 @@ class Node(object):
             self.security_group,
             self.flavor, self.image, self.image_userdata,
             username=self.image_user)
-        self.private_vars.update(private_vars)
+        if private_vars:
+            self.private_vars.update(private_vars)
         log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
 
     def stop(self):

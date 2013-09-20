@@ -134,7 +134,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         # cache instance object locally for faster access later on
         self._instances[vm.id] = vm
 
-        return (vm.id, None)
+        return (vm.id, {})
 
     def stop_instance(self, instance_id):
         """
