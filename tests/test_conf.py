@@ -64,7 +64,7 @@ def minimal_configuration():
     cfg.set('cluster/c1', 'ssh_to', 'misc')
 
     cfg.add_section('setup/sp1')
-    cfg.set('setup/sp1', 'provider', 'ansible_provider')
+    cfg.set('setup/sp1', 'provider', 'ansible')
     cfg.set('setup/sp1', 'misc_groups', 'misc_master,misc_client')
 
     cfg.add_section('login/log1')
@@ -567,6 +567,25 @@ class TestConfigurationFile(unittest.TestCase):
             cfg.write(fd)
         config = Configurator.fromConfig(self.cfgfile)
 
+    def test_parsing_of_multiple_ansible_groups(self):
+        """Fix regression causing multiple ansible groups to be incorrectly parsed
+
+        The bug caused this configuration snippet:
+
+        [setup/ansible]
+        frontend_groups=slurm_master,ganglia_frontend
+
+        to lead to the following inventory file:
+
+        [slurm_master,ganglia_frontend]
+        frontend001 ...
+        """
+        cfg = minimal_configuration()
+        with open(self.cfgfile, 'w') as fd:
+            cfg.write(fd)
+        config = Configurator.fromConfig(self.cfgfile)
+        setup = config.create_setup_provider('c1')
+        self.assertEqual(setup.groups['misc'], ['misc_master', 'misc_client'])
 
 if __name__ == "__main__":
     nose.runmodule()
