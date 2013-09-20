@@ -90,7 +90,7 @@ setup(
         'voluptuous',
         'configobj',
         # Docker support
-        'docker-py',
+        'docker-py>=0.2.0',
     ],
     tests_require = ['tox', 'mock', 'nose'],
     data_files=ansible_pb_files(),

@@ -51,8 +51,7 @@ class DockerProvider(AbstractCloudProvider):
         the instance id.
         """
         client = self._get_client()
-        container = client.create_container(image_name, None, detach=True, hostname=hostname)
-        # container = client.create_container(image_name, None, detach=True)
+        container = client.create_container(image_name, None, detach=True, hostname=hostname, privileged=True)
         client.start(container['Id'])
         return  (container['Id'], {'is_docker_container': True})
 
