@@ -63,9 +63,12 @@ class DockerProvider(AbstractCloudProvider):
         client.stop(instance_id)
 
     def get_ips(self, instance_id):
-        return ('127.0.0.1', '127.0.0.1')
+        client = self._get_client()
+        ip = client.inspect_container(instance_id)['NetworkSettings']['IPAddress']
+        return ('127.0.0.1', ip)
 
     def get_ssh_ports(self, instance_id):
+        return ('22', '22')
         client = self._get_client()
         ssh_port = client.port(instance_id, '22')
         return (ssh_port, '22')
