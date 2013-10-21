@@ -29,7 +29,7 @@ from elasticluster.conf import Configurator
 from elasticluster.cluster import Cluster, Node, ClusterStorage
 from elasticluster.exceptions import ClusterError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
-from test.test_conf import Configuration
+from tests.test_conf import Configuration
 
 
 class TestCluster(unittest.TestCase):
@@ -38,14 +38,13 @@ class TestCluster(unittest.TestCase):
         f, path = tempfile.mkstemp()
         self.path = path
 
-
     def tearDown(self):
         os.unlink(self.path)
 
     def get_cluster(self, cloud_provider=None, config=None, nodes=None):
         if not cloud_provider:
             cloud_provider = BotoCloudProvider("https://hobbes.gc3.uzh.ch/",
-                                          "nova", "a-key", "s-key")
+                                               "nova", "a-key", "s-key")
         if not config:
             config = Configuration().get_config(self.path)
 
@@ -95,20 +94,13 @@ class TestCluster(unittest.TestCase):
         cloud_provider = MagicMock()
         cloud_provider.start_instance.return_value = u'test-id'
         cloud_provider.get_ips.return_value = ('127.0.0.1', '127.0.0.1')
-        states = [True, True, True, True, True, False, False, False,
-                  False, False]
-
-        def is_running(instance_id):
-            return states.pop()
-
-        cloud_provider.is_instance_running.side_effect = is_running
+        cloud_provider.is_instance_running.return_value = True
 
         cluster = self.get_cluster(cloud_provider=cloud_provider)
         cluster._storage = MagicMock()
 
         ssh_mock = MagicMock()
-        with patch('elasticluster.cluster.paramiko.SSHClient') as ssh_mock:
-            ssh_mock.connect.return_value = True
+        with patch('paramiko.SSHClient') as ssh_mock:
             cluster.start()
 
         cluster._storage.dump_cluster.assert_called_with(cluster)
@@ -136,7 +128,6 @@ class TestCluster(unittest.TestCase):
         cluster.min_nodes = nodes_min
 
         self.failUnlessRaises(ClusterError, cluster._check_cluster_size)
-
 
     def test_get_all_nodes(self):
         """
@@ -210,8 +201,7 @@ class TestCluster(unittest.TestCase):
         for node in cluster.get_all_nodes():
             self.assertEqual(node.ip_private, node.ip_public, ip)
 
-        
-        
+
 class TestNode(unittest.TestCase):
 
     def setUp(self):
@@ -231,7 +221,6 @@ class TestNode(unittest.TestCase):
 
     def tearDown(self):
         os.unlink(self.path)
-
 
     def get_node(self):
         cloud_provider = MagicMock()
@@ -501,4 +490,3 @@ class TestClusterStorage(unittest.TestCase):
         path_valid = os.path.join(self.storage_path, "cluster_name.json")
 
         self.assertEqual(path, path_valid)
-

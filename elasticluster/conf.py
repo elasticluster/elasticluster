@@ -23,7 +23,7 @@ import re
 import sys
 
 # External modules
-from configobj import ConfigObj
+from ConfigParser import RawConfigParser
 try:
     # Voluptuous version >= 0.8.1
     from voluptuous import message, MultipleInvalid, Invalid, Schema
@@ -34,6 +34,7 @@ except ImportError:
     from voluptuous import Schema, All, Length, Any, Url, Boolean
 
 # Elasticluster imports
+from elasticluster import log
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 from elasticluster.providers.gce import GoogleCloudProvider
@@ -358,7 +359,11 @@ class ConfigValidator(object):
         for cluster, properties in self.config.iteritems():
             validator(properties)
 
-            if properties['cloud']['provider'] == "ec2":
+            if 'provider' not in properties['cloud']:
+                raise Invalid(
+                    "Missing `provider` option in cluster `%s`" % cluster)
+
+            if properties['cloud']['provider'] ==  "ec2_boto":
                 ec2_validator(properties['cloud'])
             elif properties['cloud']['provider'] == "google":
                 gce_validator(properties['cloud'])
@@ -396,7 +401,14 @@ class ConfigReader(object):
         :param configfile: path to configfile
         """
         self.configfile = configfile
-        self.conf = ConfigObj(self.configfile, interpolation=False)
+
+        configparser = RawConfigParser()
+        config_tmp = configparser.read(self.configfile)
+        self.conf = dict()
+        for section in configparser.sections():
+            self.conf[section] = dict(configparser.items(section))
+
+        #self.conf = ConfigObj(self.configfile, interpolation=False)
 
         @message("file could not be found")
         def check_file(v):
@@ -450,9 +462,8 @@ class ConfigReader(object):
 
         conf_values = dict()
 
-        errors = MultipleInvalid()
-
         for cluster in clusters:
+            errors = MultipleInvalid()
             name = re.search(ConfigReader.cluster_section + "/(.*)",
                              cluster).groups()[0]
             if not name:
@@ -502,7 +513,7 @@ class ConfigReader(object):
                 errors.add("cluster `%s` cloud section `%s` does not exists" % (cluster, cloud_name))
             except MultipleInvalid, ex:
                 for error in ex.errors:
-                    errors.add(error)
+                    errors.add(Invalid("section %s: %s" % (cloud_name, error)))
 
             try:
                 # nodes can inherit the properties of cluster or overwrite them
@@ -524,10 +535,13 @@ class ConfigReader(object):
                     else:
                         values['nodes'][node_name] = values['cluster']
 
-                conf_values[name] = values
+                if errors.errors:
+                    for error in errors.errors:
+                        log.warning("Ignoring Cluster `%s`: %s" % (name, error))
+                    log.warning("Ignoring cluster `%s`." % name)
+                else:
+                    conf_values[name] = values
             except KeyError, ex:
                 errors.add("Error in section `%s`" % cluster)
 
-        if errors.errors:
-            raise errors
         return conf_values

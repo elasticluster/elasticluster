@@ -37,3 +37,8 @@
 .. _`github elasticluster page`: https://github.com/gc3-uzh-ch/elasticluster
 .. _`python virtualenv`: https://pypi.python.org/pypi/virtualenv
 .. _`boto library`: https://github.com/boto/boto
+.. _`OrangeFS`: http://orangefs.org/
+.. _`IPython cluster`: http://ipython.org/ipython-doc/dev/parallel/
+.. _`HTCondor`: http://research.cs.wisc.edu/htcondor/
+.. _`GlusterFS`: http://www.gluster.org/
+.. _`Ceph`: http://ceph.com/
