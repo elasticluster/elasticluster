@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 #
 # Copyright (C) 2013 GC3, University of Zurich
 #
