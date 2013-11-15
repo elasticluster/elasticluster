@@ -4,10 +4,6 @@
   vars_files:
     - vars/os
   tasks:
-    - include: common/tasks/deb.yml
-    - include: common/tasks/epel_repo.yml
-    - include: common/tasks/hosts.yml hosts=${groups.all}
-    - include: common/tasks/hostname.yml
     - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
     - include: cluster/tasks/packages.yml
     - include: common/tasks/iptables.yml trusted_hosts=${groups.all}

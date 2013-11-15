@@ -4,11 +4,6 @@
   vars_files:
     - vars/os
   tasks:
-    - include: common/tasks/deb.yml
-    - include: common/tasks/hosts.yml hosts=${groups.all}
-    - include: common/tasks/hostname.yml
-    # This must run *before* start-*.sh because otherwise passwordless
-    # authentication does not work.
     - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
     - include: common/tasks/iptables.yml trusted_hosts=${groups.all} default_accept=1
   handlers:

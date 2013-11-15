@@ -6,6 +6,7 @@
     - group_by: key="$gc3group"
 
 - include: roles/gc3.yml
+- include: roles/common.yml
 - include: roles/slurm.yml
 - include: roles/jenkins.yml
 - include: roles/ganglia.yml

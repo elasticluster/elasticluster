@@ -5,9 +5,6 @@
   handlers:
     - include: common/handlers/main.yml
   tasks:
-    - include: common/tasks/deb.yml
-    - include: common/tasks/hosts.yml hosts=${groups.all}
-    - include: common/tasks/hostname.yml
     - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
 
 - hosts: pvfs2:pvfs2_data:pvfs2_meta:pvfs2_client
