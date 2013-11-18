@@ -19,6 +19,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 # System imports
 import os
 import urllib
+import threading
 
 # External modules
 import boto
@@ -38,6 +39,7 @@ class BotoCloudProvider(AbstractCloudProvider):
     Uses boto to connect to an ec2 or openstack web service to manage
     the virtual instances
     """
+    __node_start_lock = threading.Lock()  # lock used for node startup
 
     def __init__(self, ec2_url, ec2_region, ec2_access_key, ec2_secret_key,
                  storage_path=None):
@@ -112,7 +114,13 @@ class BotoCloudProvider(AbstractCloudProvider):
         connection = self._connect()
 
         log.debug("Checking keypair `%s`.", key_name)
-        self._check_keypair(key_name, public_key_path, private_key_path)
+        # the `_check_keypair` method has to be called within a lock,
+        # since it will upload the key if it does not exist and if this
+        # happens for every node at the same time ec2 will throw an error
+        # message (see issue #79)
+        with BotoCloudProvider.__node_start_lock:
+            self._check_keypair(key_name, public_key_path, private_key_path)
+
         log.debug("Checking security group `%s`.", security_group)
         self._check_security_group(security_group)
         # image_id = self._find_image_id(image_id)
