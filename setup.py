@@ -82,7 +82,7 @@ setup(
         'boto',
         'PyCLI',
         'paramiko',
-        'ansible>=1.3',
+        'ansible==1.3.3',
         # required by GCE
         'google-api-python-client',
         'oauth2client',
