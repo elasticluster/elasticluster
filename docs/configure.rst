@@ -111,6 +111,12 @@ Valid configuration keys for `boto`
 
     the availability zone you want to use.
 
+``auto_ip_assignment``
+
+    if the cloud provider assigns public ip automatically (True or False).
+    The default value for this property is `True`. You don't have to specify it
+    in case the cloud provider assigns public ips automatically.
+
 
 Valid configuration keys for `google`
 -------------------------------------
@@ -141,6 +147,7 @@ use the following::
     ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
     ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
     ec2_region=nova
+    auto_ip_assignment=True
 
 For Amazon instead (region us-east-1) you can use::
 

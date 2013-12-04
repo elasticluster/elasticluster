@@ -27,11 +27,11 @@ from ConfigParser import RawConfigParser
 try:
     # Voluptuous version >= 0.8.1
     from voluptuous import message, MultipleInvalid, Invalid, Schema
-    from voluptuous import All, Length, Any, Url, Boolean
+    from voluptuous import All, Length, Any, Url, Boolean, Optional
 except ImportError:
     # Voluptuous version <= 0.7.2
     from voluptuous.voluptuous import message, MultipleInvalid, Invalid
-    from voluptuous import Schema, All, Length, Any, Url, Boolean
+    from voluptuous import Schema, All, Length, Any, Url, Boolean, Optional
 
 # Elasticluster imports
 from elasticluster import log
@@ -335,7 +335,8 @@ class ConfigValidator(object):
                             "ec2_url": Url(str),
                             "ec2_access_key": All(str, Length(min=1)),
                             "ec2_secret_key": All(str, Length(min=1)),
-                            "ec2_region": All(str, Length(min=1))}
+                            "ec2_region": All(str, Length(min=1)),
+                            Optional("auto_ip_assignment"): Boolean(str)}
         cloud_schema_gce = {"provider": 'google',
                             "gce_client_id": All(str, Length(min=1)),
                             "gce_client_secret": All(str, Length(min=1)),
@@ -357,16 +358,17 @@ class ConfigValidator(object):
             raise Invalid("No clusters found in configuration.")
 
         for cluster, properties in self.config.iteritems():
-            validator(properties)
+            self.config[cluster] = validator(properties)
 
             if 'provider' not in properties['cloud']:
                 raise Invalid(
                     "Missing `provider` option in cluster `%s`" % cluster)
 
-            if properties['cloud']['provider'] ==  "ec2_boto":
-                ec2_validator(properties['cloud'])
+            cloud_props = properties['cloud']
+            if properties['cloud']['provider'] == "ec2_boto":
+                self.config[cluster]['cloud'] = ec2_validator(cloud_props)
             elif properties['cloud']['provider'] == "google":
-                gce_validator(properties['cloud'])
+                self.config[cluster]['cloud'] = gce_validator(cloud_props)
 
             if 'nodes' not in properties or len(properties['nodes']) == 0:
                 raise Invalid(
@@ -428,7 +430,7 @@ class ConfigReader(object):
                 "gce_project_id": All(str, Length(min=1)),
                 "gce_client_id": All(str, Length(min=1)),
                 "gce_client_secret": All(str, Length(min=1)),
-                }),
+                }, extra=True),
             "cluster": Schema(
                 {"cloud": All(str, Length(min=1)),
                  "setup_provider": All(str, Length(min=1)),

@@ -42,11 +42,12 @@ class BotoCloudProvider(AbstractCloudProvider):
     __node_start_lock = threading.Lock()  # lock used for node startup
 
     def __init__(self, ec2_url, ec2_region, ec2_access_key, ec2_secret_key,
-                 storage_path=None):
+                 storage_path=None, auto_ip_assignment=True):
         self._url = ec2_url
         self._region_name = ec2_region
         self._access_key = ec2_access_key
         self._secret_key = ec2_secret_key
+        self.auto_ip_assignment = auto_ip_assignment
 
         # read all parameters from url
         proto, opaqueurl = urllib.splittype(ec2_url)
@@ -151,8 +152,18 @@ class BotoCloudProvider(AbstractCloudProvider):
         instance.terminate()
 
     def get_ips(self, instance_id):
+        """
+        Gets the ip address for the given instance.
+        :param instance_id: id of the instance
+        :return: (private_ip, public_ip)
+        """
         self._load_instance(instance_id)
         instance = self._load_instance(instance_id)
+
+        if not instance.ip_address and not self.auto_ip_assignment:
+            log.debug("Public ip address has to be assigned through "
+                      "elasticluster.")
+            self._allocate_address(instance)
 
         return instance.private_ip_address, instance.ip_address
 
@@ -168,6 +179,17 @@ class BotoCloudProvider(AbstractCloudProvider):
             return True
         else:
             return False
+
+    def _allocate_address(self, instance):
+        """
+        Allocates a free public ip address to the given instance
+        :param instance: ec2 instance to assign address to
+        """
+        connection = self._connect()
+        address = connection.allocate_address()
+        log.debug("Assigning ip address `%s` to instance `%s`"
+                  % (address.public_ip, instance.id))
+        instance.use_ip(address.public_ip)
 
     def _load_instance(self, instance_id):
         """
