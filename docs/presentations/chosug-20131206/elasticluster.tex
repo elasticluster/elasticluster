@@ -18,7 +18,7 @@
 \title[elasticluster]{Elasticluster}
 \subtitle{\textbf{Automated provisioning \\ of computational clusters in the cloud}}
 
-\author[S. Maffioletti]{Sergio Maffioletti \texttt{<sergio.maffioletti@gc3.uzh.ch>} \\
+\author[S. Maffioletti]{Sergio Maffioletti \\
 GC3: Grid Computing Competence Center \\
 University of Zurich.}
 \date{CHOSUG 06 December 2013}
@@ -173,17 +173,16 @@ University of Zurich.}
   \item software configuration is encoded in a text file
     % playbooks?
     \begin{itemize}
-    \item everything is on the client machine
-    \item changes are \textit{reproducible} 
+    \item everything is on the {\color{Blue}client} machine
+    \item changes are {\color{Blue}reproducible} 
     \end{itemize}
   \item base OS images are used
     \begin{itemize}
-    \item independent from the infrastructure
-    \item Agentless (only python 2.4 or greater is required in the
-    managed machine)
+    \item {\color{Blue}independent} from the infrastructure
+    \item {\color{Blue}Agentless}: only python 2.4 or greater is required
     \end{itemize}
   % \item easy configuration language (YAML)
-  \item the same configuration works also on \textit{real} machines
+  \item the same configuration works also on {\color{Blue}metal} machines
   \end{itemize}
 
 \end{frame}
@@ -191,51 +190,51 @@ University of Zurich.}
 \begin{frame}
   {elasticluster features (1)}
 
-  Different kind of computational clusters are supported:
-
-  \begin{itemize}
-    \item Batch systems:
+  \begin{block}{Wide support for Batch cluster}
       \begin{itemize}
       \item SLURM
       \item OpenGridEngine
       \item Torque+MAUI
       \end{itemize}
+  \end{block}
+      
+  \begin{block}{other type of computational clusters}
+    \begin{itemize}
     \item Hadoop
     \item Matlab Distributed Computing Servers
     \end{itemize}
+  \end{block}
 
-  \+
   \pause
-  Multiple distributed filesystems:
-
-  \begin{itemize}
-  \item OrangeFS/PVFS
-  \item GlusterFS
-  \item Ceph
-  \item HDFS
-  \end{itemize}
+  \begin{block}{multiple distributed filesystems}
+    \begin{itemize}
+    \item GlusterFS
+    \item Ceph
+    \item HDFS
+    \end{itemize}
+  \end{block}
 \end{frame}
 
 \begin{frame}
   {elasticluster features (2)}
 
-  Run on multiple clouds:
-
+  \begin{block}{Run on multiple clouds}
   \begin{itemize}
   \item Amazon EC2
   \item OpenStack
   \item Google Compute Engine
   \end{itemize}
+  \end{block}
 
-  \+
 
-  Works with multiple operating systems:
-
-  \begin{itemize}
-  \item Ubuntu
-  \item CentOS
-  \item Scientific Linux
-  \end{itemize}
+  \begin{block}{on multiple operating systems}
+    \begin{itemize}
+    \item Ubuntu
+    \item CentOS
+    \item Scientific Linux
+    \end{itemize}
+  \end{block}
+  
 \end{frame}
 
 \begin{frame}
