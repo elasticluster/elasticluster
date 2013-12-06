@@ -64,7 +64,6 @@ def minimal_configuration():
 
     cfg.add_section('setup/sp1')
     cfg.set('setup/sp1', 'provider', 'ansible')
-    cfg.set('setup/sp1', 'misc_groups', 'misc_master,misc_client')
 
     cfg.add_section('login/log1')
     cfg.set('login/log1', 'image_user', 'ubuntu')
@@ -581,6 +580,7 @@ class TestConfigurationFile(unittest.TestCase):
         frontend001 ...
         """
         cfg = minimal_configuration()
+        cfg.set('setup/sp1', 'misc_groups', 'misc_master,misc_client')
         with open(self.cfgfile, 'w') as fd:
             cfg.write(fd)
         config = Configurator.fromConfig(self.cfgfile)
