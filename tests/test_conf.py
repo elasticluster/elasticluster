@@ -62,6 +62,16 @@ def minimal_configuration():
     cfg.set('cluster/c1', 'misc_nodes', '10')
     cfg.set('cluster/c1', 'security_group', 'default')
 
+    cfg.add_section('cluster/c2')
+    cfg.set('cluster/c2', 'cloud', 'google1')
+    cfg.set('cluster/c2', 'login', 'log1')
+    cfg.set('cluster/c2', 'setup_provider', 'sp1')
+    cfg.set('cluster/c2', 'login', 'log1')
+    cfg.set('cluster/c2', 'image_id', 'i-12345')
+    cfg.set('cluster/c2', 'flavor', 'm1.tiny')
+    cfg.set('cluster/c2', 'misc_nodes', '10')
+    cfg.set('cluster/c2', 'security_group', 'default')
+
     cfg.add_section('setup/sp1')
     cfg.set('setup/sp1', 'provider', 'ansible')
 
