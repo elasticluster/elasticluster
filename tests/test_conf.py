@@ -487,10 +487,12 @@ flavor=bigdisk
 
     def test_read_missing_section_cluster(self):
         '''
-        Read config with missing section
+        Check if a configuration file with no `cluster` sections will
+        raise an error.
         '''
         cfg = minimal_configuration()
         cfg.remove_section('cluster/c1')
+        cfg.remove_section('cluster/c2')
         self.assertRaises(Invalid, self._check_read_config_object, cfg)
 
     def test_read_missing_section_cloud(self):
