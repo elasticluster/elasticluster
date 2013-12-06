@@ -538,10 +538,11 @@ def test_missing_options():
 
     @nose.tools.raises(Invalid, MultipleInvalid)
     def missing_option(section, option):
+        tmpcfg = minimal_configuration()
         _, cfgfile = tempfile.mkstemp()
-        cfg.remove_option(section, option)
+        tmpcfg.remove_option(section, option)
         with open(cfgfile, 'w') as fd:
-            cfg.write(fd)
+            tmpcfg.write(fd)
         try:
             config = Configurator.fromConfig(cfgfile)
         finally:
