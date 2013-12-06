@@ -464,8 +464,8 @@ class ConfigReader(object):
 
         conf_values = dict()
 
+        errors = MultipleInvalid()
         for cluster in clusters:
-            errors = MultipleInvalid()
             name = re.search(ConfigReader.cluster_section + "/(.*)",
                              cluster).groups()[0]
             if not name:
@@ -546,4 +546,6 @@ class ConfigReader(object):
             except KeyError, ex:
                 errors.add("Error in section `%s`" % cluster)
 
+        if errors.errors:
+            raise errors
         return conf_values
