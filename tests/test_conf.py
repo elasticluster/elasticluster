@@ -61,7 +61,6 @@ def minimal_configuration():
     cfg.set('cluster/c1', 'flavor', 'm1.tiny')
     cfg.set('cluster/c1', 'misc_nodes', '10')
     cfg.set('cluster/c1', 'security_group', 'default')
-    cfg.set('cluster/c1', 'ssh_to', 'misc')
 
     cfg.add_section('setup/sp1')
     cfg.set('setup/sp1', 'provider', 'ansible')
