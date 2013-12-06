@@ -47,6 +47,25 @@ def ansible_pb_files():
 
 from setuptools import setup, find_packages
 
+required_packages = [
+    'boto',
+    'PyCLI',
+    'paramiko',
+    'ansible==1.3.3',
+    # required by GCE
+    'google-api-python-client',
+    'oauth2client',
+    'httplib2',
+    'voluptuous',
+    'configobj'
+]
+
+if sys.version_info[:2] == (2, 6):
+    # Python 2.6. 
+    # Google api python client *requires* argparse
+    # cfr. http://code.google.com/p/google-api-python-client/issues/detail?id=299
+    required_packages.append('argparse')
+
 setup(
     name="elasticluster",
     version="1.1-dev",
@@ -78,18 +97,7 @@ setup(
         "Topic :: System :: Distributed Computing",
     ],
     packages=find_packages(),
-    install_requires=[
-        'boto',
-        'PyCLI',
-        'paramiko',
-        'ansible==1.3.3',
-        # required by GCE
-        'google-api-python-client',
-        'oauth2client',
-        'httplib2',
-        'voluptuous',
-        'configobj'
-    ],
+    install_requires=required_packages,
     tests_require = ['tox', 'mock', 'nose'],
     data_files=ansible_pb_files(),
     entry_points={
