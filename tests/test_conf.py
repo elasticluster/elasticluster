@@ -70,7 +70,7 @@ def minimal_configuration():
     cfg.add_section('login/log1')
     cfg.set('login/log1', 'image_user', 'ubuntu')
     cfg.set('login/log1', 'image_user_sudo', 'root')
-    cfg.set('login/log1', 'image_sudo', False)
+    cfg.set('login/log1', 'image_sudo', 'False')
     cfg.set('login/log1', 'user_key_name', 'keyname')
     cfg.set('login/log1', 'user_key_private', '/etc/fstab')
     cfg.set('login/log1', 'user_key_public', '/etc/fstab')
@@ -99,7 +99,7 @@ class Configuration(object):
                 "login": {
                     "image_user": "gc3-user",
                     "image_user_sudo": "root",
-                    "image_sudo": True,
+                    "image_sudo": "True",
                     "user_key_name": "***name of SSH keypair on Hobbes***",
                     "user_key_private": path,
                     "user_key_public": path,
