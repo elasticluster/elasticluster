@@ -1,0 +1,164 @@
+%% gc3.sty
+%%
+%% LaTeX style file with common commands and settings for the GC3
+%% presentations and documents.
+%%
+
+%% generic LaTeX packages/helpers
+\usepackage[utf8]{inputenc}
+%\usepackage[T1]{fontenc}
+\usepackage{babel}
+\usepackage{fixltx2e}
+
+\usepackage{relsize}
+%\usepackage[normalem]{ulem}
+
+%% symbol families
+\usepackage{marvosym}
+\usepackage{wasysym}
+\usepackage{latexsym}
+\usepackage{amssymb}
+
+%% graphics and color
+\usepackage{xcolor}
+  % for the color names, see: http://en.wikibooks.org/wiki/LaTeX/Colors#Predefined_colors
+  % Apricot     Aquamarine      Bittersweet     Black
+  % Blue        BlueGreen       BlueViolet      BrickRed
+  % Brown       BurntOrange     CadetBlue       CarnationPink
+  % Cerulean    CornflowerBlue  Cyan    Dandelion
+  % DarkOrchid  Emerald         ForestGreen     Fuchsia
+  % Goldenrod   Gray    Green   GreenYellow
+  % JungleGreen Lavender        LimeGreen       Magenta
+  % Mahogany    Maroon  Melon   MidnightBlue
+  % Mulberry    NavyBlue        OliveGreen      Orange
+  % OrangeRed   Orchid  Peach   Periwinkle
+  % PineGreen   Plum    ProcessBlue     Purple
+  % RawSienna   Red     RedOrange       RedViolet
+  % Rhodamine   RoyalBlue       RoyalPurple     RubineRed
+  % Salmon      SeaGreen        Sepia   SkyBlue
+  % SpringGreen Tan     TealBlue        Thistle
+  % Turquoise   Violet  VioletRed       White
+  % WildStrawberry      Yellow  YellowGreen     YellowOrange
+\usepackage{graphicx}
+\usepackage{tikz}%
+  \usetikzlibrary{arrows,shapes}%
+  % For every picture that defines or uses external nodes, you'll have to
+  % apply the 'remember picture' style. To avoid some typing, we'll apply
+  % the style to all pictures.
+  \tikzstyle{every picture}+=[remember picture]%
+
+%% extended table support
+\usepackage{colortbl}%
+  %\newcommand{\cellcolor}[2]{\multicolumn{1}{>{\columncolor{#1}}c}{#2}}
+\usepackage{longtable}
+\usepackage{mdwtab}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{textcomp}
+
+%% programming languages support
+\usepackage[procnames]{listings}%
+  \lstloadlanguages{python,sh,tex}%
+  \lstset{
+    language=python,%
+    % --- basic appearance ---
+    basicstyle=\small\ttfamily,%
+    %columns=fullflexible,% best results for proportional fonts
+    commentstyle=\slshape\color{PineGreen},%
+    keywordstyle=\bfseries,% or \normalfont
+    morekeywords={as,with,type,yield},%
+    %identifierstyle=\color{black},%
+    procnamestyle=\bfseries\color{BrickRed},%
+    procnamekeys={def},%
+    stringstyle=\color{MidnightBlue},%
+    showstringspaces=true,%
+    emph={self},%
+    emphstyle=\bfseries\color{gray},%
+    % --- escaping and special displays ---
+    escapechar=~,% text between "~" will be rendered as normal TeX
+    %moredelim=[il][\small\itshape]{\#},% ditto for text beween "#" and end-of-line
+    texcl,%
+    mathescape=false,%
+    %literate={*{=}{{$\gets$ }}1 {==}{{$=$ }}1 {<=}{{$\leq$ }}1 {>=}{{$\geq$ }}1 {!=}{{$\neq$ }}1},%
+    % --- display ---
+    %showspaces=false,%
+    %showstringspaces=false,%
+    %xleftmargin=2em,%
+    % --- line numbers ---
+    %numbers=left,%
+    %numberstyle=\tiny,%
+    %stepnumber=1,%
+    %firstnumber=1%
+  }%
+  \lstnewenvironment{python}{\lstset{language=python}}{}%
+  \lstnewenvironment{sh}{\lstset{language=sh}}{}%
+
+\usepackage{hyperref}
+  % for a summary of hyperref options,see: http://www.andy-roberts.net/writing/latex/pdfs
+  \hypersetup{%
+    colorlinks=true,%
+    urlcolor=uzh@orange,% defined in `beamerthemeneu-de.sty`
+    % the following controls how the PDF is opened in the viewer
+    % there should be no reason to change it
+    pdfstartview=Fit,%
+    pdfpagelayout=SinglePage,%
+    pdfpagemode=UseThumbs
+  }%
+\usepackage{url}
+
+
+%% Use `\largeskip` or its alias `\+` to get a larger vertical white
+%% space between two lines/paragraphs:
+\newcommand{\largeskip}{\vspace{1em}}
+\newcommand{\+}{\largeskip}
+\setlength{\parsep}{1.0em}
+
+%% use `\HL` to highlight a region of text within a code listing
+\newcommand{\HL}[1][\relax]{\colorbox{\ifx#1\relax uzh@orange!25 \else #1 \fi}}
+
+%% use `\hl` for highlighting items in listings, etc.
+\newcommand{\hl}[1]{{\bfseries\color{uzh@blue} #1}}
+
+%% for questions interspersed in the text
+\newenvironment{question}{\+ \em \textbf{Q:}\bgroup}{\egroup}
+
+%% for the `References: ...` at the bottom of the slide
+\newenvironment{references}{%
+  \largeskip \scriptsize%
+  \emph{Reference:}%
+  \bgroup
+}{%
+  \egroup%
+}
+
+%% for the `See also: ...` at the bottom of the slide
+\newenvironment{seealso}{%
+  \largeskip \small%
+  \emph{See also:}%
+  \bgroup
+}{%
+  \egroup%
+}
+
+%% for API description lists, etc.
+\newenvironment{describe}[1]{%
+  \+ \raggedright \hl{#1} \\%
+  \bgroup%
+}{%
+  \egroup%
+}
+
+%% exercises (numbered with uppercase letters starting from "A")
+\newcounter{exerciseno}%
+\setcounter{exerciseno}{1}%
+\newenvironment{exercise}{%
+  \textbf{Exercise \Alph{exerciseno}:}~\bgroup%
+}{%
+  \egroup%
+  \addtocounter{exerciseno}{1}%
+}
+\newenvironment{exercise*}[1][\relax]{%
+  \textbf{Exercise~#1:}~\bgroup%
+}{%
+  \egroup%
+}

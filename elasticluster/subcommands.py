@@ -181,6 +181,10 @@ class Start(AbstractCommand):
                 print("Starting cluster `%s` with %d %s nodes." % (
                     cluster.name, len(cluster.nodes[cls]), cls))
             print("(this may take a while...)")
+            conf = configurator.cluster_conf[cluster_template]
+            min_nodes = dict(
+                (k[:-10], int(v)) for k, v in conf['cluster'].iteritems() if
+                k.endswith('_nodes_min'))
             cluster.start()
             if self.params.no_setup:
                 print("NOT configuring the cluster as requested.")
@@ -312,8 +316,14 @@ class ResizeCluster(AbstractCommand):
         for grp in self.params.nodes_to_add:
             print("Adding %d %s node(s) to the cluster"
                   "" % (self.params.nodes_to_add[grp], grp))
+            conf = configurator.cluster_conf[cluster.template]
+            conf_kind = conf['nodes'][grp]
             for i in range(self.params.nodes_to_add[grp]):
-                cluster.add_node(grp)
+                image_user = conf['login']['image_user']
+                userdata = conf_kind.get('image_userdata', '')
+                cluster.add_node(grp, conf_kind['image_id'], image_user,
+                                 conf_kind['flavor'], conf_kind['security_group'],
+                                 image_userdata=userdata)
 
         for grp in self.params.nodes_to_remove:
             n_to_rm = self.params.nodes_to_remove[grp]
@@ -377,11 +387,13 @@ Please note that there's no guarantee that they are fully configured:
                     log.error("gettin information from cluster `%s`: %s",
                               name, ex)
                     continue
+                cloud = configurator.cluster_conf[cluster.template]['cluster'][
+                    'cloud']
                 print("%s " % name)
                 print("-" * len(name))
                 print("  name:           %s" % cluster.name)
                 print("  template:       %s" % cluster.template)
-                print("  cloud:          %s " % cluster._cloud)
+                print("  cloud:          %s " % cloud)
                 for cls in cluster.nodes:
                     print("  - %s nodes: %d" % (cls, len(cluster.nodes[cls])))
                 print("")

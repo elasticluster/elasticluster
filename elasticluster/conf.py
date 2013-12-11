@@ -39,7 +39,7 @@ from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 from elasticluster.providers.gce import GoogleCloudProvider
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
-from elasticluster.cluster import Cluster, ClusterStorage, Node
+from elasticluster.cluster import Cluster, ClusterStorage
 
 
 class Configurator(object):
@@ -144,24 +144,37 @@ class Configurator(object):
                 "" % (template, name))
 
         conf = self.cluster_conf[template]
-
-        nodes = dict(
-            (k[:-6], int(v)) for k, v in conf['cluster'].iteritems() if
-            k.endswith('_nodes'))
-        min_nodes = dict(
-            (k[:-10], int(v)) for k, v in conf['cluster'].iteritems() if
-            k.endswith('_nodes_min'))
+        conf_login = self.cluster_conf[template]['login']
 
         extra = conf['cluster'].copy()
         extra.pop('cloud')
         extra.pop('setup_provider')
-        return Cluster(template,
-                       name,
-                       conf['cluster']['cloud'],
-                       self.create_cloud_provider(template),
-                       self.create_setup_provider(template, name=name),
-                       nodes,
-                       self, min_nodes=min_nodes, **extra)
+
+        cluster = Cluster(template,
+                          name,
+                          self.create_cloud_provider(template),
+                          self.create_setup_provider(template, name=name),
+                          self.create_cluster_storage(),
+                          conf_login['user_key_name'],
+                          conf_login['user_key_public'],
+                          conf_login["user_key_private"],
+                          **extra)
+
+        nodes = dict(
+            (k[:-6], int(v)) for k, v in conf['cluster'].iteritems() if
+            k.endswith('_nodes'))
+
+        for kind, num in nodes.iteritems():
+            conf_kind = conf['nodes'][kind]
+            userdata = conf_kind.get('image_userdata', '')
+            cluster.add_nodes(kind,
+                              num,
+                              conf_kind['image_id'],
+                              conf_login['image_user'],
+                              conf_kind['flavor'],
+                              conf_kind['security_group'],
+                              image_userdata=userdata)
+        return cluster
 
     def load_cluster(self, cluster_name):
         """
@@ -175,38 +188,17 @@ class Configurator(object):
         cluster = self.create_cluster(
             information['template'], information['name'])
 
-        # Clear cluster nodes.
-        cluster.nodes = dict((k, []) for k in cluster.nodes)
+        cluster.nodes = dict()
         for dnode in information['nodes']:
-            if dnode['type'] not in cluster.nodes:
-                cluster.nodes[dnode['type']] = []
-            node = cluster.add_node(dnode['type'], name=dnode['name'])
+            node = cluster.add_node(dnode['type'], dnode['image_id'],
+                                    dnode['image_user'], dnode['flavor'],
+                                    dnode['security_group'],
+                                    name=dnode['name'])
             node.instance_id = dnode['instance_id']
             node.ip_public = dnode['ip_public']
             node.ip_private = dnode['ip_private']
 
         return cluster
-
-    def create_node(self, cluster_template, node_type, cloud_provider, name):
-        """
-        :param cluster_template: name of the cluster template
-        :param node_type: type of the node, string defining the <group> in
-            the configuration
-        :param cloud_provider: instance of :py:class:`elasticluster
-            .providers.AbstractCloudProvider`
-        :param name: name of the node
-        :return: :py:class:`elasticluster.cluster.node` instance
-        """
-        conf = self.cluster_conf[cluster_template]['nodes'][node_type]
-        conf_login = self.cluster_conf[cluster_template]['login']
-
-        return Node(name, node_type, cloud_provider,
-                    conf_login['user_key_public'],
-                    conf_login["user_key_private"],
-                    conf_login['user_key_name'],
-                    conf_login['image_user'], conf['security_group'],
-                    conf['image_id'], conf['flavor'],
-                    image_userdata=conf.get('image_userdata', ''))
 
     def create_cluster_storage(self):
         """
@@ -464,8 +456,8 @@ class ConfigReader(object):
 
         conf_values = dict()
 
+        errors = MultipleInvalid()
         for cluster in clusters:
-            errors = MultipleInvalid()
             name = re.search(ConfigReader.cluster_section + "/(.*)",
                              cluster).groups()[0]
             if not name:
@@ -546,4 +538,6 @@ class ConfigReader(object):
             except KeyError, ex:
                 errors.add("Error in section `%s`" % cluster)
 
+        if errors.errors:
+            raise errors
         return conf_values

@@ -34,7 +34,7 @@ from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 
 
-def minimal_configuration():
+def minimal_configuration(valid_path):
 
     cfg = ConfigParser.ConfigParser()
 
@@ -61,19 +61,27 @@ def minimal_configuration():
     cfg.set('cluster/c1', 'flavor', 'm1.tiny')
     cfg.set('cluster/c1', 'misc_nodes', '10')
     cfg.set('cluster/c1', 'security_group', 'default')
-    cfg.set('cluster/c1', 'ssh_to', 'misc')
+
+    cfg.add_section('cluster/c2')
+    cfg.set('cluster/c2', 'cloud', 'google1')
+    cfg.set('cluster/c2', 'login', 'log1')
+    cfg.set('cluster/c2', 'setup_provider', 'sp1')
+    cfg.set('cluster/c2', 'login', 'log1')
+    cfg.set('cluster/c2', 'image_id', 'i-12345')
+    cfg.set('cluster/c2', 'flavor', 'm1.tiny')
+    cfg.set('cluster/c2', 'misc_nodes', '10')
+    cfg.set('cluster/c2', 'security_group', 'default')
 
     cfg.add_section('setup/sp1')
     cfg.set('setup/sp1', 'provider', 'ansible')
-    cfg.set('setup/sp1', 'misc_groups', 'misc_master,misc_client')
 
     cfg.add_section('login/log1')
     cfg.set('login/log1', 'image_user', 'ubuntu')
     cfg.set('login/log1', 'image_user_sudo', 'root')
-    cfg.set('login/log1', 'image_sudo', False)
+    cfg.set('login/log1', 'image_sudo', 'False')
     cfg.set('login/log1', 'user_key_name', 'keyname')
-    cfg.set('login/log1', 'user_key_private', '/etc/fstab')
-    cfg.set('login/log1', 'user_key_public', '/etc/fstab')
+    cfg.set('login/log1', 'user_key_private', valid_path)
+    cfg.set('login/log1', 'user_key_public', valid_path)
 
     return cfg
 
@@ -99,7 +107,7 @@ class Configuration(object):
                 "login": {
                     "image_user": "gc3-user",
                     "image_user_sudo": "root",
-                    "image_sudo": True,
+                    "image_sudo": "True",
                     "user_key_name": "***name of SSH keypair on Hobbes***",
                     "user_key_private": path,
                     "user_key_public": path,
@@ -162,9 +170,6 @@ class TestConfigurator(unittest.TestCase):
         self.assertEqual(cluster.template, "mycluster")
         self.assertEqual(cluster.name, "mycluster")
 
-        cloud = self.config['mycluster']['cluster']['cloud']
-        self.assertEqual(cluster._cloud, cloud)
-
         self.assertTrue(type(cluster._cloud_provider) is BotoCloudProvider)
         self.assertTrue(type(cluster._setup_provider) is AnsibleSetupProvider)
 
@@ -186,39 +191,6 @@ class TestConfigurator(unittest.TestCase):
         # TODO: test with storage file; the problem is to give a fixed
         # directory as a parameter to configurator, since it should work
         # anywhere
-
-    def test_create_node(self):
-        configurator = Configurator(self.config)
-        node = configurator.create_node("mycluster", "compute", None, "test-1")
-
-        self.assertTrue(type(node) is Node)
-        self.assertEqual(node.name, "test-1")
-        self.assertEqual(node.type, "compute")
-        self.assertEqual(node._cloud_provider, None)
-
-        pub_key = self.config['mycluster']['login']['user_key_public']
-        self.assertEqual(node.user_key_public, pub_key)
-
-        prv_key = self.config['mycluster']['login']['user_key_private']
-        self.assertEqual(node.user_key_private, prv_key)
-
-        key_name = self.config['mycluster']['login']['user_key_name']
-        self.assertEqual(node.user_key_name, key_name)
-
-        usr = self.config['mycluster']['login']['image_user']
-        self.assertEqual(node.image_user, usr)
-
-        nodes = self.config['mycluster']['nodes']
-        sec_group = nodes['compute']['security_group']
-        self.assertEqual(node.security_group, sec_group)
-
-        image = self.config['mycluster']['nodes']['compute']['image_id']
-        self.assertEqual(node.image, image)
-
-        flavor = self.config['mycluster']['nodes']['compute']['flavor']
-        self.assertEqual(node.flavor, flavor)
-
-        self.assertEqual(node.image_userdata, '')
 
     def test_create_cluster_storage(self):
         # default storage path
@@ -479,17 +451,19 @@ flavor=bigdisk
 
     def test_read_missing_section_cluster(self):
         '''
-        Read config with missing section
+        Check if a configuration file with no `cluster` sections will
+        raise an error.
         '''
-        cfg = minimal_configuration()
+        cfg = minimal_configuration(self.path)
         cfg.remove_section('cluster/c1')
+        cfg.remove_section('cluster/c2')
         self.assertRaises(Invalid, self._check_read_config_object, cfg)
 
     def test_read_missing_section_cloud(self):
         '''
         Read config with missing section
         '''
-        cfg = minimal_configuration()
+        cfg = minimal_configuration(self.path)
         cfg.remove_section('cloud/boto1')
         self.assertRaises(Invalid, self._check_read_config_object, cfg)
 
@@ -533,23 +507,24 @@ ssh_to=frontend
         self.assertRaises(Invalid, self._check_read_config, config)
 
 
-def test_missing_options():
-    cfg = minimal_configuration()
+    def test_missing_options(self):
+        cfg = minimal_configuration(self.path)
 
-    @nose.tools.raises(Invalid, MultipleInvalid)
-    def missing_option(section, option):
-        _, cfgfile = tempfile.mkstemp()
-        cfg.remove_option(section, option)
-        with open(cfgfile, 'w') as fd:
-            cfg.write(fd)
-        try:
-            config = Configurator.fromConfig(cfgfile)
-        finally:
-            os.unlink(cfgfile)
+        @nose.tools.raises(Invalid, MultipleInvalid)
+        def missing_option(section, option):
+            tmpcfg = minimal_configuration()
+            _, cfgfile = tempfile.mkstemp()
+            tmpcfg.remove_option(section, option)
+            with open(cfgfile, 'w') as fd:
+                tmpcfg.write(fd)
+            try:
+                config = Configurator.fromConfig(cfgfile)
+            finally:
+                os.unlink(cfgfile)
 
-    for section in cfg.sections():
-        for option, value in cfg.items(section):
-            yield missing_option, section, option
+        for section in cfg.sections():
+            for option, value in cfg.items(section):
+                yield missing_option, section, option
 
 
 class TestConfigurationFile(unittest.TestCase):
@@ -562,7 +537,8 @@ class TestConfigurationFile(unittest.TestCase):
         os.unlink(self.cfgfile)
 
     def test_valid_minimal_configuration(self):
-        cfg = minimal_configuration()
+        cfg = minimal_configuration(self.cfgfile)
+
         with open(self.cfgfile, 'w') as fd:
             cfg.write(fd)
         config = Configurator.fromConfig(self.cfgfile)
@@ -580,7 +556,8 @@ class TestConfigurationFile(unittest.TestCase):
         [slurm_master,ganglia_frontend]
         frontend001 ...
         """
-        cfg = minimal_configuration()
+        cfg = minimal_configuration(self.cfgfile)
+        cfg.set('setup/sp1', 'misc_groups', 'misc_master,misc_client')
         with open(self.cfgfile, 'w') as fd:
             cfg.write(fd)
         config = Configurator.fromConfig(self.cfgfile)
