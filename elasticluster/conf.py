@@ -222,10 +222,11 @@ class Configurator(object):
 
         provider = Configurator.setup_providers_map[provider_name]
 
-        return provider(
-            conf_login['user_key_private'], conf_login['image_user'],
-            conf_login['image_user_sudo'], conf_login['image_sudo'],
-            **conf)
+        return provider(private_key_file=conf_login['user_key_private'],
+                        remote_user=conf_login['image_user'],
+                        sudo_user=conf_login['image_user_sudo'],
+                        sudo=conf_login['image_sudo'],
+                        **conf)
 
 
 class ConfigValidator(object):
