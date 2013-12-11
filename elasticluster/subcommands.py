@@ -312,8 +312,14 @@ class ResizeCluster(AbstractCommand):
         for grp in self.params.nodes_to_add:
             print("Adding %d %s node(s) to the cluster"
                   "" % (self.params.nodes_to_add[grp], grp))
+            conf = configurator.cluster_conf[cluster.template]
+            conf_kind = conf['nodes'][grp]
             for i in range(self.params.nodes_to_add[grp]):
-                cluster.add_node(grp)
+                image_user = conf['login']['image_user']
+                userdata = conf_kind.get('image_userdata', '')
+                cluster.add_node(grp, conf_kind['image_id'], image_user,
+                                 conf_kind['flavor'], conf_kind['security_group'],
+                                 image_userdata=userdata)
 
         for grp in self.params.nodes_to_remove:
             n_to_rm = self.params.nodes_to_remove[grp]

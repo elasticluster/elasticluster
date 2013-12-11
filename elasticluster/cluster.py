@@ -36,8 +36,8 @@ from binascii import hexlify
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.exceptions import TimeoutError, ClusterNotFound, \
-    NodeNotFound, InstanceError, SecurityGroupError, ImageError, KeypairError,\
-    ClusterError
+    NodeNotFound, InstanceError, ClusterError
+
 
 class IgnorePolicy(paramiko.MissingHostKeyPolicy):
     def missing_host_key(self, client, hostname, key):
@@ -52,48 +52,49 @@ class Cluster(object):
     """
     startup_timeout = 60 * 10
 
-    def __init__(self, template, name, cloud, cloud_provider, setup_provider,
-                 nodes, configurator, min_nodes=None, **extra):
+    def __init__(self, template, name, cloud_provider, setup_provider,
+                 cluster_storage, user_key_name, user_key_public,
+                 user_key_private, **extra):
         self.template = template
         self.name = name
-        self._cloud = cloud
         self._cloud_provider = cloud_provider
         self._setup_provider = setup_provider
-
-        self._configurator = configurator
-        self._storage = configurator.create_cluster_storage()
-        self.nodes = dict((k, []) for k in nodes)
+        self._storage = cluster_storage
+        self.user_key_name = user_key_name
+        self.user_key_public = user_key_public
+        self.user_key_private = user_key_private
         self.ssh_to = extra.get('ssh_to')
         self.extra = extra.copy()
-        # initialize nodes
-        for cls in nodes:
-            for i in range(nodes[cls]):
-                self.add_node(cls)
+        self.nodes = dict()
 
-        # set the minimum number of nodes per group
-        self.min_nodes = min_nodes
-        if not self.min_nodes:
-            # the node minimum is implicit if not specified.
-            self.min_nodes = nodes
-        else:
-            # check that each group has a minimum value
-            for group, nodes in self.nodes.iteritems():
-                if group not in self.min_nodes:
-                    self.min_nodes[group] = len(nodes)
-
-
-    def add_node(self, node_type, name=None):
+    def add_node(self, node_type, image_id, image_user, flavor,
+                 security_group, image_userdata='', name=None):
         """
         Adds a new node, but doesn't start the instance on the cloud.
         Returns the created node instance
         """
+        if node_type not in self.nodes:
+            self.nodes[node_type] = []
+
         if not name:
             name = "%s%03d" % (node_type, len(self.nodes[node_type]) + 1)
 
-        node = self._configurator.create_node(self.template, node_type,
-                                              self._cloud_provider, name)
+        node = Node(name, node_type, self._cloud_provider,
+                    self.user_key_public, self.user_key_private,
+                    self.user_key_name, image_user, security_group,
+                    image_id, flavor, image_userdata=image_userdata)
+
         self.nodes[node_type].append(node)
         return node
+
+    def add_nodes(self, node_type, num, image_id, image_user, flavor,
+                  security_group, image_userdata=''):
+        """
+        Helper method to add multiple nodes of the same kind to a cluster.
+        """
+        for i in range(num):
+            self.add_node(node_type, image_id, image_user, flavor,
+                          security_group, image_userdata=image_userdata)
 
     def remove_node(self, node):
         """
@@ -132,7 +133,7 @@ class Cluster(object):
                           "`%s`" % (node.name, e))
                 return None
 
-    def start(self):
+    def start(self, min_nodes=None):
         """
         Starts the cluster with the properties given in the
         constructor. It will create the nodes through the configurator
@@ -248,10 +249,19 @@ class Cluster(object):
         # ensure a stable cluster fitting the needs of the user in terms of
         # cluster size, we check the minimum nodes within the node groups to
         # match the current setup.
-        self._check_cluster_size()
+        if not min_nodes:
+            # the node minimum is implicit if not specified.
+            min_nodes = dict((key, len(self.nodes[key])) for key in
+                             self.nodes.iterkeys())
+        else:
+            # check that each group has a minimum value
+            for group, nodes in nodes.iteritems():
+                if group not in min_nodes:
+                    min_nodes[group] = len(nodes)
 
+        self._check_cluster_size(min_nodes)
 
-    def _check_cluster_size(self):
+    def _check_cluster_size(self, min_nodes):
         """
         Checks the size of the cluster to fit the needs of the user. It
         considers the minimum values for the node groups if present.
@@ -261,7 +271,7 @@ class Cluster(object):
         """
         # check the total sizes before moving the nodes around
         minimum_nodes = 0
-        for group, size in self.min_nodes.iteritems():
+        for group, size in min_nodes.iteritems():
             minimum_nodes = minimum_nodes + size
 
         if len(self.get_all_nodes()) < minimum_nodes:
@@ -275,15 +285,15 @@ class Cluster(object):
 
         # finding all node groups with an unsatisfied amount of nodes
         unsatisfied_groups = []
-        for group, size in self.min_nodes.iteritems():
+        for group, size in min_nodes.iteritems():
             if len(self.nodes[group]) < size:
                 unsatisfied_groups.append(group)
 
         # trying to move nodes around to fill the groups with missing nodes
         for ugroup in unsatisfied_groups[:]:
-            missing = self.min_nodes[ugroup] - len(self.nodes[ugroup])
+            missing = min_nodes[ugroup] - len(self.nodes[ugroup])
             for group, nodes in self.nodes.iteritems():
-                spare = len(self.nodes[group]) - self.min_nodes[group]
+                spare = len(self.nodes[group]) - min_nodes[group]
                 while spare > 0 and missing > 0:
                     self.nodes[ugroup].append(self.nodes[group][-1])
                     del self.nodes[group][-1]
@@ -411,8 +421,6 @@ class Node(object):
     Handles all the node related funcitonality such as start, stop,
     configure, etc.
     """
-    frontend_type = 'frontend'
-    compute_type = 'compute'
     connection_timeout = 10
 
     def __init__(self, name, node_type, cloud_provider, user_key_public,
@@ -552,7 +560,11 @@ class ClusterStorage(object):
              'name': node.name,
              'type': node.type,
              'ip_public': node.ip_public,
-             'ip_private': node.ip_private}
+             'ip_private': node.ip_private,
+             'image_id': node.image,
+             'image_user': node.image_user,
+             'flavor': node.flavor,
+             'security_group': node.security_group}
             for node in cluster.get_all_nodes()]
 
         db_json = json.dumps(db)
