@@ -203,15 +203,14 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         inventory = dict()
         for node in cluster.get_all_nodes():
             if node.type in self.groups:
-                extra_vars = ''
+                extra_vars = ['ansible_ssh_user=%s' % node.image_user]
                 if node.type in self.environment:
-                    extra_vars = ['%s=%s' % (k, v) for k, v in \
-                                      self.environment[node.type].items()]
-                    extra_vars = str.join(' ', extra_vars)
+                    extra_vars.extend(['%s=%s' % (k, v) for k, v in \
+                                       self.environment[node.type].items()])
                 for group in self.groups[node.type]:
                     if group not in inventory:
                         inventory[group] = []
-                    inventory[group].append((node.name, node.ip_public, extra_vars))
+                    inventory[group].append((node.name, node.ip_public, str.join(' ', extra_vars)))
 
         if inventory:
             # create a temporary file to pass to ansible, since the
