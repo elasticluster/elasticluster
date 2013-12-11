@@ -181,6 +181,10 @@ class Start(AbstractCommand):
                 print("Starting cluster `%s` with %d %s nodes." % (
                     cluster.name, len(cluster.nodes[cls]), cls))
             print("(this may take a while...)")
+            conf = configurator.cluster_conf[cluster_template]
+            min_nodes = dict(
+                (k[:-10], int(v)) for k, v in conf['cluster'].iteritems() if
+                k.endswith('_nodes_min'))
             cluster.start()
             if self.params.no_setup:
                 print("NOT configuring the cluster as requested.")
@@ -383,11 +387,13 @@ Please note that there's no guarantee that they are fully configured:
                     log.error("gettin information from cluster `%s`: %s",
                               name, ex)
                     continue
+                cloud = configurator.cluster_conf[cluster.template]['cluster'][
+                    'cloud']
                 print("%s " % name)
                 print("-" * len(name))
                 print("  name:           %s" % cluster.name)
                 print("  template:       %s" % cluster.template)
-                print("  cloud:          %s " % cluster._cloud)
+                print("  cloud:          %s " % cloud)
                 for cls in cluster.nodes:
                     print("  - %s nodes: %d" % (cls, len(cluster.nodes[cls])))
                 print("")
