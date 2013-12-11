@@ -50,10 +50,23 @@ class TestCluster(unittest.TestCase):
 
         setup = Mock()
         configurator = Configurator(config)
+        conf_login = configurator.cluster_conf['mycluster']['login']
+
+        cluster = Cluster("mycluster", "mycluster", cloud_provider,
+                          setup, None, conf_login['user_key_name'],
+                          conf_login['user_key_public'],
+                          conf_login['user_key_private'])
+
         if not nodes:
             nodes = {"compute": 2, "frontend": 1}
-        cluster = Cluster("mycluster", "mycluster", "hobbes", cloud_provider,
-                          setup, nodes, configurator)
+
+        for kind, num in nodes.iteritems():
+            conf_kind = configurator.cluster_conf['mycluster']['nodes'][kind]
+            cluster.add_nodes(kind, num, conf_kind['image_id'],
+                              conf_login['image_user'],
+                              conf_kind['flavor'],
+                              conf_kind['security_group'])
+
         return cluster
 
     def test_add_node(self):
@@ -64,7 +77,8 @@ class TestCluster(unittest.TestCase):
 
         # without name
         size = len(cluster.nodes['compute'])
-        cluster.add_node("compute")
+        cluster.add_node("compute", 'image_id', 'image_user', 'flavor',
+                         'security_group')
         self.assertEqual(size + 1, len(cluster.nodes['compute']))
         new_node = cluster.nodes['compute'][2]
         self.assertEqual(new_node.name, 'compute003')
@@ -73,7 +87,8 @@ class TestCluster(unittest.TestCase):
         # with custom name
         name = "test-node"
         size = len(cluster.nodes['compute'])
-        cluster.add_node("compute", name=name)
+        cluster.add_node("compute", 'image_id', 'image_user', 'flavor',
+                         'security_group', image_userdata="", name=name)
         self.assertEqual(size + 1, len(cluster.nodes['compute']))
         self.assertEqual(cluster.nodes['compute'][3].name, name)
 
@@ -114,9 +129,8 @@ class TestCluster(unittest.TestCase):
         nodes = {"compute": 3, "frontend": 1}
         nodes_min = {"compute": 1, "frontend": 3}
         cluster = self.get_cluster(nodes=nodes)
-        cluster.min_nodes = nodes_min
 
-        cluster._check_cluster_size()
+        cluster._check_cluster_size(nodes_min)
 
         self.assertEqual(len(cluster.nodes["frontend"]), 3)
         self.assertTrue(len(cluster.nodes["compute"]) >= 1)
@@ -125,9 +139,9 @@ class TestCluster(unittest.TestCase):
         nodes = {"compute": 3, "frontend": 1}
         nodes_min = {"compute": 5, "frontend": 3}
         cluster = self.get_cluster(nodes=nodes)
-        cluster.min_nodes = nodes_min
 
-        self.failUnlessRaises(ClusterError, cluster._check_cluster_size)
+        self.failUnlessRaises(ClusterError, cluster._check_cluster_size,
+                              min_nodes=nodes_min)
 
     def test_get_all_nodes(self):
         """
@@ -346,8 +360,9 @@ class TestClusterStorage(unittest.TestCase):
 
         configurator = Configurator(Configuration().get_config(self.path))
         nodes = {"compute": 2, "frontend": 1}
-        cluster = Cluster("mycluster", "cluster_name", "hobbes", MagicMock(),
-                          MagicMock(), nodes, configurator)
+        cluster = Cluster("mycluster", "cluster_name", MagicMock(),
+                          MagicMock(), MagicMock(), 'key_name',
+                          'key_public', 'key_private')
         instance_id = "test-id"
         ip_public = "127.0.0.1"
         ip_private = "127.0.0.2"
