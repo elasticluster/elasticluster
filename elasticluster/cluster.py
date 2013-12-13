@@ -19,15 +19,12 @@
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 # System imports
-import json
 import operator
-import os
 import signal
 import socket
 import sys
 import time
-from multiprocessing.dummy import Manager, Pool
-from Queue import Empty
+from multiprocessing.dummy import Pool
 
 # External modules
 import paramiko
@@ -35,8 +32,8 @@ from binascii import hexlify
 
 # Elasticluster imports
 from elasticluster import log
-from elasticluster.exceptions import TimeoutError, ClusterNotFound, \
-    NodeNotFound, InstanceError, ClusterError
+from elasticluster.exceptions import TimeoutError, NodeNotFound, \
+    InstanceError, ClusterError
 
 
 class IgnorePolicy(paramiko.MissingHostKeyPolicy):
@@ -53,16 +50,16 @@ class Cluster(object):
     startup_timeout = 60 * 10
 
     def __init__(self, template, name, cloud_provider, setup_provider,
-                 cluster_storage, user_key_name, user_key_public,
+                 repository, user_key_name, user_key_public,
                  user_key_private, **extra):
         self.template = template
         self.name = name
         self._cloud_provider = cloud_provider
         self._setup_provider = setup_provider
-        self._storage = cluster_storage
-        self.user_key_name = user_key_name
-        self.user_key_public = user_key_public
-        self.user_key_private = user_key_private
+        self._user_key_name = user_key_name
+        self._user_key_public = user_key_public
+        self._user_key_private = user_key_private
+        self.repository = repository
         self.ssh_to = extra.get('ssh_to')
         self.extra = extra.copy()
         self.nodes = dict()
@@ -80,8 +77,8 @@ class Cluster(object):
             name = "%s%03d" % (node_type, len(self.nodes[node_type]) + 1)
 
         node = Node(name, node_type, self._cloud_provider,
-                    self.user_key_public, self.user_key_private,
-                    self.user_key_name, image_user, security_group,
+                    self._user_key_public, self._user_key_private,
+                    self._user_key_name, image_user, security_group,
                     image_id, flavor, image_userdata=image_userdata)
 
         self.nodes[node_type].append(node)
@@ -147,6 +144,7 @@ class Cluster(object):
         # and communicates to the `start_node` thread. The nodes to work on
         # are passed in a managed queue.
         self.keep_running = True
+
         def sigint_handler(signal, frame):
             """
             Makes sure the cluster is stored, before the sigint results in
@@ -173,11 +171,11 @@ class Cluster(object):
                 log.error("Aborting upon Ctrl-C")
                 thread_pool.close()
                 thread_pool.join()
-                self._storage.dump_cluster(self)
+                self.repository.save_or_update(self)
                 sys.exit(1)
 
         # dump the cluster here, so we don't loose any knowledge
-        self._storage.dump_cluster(self)
+        self.repository.save_or_update(self)
 
         signal.alarm(0)
 
@@ -214,7 +212,7 @@ class Cluster(object):
 
         # If we reached this point, we should have IP addresses for
         # the nodes, so update the storage file again.
-        self._storage.dump_cluster(self)
+        self.repository.save_or_update(self)
 
         # Try to connect to each node. Run the setup action only when
         # we successfully connect to all of them.
@@ -346,16 +344,16 @@ class Cluster(object):
         if not self.get_all_nodes():
             log.debug("Removing cluster %s.", self.name)
             self._setup_provider.cleanup()
-            self._storage.delete_cluster(self.name)
+            self.repository.delete(self)
         elif not force:
             log.warning("Not all instances have been terminated. "
                         "Please rerun the `elasticluster stop %s`", self.name)
-            self._storage.dump_cluster(self)
+            self.repository.save_or_update(self)
         else:
             log.warning("Not all instances have been terminated. However, "
                         "as requested, the cluster has been force-removed.")
             self._setup_provider.cleanup()
-            self._storage.delete_cluster(self.name)
+            self.repository.delete(self)
 
     def get_frontend_node(self):
         """
@@ -413,7 +411,8 @@ class Cluster(object):
             except InstanceError, ex:
                 log.warning("Ignoring error updating information on node %s: %s",
                           node, str(ex))
-        self._storage.dump_cluster(self)
+        self.repository.save_or_update(self)
+
 
 
 class Node(object):
@@ -536,94 +535,3 @@ private IP:  %s
 instance id: %s
 instance flavor: %s""" % (self.name, self.ip_public, self.ip_private,
                           self.instance_id, self.flavor)
-
-
-class ClusterStorage(object):
-    """
-    Handles the storage to save information about all the clusters
-    managed by this tool.
-    """
-
-    def __init__(self, storage_dir):
-        self._storage_dir = storage_dir
-
-    def dump_cluster(self, cluster):
-        """
-        Saves the information of the cluster to disk in json format to
-        load it later on.
-        """
-        db = {"name": cluster.name, "template": cluster.template}
-        for cls in cluster.nodes:
-            db[cls + '_nodes'] = len(cluster.nodes[cls])
-        db["nodes"] = [
-            {'instance_id': node.instance_id,
-             'name': node.name,
-             'type': node.type,
-             'ip_public': node.ip_public,
-             'ip_private': node.ip_private,
-             'image_id': node.image,
-             'image_user': node.image_user,
-             'flavor': node.flavor,
-             'security_group': node.security_group}
-            for node in cluster.get_all_nodes()]
-
-        db_json = json.dumps(db)
-
-        db_path = self._get_json_path(cluster.name)
-
-        f = open(db_path, 'w')
-        f.write(unicode(db_json))
-        f.close()
-
-    def load_cluster(self, cluster_name):
-        """
-        Read the storage file, create a cluster and return a `Cluster`
-        object.
-        """
-        db_path = self._get_json_path(cluster_name)
-
-        if not os.path.exists(db_path):
-            raise ClusterNotFound("Storage file %s not found" % db_path)
-        f = open(db_path, 'r')
-        db_json = f.readline()
-
-        information = json.loads(db_json)
-
-        return information
-
-    def delete_cluster(self, cluster_name):
-        """
-        Deletes the storage of a cluster.
-        """
-        db_file = self._get_json_path(cluster_name)
-        self._clear_storage(db_file)
-
-    def get_stored_clusters(self):
-        """
-        Returns a list of all stored clusters.
-        """
-        allfiles = os.listdir(self._storage_dir)
-        db_files = []
-        for fname in allfiles:
-            fpath = os.path.join(self._storage_dir, fname)
-            if fname.endswith('.json') and os.path.isfile(fpath):
-                db_files.append(fname[:-5])
-            else:
-                log.info("Ignoring invalid storage file %s", fpath)
-
-        return db_files
-
-    def _get_json_path(self, cluster_name):
-        """
-        Gets the path to the json storage file.
-        """
-        if not os.path.exists(self._storage_dir):
-            os.makedirs(self._storage_dir)
-        return os.path.join(self._storage_dir, cluster_name + ".json")
-
-    def _clear_storage(self, db_path):
-        """
-        Clears a storage file.
-        """
-        if os.path.exists(db_path):
-            os.unlink(db_path)

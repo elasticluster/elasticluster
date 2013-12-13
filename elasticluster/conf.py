@@ -39,7 +39,8 @@ from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 from elasticluster.providers.gce import GoogleCloudProvider
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
-from elasticluster.cluster import Cluster, ClusterStorage
+from elasticluster.cluster import Cluster
+from elasticluster.repository import ClusterRepository
 
 
 class Configurator(object):
@@ -150,11 +151,12 @@ class Configurator(object):
         extra.pop('cloud')
         extra.pop('setup_provider')
 
+
         cluster = Cluster(template,
                           name,
                           self.create_cloud_provider(template),
                           self.create_setup_provider(template, name=name),
-                          self.create_cluster_storage(),
+                          self.create_repository(),
                           conf_login['user_key_name'],
                           conf_login['user_key_public'],
                           conf_login["user_key_private"],
@@ -182,30 +184,10 @@ class Configurator(object):
         :param cluster_name: name of the cluster
         :return: :py:class:`elasticluster.cluster.cluster` instance
         """
-        storage = self.create_cluster_storage()
-        information = storage.load_cluster(cluster_name)
-
-        cluster = self.create_cluster(
-            information['template'], information['name'])
-
-        cluster.nodes = dict()
-        for dnode in information['nodes']:
-            node = cluster.add_node(dnode['type'], dnode['image_id'],
-                                    dnode['image_user'], dnode['flavor'],
-                                    dnode['security_group'],
-                                    name=dnode['name'])
-            node.instance_id = dnode['instance_id']
-            node.ip_public = dnode['ip_public']
-            node.ip_private = dnode['ip_private']
+        repository = self.create_repository()
+        cluster = repository.get(cluster_name)
 
         return cluster
-
-    def create_cluster_storage(self):
-        """
-        Creates an instance of :py:class:`elasticluster.cluster.ClusterStorage`
-            to safe information about a cluster local.
-        """
-        return ClusterStorage(self.general_conf['storage'])
 
     def create_setup_provider(self, cluster_template, name=None):
         conf = self.cluster_conf[cluster_template]['setup']
@@ -226,6 +208,11 @@ class Configurator(object):
             conf_login['user_key_private'], conf_login['image_user'],
             conf_login['image_user_sudo'], conf_login['image_sudo'],
             **conf)
+
+    def create_repository(self):
+        storage_path = self.general_conf['storage']
+        repository = ClusterRepository(storage_path)
+        return repository
 
 
 class ConfigValidator(object):
