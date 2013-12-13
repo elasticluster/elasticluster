@@ -322,15 +322,6 @@ class TestNode(unittest.TestCase):
         self.assertEqual(node.ip_public, ip_public)
         provider.get_ips.assert_called_once_with(instance_id)
 
-        # check with already present ips
-        ip_unused = "127.0.0.3"
-        provider.get_ips.return_value = (ip_unused, ip_unused)
-
-        node.update_ips()
-
-        self.assertEqual(node.ip_private, ip_private)
-        self.assertEqual(node.ip_public, ip_public)
-
 
 class TestClusterStorage(unittest.TestCase):
 
