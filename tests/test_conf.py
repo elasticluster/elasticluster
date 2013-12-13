@@ -192,19 +192,6 @@ class TestConfigurator(unittest.TestCase):
         # directory as a parameter to configurator, since it should work
         # anywhere
 
-    def test_create_cluster_storage(self):
-        # default storage path
-        configurator = Configurator(self.config)
-        storage = configurator.create_cluster_storage()
-        default_storage = configurator.general_conf['storage']
-        self.assertEqual(storage._storage_dir, default_storage)
-
-        # custom storage path
-        path = "/tmp"
-        configurator = Configurator(self.config, storage_path=path)
-        storage = configurator.create_cluster_storage()
-        self.assertEqual(storage._storage_dir, path)
-
     def test_create_setup_provider(self):
         configurator = Configurator(self.config)
         provider = configurator.create_setup_provider("mycluster")

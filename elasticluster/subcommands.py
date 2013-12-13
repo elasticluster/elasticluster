@@ -185,7 +185,7 @@ class Start(AbstractCommand):
             min_nodes = dict(
                 (k[:-10], int(v)) for k, v in conf['cluster'].iteritems() if
                 k.endswith('_nodes_min'))
-            cluster.start()
+            cluster.start(min_nodes=min_nodes)
             if self.params.no_setup:
                 print("NOT configuring the cluster as requested.")
             else:
@@ -321,8 +321,11 @@ class ResizeCluster(AbstractCommand):
             for i in range(self.params.nodes_to_add[grp]):
                 image_user = conf['login']['image_user']
                 userdata = conf_kind.get('image_userdata', '')
-                cluster.add_node(grp, conf_kind['image_id'], image_user,
-                                 conf_kind['flavor'], conf_kind['security_group'],
+                cluster.add_node(grp,
+                                 conf_kind['image_id'],
+                                 image_user,
+                                 conf_kind['flavor'],
+                                 conf_kind['security_group'],
                                  image_userdata=userdata)
 
         for grp in self.params.nodes_to_remove:
@@ -370,30 +373,20 @@ class ListClusters(AbstractCommand):
     def execute(self):
         configurator = Configurator.fromConfig(
             self.params.config, storage_path=self.params.storage)
-        storage = configurator.create_cluster_storage()
-        cluster_names = storage.get_stored_clusters()
+        repository = configurator.create_repository()
+        clusters = repository.get_all()
 
-        if not cluster_names:
+        if not clusters:
             print("No clusters found.")
         else:
             print("""
 The following clusters have been started.
 Please note that there's no guarantee that they are fully configured:
 """)
-            for name in sorted(cluster_names):
-                try:
-                    cluster = configurator.load_cluster(name)
-                except ConfigurationError, ex:
-                    log.error("gettin information from cluster `%s`: %s",
-                              name, ex)
-                    continue
-                cloud = configurator.cluster_conf[cluster.template]['cluster'][
-                    'cloud']
-                print("%s " % name)
-                print("-" * len(name))
+            for cluster in sorted(clusters):
+                print("%s " % cluster.name)
+                print("-" * len(cluster.name))
                 print("  name:           %s" % cluster.name)
-                print("  template:       %s" % cluster.template)
-                print("  cloud:          %s " % cloud)
                 for cls in cluster.nodes:
                     print("  - %s nodes: %d" % (cls, len(cluster.nodes[cls])))
                 print("")
@@ -430,8 +423,7 @@ class ListTemplates(AbstractCommand):
             try:
                 cluster = configurator.create_cluster(template, template)
                 print("""
-name:     %s
-cloud:     %s""" % (template, cluster._cloud))
+name:     %s""" % template)
                 for nodetype in cluster.nodes:
                     print("%s nodes: %d" % (
                         nodetype,
@@ -563,8 +555,7 @@ class SshFrontend(AbstractCommand):
                        "-i", frontend.user_key_private,
                        "-o", "UserKnownHostsFile=/dev/null",
                        "-o", "StrictHostKeyChecking=no",
-                       '%s@%s' % (username, host),
-        ]
+                       '%s@%s' % (username, host)]
         ssh_cmdline.extend(self.params.ssh_args)
         log.debug("Running command `%s`" % str.join(' ', ssh_cmdline))
         os.execlp("ssh", *ssh_cmdline)
@@ -610,8 +601,7 @@ class SftpFrontend(AbstractCommand):
         sftp_cmdline = ["sftp",
                         "-i", frontend.user_key_private,
                         "-o", "UserKnownHostsFile=/dev/null",
-                        "-o", "StrictHostKeyChecking=no",
-        ]
+                        "-o", "StrictHostKeyChecking=no"]
         sftp_cmdline.extend(self.params.sftp_args)
         sftp_cmdline.append('%s@%s' % (username, host))
         os.execlp("sftp", *sftp_cmdline)
