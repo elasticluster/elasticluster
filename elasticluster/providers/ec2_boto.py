@@ -197,8 +197,15 @@ class BotoCloudProvider(AbstractCloudProvider):
                 log.debug("Assigning ip address `%s` to instance `%s`"
                           % (address.public_ip, instance.id))
                 return address.public_ip
-        log.error("Unable to allocate a public IP address to instance `%s`",
-                  instance.id)
+
+        # No allocated addresses available.
+        try:
+            address = connection.allocate_address()
+            instance.use_ip(address)
+            return address.public_ip
+        except Exception, ex:
+            log.error("Unable to allocate a public IP address to instance `%s`",
+                      instance.id)
 
     def _load_instance(self, instance_id):
         """
