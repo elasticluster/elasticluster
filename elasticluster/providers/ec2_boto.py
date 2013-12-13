@@ -160,11 +160,6 @@ class BotoCloudProvider(AbstractCloudProvider):
         self._load_instance(instance_id)
         instance = self._load_instance(instance_id)
 
-        if not instance.ip_address and not self.auto_ip_assignment:
-            log.debug("Public ip address has to be assigned through "
-                      "elasticluster.")
-            self._allocate_address(instance)
-
         return instance.private_ip_address, instance.ip_address
 
     def is_instance_running(self, instance_id):
@@ -176,6 +171,13 @@ class BotoCloudProvider(AbstractCloudProvider):
         instance = self._load_instance(instance_id)
 
         if instance.update() == "running":
+            # If the instance is up&running, ensure it has an IP
+            # address.
+            if not instance.ip_address and not self.auto_ip_assignment:
+                log.debug("Public ip address has to be assigned through "
+                          "elasticluster.")
+                self._allocate_address(instance)
+                instance.update()
             return True
         else:
             return False
@@ -186,10 +188,17 @@ class BotoCloudProvider(AbstractCloudProvider):
         :param instance: ec2 instance to assign address to
         """
         connection = self._connect()
-        address = connection.allocate_address()
-        log.debug("Assigning ip address `%s` to instance `%s`"
-                  % (address.public_ip, instance.id))
-        instance.use_ip(address.public_ip)
+        addresses = connection.get_all_addresses()
+        for address in addresses:
+            # Find an unused address
+            if not address.instance_id:
+                # Free address, use it.
+                instance.use_ip(address)
+                log.debug("Assigning ip address `%s` to instance `%s`"
+                          % (address.public_ip, instance.id))
+                return address.public_ip
+        log.error("Unable to allocate a public IP address to instance `%s`",
+                  instance.id)
 
     def _load_instance(self, instance_id):
         """
