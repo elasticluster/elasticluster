@@ -29,6 +29,17 @@ class AbstractCloudProvider:
     __metaclass__ = ABCMeta
 
     @abstractmethod
+    def __init__(self, **config):
+        """
+        The constructor of a `CloudProvider` class is called only
+        using keyword arguments.
+
+        Usually these are configuration option of the corresponding
+        `setup` section in the configuration file.
+        """
+        pass
+
+    @abstractmethod
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_name, image_userdata,
                        username=None):
