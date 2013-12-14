@@ -19,6 +19,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.mes
 
 # System imports
 import operator
+import os
 import signal
 import socket
 import sys
@@ -91,6 +92,13 @@ class Cluster(object):
         self.ssh_to = extra.get('ssh_to')
         self.extra = extra.copy()
         self.nodes = dict()
+
+        self.user_key_private = os.path.expandvars(self.user_key_private)
+        self.user_key_private = os.path.expanduser(self.user_key_private)
+
+        self._user_key_public = os.path.expanduser(self._user_key_public)
+        self._user_key_public = os.path.expandvars(self._user_key_public)
+
 
     def add_node(self, kind, image_id, image_user, flavor,
                  security_group, image_userdata='', name=None):
