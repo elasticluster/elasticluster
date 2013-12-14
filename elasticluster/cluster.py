@@ -92,16 +92,16 @@ class Cluster(object):
         self.extra = extra.copy()
         self.nodes = dict()
 
-    def add_node(self, node_type, image_id, image_user, flavor,
+    def add_node(self, kind, image_id, image_user, flavor,
                  security_group, image_userdata='', name=None):
         """Adds a new node to the cluster. This factory method provides an
         easy way to add a new node to the cluster by specifying all relevant
         parameters. The node does not get started nor setup automatically,
         this has to be done manually afterwards.
 
-        :param str node_type: type of node to start. this refers to the groups
-                              defined in the ansible setup provider
-                              :py:class:`elasticluster.providers.AnsibleSetupProvider`
+        :param str kind: kind of node to start. this refers to the groups
+                         defined in the ansible setup provider
+                         :py:class:`elasticluster.providers.AnsibleSetupProvider`
 
         :param str image_id: image id to use for the cloud instance (e.g.
                              ami on amazon)
@@ -119,27 +119,27 @@ class Cluster(object):
 
         :return: created :py:class:`Node`
         """
-        if node_type not in self.nodes:
-            self.nodes[node_type] = []
+        if kind not in self.nodes:
+            self.nodes[kind] = []
 
         if not name:
-            name = "%s%03d" % (node_type, len(self.nodes[node_type]) + 1)
+            name = "%s%03d" % (kind, len(self.nodes[kind]) + 1)
 
-        node = Node(name, node_type, self._cloud_provider,
+        node = Node(name, kind, self._cloud_provider,
                     self._user_key_public, self.user_key_private,
                     self._user_key_name, image_user, security_group,
                     image_id, flavor, image_userdata=image_userdata)
 
-        self.nodes[node_type].append(node)
+        self.nodes[kind].append(node)
         return node
 
-    def add_nodes(self, node_type, num, image_id, image_user, flavor,
+    def add_nodes(self, kind, num, image_id, image_user, flavor,
                   security_group, image_userdata=''):
         """Helper method to add multiple nodes of the same kind to a cluster.
 
-        :param str node_type: type of node to start. this refers to the groups
-                              defined in the ansible setup provider
-                              :py:class:`elasticluster.providers.AnsibleSetupProvider`
+        :param str kind: kind of node to start. this refers to the groups
+                         defined in the ansible setup provider
+                         :py:class:`elasticluster.providers.AnsibleSetupProvider`
 
         :param int num: number of nodes to add of this kind
 
@@ -156,7 +156,7 @@ class Cluster(object):
         :param str image_userdata: commands to execute after instance starts
         """
         for i in range(num):
-            self.add_node(node_type, image_id, image_user, flavor,
+            self.add_node(kind, image_id, image_user, flavor,
                           security_group, image_userdata=image_userdata)
 
     def remove_node(self, node):
@@ -166,13 +166,13 @@ class Cluster(object):
         :param node: node to remove
         :type node: :py:class:`Node`
         """
-        if node.type not in self.nodes:
+        if node.kind not in self.nodes:
             log.error("Unable to remove node %s: invalid node type `%s`.",
-                      node.name, node.type)
+                      node.name, node.kind)
         else:
-            index = self.nodes[node.type].index(node)
-            if self.nodes[node.type][index]:
-                del self.nodes[node.type][index]
+            index = self.nodes[node.kind].index(node)
+            if self.nodes[node.kind][index]:
+                del self.nodes[node.kind][index]
 
     @staticmethod
     def _start_node(node):
@@ -215,7 +215,7 @@ class Cluster(object):
 
         :param min_nodes: minimum number of nodes to start in case the quota
                           is reached before all instances are up
-        :type min_nodes: dict [node_type] = number
+        :type min_nodes: dict [node_kind] = number
         """
 
         # To not mess up the cluster management we start the nodes in a
@@ -344,8 +344,8 @@ class Cluster(object):
         Otherwise it will imply the user wants the amount of specified
         nodes at least.
 
-        :param min_nodes: minimum number of nodes for each type
-        :type min_nodes: dict [node_type] = number
+        :param min_nodes: minimum number of nodes for each kind
+        :type min_nodes: dict [node_kind] = number
         :raises: ClusterError in case the size does not fit the minimum
                  number specified by the user.
         """
@@ -394,7 +394,7 @@ class Cluster(object):
 
     def get_all_nodes(self):
         """Returns a list of all nodes in this cluster as a mixed list of
-        different node types.
+        different node kinds.
 
         :return: list of :py:class:`Node`
         """
@@ -414,9 +414,9 @@ class Cluster(object):
             if node.instance_id:
                 try:
                     node.stop()
-                    self.nodes[node.type].remove(node)
+                    self.nodes[node.kind].remove(node)
                     log.debug("Removed node with instance id %s from %s"
-                              % (node.instance_id, node.type))
+                              % (node.instance_id, node.kind))
                 except:
                     # Boto does not always raises an `Exception` class!
                     log.error("could not stop instance `%s`, it might "
@@ -425,7 +425,7 @@ class Cluster(object):
                 log.debug("Not stopping node with no instance id. It seems "
                           "like node `%s` did not start correctly."
                           % node.name)
-                self.nodes[node.type].remove(node)
+                self.nodes[node.kind].remove(node)
         if not self.get_all_nodes():
             log.debug("Removing cluster %s.", self.name)
             self._setup_provider.cleanup()
@@ -519,9 +519,9 @@ class Node(object):
 
     :param str name: identifier of the node
 
-    :param str node_type: kind of node in regard to cluster. this usually
-                          refers to a specified group in the
-                          :py:class:`elasticluster.providers.AbstractSetupProvider`
+    :param str kind: kind of node in regard to cluster. this usually
+                     refers to a specified group in the
+                     :py:class:`elasticluster.providers.AbstractSetupProvider`
 
     :param cloud_provider: cloud provider to manage the instance
     :type cloud_provider: :py:class:`elasticluster.providers.AbstractCloudProvider`
@@ -551,11 +551,11 @@ class Node(object):
     """
     connection_timeout = 10  #: timeout in seconds to connect to host via ssh
 
-    def __init__(self, name, node_type, cloud_provider, user_key_public,
+    def __init__(self, name, kind, cloud_provider, user_key_public,
                  user_key_private, user_key_name, image_user, security_group,
                  image, flavor, image_userdata=None):
         self.name = name
-        self.type = node_type
+        self.kind = kind
         self._cloud_provider = cloud_provider
         self.user_key_public = user_key_public
         self.user_key_private = user_key_private

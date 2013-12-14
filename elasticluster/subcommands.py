@@ -451,10 +451,10 @@ class ListTemplates(AbstractCommand):
                 cluster = configurator.create_cluster(template, template)
                 print("""
 name:     %s""" % template)
-                for nodetype in cluster.nodes:
+                for nodekind in cluster.nodes:
                     print("%s nodes: %d" % (
-                        nodetype,
-                        len(cluster.nodes[nodetype])))
+                        nodekind,
+                        len(cluster.nodes[nodekind])))
             except ConfigurationError, ex:
                 log.warning("unable to load cluster `%s`: %s", template, ex)
 

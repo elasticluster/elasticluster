@@ -87,7 +87,7 @@ class TestCluster(unittest.TestCase):
         self.assertEqual(size + 1, len(cluster.nodes['compute']))
         new_node = cluster.nodes['compute'][2]
         self.assertEqual(new_node.name, 'compute003')
-        self.assertEqual(new_node.type, 'compute')
+        self.assertEqual(new_node.kind, 'compute')
 
         # with custom name
         name = "test-node"
@@ -228,7 +228,7 @@ class TestNode(unittest.TestCase):
         self.path = path
 
         self.name = "test"
-        self.node_type = "frontend"
+        self.node_kind = "frontend"
         self.user_key_public = self.path
         self.user_key_private = self.path
         self.user_key_name = "key"
@@ -243,7 +243,7 @@ class TestNode(unittest.TestCase):
 
     def get_node(self):
         cloud_provider = MagicMock()
-        node = Node(self.name, self.node_type, cloud_provider,
+        node = Node(self.name, self.node_kind, cloud_provider,
                     self.user_key_public, self.user_key_private,
                     self.user_key_name, self.image_user,
                     self.security_group, self.image, self.flavor,

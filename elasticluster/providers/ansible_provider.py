@@ -102,7 +102,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
     :param str ansible_module_dir: path to addition ansible modules
     :param extra_conf: tbd.
 
-    :ivar groups: node_type and ansible group mapping dictionary
+    :ivar groups: node kind and ansible group mapping dictionary
     :ivar environment: additional environment variables
     """
 
@@ -233,12 +233,12 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         """
         inventory = dict()
         for node in cluster.get_all_nodes():
-            if node.type in self.groups:
+            if node.kind in self.groups:
                 extra_vars = ['ansible_ssh_user=%s' % node.image_user]
-                if node.type in self.environment:
+                if node.kind in self.environment:
                     extra_vars.extend('%s=%s' % (k, v) for k, v in
-                                      self.environment[node.type].items())
-                for group in self.groups[node.type]:
+                                      self.environment[node.kind].items())
+                for group in self.groups[node.kind]:
                     if group not in inventory:
                         inventory[group] = []
                     public_ip = node.ip_public if node.ip_public else node.ip_private

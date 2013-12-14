@@ -57,8 +57,8 @@ class Configurator(object):
         "cloud" : { properties of the cloud section },
         "login" : { properties of the login section },
         "cluster" : { properties of the cluster section },
-        "nodes": {  "<node_type>" : { properties of the node},
-                    "<node_type>" : { properties of the node},
+        "nodes": {  "<node_kind>" : { properties of the node},
+                    "<node_kind>" : { properties of the node},
                 },
         },
      "<cluster_template>" : {
@@ -213,17 +213,17 @@ class Configurator(object):
         groups = dict((k[:-7], v.split(',')) for k, v
                       in conf.items() if k.endswith('_groups'))
         environment = dict()
-        for nodetype, grps in groups.iteritems():
+        for nodekind, grps in groups.iteritems():
             if not isinstance(grps, list):
-                groups[nodetype] = [grps]
+                groups[nodekind] = [grps]
 
             # Environment variables parsing
-            environment[nodetype] = dict()
+            environment[nodekind] = dict()
             for key, value in conf.iteritems():
-                prefix = "%s_var_" % nodetype
+                prefix = "%s_var_" % nodekind
                 if key.startswith(prefix):
                     var = key.replace(prefix, '')
-                    environment[nodetype][var] = value
+                    environment[nodekind][var] = value
 
         provider = Configurator.setup_providers_map[provider_name]
         return provider(groups, playbook_path=playbook_path,
