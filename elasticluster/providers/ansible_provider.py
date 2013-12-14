@@ -131,6 +131,9 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             self._storage_path = os.path.expanduser(self._storage_path)
             self._storage_path = os.path.expandvars(self._storage_path)
             self._storage_path_tmp = False
+            if not os.path.exists(self._storage_path):
+                os.makedirs(self._storage_path)
+
         else:
             self._storage_path = tempfile.mkdtemp()
             self._storage_path_tmp = True
