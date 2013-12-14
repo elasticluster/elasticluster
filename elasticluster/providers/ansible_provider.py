@@ -278,7 +278,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
     def cleanup(self):
         """Deletes the inventory file used last recently used.
         """
-        # TODO: currently the latest inventory file is delete, but since
+        # TODO: currently the latest inventory file is delete, but since
         #       multiple clusters can be setup after each other, this is not
         #       safe. This method should consider the cluster name to decide
         #       which inventory file to delete.
