@@ -34,7 +34,7 @@ from binascii import hexlify
 from elasticluster import log
 from elasticluster.exceptions import TimeoutError, NodeNotFound, \
     InstanceError, ClusterError
-
+from elasticluster.repository import MemRepository
 
 class IgnorePolicy(paramiko.MissingHostKeyPolicy):
     def missing_host_key(self, client, hostname, key):
@@ -80,15 +80,15 @@ class Cluster(object):
     startup_timeout = 60 * 10  #: timeout in seconds to start all nodes
 
     def __init__(self, name, cloud_provider, setup_provider,
-                 repository, user_key_name, user_key_public,
-                 user_key_private, **extra):
+                 user_key_name, user_key_public,
+                 user_key_private, repository=None, **extra):
         self.name = name
         self._cloud_provider = cloud_provider
         self._setup_provider = setup_provider
         self._user_key_name = user_key_name
         self._user_key_public = user_key_public
         self.user_key_private = user_key_private
-        self.repository = repository
+        self.repository = repository if repository else MemRepository()
         self.ssh_to = extra.get('ssh_to')
         self.extra = extra.copy()
         self.nodes = dict()

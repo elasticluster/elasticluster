@@ -155,10 +155,10 @@ class Configurator(object):
         cluster = Cluster(name,
                           self.create_cloud_provider(template),
                           self.create_setup_provider(template, name=name),
-                          self.create_repository(),
                           conf_login['user_key_name'],
                           conf_login['user_key_public'],
                           conf_login["user_key_private"],
+                          repository=self.create_repository(),
                           **extra)
 
         nodes = dict(
