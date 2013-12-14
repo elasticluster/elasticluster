@@ -557,4 +557,5 @@ class TestConfigurationFile(unittest.TestCase):
         self.assertEqual(setup.groups['misc'], ['misc_master', 'misc_client'])
 
 if __name__ == "__main__":
+    import nose
     nose.runmodule()
