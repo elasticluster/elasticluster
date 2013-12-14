@@ -128,8 +128,7 @@ class ClusterRepository(AbstractClusterRepository):
         :param cluster: cluster to delete from persistent state
         :type cluster: :py:class:`elasticluster.cluster.Cluster`
         """
-        cluster_file = '%s.%s' % (cluster.name, ClusterRepository.file_ending)
-        path = os.path.join(self.storage_path, cluster_file)
+        path = self._get_cluster_storage_path(cluster.name)
         if os.path.exists(path):
             os.unlink(path)
 
