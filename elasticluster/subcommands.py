@@ -474,7 +474,7 @@ class ListNodes(AbstractCommand):
             print("%s nodes:" % cls)
             print("")
             for node in cluster.nodes[cls]:
-                txt = ["    " + i for i in node.pprint.splitlines()]
+                txt = ["    " + i for i in node.pprint().splitlines()]
                 print('  - ' + str.join("\n", txt)[4:])
                 print("")
 
