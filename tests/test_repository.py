@@ -57,7 +57,7 @@ class MemRepositoryTests(unittest.TestCase):
 
         new_clusters = self.storage.get_all()
         for cluster in new_clusters:
-            nt.assert_in(cluster, clusters)
+            nt.assert_true(cluster in clusters)
 
     def test_get(self):
         clusters = [FakeCluster('test_%d' % i) for i in range(10)]
@@ -67,15 +67,15 @@ class MemRepositoryTests(unittest.TestCase):
 
         new_clusters = [self.storage.get(cluster.name) for cluster in clusters]
         for cluster in new_clusters:
-            nt.assert_in(cluster, clusters)
+            nt.assert_true(cluster in clusters)
 
     def test_delete(self):
         cluster = FakeCluster('test1')
         self.storage.save_or_update(cluster)
-        nt.assert_in(cluster.name, self.storage.clusters)
+        nt.assert_true(cluster.name in self.storage.clusters)
 
         self.storage.delete(cluster)
-        nt.assert_not_in(cluster.name, self.storage.clusters)
+        nt.assert_false(cluster.name in self.storage.clusters)
     
 
 class ClusterRepositoryTests(MemRepositoryTests):
