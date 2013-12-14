@@ -91,9 +91,9 @@ class MemRepository(AbstractClusterRepository):
         return self.clusters.values()
 
     def delete(self, cluster):
-        if name not in self.clusters:
+        if cluster.name not in self.clusters:
             raise ClusterNotFound(
-                "Unable to delete non-existent cluster %s" % name)
+                "Unable to delete non-existent cluster %s" % cluster.name)
         del self.clusters[cluster.name]
 
 
