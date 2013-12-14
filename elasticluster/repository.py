@@ -71,6 +71,32 @@ class AbstractClusterRepository:
         pass
 
 
+class MemRepository(AbstractClusterRepository):
+    """
+    This implementation of :py:class:`AbstractClusterRepository` stores
+    the clusters in memory, without actually saving the data on disk.
+    """
+    def __init__(self):
+        self.clusters = {}
+
+    def save_or_update(self, cluster):
+        self.clusters[cluster.name] = cluster
+
+    def get(self, name):
+        if name not in self.clusters:
+            raise ClusterNotFound("Cluster %s not found." % name)
+        return self.clusters.get(name)
+
+    def get_all(self):
+        return self.clusters.values()
+
+    def delete(self, cluster):
+        if name not in self.clusters:
+            raise ClusterNotFound(
+                "Unable to delete non-existent cluster %s" % name)
+        del self.clusters[cluster.name]
+
+
 class ClusterRepository(AbstractClusterRepository):
     """This implementation of :py:class:`AbstractClusterRepository` stores the
     cluster on the local disc using pickle. Therefore the cluster object and
