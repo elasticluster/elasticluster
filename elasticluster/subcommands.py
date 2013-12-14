@@ -326,20 +326,34 @@ class ResizeCluster(AbstractCommand):
             # `--template` argument.
             # TODO: find a better solution for this problem, it makes things
             #       complicated for the user
-            if not grp in cluster.nodes and not cluster.nodes[grp]:
-                print "Elasticluster can not infer which template to use for " \
+            if (not grp in cluster.nodes or not cluster.nodes[grp]) \
+                    and not template:
+                print "Elasticluster can not infer which template to use for "\
                       "the new node(s). Please provide the template with " \
                       "the `-t` or `--template` option"
                 return
 
-            sample_node = cluster.nodes[grp][0]
-            for i in range(self.params.nodes_to_add[grp]):
-                cluster.add_node(grp,
-                                 sample_node.image,
-                                 sample_node.image_user,
-                                 sample_node.flavor,
-                                 sample_node.security_group,
-                                 image_userdata=sample_node.image_userdata)
+            if not template:
+                sample_node = cluster.nodes[grp][0]
+                for i in range(self.params.nodes_to_add[grp]):
+                    cluster.add_node(grp,
+                                     sample_node.image,
+                                     sample_node.image_user,
+                                     sample_node.flavor,
+                                     sample_node.security_group,
+                                     image_userdata=sample_node.image_userdata)
+            else:
+                conf = configurator.cluster_conf[template]
+                conf_kind = conf['nodes'][grp]
+                for i in range(self.params.nodes_to_add[grp]):
+                    image_user = conf['login']['image_user']
+                    userdata = conf_kind.get('image_userdata', '')
+                    cluster.add_node(grp,
+                                     conf_kind['image_id'],
+                                     image_user,
+                                     conf_kind['flavor'],
+                                     conf_kind['security_group'],
+                                     image_userdata=userdata)
 
         for grp in self.params.nodes_to_remove:
             n_to_rm = self.params.nodes_to_remove[grp]
