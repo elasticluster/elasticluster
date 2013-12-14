@@ -663,6 +663,7 @@ class Node(object):
         private, public = self._cloud_provider.get_ips(self.instance_id)
         self.ip_public = public
         self.ip_private = private
+        return private, public
 
     def __str__(self):
         return "name=`%s`, id=`%s`, public_ip=`%s`, private_ip=`%s`" % (
