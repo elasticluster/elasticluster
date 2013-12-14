@@ -27,68 +27,68 @@ from elasticluster.exceptions import ClusterNotFound
 
 
 class AbstractClusterRepository:
-    """
-    Defines the contract for a cluster repository to store clusters in a
+    """Defines the contract for a cluster repository to store clusters in a
     persistent state.
     """
     __metaclass__ = ABCMeta
 
     @abstractmethod
     def save_or_update(self, cluster):
-        """
-        Save or update the cluster persistent
-        :param `elasticluster.cluster.Cluster` cluster: cluster to save
+        """Save or update the cluster in a persistent state. Elasticluster
+        will call this method multiple times, so the implementation
+        should handle save and update seamlessly
+
+        :param cluster: cluster object to store
+        :type cluster: :py:class:`elasticluster.cluster.Cluster`
         """
         pass
 
     @abstractmethod
     def get(self, name):
-        """
-        Retrieves the cluster with the given name.
+        """Retrieves the cluster by the given name.
+
         :param str name: name of the cluster (identifier)
-        :return: instance of `elasticluster.cluster.Cluster` with the
-                 corresponding name
+        :return: instance of :py:class:`elasticluster.cluster.Cluster` that
+                 matches the given name
         """
         pass
 
     @abstractmethod
     def get_all(self):
-        """
-        Retrieves all stored clusters from the persistent state.
-        :return: list of `elasticluster.cluster.Cluster`
+        """Retrieves all stored clusters from the persistent state.
+
+        :return: list of :py:class:`elasticluster.cluster.Cluster`
         """
         pass
 
     @abstractmethod
     def delete(self, cluster):
-        """
-        Deletes the cluster from persistent state.
-        :param `elasticluster.cluster.Cluster` cluster: cluster to delete
-                                                        from persistent state
+        """Deletes the cluster from persistent state.
+
+        :param cluster: cluster to delete from persistent state
+        :type cluster: :py:class:`elasticluster.cluster.Cluster`
         """
         pass
 
 
 class ClusterRepository(AbstractClusterRepository):
+    """This implementation of :py:class:`AbstractClusterRepository` stores the
+    cluster on the local disc using pickle. Therefore the cluster object and
+    all its dependencies will be saved in a pickle (binary) file.
+
+    :param str storage_path: path to the folder to store the cluster
+                             information
     """
-    This implementation of `elasticluster.repository.AbstractClusterRepositoy`
-    stores the cluster on the local disc using pickle.
-    """
+
     file_ending = 'pickle'
 
     def __init__(self, storage_path):
-        """
-        :param str storage_path: path to the folder to store the cluster
-                                 information
-        """
         self.storage_path = storage_path
 
     def get_all(self):
-        """
-        Retrieves the cluster with the given name.
-        :param str name: name of the cluster (identifier)
-        :return: instance of `elasticluster.cluster.Cluster` with the
-                 corresponding name
+        """Retrieves all clusters from the persistent state.
+
+        :return: list of :py:class:`elasticluster.cluster.Cluster`
         """
         file_ending = ClusterRepository.file_ending
         allfiles = os.listdir(self.storage_path)
@@ -109,11 +109,10 @@ class ClusterRepository(AbstractClusterRepository):
         return clusters
 
     def get(self, name):
-        """
-        Retrieves the cluster with the given name.
+        """Retrieves the cluster with the given name.
+
         :param str name: name of the cluster (identifier)
-        :return: instance of `elasticluster.cluster.Cluster` with the
-                 corresponding name
+        :return: :py:class:`elasticluster.cluster.Cluster`
         """
         path = self._get_cluster_storage_path(name)
         if not os.path.exists(path):
@@ -124,10 +123,10 @@ class ClusterRepository(AbstractClusterRepository):
             return cluster
 
     def delete(self, cluster):
-        """
-        Deletes the cluster from persistent state.
-        :param `elasticluster.cluster.Cluster` cluster: cluster to delete
-                                                        from persistent state
+        """Deletes the cluster from persistent state.
+
+        :param cluster: cluster to delete from persistent state
+        :type cluster: :py:class:`elasticluster.cluster.Cluster`
         """
         cluster_file = '%s.%s' % (cluster.name, ClusterRepository.file_ending)
         path = os.path.join(self.storage_path, cluster_file)
@@ -135,9 +134,10 @@ class ClusterRepository(AbstractClusterRepository):
             os.unlink(path)
 
     def save_or_update(self, cluster):
-        """
-        Save or update the cluster persistent
-        :param `elasticluster.cluster.Cluster` cluster: cluster to save
+        """Save or update the cluster to persistent state.
+
+        :param cluster: cluster to save or update
+        :type: :py:class:`elasticluster.cluster.Cluster`
         """
         if not os.path.exists(self.storage_path):
             os.makedirs(self.storage_path)

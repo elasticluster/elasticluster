@@ -35,9 +35,21 @@ from elasticluster.exceptions import SecurityGroupError, KeypairError, \
 
 
 class BotoCloudProvider(AbstractCloudProvider):
-    """
-    Uses boto to connect to an ec2 or openstack web service to manage
-    the virtual instances
+    """This implementation of
+    :py:class:`elasticluster.providers.AbstractCloudProvider` uses the boto
+    ec2 interface to connect to ec2 compliant clouds and manage instances.
+
+    Please check https://github.com/boto/boto for further information about
+    the supported cloud platforms.
+
+    :param str ec2_url: url to connect to cloud web service
+    :param str ec2_region: region identifier
+    :param str ec2_access_key: access key of the user account
+    :param str ec2_secret_key: secret key of the user account
+    :param str storage_path: path to store temporary data
+    :param bool auto_ip_assignment: Whether ip are assigned automatically
+                                    `True` or floating ips have to be
+                                    assigned manually `False`
     """
     __node_start_lock = threading.Lock()  # lock used for node startup
 
@@ -71,8 +83,10 @@ class BotoCloudProvider(AbstractCloudProvider):
         self._images = None
 
     def _connect(self):
-        """
-        Connects to the ec2 cloud provider
+        """Connects to the ec2 cloud provider
+
+        :return: :py:class:`boto.ec2.connection.EC2Connection`
+        :raises: Generic exception on error
         """
         # check for existing connection
         if self._connection:
@@ -107,10 +121,27 @@ class BotoCloudProvider(AbstractCloudProvider):
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
                        username=None):
-        """
-        Starts an instance in the cloud on the specified cloud
-        provider (configuration option) and returns the id of the
-        started instance.
+        """Starts a new instance on the cloud using the given properties.
+        The following tasks are done to start an instance:
+
+        * establish a connection to the cloud web service
+        * check ssh keypair and upload it if it does not yet exist. This is
+          a locked process, since this function might be called in multiple
+          threads and we only want the key to be stored once.
+        * check if the security group exists
+        * run the instance with the given properties
+
+        :param str key_name: name of the ssh key to connect
+        :param str public_key_path: path to ssh public key
+        :param str private_key_path: path to ssh private key
+        :param str security_group: firewall rule definition to apply on the
+                                   instance
+        :param str flavor: machine type to use for the instance
+        :param str image_id: image type (os) to use for the instance
+        :param str image_userdata: command to execute after startup
+        :param str username: username for the given ssh key, default None
+
+        :return: str - instance id of the started instance
         """
         connection = self._connect()
 
@@ -145,17 +176,17 @@ class BotoCloudProvider(AbstractCloudProvider):
         return vm.id
 
     def stop_instance(self, instance_id):
-        """
-        Terminates the given instance.
+        """Stops the instance gracefully.
+
+        :param str instance_id: instance identifier
         """
         instance = self._load_instance(instance_id)
         instance.terminate()
 
     def get_ips(self, instance_id):
-        """
-        Gets the ip address for the given instance.
-        :param instance_id: id of the instance
-        :return: (private_ip, public_ip)
+        """Retrieves the private and public ip addresses for a given instance.
+
+        :return: tuple (ip_private, ip_public)
         """
         self._load_instance(instance_id)
         instance = self._load_instance(instance_id)
@@ -163,11 +194,12 @@ class BotoCloudProvider(AbstractCloudProvider):
         return instance.private_ip_address, instance.ip_address
 
     def is_instance_running(self, instance_id):
-        """
-        Checks if an instance with the given id is up and running.
-        """
-        self._load_instance(instance_id)
+        """Checks if the instance is up and running.
 
+        :param str instance_id: instance identifier
+
+        :return: bool - True if running, False otherwise
+        """
         instance = self._load_instance(instance_id)
 
         if instance.update() == "running":
@@ -183,9 +215,12 @@ class BotoCloudProvider(AbstractCloudProvider):
             return False
 
     def _allocate_address(self, instance):
-        """
-        Allocates a free public ip address to the given instance
-        :param instance: ec2 instance to assign address to
+        """Allocates a free public ip address to the given instance
+
+        :param instance: instance to assign address to
+        :type instance: py:class:`boto.ec2.instance.Reservation`
+
+        :return: public ip address
         """
         connection = self._connect()
         addresses = connection.get_all_addresses()
@@ -208,11 +243,14 @@ class BotoCloudProvider(AbstractCloudProvider):
                       instance.id)
 
     def _load_instance(self, instance_id):
-        """
-        Checks if an instance with the given id is cached. If not it
+        """hecks if an instance with the given id is cached. If not it
         will connect to the cloud and put it into the local cache
-        _instances. An InstanceError is returned if the instance can't
-        be found in the local cache or in the cloud.
+        _instances.
+
+        :param str instance_id: instance identifier
+        :return: py:class:`boto.ec2.instance.Reservation` - instance
+        :raises: `InstanceError` is returned if the instance can't
+                 be found in the local cache or in the cloud.
         """
         connection = self._connect()
         if instance_id in self._instances:
@@ -238,6 +276,18 @@ class BotoCloudProvider(AbstractCloudProvider):
                             "on the coud" % instance_id)
 
     def _check_keypair(self, name, public_key_path, private_key_path):
+        """First checks if the keypair is valid, then checks if the keypair
+        is registered with on the cloud. If not the keypair is added to the
+        users ssh keys.
+
+        :param str name: name of the ssh key
+        :param str public_key_path: path to the ssh public key file
+        :param str private_key_path: path to the ssh private key file
+
+        :raises: `KeypairError` if key is not a valid RSA or DSA key,
+                 the key could not be uploaded or the fingerprint does not
+                 match to the one uploaded to the cloud.
+        """
         connection = self._connect()
         keypairs = connection.get_all_key_pairs()
         keypairs = dict((k.name, k) for k in keypairs)
@@ -309,11 +359,10 @@ class BotoCloudProvider(AbstractCloudProvider):
                             "different fingerprint. Aborting!" % name)
 
     def _check_security_group(self, name):
-        """
-        Checks if the security group exists.
-        TODO: if the configuration file specify some rules, ensure
-              that the security group has those rules, and if the security
-              group does not exists, create it.
+        """Checks if the security group exists.
+
+        :param str name: name of the security group
+        :raises: `SecurityGroupError` if group does not exist
         """
         connection = self._connect()
         security_groups = connection.get_all_security_groups()
@@ -328,8 +377,10 @@ class BotoCloudProvider(AbstractCloudProvider):
                 "the specified security group %s does not exist" % name)
 
     def _find_image_id(self, image_id):
-        """
-        Finds an image id to a given id or name.
+        """Finds an image id to a given id or name.
+
+        :param str image_id: name or id of image
+        :return: str - identifier of image
         """
         if not self._images:
             connection = self._connect()

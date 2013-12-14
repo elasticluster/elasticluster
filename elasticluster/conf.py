@@ -45,8 +45,7 @@ from elasticluster.repository import ClusterRepository
 
 
 class Configurator(object):
-    """
-    The Configurator is responsible for (I) keeping track of the
+    """The Configurator is responsible for (I) keeping track of the
     configuration and (II) offer factory methods to create all kind of
     objects that need information from the configuration.
 
@@ -66,6 +65,10 @@ class Configurator(object):
         (see above)
         }
      }
+
+     :param dict cluster_conf: see description above
+     :param str storage_path: path to store data
+     :raises MultipleInvalid: configuration validation
     """
 
     cloud_providers_map = {
@@ -79,11 +82,6 @@ class Configurator(object):
         "~/.elasticluster/storage")
 
     def __init__(self, cluster_conf, storage_path=None):
-        """
-        Default constructor to initialize a Configurator.
-        :param cluster_conf: configuration dictionary
-        :raises MultipleInvalid: configuration validation
-        """
         self.general_conf = dict()
         self.cluster_conf = cluster_conf
 
@@ -97,23 +95,23 @@ class Configurator(object):
 
     @classmethod
     def fromConfig(cls, configfile, storage_path=None):
-        """
-        Helper method to initialize Configurator from an ini file.
-        :param configfile: path to the ini file
-        :return: configurator object
+        """Helper method to initialize Configurator from an ini file.
+
+        :param str configfile: path to the ini file
+        :return: :py:class:`Configurator`
         """
         config_reader = ConfigReader(configfile)
         conf = config_reader.read_config()
         return Configurator(conf, storage_path=storage_path)
 
     def create_cloud_provider(self, cluster_template):
-        """
-        Creates a cloud provider by inspecting the configuration properties
+        """Creates a cloud provider by inspecting the configuration properties
         of the given cluster template.
-        :param cluster_template: template to use (if not already specified
-            on init)
-        :return: object that fulfills the contract of
-            :py:class:`elasticluster.providers.AbstractSetupProvider`
+
+        :param str cluster_template: template to use (if not already specified
+                                 on init)
+        :return: cloud provider that fulfills the contract of
+                 :py:class:`elasticluster.providers.AbstractSetupProvider`
         """
         conf = self.cluster_conf[cluster_template]['cloud']
 
@@ -125,12 +123,12 @@ class Configurator(object):
         return provider(**providerconf)
 
     def create_cluster(self, template, name=None):
-        """
-        Creates a cluster by inspecting the configuration properties of the
-            given cluster template.
-        :param template: name of the cluster template
+        """Creates a cluster by inspecting the configuration properties of the
+        given cluster template.
 
-        :param name: name of the cluster. If not defined, the cluster
+        :param str template: name of the cluster template
+
+        :param str name: name of the cluster. If not defined, the cluster
         will be named after the template.
 
         :return: :py:class:`elasticluster.cluster.cluster` instance
@@ -179,9 +177,9 @@ class Configurator(object):
         return cluster
 
     def load_cluster(self, cluster_name):
-        """
-        Loads a cluster from the local stored information.
-        :param cluster_name: name of the cluster
+        """Loads a cluster from the cluster repository.
+
+        :param str cluster_name: name of the cluster
         :return: :py:class:`elasticluster.cluster.cluster` instance
         """
         repository = self.create_repository()
@@ -190,6 +188,11 @@ class Configurator(object):
         return cluster
 
     def create_setup_provider(self, cluster_template, name=None):
+        """Creates the setup provider for the given cluster template.
+
+        :param str cluster_template: template of the cluster
+        :param str name: name of the cluster to read configuration properties
+        """
         conf = self.cluster_conf[cluster_template]['setup']
         conf['general_conf'] = self.general_conf.copy()
         if name:
@@ -237,21 +240,19 @@ class Configurator(object):
 
 
 class ConfigValidator(object):
-    """
-    Validator for the cluster configuration dictionary.
+    """Validator for the cluster configuration dictionary.
+
+    :param config: dictionary containing cluster configuration properties
     """
 
     def __init__(self, config):
-        """
-        :param config: dictionary containing cluster configuration properties
-        """
         self.config = config
 
     def _pre_validate(self):
-        """
-        Handles all pre validation phase functionality, such as:
-        - reading environment variables
-        - interpolating configuraiton options
+        """Handles all pre validation phase functionality, such as:
+
+        * reading environment variables
+        * interpolating configuraiton options
         """
         # read cloud provider environment variables (ec2_boto or google)
         for cluster, props in self.config.iteritems():
@@ -275,12 +276,10 @@ class ConfigValidator(object):
                                             str(ansible_pb_dir))
                     self.config[cluster]['setup']['playbook_path'] = pbpath
 
-
-
     def _post_validate(self):
-        """
-        Handles all post validation phase functionality, such as:
-        - expanding file paths
+        """Handles all post validation phase functionality, such as:
+
+        * expanding file paths
         """
         # expand all paths
         for cluster, values in self.config.iteritems():
@@ -296,10 +295,13 @@ class ConfigValidator(object):
             conf['login']['user_key_public'] = pubkey
 
     def validate(self):
-        """
-        Validates the given configuration :py:attr:`self.config` to comply
+        """Validates the given configuration :py:attr:`self.config` to comply
         with elasticluster. As well all types are converted to the expected
         format if possible.
+
+        :raises: :py:class:`voluptuous.MultipleInvalid` if multiple
+                 properties are not compliant
+        :raises: :py:class:`voluptuous.Invalid` if one property is invalid
         """
         self._pre_validate()
         # custom validators
@@ -314,19 +316,15 @@ class ConfigValidator(object):
         # schema to validate all cluster properties
         schema = {"cluster": {"cloud": All(str, Length(min=1)),
                               "setup_provider": All(str, Length(min=1)),
-                              "login": All(str, Length(min=1)),
-        },
+                              "login": All(str, Length(min=1))},
                   "setup": {"provider": All(str, Length(min=1)),
-                            Optional("playbook_path"): check_file(),
-                  },
+                            Optional("playbook_path"): check_file()},
                   "login": {"image_user": All(str, Length(min=1)),
                             "image_user_sudo": All(str, Length(min=1)),
                             "image_sudo": Boolean(str),
                             "user_key_name": All(str, Length(min=1)),
                             "user_key_private": check_file(),
-                            "user_key_public": check_file(),
-                  }
-        }
+                            "user_key_public": check_file()}}
 
         cloud_schema_ec2 = {"provider": 'ec2_boto',
                             "ec2_url": Url(str),
@@ -386,8 +384,9 @@ class ConfigValidator(object):
 
 
 class ConfigReader(object):
-    """
-    Reads the configuration properties from a ini file.
+    """Reads the configuration properties from a ini file.
+
+    :param str configfile: path to configfile
     """
     cluster_section = "cluster"
     login_section = "login"
@@ -396,9 +395,6 @@ class ConfigReader(object):
     node_section = "node"
 
     def __init__(self, configfile):
-        """
-        :param configfile: path to configfile
-        """
         self.configfile = configfile
 
         configparser = RawConfigParser()
@@ -426,34 +422,31 @@ class ConfigReader(object):
                  "ec2_region": All(str, Length(min=1)),
                  "gce_project_id": All(str, Length(min=1)),
                  "gce_client_id": All(str, Length(min=1)),
-                 "gce_client_secret": All(str, Length(min=1)),
-                }, extra=True),
+                 "gce_client_secret": All(str, Length(min=1))}, extra=True),
             "cluster": Schema(
                 {"cloud": All(str, Length(min=1)),
                  "setup_provider": All(str, Length(min=1)),
-                 "login": All(str, Length(min=1)),
-                }, required=True, extra=True),
+                 "login": All(str, Length(min=1))}, required=True, extra=True),
             "setup": Schema(
                 {"provider": All(str, Length(min=1)),
-                }, required=True, extra=True),
+                    }, required=True, extra=True),
             "login": Schema(
                 {"image_user": All(str, Length(min=1)),
                  "image_user_sudo": All(str, Length(min=1)),
                  "image_sudo": Boolean(str),
                  "user_key_name": All(str, Length(min=1)),
                  "user_key_private": check_file(),
-                 "user_key_public": check_file(),
-                }, required=True)
+                 "user_key_public": check_file()}, required=True)
         }
 
     def read_config(self):
-        """
-        Reads the configuration properties from the ini file and links the
+        """Reads the configuration properties from the ini file and links the
         section to comply with the cluster config dictionary format.
+
         :return: dictionary containing all configuration properties from the
          ini file in compliance to the cluster config format
-        :raises MultipleInvalid: not all sections present or broken links
-            between secitons
+        :raises: :py:class:`voluptuous.MultipleInvalid` if not all sections
+                 present or broken links between secitons
         """
         clusters = dict((key, value) for key, value in self.conf.iteritems() if
                         re.search(ConfigReader.cluster_section + "/(.*)", key)

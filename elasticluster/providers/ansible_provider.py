@@ -75,28 +75,40 @@ class ElasticlusterPbCallbacks(ansible.callbacks.PlaybookCallbacks):
 
 
 class AnsibleSetupProvider(AbstractSetupProvider):
-    """
+    """This implementation uses ansible to configure and manage the cluster
+    setup. See https://github.com/ansible/ansible for details.
+
+    :param dict groups: dictionary of node kinds with corresponding
+                        ansible groups to install on the node kind.
+                        e.g [node_kind] = [ansible_group1, ansible_group2]
+                        The group defined here can be references in each
+                        node. Therefore groups can make it easier to
+                        define multiple groups for one node.
+
+    :param str playbook_path: path to playbook; if empty this will use
+                              the shared playbook of elasticluster
+
+    :param dict environment_vars: dictonary to define variables per node
+                                  kind, e.g. [node_kind][var] = value
+
+    :param str storage_path: path to store the inventory file. By default
+                             the inventory file is saved temporarily and
+                             deleted after setup.
+
+    :param bool sudo: indication whether use sudo to gain root permission
+
+    :param str sudo_user: user with root permission
+
+    :param str ansible_module_dir: path to addition ansible modules
+    :param extra_conf: tbd.
+
+    :ivar groups: node_type and ansible group mapping dictionary
+    :ivar environment: additional environment variables
     """
 
     def __init__(self, groups, playbook_path=None, environment_vars=dict(),
                  storage_path=None, sudo=True, sudo_user='root',
                  ansible_module_dir=None, **extra_conf):
-        """
-
-        :param dict groups: dictionary of group names with corresponding
-                            ansible groups to install.
-                            e.g [group] = [ansible_group1, ansible_group2]
-                            The group defined here can be references in each
-                            node. Therefore groups can make it easier to
-                            define multiple groups for one node.
-        :param str playbook_path: path to playbook; if empty this will use
-                                  the shared playbook of elasticluster
-        :param dict environment_vars: dictonary to define variables per node
-                                      type, e.g. [group][var] = value
-        :param str storage_path: path to store the inventory file. By default
-                                 the inventory file is saved temporarily and
-                                 deleted after setup.
-        """
         self.groups = groups
         self._playbook_path = playbook_path
         self.environment = environment_vars
@@ -120,6 +132,19 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 ansible.utils.module_finder.add_directory(mdir.strip())
 
     def setup_cluster(self, cluster):
+        """Configures the cluster according to the node_kind to ansible
+        group matching. This method is idempotent and therefore can be
+        called multiple times without corrupting the cluster configuration.
+
+        :param cluster: cluster to configure
+        :type cluster: :py:class:`elasticluster.cluster.Cluster`
+
+        :return: True on success, False otherwise. Please note, if nothing
+                 has to be configures True is returned
+
+        :raises: `AnsibleError` if the playbook can not be found or playbook
+                 is corrupt
+        """
         inventory_path = self._build_inventory(cluster)
         private_key_file = cluster.user_key_private
 
@@ -201,8 +226,10 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         return False
 
     def _build_inventory(self, cluster):
-        """
-        Builds the inventory for the given cluster and returns its path
+        """Builds the inventory for the given cluster and returns its path
+
+        :param cluster: cluster to build inventory for
+        :type cluster: :py:class:`elasticluster.cluster.Cluster`
         """
         inventory = dict()
         for node in cluster.get_all_nodes():
@@ -249,9 +276,12 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             return None
 
     def cleanup(self):
+        """Deletes the inventory file used last recently used.
         """
-        Delete inventory file.
-        """
+        # TODO: currently the latest inventory file is delete, but since
+        #       multiple clusters can be setup after each other, this is not
+        #       safe. This method should consider the cluster name to decide
+        #       which inventory file to delete.
         if self._inventory_path:
             if os.path.exists(self._inventory_path):
                 try:

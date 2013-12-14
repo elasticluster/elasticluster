@@ -55,31 +55,40 @@ GCE_URL = 'https://www.googleapis.com/compute/%s/projects/' % GCE_API_VERSION
 GCE_DEFAULT_ZONE = 'us-central1-a'
 GCE_DEFAULT_SERVICE_EMAIL = 'default'
 GCE_DEFAULT_SCOPES = ['https://www.googleapis.com/auth/devstorage'
-                     '.full_control',
-                  'https://www.googleapis.com/auth/compute']
+                      '.full_control',
+                      'https://www.googleapis.com/auth/compute']
 
 
 class GoogleCloudProvider(AbstractCloudProvider):
-    """
-    Cloud provider for the Google Compute Engine.
+    """Cloud provider for the Google Compute Engine.
+
+    :param str gce_client_id: Client ID to use in OAuth authentication.
+
+    :param str gce_client_secret: Client secret (password) to use in
+                                  OAuth authentication.
+
+    :param str gce_project_id: Project name to log in to GCE.
+
+    :param str zone: gce zone, default is `us-central1-a`
+
+    :param str network: network to use, default is  `default`
+
+    :param str email: service email to use, default is `default`
+
+    :param str storage_path: path to store authentication data (oauth.dat
+                             file). If no path is specified, the login data
+                             has to be entered after every request.
     """
 
     def __init__(self, gce_client_id, gce_client_secret, gce_project_id,
                  zone=GCE_DEFAULT_ZONE, network='default',
                  email=GCE_DEFAULT_SERVICE_EMAIL, storage_path=None):
-        """
-        Initialize a provider for the GCE service.
-
-        :param str gce_client_id:     Client ID to use in OAuth authentication.
-        :param str gce_client_secret: Client secret (password) to use in
-         OAuth authentication.
-        :param str gce_project_id:    Project name to log in to GCE.
-        """
         self._client_id = gce_client_id
         self._client_secret = gce_client_secret
         self._project_id = gce_project_id
         self._zone = zone
         self._network = network
+        self._email = email
         self._storage_path = storage_path
 
         # will be initialized upon first connect
@@ -91,11 +100,12 @@ class GoogleCloudProvider(AbstractCloudProvider):
         self._gce_lock = Lock()
 
     def _connect(self):
-        """
-        Connects to the cloud provider.
+        """Connects to the cloud web services. If this is the first
+        authentication, a web browser will be started to authenticate
+        against google and provide access to elasticluster.
 
-        Also initializes the OAuth credential storage, which might in
-        turn fire up a browser.
+        :return: A Resource object with methods for interacting with the
+                 service.
         """
         # check for existing connection
         with self._gce_lock:
@@ -130,6 +140,11 @@ class GoogleCloudProvider(AbstractCloudProvider):
             return self._gce
 
     def _execute_request(self, request):
+        """Helper method to execute a request, since a lock should be used
+        to not fire up multiple requests at the same time.
+
+        :return: Result of `request.execute`
+        """
         with self._gce_lock:
             return request.execute(http=self._auth_http)
 
@@ -137,13 +152,12 @@ class GoogleCloudProvider(AbstractCloudProvider):
     # https://developers.google.com/compute/docs/api/python_guide
     # (function _blocking_call)
     def _wait_until_done(self, response, wait=30):
-        """
-        Blocks until the operation status is done for the given operation.
+        """Blocks until the operation status is done for the given operation.
 
         :param response: The response object used in a previous GCE call.
 
         :param int wait: Wait up to this number of seconds in between
-        successive polling of the GCE status.
+                         successive polling of the GCE status.
         """
 
         gce = self._connect()
@@ -181,9 +195,22 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        # these params are specific to the
                        # GoogleCloudProvider
                        instance_name=None):
-        """
-        Starts a new instance with the given properties and returns
+        """Starts a new instance with the given properties and returns
         the instance id.
+
+        :param str key_name: name of the ssh key to connect
+        :param str public_key_path: path to ssh public key
+        :param str private_key_path: path to ssh private key
+        :param str security_group: firewall rule definition to apply on the
+                                   instance
+        :param str flavor: machine type to use for the instance
+        :param str image_id: image type (os) to use for the instance
+        :param str image_userdata: command to execute after startup
+        :param str username: username for the given ssh key, default None
+
+        :param str instance_name: name of the instance
+
+        :return: str - instance id of the started instance
         """
         # construct URLs
         project_url = '%s%s' % (GCE_URL, self._project_id)
@@ -197,10 +224,6 @@ class GoogleCloudProvider(AbstractCloudProvider):
 
         # construct the request body
         if instance_name is None:
-            # TODO: it would be nice to have a way to name this
-            # <clustername>-<nodetype>-NNN, e.g.,
-            # "mycluster-compute-001", but we take an easy path to
-            # uniqueness for now.
             instance_name = 'elasticluster-%s' % uuid.uuid4()
 
         public_key_content = file(public_key_path).read()
@@ -217,7 +240,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                  'network': network_url
                 }],
             'serviceAccounts': [
-                {'email': GCE_DEFAULT_SERVICE_EMAIL,
+                {'email': self._email,
                  'scopes': GCE_DEFAULT_SCOPES
                 }],
             "metadata": {
@@ -246,8 +269,10 @@ class GoogleCloudProvider(AbstractCloudProvider):
 
 
     def stop_instance(self, instance_id):
-        """
-        Stops the instance with the given id gracefully.
+        """Stops the instance gracefully.
+
+        :param str instance_id: instance identifier
+        :raises: `InstanceError` if instance can not be stopped
         """
         gce = self._connect()
 
@@ -261,10 +286,10 @@ class GoogleCloudProvider(AbstractCloudProvider):
                                 % (instance_id, e))
 
     def list_instances(self, filter=None):
-        """
-        List instances on GCE, optionally filtering the results.
+        """List instances on GCE, optionally filtering the results.
 
         :param str filter: Filter specification; see https://developers.google.com/compute/docs/reference/latest/instances/list for details.
+        :return: list of instances
         """
         gce = self._connect()
 
@@ -283,10 +308,10 @@ class GoogleCloudProvider(AbstractCloudProvider):
             return list()
 
     def get_ips(self, instance_id):
-        """
-        Fetches the ip addresses (private and public) from the cloud
+        """Retrieves the ip addresses (private and public) from the cloud
         provider by the given instance id.
-        :param instance_id: id of the instance
+
+        :param str instance_id: id of the instance
         :return: tuple (ip_private, ip_public)
         :raises: InstanceError if the ip could not be retrieved.
         """
@@ -319,9 +344,10 @@ class GoogleCloudProvider(AbstractCloudProvider):
                                 '`%s`' % (instance_id, e))
 
     def is_instance_running(self, instance_id):
-        """
-        Return True/False depending on whether the instance with the
-        given id is up and running.
+        """Check whether the instance is up and running.
+
+        :param str instance_id: instance identifier
+        :reutrn: True if instance is running, False otherwise
         """
         items = self.list_instances(filter=('name eq "%s"' % instance_id))
         for item in items:
@@ -330,12 +356,12 @@ class GoogleCloudProvider(AbstractCloudProvider):
         return False
 
     def _get_image_url(self, image_id):
-        """
-        Gets the url for the specified image. Unfortunatly this only works for
-        images uploaded by the user. The images provided by google will not
-        be found.
-        :param image_id: name of the image
-        :return: api url of the image
+        """Gets the url for the specified image. Unfortunatly this only works
+        for images uploaded by the user. The images provided by google will
+        not be found.
+
+        :param str image_id: image identifier
+        :return: str - api url of the image
         """
         gce = self._connect()
         filter = "name eq %s" % image_id
@@ -353,8 +379,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
             raise ImageError("Could not find given image id `%s`" % image_id)
 
     def _check_response(self, response):
-        """
-        Checks the response from GCE for error messages.
+        """Checks the response from GCE for error messages.
+
         :param response: GCE response
         :return: nothing
         :raises: CloudProviderError with error message from GCE

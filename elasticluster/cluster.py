@@ -15,8 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
+__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
 
 # System imports
 import operator
@@ -43,11 +42,41 @@ class IgnorePolicy(paramiko.MissingHostKeyPolicy):
 
 
 class Cluster(object):
-    """
-    Handles all cluster related functionality such as start, setup,
-    load, stop, storage etc.
-    """
-    startup_timeout = 60 * 10
+    """This is the heart of elasticluster and handles all cluster relevant
+    behavior. You can basically start, setup and stop a cluster. Also it
+    provides factory methods to add nodes to the cluster.
+    A typical workflow is as follows:
+
+    * create a new cluster
+    * add nodes to fit your computing needs
+    * start cluster; start all instances in the cloud
+    * setup cluster; configure all nodes to fit your computing cluster
+    * eventually stop cluster; destroys all instances in the cloud
+
+    :param str name: unique identifier of the cluster
+
+    :param cloud_provider: access to the cloud to manage nodes
+    :type cloud_provider: :py:class:`elasticluster.providers.AbstractCloudProvider`
+
+    :param setup_provider: provider to setup cluster
+    :type setup_provider: :py:class:`elasticluster.providers.AbstractSetupProvider`
+
+    :param repository: persistent storage
+    :type repository: :py:class:`elasticluster.repository.AbstractClusterRepository`
+
+    :param str user_key_name: name of the ssh key to connect to cloud
+
+    :param str user_key_public: path to ssh public key file
+
+    :param str user_key_private: path to ssh private key file
+
+    :param extra: tbd.
+
+
+    :ivar nodes: dict [node_type] = [:py:class:`Node`] that represents all
+                 nodes in this cluster
+   """
+    startup_timeout = 60 * 10  #: timeout in seconds to start all nodes
 
     def __init__(self, template, name, cloud_provider, setup_provider,
                  repository, user_key_name, user_key_public,
@@ -66,9 +95,30 @@ class Cluster(object):
 
     def add_node(self, node_type, image_id, image_user, flavor,
                  security_group, image_userdata='', name=None):
-        """
-        Adds a new node, but doesn't start the instance on the cloud.
-        Returns the created node instance
+        """Adds a new node to the cluster. This factory method provides an
+        easy way to add a new node to the cluster by specifying all relevant
+        parameters. The node does not get started nor setup automatically,
+        this has to be done manually afterwards.
+
+        :param str node_type: type of node to start. this refers to the groups
+                              defined in the ansible setup provider
+                              :py:class:`elasticluster.providers.AnsibleSetupProvider`
+
+        :param str image_id: image id to use for the cloud instance (e.g.
+                             ami on amazon)
+
+        :param str image_user: user to login on given image
+
+        :param str flavor: machine type to use for cloud instance
+
+        :param str security_group: security group that defines firewall rules
+                                   to the instance
+
+        :param str image_userdata: commands to execute after instance starts
+
+        :param str name: name of this node, automatically generated if None
+
+        :return: created :py:class:`Node`
         """
         if node_type not in self.nodes:
             self.nodes[node_type] = []
@@ -86,16 +136,36 @@ class Cluster(object):
 
     def add_nodes(self, node_type, num, image_id, image_user, flavor,
                   security_group, image_userdata=''):
-        """
-        Helper method to add multiple nodes of the same kind to a cluster.
+        """Helper method to add multiple nodes of the same kind to a cluster.
+
+        :param str node_type: type of node to start. this refers to the groups
+                              defined in the ansible setup provider
+                              :py:class:`elasticluster.providers.AnsibleSetupProvider`
+
+        :param int num: number of nodes to add of this kind
+
+        :param str image_id: image id to use for the cloud instance (e.g.
+                             ami on amazon)
+
+        :param str image_user: user to login on given image
+
+        :param str flavor: machine type to use for cloud instance
+
+        :param str security_group: security group that defines firewall rules
+                                   to the instance
+
+        :param str image_userdata: commands to execute after instance starts
         """
         for i in range(num):
             self.add_node(node_type, image_id, image_user, flavor,
                           security_group, image_userdata=image_userdata)
 
     def remove_node(self, node):
-        """
-        Removes a node from the cluster, but does not stop it.
+        """Removes a node from the cluster, but does not stop it. Use this
+        method with caution.
+
+        :param node: node to remove
+        :type node: :py:class:`Node`
         """
         if node.type not in self.nodes:
             log.error("Unable to remove node %s: invalid node type `%s`.",
@@ -107,8 +177,9 @@ class Cluster(object):
 
     @staticmethod
     def _start_node(node):
-        """
-        Static method to start a specific node on a cloud
+        """Static method to start a specific node on a cloud
+
+        :return: bool -- True on success, False otherwise
         """
         log.debug("_start_node: working on node %s" % node.name)
         # TODO: the following check is not optimal yet. When a
@@ -131,12 +202,21 @@ class Cluster(object):
                 return None
 
     def start(self, min_nodes=None):
-        """
-        Starts the cluster with the properties given in the
-        constructor. It will create the nodes through the configurator
-        and delegate all the work to them. After the identifiers of
-        all instances are available, it will save the cluster through
-        the cluster storage.
+        """Starts up all the instances in the cloud. To speed things up all
+        instances are started in a seperate thread. To make sure
+        elasticluster is not stopped during creation of an instance, it will
+        overwrite the sigint handler. As soon as the last started instance
+        is returned and saved to the repository, sigint is executed as usual.
+        An instance is up and running as soon as a ssh connection can be
+        established. If the startup timeout is reached before all instances
+        are started, the cluster will stop and destroy all instances.
+
+        This method is blocking and might take some time depending on the
+        amount of instances to start.
+
+        :param min_nodes: minimum number of nodes to start in case the quota
+                          is reached before all instances are up
+        :type min_nodes: dict [node_type] = number
         """
 
         # To not mess up the cluster management we start the nodes in a
@@ -260,12 +340,15 @@ class Cluster(object):
         self._check_cluster_size(min_nodes)
 
     def _check_cluster_size(self, min_nodes):
-        """
-        Checks the size of the cluster to fit the needs of the user. It
+        """Checks the size of the cluster to fit the needs of the user. It
         considers the minimum values for the node groups if present.
-        Otherwise it will assume the user wants the amount of specified
-        nodes.
-        :raises: ClusterError
+        Otherwise it will imply the user wants the amount of specified
+        nodes at least.
+
+        :param min_nodes: minimum number of nodes for each type
+        :type min_nodes: dict [node_type] = number
+        :raises: ClusterError in case the size does not fit the minimum
+                 number specified by the user.
         """
         # check the total sizes before moving the nodes around
         minimum_nodes = 0
@@ -311,8 +394,10 @@ class Cluster(object):
                                "provider settings")
 
     def get_all_nodes(self):
-        """
-        Returns a list of all the nodes of the cluster.
+        """Returns a list of all nodes in this cluster as a mixed list of
+        different node types.
+
+        :return: list of :py:class:`Node`
         """
         nodes = self.nodes.values()
         if nodes:
@@ -321,9 +406,10 @@ class Cluster(object):
             return []
 
     def stop(self, force=False):
-        """
-        Terminates all instances corresponding to this cluster and
-        deletes the cluster storage.
+        """Destroys all instances of this cluster and calls delete on the
+        repository.
+
+        :param bool force: force termination of instances in any case
         """
         for node in self.get_all_nodes():
             if node.instance_id:
@@ -356,10 +442,13 @@ class Cluster(object):
             self.repository.delete(self)
 
     def get_frontend_node(self):
-        """
-        Returns the first node of the class specified in the
+        """Returns the first node of the class specified in the
         configuration file as `ssh_to`, or the first node of
         the first class in alphabetic order.
+
+        :return: :py:class:`Node`
+        :raise: :py:class:`elasticluster.exceptions.NodeNotFound` if no
+                valid frontend node is found
         """
         if self.ssh_to:
             if self.ssh_to in self.nodes:
@@ -386,6 +475,11 @@ class Cluster(object):
                            "cluster has no nodes!")
 
     def setup(self):
+        """Configure the cluster nodes with the specified  This
+        is delegated to the provided :py:class:`elasticluster.providers.AbstractSetupProvider`
+
+        :return: bool - True on success, False otherwise
+        """
         try:
             # setup the cluster using the setup provider
             ret = self._setup_provider.setup_cluster(self)
@@ -405,6 +499,10 @@ class Cluster(object):
         return ret
 
     def update(self):
+        """Update all connection information of the nodes of this cluster.
+        It occurs for example public ip's are not available imediatly,
+        therefore calling this method might help.
+        """
         for node in self.get_all_nodes():
             try:
                 node.update_ips()
@@ -414,13 +512,45 @@ class Cluster(object):
         self.repository.save_or_update(self)
 
 
-
 class Node(object):
+    """The node represents an instance in a cluster. It holds all
+    information to connect to the nodes also manages the cloud instance. It
+    provides the basic functionality to interact with the cloud instance,
+    such as start, stop, check if the instance is up and ssh connect.
+
+    :param str name: identifier of the node
+
+    :param str node_type: kind of node in regard to cluster. this usually
+                          refers to a specified group in the
+                          :py:class:`elasticluster.providers.AbstractSetupProvider`
+
+    :param cloud_provider: cloud provider to manage the instance
+    :type cloud_provider: :py:class:`elasticluster.providers.AbstractCloudProvider`
+
+    :param str user_key_public: path to the ssh public key
+
+    :param str user_key_private: path to the ssh private key
+
+    :param str user_key_name: name of the ssh key
+
+    :param str image_user: user to connect to the instance via ssh
+
+    :param str security_group: security group to setup firewall rules
+
+    :param str image: image id to launch instance with
+
+    :param str flavor: machine type to launch instance
+
+    :param str image_userdata: commands to execute after instance start
+
+
+    :ivar instance_id: id of the node instance on the cloud
+
+    :ivar ip_public: public ip of this node
+
+    :ivar ip_private: private ip of this node
     """
-    Handles all the node related funcitonality such as start, stop,
-    configure, etc.
-    """
-    connection_timeout = 10
+    connection_timeout = 10  #: timeout in seconds to connect to host via ssh
 
     def __init__(self, name, node_type, cloud_provider, user_key_public,
                  user_key_private, user_key_name, image_user, security_group,
@@ -442,10 +572,11 @@ class Node(object):
         self.ip_private = None
 
     def start(self):
-        """
-        Starts an instance for this node on the cloud through the
-        clode provider. This method is non-blocking, as soon as the
-        node id is returned from the cloud provider, it will return.
+        """Starts the node on the cloud using the given
+        instance properties. This method is non-blocking, as soon
+        as the node id is returned from the cloud provider, it will return.
+        Therefore the `is_alive` and `update_ips` methods can be used to
+        further gather details about the state of the node.
         """
         log.info("Starting node %s.", self.name)
         self.instance_id = self._cloud_provider.start_instance(
@@ -456,13 +587,16 @@ class Node(object):
         log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
 
     def stop(self):
+        """Destroys the instance launched on the cloud for this specific node.
+        """
         log.info("shutting down instance `%s`",
                  self.instance_id)
         self._cloud_provider.stop_instance(self.instance_id)
 
     def is_alive(self):
-        """
-        Checks if the current node is up and running in the cloud
+        """Checks if the current node is up and running in the cloud. It
+        only checks the status provided by the cloud interface. Therefore a
+        node might be running, but not yet ready to ssh into it.
         """
         running = False
         if not self.instance_id:
@@ -487,9 +621,10 @@ class Node(object):
         return running
 
     def connect(self):
-        """
-        Connect to the node via ssh and returns a paramiko.SSHClient
-        object, or None if we are unable to connect.
+        """Connect to the node via ssh using the paramiko library.
+
+        :return: :py:class:`paramiko.SSHClient` - ssh connection or None on
+                 failure
         """
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(IgnorePolicy())
@@ -513,8 +648,10 @@ class Node(object):
         return None
 
     def update_ips(self):
-        """
-        Updates the ips of the node through the cloud provider.
+        """Retrieves the public and private ip of the instance by using the
+        cloud provider. In some cases the public ip assignment takes some
+        time, but this method is non blocking. To check for a public ip,
+        consider calling this method multiple times during a certain timeout.
         """
         private, public = self._cloud_provider.get_ips(self.instance_id)
         self.ip_public = public
@@ -525,8 +662,9 @@ class Node(object):
             self.name, self.instance_id, self.ip_public, self.ip_private)
 
     def pprint(self):
-        """
-        Pretty print information about the node.
+        """Pretty print information about the node.
+
+        :return: str - representaion of a node in pretty print
         """
         return """%s
 public IP:   %s

@@ -22,3 +22,14 @@ import logging
 
 logging.basicConfig()
 log = logging.getLogger("gc3.elasticluster")
+
+
+# API
+from elasticluster.cluster import Cluster
+from elasticluster.repository import AbstractClusterRepository, ClusterRepository
+from elasticluster.providers import AbstractCloudProvider, AbstractSetupProvider
+from elasticluster.providers.ansible_provider import AnsibleSetupProvider
+from elasticluster.providers.ec2_boto import BotoCloudProvider
+from elasticluster.providers.gce import GoogleCloudProvider
+
+
