@@ -22,16 +22,14 @@ from abc import ABCMeta, abstractmethod
 
 
 class AbstractCloudProvider:
-    """
-    Defines the contract for a cloud provider to proper function with
+    """Defines the contract for a cloud provider to proper function with
     elasticluster.
     """
     __metaclass__ = ABCMeta
 
     @abstractmethod
     def __init__(self, **config):
-        """
-        The constructor of a `CloudProvider` class is called only
+        """The constructor of a `CloudProvider` class is called only
         using keyword arguments.
 
         Usually these are configuration option of the corresponding
@@ -41,33 +39,52 @@ class AbstractCloudProvider:
 
     @abstractmethod
     def start_instance(self, key_name, public_key_path, private_key_path,
-                       security_group, flavor, image_name, image_userdata,
+                       security_group, flavor, image_id, image_userdata,
                        username=None):
-        """
-        Starts a new instance with the given properties and returns
-        the instance id.
+        """Starts a new instance on the cloud using the given properties.
+        Multiple instances might be started in different threads at the same
+        time. The implementation should handle any problems regarding this
+        itself.
+
+        :param str key_name: name of the ssh key to connect
+        :param str public_key_path: path to ssh public key
+        :param str private_key_path: path to ssh private key
+        :param str security_group: firewall rule definition to apply on the
+                                   instance
+        :param str flavor: machine type to use for the instance
+        :param str image_name: image type (os) to use for the instance
+        :param str image_userdata: command to execute after startup
+        :param str username: username for the given ssh key, default None
+
+        :return: str - instance id of the started instance
         """
         pass
 
     @abstractmethod
     def stop_instance(self, instance_id):
-        """
-        Stops the instance with the given id gracefully.
+        """Stops the instance gracefully.
+
+        :param str instance_id: instance identifier
+
+        :return: None
         """
         pass
 
     @abstractmethod
     def get_ips(self, instance_id):
-        """
-        Finds the private and public ip addresses for a given instance.
-        :return tuple (ip_private, ip_public)
+        """Retrieves the private and public ip addresses for a given instance.
+
+        :return: tuple (ip_private, ip_public)
         """
         pass
 
     @abstractmethod
     def is_instance_running(self, instance_id):
-        """
-        Checks if the instance with the given id is up and running.
+        """Checks if the instance is up and running.
+
+        :param str instance_id: instance identifier
+
+        :return: bool - True if running, False otherwise
         """
         pass
 
@@ -80,25 +97,24 @@ class AbstractSetupProvider:
 
     @abstractmethod
     def setup_cluster(self, cluster):
-        """
-        Setup a cluster. `cluster` must be a
-        `elasticluster.cluster.Cluster` class.
+        """Configures all nodes of a cluster to function in respect to the
+        given configuration.
 
         This method *must* be idempotent, i.e. it should always be
         safe calling it multiple times..
 
-        :return: `True` if the cluster is correctly configured, even
-                  if the method didn't actually do anything.
+        :param cluster: cluster to configure
+        :type cluster: :py:class:`elasticluster.cluster.Cluster`
 
-                 `False` if the cluster is not configured.
+        :return: `True` if the cluster is correctly configured, even
+                  if the method didn't actually do anything. `False` if the
+                  cluster is not configured.
         """
         pass
 
     @abstractmethod
     def cleanup(self):
-        """
-        Cleanup any temporary file or directory created during setup.
-
+        """Cleanup any temporary file or directory created during setup.
         This method is called every time a cluster is stopped.
 
         :return: None
