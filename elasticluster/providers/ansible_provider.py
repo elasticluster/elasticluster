@@ -20,6 +20,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 import logging
 import os
 import tempfile
+import shutil
 import sys
 
 # external imports
@@ -80,7 +81,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
 
     :param dict groups: dictionary of node kinds with corresponding
                         ansible groups to install on the node kind.
-                        e.g [node_kind] = [ansible_group1, ansible_group2]
+                        e.g [node_kind] = ['ansible_group1', 'ansible_group2']
                         The group defined here can be references in each
                         node. Therefore groups can make it easier to
                         define multiple groups for one node.
@@ -92,8 +93,9 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                                   kind, e.g. [node_kind][var] = value
 
     :param str storage_path: path to store the inventory file. By default
-                             the inventory file is saved temporarily and
-                             deleted after setup.
+                             the inventory file is saved temporarily in a
+                             temporary directory and deleted when the
+                             cluster in stopped.
 
     :param bool sudo: indication whether use sudo to gain root permission
 
@@ -105,6 +107,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
     :ivar groups: node kind and ansible group mapping dictionary
     :ivar environment: additional environment variables
     """
+    inventory_file_ending = 'ansible-inventory'
 
     def __init__(self, groups, playbook_path=None, environment_vars=dict(),
                  storage_path=None, sudo=True, sudo_user='root',
@@ -120,12 +123,17 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         if not self._playbook_path:
             self._playbook_path = os.path.join(sys.prefix,
                                                'share/elasticluster/providers/ansible-playbooks', 'site.yml')
-
-        if not self._storage_path:
-            (fd, self._inventory_path) = tempfile.mkstemp()
         else:
-            self._inventory_path = None
-            self._inventory_fd = None
+            self._playbook_path = os.path.expanduser(self._playbook_path)
+            self._playbook_path = os.path.expandvars(self._playbook_path)
+
+        if self._storage_path:
+            self._storage_path = os.path.expanduser(self._storage_path)
+            self._storage_path = os.path.expandvars(self._storage_path)
+            self._storage_path_tmp = False
+        else:
+            self._storage_path = tempfile.mkdtemp()
+            self._storage_path_tmp = True
 
         if ansible_module_dir:
             for mdir in ansible_module_dir.split(','):
@@ -248,45 +256,49 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         if inventory:
             # create a temporary file to pass to ansible, since the
             # api is not stable yet...
-            if self._inventory_path:
-                elasticluster.log.warning("Not using default storage directory"
-                                          " for the inventory file.")
-                elasticluster.log.warning("Writing invenetory file to "
-                                          "`%s`", self._inventory_path)
-            else:
-                self._inventory_path = self._storage_path
-                self._inventory_path = os.path.join(self._inventory_path,
-                                                    '%s.ansible-inventory' %
-                                                    cluster.name)
+            if self._storage_path_tmp:
+                if not self._storage_path:
+                    self._storage_path = tempfile.mkdtemp()
+                elasticluster.log.warning("Writing inventory file to tmp dir "
+                                          "`%s`", self._storage_path)
+            fname = '%s.%s' % (AnsibleSetupProvider.inventory_file_ending,
+                               cluster.name)
+            inventory_path = os.path.join(self._storage_path, fname)
 
-            self._inventory_fd = open(self._inventory_path, 'w+')
+            inventory_fd = open(inventory_path, 'w+')
             for section, hosts in inventory.items():
-                self._inventory_fd.write("\n[" + section + "]\n")
+                inventory_fd.write("\n[" + section + "]\n")
                 if hosts:
                     for host in hosts:
                         hostline = "%s ansible_ssh_host=%s %s\n" \
                                    % host
-                        self._inventory_fd.write(hostline)
+                        inventory_fd.write(hostline)
 
-            self._inventory_fd.close()
+            inventory_fd.close()
 
-            return self._inventory_path
+            return inventory_path
         else:
             elasticluster.log.info("No inventory file was created.")
             return None
 
-    def cleanup(self):
+    def cleanup(self, cluster):
         """Deletes the inventory file used last recently used.
+
+        :param cluster: cluster to clear up inventory file for
+        :type cluster: :py:class:`elasticluster.cluster.Cluster`
         """
-        # TODO: currently the latest inventory file is delete, but since
-        #       multiple clusters can be setup after each other, this is not
-        #       safe. This method should consider the cluster name to decide
-        #       which inventory file to delete.
-        if self._inventory_path:
-            if os.path.exists(self._inventory_path):
+        if self._storage_path and os.path.exists(self._storage_path):
+            fname = '%s.%s' % (AnsibleSetupProvider.inventory_file_ending,
+                               cluster.name)
+            inventory_path = os.path.join(self._storage_path, fname)
+
+            if os.path.exists(inventory_path):
                 try:
-                    os.unlink(self._inventory_path)
+                    os.unlink(inventory_path)
+                    if self._storage_path_tmp:
+                        if len(os.listdir(self._storage_path)) == 0:
+                            shutil.rmtree(self._storage_path)
                 except OSError, ex:
                     log.warning(
                         "AnsibileProvider: Ignoring error while deleting "
-                        "inventory file %s: %s", self._inventory_path, ex)
+                        "inventory file %s: %s", inventory_path, ex)

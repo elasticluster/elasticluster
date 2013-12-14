@@ -86,6 +86,8 @@ class Configurator(object):
         self.cluster_conf = cluster_conf
 
         if storage_path:
+            storage_path = os.path.expanduser(storage_path)
+            storage_path = os.path.expandvars(storage_path)
             self.general_conf['storage'] = storage_path
         else:
             self.general_conf['storage'] = Configurator.default_storage_dir

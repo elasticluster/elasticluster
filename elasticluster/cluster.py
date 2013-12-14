@@ -428,7 +428,7 @@ class Cluster(object):
                 self.nodes[node.kind].remove(node)
         if not self.get_all_nodes():
             log.debug("Removing cluster %s.", self.name)
-            self._setup_provider.cleanup()
+            self._setup_provider.cleanup(self)
             self.repository.delete(self)
         elif not force:
             log.warning("Not all instances have been terminated. "
@@ -437,7 +437,7 @@ class Cluster(object):
         else:
             log.warning("Not all instances have been terminated. However, "
                         "as requested, the cluster has been force-removed.")
-            self._setup_provider.cleanup()
+            self._setup_provider.cleanup(self)
             self.repository.delete(self)
 
     def get_frontend_node(self):

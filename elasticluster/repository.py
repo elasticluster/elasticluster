@@ -83,6 +83,8 @@ class ClusterRepository(AbstractClusterRepository):
     file_ending = 'pickle'
 
     def __init__(self, storage_path):
+        storage_path = os.path.expanduser(storage_path)
+        storage_path = os.path.expandvars(storage_path)
         self.storage_path = storage_path
 
     def get_all(self):
