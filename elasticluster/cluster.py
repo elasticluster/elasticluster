@@ -78,10 +78,9 @@ class Cluster(object):
    """
     startup_timeout = 60 * 10  #: timeout in seconds to start all nodes
 
-    def __init__(self, template, name, cloud_provider, setup_provider,
+    def __init__(self, name, cloud_provider, setup_provider,
                  repository, user_key_name, user_key_public,
                  user_key_private, **extra):
-        self.template = template
         self.name = name
         self._cloud_provider = cloud_provider
         self._setup_provider = setup_provider

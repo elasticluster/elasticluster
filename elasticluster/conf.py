@@ -150,8 +150,7 @@ class Configurator(object):
         extra.pop('cloud')
         extra.pop('setup_provider')
 
-        cluster = Cluster(template,
-                          name,
+        cluster = Cluster(name,
                           self.create_cloud_provider(template),
                           self.create_setup_provider(template, name=name),
                           self.create_repository(),

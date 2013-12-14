@@ -168,7 +168,6 @@ class TestConfigurator(unittest.TestCase):
         configurator = Configurator(self.config)
         cluster = configurator.create_cluster("mycluster")
 
-        self.assertEqual(cluster.template, "mycluster")
         self.assertEqual(cluster.name, "mycluster")
 
         self.assertTrue(type(cluster._cloud_provider) is BotoCloudProvider)

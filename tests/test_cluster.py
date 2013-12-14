@@ -56,7 +56,7 @@ class TestCluster(unittest.TestCase):
         conf_login = configurator.cluster_conf['mycluster']['login']
         repository = ClusterRepository(self.storage_path)
 
-        cluster = Cluster("mycluster", "mycluster", cloud_provider,
+        cluster = Cluster("mycluster", cloud_provider,
                           setup, repository, conf_login['user_key_name'],
                           conf_login['user_key_public'],
                           conf_login['user_key_private'],

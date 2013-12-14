@@ -86,9 +86,8 @@ def cluster_summary(cluster):
                   "%s", str(ex))
     msg = """
 Cluster name:     %s
-Cluster template: %s
 Frontend node: %s
-""" % (cluster.name, cluster.template, frontend)
+""" % (cluster.name, frontend)
 
     for cls in cluster.nodes:
         msg += "- %s nodes: %d\n" % (cls, len(cluster.nodes[cls]))
@@ -267,6 +266,8 @@ class ResizeCluster(AbstractCommand):
         parser.add_argument('-r', '--remove', metavar='N1:GROUP1[,N2:GROUP2]',
                             help="Remove N1 nodes of group GROUP1, "
                                  "N2 of group GROUP2 etc...")
+        parser.add_argument('-t', '--template', help='name of the template '
+                                                     'of this cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
         parser.add_argument('--no-setup', action="store_true", default=False,
@@ -305,6 +306,7 @@ class ResizeCluster(AbstractCommand):
 
         # Get current cluster configuration
         cluster_name = self.params.cluster
+        template = self.params.template
 
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -316,17 +318,28 @@ class ResizeCluster(AbstractCommand):
         for grp in self.params.nodes_to_add:
             print("Adding %d %s node(s) to the cluster"
                   "" % (self.params.nodes_to_add[grp], grp))
-            conf = configurator.cluster_conf[cluster.template]
-            conf_kind = conf['nodes'][grp]
+
+            # Currently we can't save which template was used to setup a
+            # cluster, therefore we imply the configuration of the new nodes
+            # to match already existent nodes in this group. If no node was
+            # added to this group yet, it will abort and ask for the
+            # `--template` argument.
+            # TODO: find a better solution for this problem, it makes things
+            #       complicated for the user
+            if not grp in cluster.nodes and not cluster.nodes[grp]:
+                print "Elasticluster can not infer which template to use for " \
+                      "the new node(s). Please provide the template with " \
+                      "the `-t` or `--template` option"
+                return
+
+            sample_node = cluster.nodes[grp][0]
             for i in range(self.params.nodes_to_add[grp]):
-                image_user = conf['login']['image_user']
-                userdata = conf_kind.get('image_userdata', '')
                 cluster.add_node(grp,
-                                 conf_kind['image_id'],
-                                 image_user,
-                                 conf_kind['flavor'],
-                                 conf_kind['security_group'],
-                                 image_userdata=userdata)
+                                 sample_node.image,
+                                 sample_node.image_user,
+                                 sample_node.flavor,
+                                 sample_node.security_group,
+                                 image_userdata=sample_node.image_userdata)
 
         for grp in self.params.nodes_to_remove:
             n_to_rm = self.params.nodes_to_remove[grp]
@@ -339,7 +352,7 @@ class ResizeCluster(AbstractCommand):
             if not self.params.yes:
                 # Ask for confirmation.
                 yesno = raw_input(
-                    "Do you want really want to remove them? [yN] ")
+                    "Do you really want to remove them? [yN] ")
                 if yesno.lower() not in ['yes', 'y']:
                     print("Aborting as per user request.")
                     sys.exit(0)
