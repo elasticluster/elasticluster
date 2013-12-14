@@ -340,3 +340,7 @@ class TestNode(unittest.TestCase):
         self.assertEqual(node.ip_private, ip_private)
         self.assertEqual(node.ip_public, ip_public)
         provider.get_ips.assert_called_once_with(instance_id)
+
+if __name__ == "__main__":
+    import nose
+    nose.runmodule()
