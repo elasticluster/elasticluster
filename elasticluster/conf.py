@@ -24,6 +24,7 @@ import sys
 
 # External modules
 from ConfigParser import RawConfigParser
+
 try:
     # Voluptuous version >= 0.8.1
     from voluptuous import message, MultipleInvalid, Invalid, Schema
@@ -151,7 +152,6 @@ class Configurator(object):
         extra.pop('cloud')
         extra.pop('setup_provider')
 
-
         cluster = Cluster(template,
                           name,
                           self.create_cloud_provider(template),
@@ -202,13 +202,33 @@ class Configurator(object):
                 "Invalid value `%s` for `setup_provider` in configuration "
                 "file." % provider_name)
 
-        provider = Configurator.setup_providers_map[provider_name]
+        storage_path = self.general_conf['storage']
+        if 'playbook_path' in conf:
+            playbook_path = conf['playbook_path']
+            del conf['playbook_path']
+        else:
+            playbook_path = None
+        groups = dict((k[:-7], v.split(',')) for k, v
+                      in conf.items() if k.endswith('_groups'))
+        environment = dict()
+        for nodetype, grps in groups.iteritems():
+            if not isinstance(grps, list):
+                groups[nodetype] = [grps]
 
-        return provider(private_key_file=conf_login['user_key_private'],
-                        remote_user=conf_login['image_user'],
+            # Environment variables parsing
+            environment[nodetype] = dict()
+            for key, value in conf.iteritems():
+                prefix = "%s_var_" % nodetype
+                if key.startswith(prefix):
+                    var = key.replace(prefix, '')
+                    environment[nodetype][var] = value
+
+        provider = Configurator.setup_providers_map[provider_name]
+        return provider(groups, playbook_path=playbook_path,
+                        environment_vars=environment,
+                        storage_path=storage_path,
                         sudo_user=conf_login['image_user_sudo'],
-                        sudo=conf_login['image_sudo'],
-                        **conf)
+                        sudo=conf_login['image_sudo'], **conf)
 
     def create_repository(self):
         storage_path = self.general_conf['storage']
@@ -255,11 +275,7 @@ class ConfigValidator(object):
                                             str(ansible_pb_dir))
                     self.config[cluster]['setup']['playbook_path'] = pbpath
 
-            elif 'setup' in props:
-                # set default playbook directory if none specified
-                setup_conf = self.config[cluster]['setup']
-                setup_conf['playbook_path'] = ansible_pb_dir + os.sep + \
-                                              "site.yml"
+
 
     def _post_validate(self):
         """
@@ -269,8 +285,9 @@ class ConfigValidator(object):
         # expand all paths
         for cluster, values in self.config.iteritems():
             conf = self.config[cluster]
-            pbpath = os.path.expanduser(values['setup']['playbook_path'])
-            conf['setup']['playbook_path'] = pbpath
+            if 'playbook_path' in values['setup']:
+                pbpath = os.path.expanduser(values['setup']['playbook_path'])
+                conf['setup']['playbook_path'] = pbpath
 
             privkey = os.path.expanduser(values['login']['user_key_private'])
             conf['login']['user_key_private'] = privkey
@@ -298,18 +315,18 @@ class ConfigValidator(object):
         schema = {"cluster": {"cloud": All(str, Length(min=1)),
                               "setup_provider": All(str, Length(min=1)),
                               "login": All(str, Length(min=1)),
-                              },
+        },
                   "setup": {"provider": All(str, Length(min=1)),
-                            "playbook_path": check_file(),
-                            },
+                            Optional("playbook_path"): check_file(),
+                  },
                   "login": {"image_user": All(str, Length(min=1)),
                             "image_user_sudo": All(str, Length(min=1)),
                             "image_sudo": Boolean(str),
                             "user_key_name": All(str, Length(min=1)),
                             "user_key_private": check_file(),
                             "user_key_public": check_file(),
-                            }
                   }
+        }
 
         cloud_schema_ec2 = {"provider": 'ec2_boto',
                             "ec2_url": Url(str),
@@ -403,22 +420,22 @@ class ConfigReader(object):
         self.schemas = {
             "cloud": Schema(
                 {"provider": Any('ec2_boto', 'google'),
-                "ec2_url": Url(str),
-                "ec2_access_key": All(str, Length(min=1)),
-                "ec2_secret_key": All(str, Length(min=1)),
-                "ec2_region": All(str, Length(min=1)),
-                "gce_project_id": All(str, Length(min=1)),
-                "gce_client_id": All(str, Length(min=1)),
-                "gce_client_secret": All(str, Length(min=1)),
+                 "ec2_url": Url(str),
+                 "ec2_access_key": All(str, Length(min=1)),
+                 "ec2_secret_key": All(str, Length(min=1)),
+                 "ec2_region": All(str, Length(min=1)),
+                 "gce_project_id": All(str, Length(min=1)),
+                 "gce_client_id": All(str, Length(min=1)),
+                 "gce_client_secret": All(str, Length(min=1)),
                 }, extra=True),
             "cluster": Schema(
                 {"cloud": All(str, Length(min=1)),
                  "setup_provider": All(str, Length(min=1)),
                  "login": All(str, Length(min=1)),
-                 }, required=True, extra=True),
+                }, required=True, extra=True),
             "setup": Schema(
                 {"provider": All(str, Length(min=1)),
-                 }, required=True, extra=True),
+                }, required=True, extra=True),
             "login": Schema(
                 {"image_user": All(str, Length(min=1)),
                  "image_user_sudo": All(str, Length(min=1)),
@@ -426,8 +443,8 @@ class ConfigReader(object):
                  "user_key_name": All(str, Length(min=1)),
                  "user_key_private": check_file(),
                  "user_key_public": check_file(),
-                 }, required=True)
-            }
+                }, required=True)
+        }
 
     def read_config(self):
         """
@@ -474,7 +491,9 @@ class ConfigReader(object):
                 values['setup'] = dict(self.conf[setup_name])
                 self.schemas['setup'](values['setup'])
             except KeyError, ex:
-                errors.add("cluster `%s` setup section `%s` does not exists" % (cluster, setup_name))
+                errors.add(
+                    "cluster `%s` setup section `%s` does not exists" % (
+                        cluster, setup_name))
             except MultipleInvalid, ex:
                 for error in ex.errors:
                     errors.add(error)
@@ -483,7 +502,9 @@ class ConfigReader(object):
                 values['login'] = dict(self.conf[login_name])
                 self.schemas['login'](values['login'])
             except KeyError, ex:
-                errors.add("cluster `%s` login section `%s` does not exists" % (cluster, login_name))
+                errors.add(
+                    "cluster `%s` login section `%s` does not exists" % (
+                        cluster, login_name))
             except MultipleInvalid, ex:
                 for error in ex.errors:
                     errors.add(error)
@@ -492,7 +513,9 @@ class ConfigReader(object):
                 values['cloud'] = dict(self.conf[cloud_name])
                 self.schemas['cloud'](values['cloud'])
             except KeyError, ex:
-                errors.add("cluster `%s` cloud section `%s` does not exists" % (cluster, cloud_name))
+                errors.add(
+                    "cluster `%s` cloud section `%s` does not exists" % (
+                        cluster, cloud_name))
             except MultipleInvalid, ex:
                 for error in ex.errors:
                     errors.add(Invalid("section %s: %s" % (cloud_name, error)))
@@ -519,7 +542,8 @@ class ConfigReader(object):
 
                 if errors.errors:
                     for error in errors.errors:
-                        log.warning("Ignoring Cluster `%s`: %s" % (name, error))
+                        log.warning(
+                            "Ignoring Cluster `%s`: %s" % (name, error))
                     log.warning("Ignoring cluster `%s`." % name)
                 else:
                     conf_values[name] = values

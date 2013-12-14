@@ -20,6 +20,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 import logging
 import os
 import tempfile
+import sys
 
 # external imports
 import ansible.callbacks
@@ -77,62 +78,66 @@ class AnsibleSetupProvider(AbstractSetupProvider):
     """
     """
 
-    def __init__(self, private_key_file, remote_user,
-                 sudo_user, sudo, playbook_path, **extra_conf):
-        self._private_key_file = os.path.expanduser(
-            os.path.expandvars(private_key_file))
-        self._remote_user = remote_user
+    def __init__(self, groups, playbook_path=None, environment_vars=dict(),
+                 storage_path=None, sudo=True, sudo_user='root',
+                 ansible_module_dir=None, **extra_conf):
+        """
+
+        :param dict groups: dictionary of group names with corresponding
+                            ansible groups to install.
+                            e.g [group] = [ansible_group1, ansible_group2]
+                            The group defined here can be references in each
+                            node. Therefore groups can make it easier to
+                            define multiple groups for one node.
+        :param str playbook_path: path to playbook; if empty this will use
+                                  the shared playbook of elasticluster
+        :param dict environment_vars: dictonary to define variables per node
+                                      type, e.g. [group][var] = value
+        :param str storage_path: path to store the inventory file. By default
+                                 the inventory file is saved temporarily and
+                                 deleted after setup.
+        """
+        self.groups = groups
+        self._playbook_path = playbook_path
+        self.environment = environment_vars
+        self._storage_path = storage_path
         self._sudo_user = sudo_user
         self._sudo = sudo
-        self._playbook_path = playbook_path
         self.extra_conf = extra_conf
-        self.groups = dict((k[:-7], v.split(',')) for k, v in extra_conf.items() if k.endswith('_groups'))
-        self.environment = dict()
-        for nodetype, grps in self.groups.iteritems():
-            if not isinstance(grps, list):
-                self.groups[nodetype] = [grps]
 
-            # Environment variables parsing
-            self.environment[nodetype] = dict()
-            for key, value in extra_conf.iteritems():
-                prefix = "%s_var_" % nodetype
-                if key.startswith(prefix):
-                    var = key.replace(prefix,'')
-                    self.environment[nodetype][var] = value
+        if not self._playbook_path:
+            self._playbook_path = os.path.join(sys.prefix,
+                                               'share/elasticluster/providers/ansible-playbooks', 'site.yml')
 
-        self.inventory_path = None
-        if ('general_conf' not in extra_conf
-            or 'storage' not in extra_conf['general_conf']
-            or 'cluster_name' not in extra_conf):
-            log.error("Unable to store inventory file in elasticluster storage directory")
+        if not self._storage_path:
+            (fd, self._inventory_path) = tempfile.mkstemp()
         else:
-            self.inventory_path = os.path.join(
-                extra_conf['general_conf']['storage'],
-                "%s.ansible-inventory" % extra_conf['cluster_name'])
+            self._inventory_path = None
+            self._inventory_fd = None
 
-        module_dir = extra_conf.get('ansible_module_dir', None)
-        if module_dir:
-            for mdir in module_dir.split(','):
+        if ansible_module_dir:
+            for mdir in ansible_module_dir.split(','):
                 ansible.utils.module_finder.add_directory(mdir.strip())
 
-        ansible_constants.DEFAULT_PRIVATE_KEY_FILE = self._private_key_file
-        ansible_constants.DEFAULT_REMOTE_USER = self._remote_user
-        ansible_constants.DEFAULT_SUDO_USER = self._sudo_user
-        ansible_constants.HOST_KEY_CHECKING=False
-
     def setup_cluster(self, cluster):
-        self.inventory_path = self._build_inventory(cluster)
+        inventory_path = self._build_inventory(cluster)
+        private_key_file = cluster.user_key_private
+
+        # update ansible constants
+        ansible_constants.HOST_KEY_CHECKING = False
+        ansible_constants.DEFAULT_PRIVATE_KEY_FILE = private_key_file
+        ansible_constants.DEFAULT_SUDO_USER = self._sudo_user
 
         # check paths
-        if not self.inventory_path:
+        if not inventory_path:
             # No inventory file has been created, maybe an
             # invalid calss has been specified in config file? Or none?
             # assume it is fine.
             elasticluster.log.info("No setup required for this cluster.")
             return True
-        if not os.path.exists(self.inventory_path):
+        if not os.path.exists(inventory_path):
             raise AnsibleError(
-                "inventory file `%s` could not be found" % self.inventory_path)
+                "inventory file `%s` could not be found" % inventory_path)
         # ANTONIO: These should probably be configuration error
         # instead, and should probably checked inside __init__().
         if not os.path.exists(self._playbook_path):
@@ -154,15 +159,14 @@ class AnsibleSetupProvider(AbstractSetupProvider):
 
         pb = PlayBook(
             playbook=self._playbook_path,
-            host_list=self.inventory_path,
-            remote_user=self._remote_user,
+            host_list=inventory_path,
             callbacks=playbook_cb,
             runner_callbacks=runner_cb,
             forks=10,
             stats=stats,
             sudo=self._sudo,
             sudo_user=self._sudo_user,
-            private_key_file=self._private_key_file,
+            private_key_file=private_key_file,
         )
 
         try:
@@ -205,38 +209,41 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             if node.type in self.groups:
                 extra_vars = ['ansible_ssh_user=%s' % node.image_user]
                 if node.type in self.environment:
-                    extra_vars.extend('%s=%s' % (k, v) for k, v in \
+                    extra_vars.extend('%s=%s' % (k, v) for k, v in
                                       self.environment[node.type].items())
                 for group in self.groups[node.type]:
                     if group not in inventory:
                         inventory[group] = []
                     public_ip = node.ip_public if node.ip_public else node.ip_private
-                    inventory[group].append((node.name, public_ip, str.join(' ', extra_vars)))
+                    inventory[group].append(
+                        (node.name, public_ip, str.join(' ', extra_vars)))
 
         if inventory:
             # create a temporary file to pass to ansible, since the
             # api is not stable yet...
-            fname = self.inventory_path
-            if not self.inventory_path:
-                (fd, fname) = tempfile.mkstemp()
-                fd = os.fdopen(fd, 'w+')
-                elasticluster.log.warning(
-                    "Not using default storage directory for the inventory file.")
-                elasticluster.log.warning(
-                    "Writing invenetory file to `%s`", fname)
+            if self._inventory_path:
+                elasticluster.log.warning("Not using default storage directory"
+                                          " for the inventory file.")
+                elasticluster.log.warning("Writing invenetory file to "
+                                          "`%s`", self._inventory_path)
             else:
-                fd = open(self.inventory_path, 'w+')
+                self._inventory_path = self._storage_path
+                self._inventory_path = os.path.join(self._inventory_path,
+                                                    '%s.ansible-inventory' %
+                                                    cluster.name)
+
+            self._inventory_fd = open(self._inventory_path, 'w+')
             for section, hosts in inventory.items():
-                fd.write("\n["+section+"]\n")
+                self._inventory_fd.write("\n[" + section + "]\n")
                 if hosts:
                     for host in hosts:
                         hostline = "%s ansible_ssh_host=%s %s\n" \
-                            % host
-                        fd.write(hostline)
+                                   % host
+                        self._inventory_fd.write(hostline)
 
-            fd.close()
+            self._inventory_fd.close()
 
-            return self.inventory_path
+            return self._inventory_path
         else:
             elasticluster.log.info("No inventory file was created.")
             return None
@@ -245,11 +252,11 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         """
         Delete inventory file.
         """
-        if self.inventory_path:
-            if os.path.exists(self.inventory_path):
+        if self._inventory_path:
+            if os.path.exists(self._inventory_path):
                 try:
-                    os.unlink(self.inventory_path)
+                    os.unlink(self._inventory_path)
                 except OSError, ex:
                     log.warning(
                         "AnsibileProvider: Ignoring error while deleting "
-                        "inventory file %s: %s", self.inventory_path, ex)
+                        "inventory file %s: %s", self._inventory_path, ex)

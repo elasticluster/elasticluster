@@ -58,7 +58,7 @@ class Cluster(object):
         self._setup_provider = setup_provider
         self._user_key_name = user_key_name
         self._user_key_public = user_key_public
-        self._user_key_private = user_key_private
+        self.user_key_private = user_key_private
         self.repository = repository
         self.ssh_to = extra.get('ssh_to')
         self.extra = extra.copy()
@@ -77,7 +77,7 @@ class Cluster(object):
             name = "%s%03d" % (node_type, len(self.nodes[node_type]) + 1)
 
         node = Node(name, node_type, self._cloud_provider,
-                    self._user_key_public, self._user_key_private,
+                    self._user_key_public, self.user_key_private,
                     self._user_key_name, image_user, security_group,
                     image_id, flavor, image_userdata=image_userdata)
 

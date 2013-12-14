@@ -18,11 +18,12 @@
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 import copy
+import ConfigParser
 import os
 import shutil
 import tempfile
 import unittest
-import ConfigParser
+import sys
 
 import nose.tools
 from voluptuous import Invalid, MultipleInvalid
@@ -198,11 +199,17 @@ class TestConfigurator(unittest.TestCase):
 
         self.assertTrue(type(provider) is AnsibleSetupProvider)
 
-        prv_key = self.config['mycluster']['login']['user_key_private']
-        self.assertEqual(provider._private_key_file, prv_key)
+        conf = self.config['mycluster']['setup']
+        groups = dict((k[:-7], v.split(',')) for k, v
+                      in conf.items() if k.endswith('_groups'))
+        self.assertEqual(groups, provider.groups)
 
-        usr = self.config['mycluster']['login']['image_user']
-        self.assertEqual(provider._remote_user, usr)
+        playbook_path = os.path.join(sys.prefix,
+                                     'share/elasticluster/providers/ansible-playbooks', 'site.yml')
+        self.assertEqual(playbook_path, provider._playbook_path)
+
+        storage_path = configurator.general_conf['storage']
+        self.assertEqual(provider._storage_path, storage_path)
 
         usr_sudo = self.config['mycluster']['login']['image_user_sudo']
         self.assertEqual(provider._sudo_user, usr_sudo)
@@ -210,8 +217,7 @@ class TestConfigurator(unittest.TestCase):
         sudo = self.config['mycluster']['login']['image_sudo']
         self.assertEqual(provider._sudo, sudo)
 
-        pb = self.config['mycluster']['setup']['playbook_path']
-        self.assertEqual(provider._playbook_path, pb)
+
 
 
 class TestConfigValidator(unittest.TestCase):
