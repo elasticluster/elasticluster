@@ -62,14 +62,17 @@ class Cluster(object):
     :param setup_provider: provider to setup cluster
     :type setup_provider: :py:class:`elasticluster.providers.AbstractSetupProvider`
 
-    :param repository: persistent storage
-    :type repository: :py:class:`elasticluster.repository.AbstractClusterRepository`
-
     :param str user_key_name: name of the ssh key to connect to cloud
 
     :param str user_key_public: path to ssh public key file
 
     :param str user_key_private: path to ssh private key file
+
+    :param repository: by default the
+                       :py:class:`elasticluster.repository.MemRepository` is
+                       used to store the cluster in memory. Provide another
+                       repository to store the cluster in a persistent state.
+    :type repository: :py:class:`elasticluster.repository.AbstractClusterRepository`
 
     :param extra: tbd.
 
