@@ -441,10 +441,13 @@ class ListTemplates(AbstractCommand):
             self.params.config, storage_path=self.params.storage)
         config = configurator.cluster_conf
 
-        print("""%d cluster templates found.""" % len(config))
+        print("""%d cluster templates found in configuration file.""" % len(config))
         templates = config.keys()
         for pattern in self.params.clusters:
             templates = [t for t in templates if fnmatch(t, pattern)]
+
+        if self.params.clusters:
+            print("""%d cluter templates found matching pattern(s) '%s'""" % (len(templates), str.join(", ", self.params.clusters)))
 
         for template in templates:
             try:
