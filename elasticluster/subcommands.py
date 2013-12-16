@@ -652,3 +652,36 @@ class SftpFrontend(AbstractCommand):
         sftp_cmdline.extend(self.params.sftp_args)
         sftp_cmdline.append('%s@%s' % (username, host))
         os.execlp("sftp", *sftp_cmdline)
+
+
+class GC3Config(AbstractCommand):
+    """
+    Print a GC3Pie configuration snippet for a specific cluster
+    """
+
+    def setup(self, subparsers):
+        parser = subparsers.add_parser(
+            "gc3-config", help="Print a GC3Pie configuration snippet.",
+            description=self.__doc__)
+        parser.set_defaults(func=self)
+        parser.add_argument('cluster', help='name of the cluster')
+        parser.add_argument('-v', '--verbose', action='count', default=0,
+                            help="Increase verbosity.")
+
+    def execute(self):
+        """
+        Load the cluster and build a GC3Pie configuration snippet.
+        """
+        configurator = Configurator.fromConfig(
+            self.params.config, storage_path=self.params.storage)
+        cluster_name = self.params.cluster
+        try:
+            cluster = configurator.load_cluster(cluster_name)
+        except (ClusterNotFound, ConfigurationError), ex:
+            log.error("Listing nodes from cluster %s: %s\n" %
+                      (cluster_name, ex))
+            return
+
+        from elasticluster.gc3_config import create_gc3_config_snippet
+
+        print(create_gc3_config_snippet(cluster))

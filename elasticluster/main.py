@@ -43,6 +43,7 @@ from elasticluster.subcommands import ListTemplates
 from elasticluster.subcommands import ResizeCluster
 from elasticluster.subcommands import SshFrontend
 from elasticluster.subcommands import SftpFrontend
+from elasticluster.subcommands import GC3Config
 from elasticluster.conf import Configurator
 from elasticluster.exceptions import ConfigurationError
 
@@ -67,6 +68,7 @@ class ElastiCluster(cli.app.CommandLineApp):
                     ResizeCluster(self.params),
                     SshFrontend(self.params),
                     SftpFrontend(self.params),
+                    GC3Config(self.params),
                     ]
 
         # global parameters
