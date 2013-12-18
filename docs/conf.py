@@ -64,6 +64,7 @@ MOCK_MODULES = [
     'oauth2client.file',
     'oauth2client.tools',
     'paramiko',
+    'paramiko.ssh_exception',
     'voluptuous',
     'voluptuous.voluptuous',
     ]
