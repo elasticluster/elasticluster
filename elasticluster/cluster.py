@@ -20,6 +20,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.mes
 # System imports
 import operator
 import os
+import re
 import signal
 import socket
 import sys
@@ -110,9 +111,12 @@ class Cluster(object):
         parameters. The node does not get started nor setup automatically,
         this has to be done manually afterwards.
 
-        :param str kind: kind of node to start. this refers to the groups
-                         defined in the ansible setup provider
+        :param str kind: kind of node to start. this refers to the
+                         groups defined in the ansible setup provider
                          :py:class:`elasticluster.providers.AnsibleSetupProvider`
+                         Please note that this must match the
+                         `[a-zA-Z0-9-]` regexp, as it is used to build
+                         a valid hostname
 
         :param str image_id: image id to use for the cloud instance (e.g.
                              ami on amazon)
@@ -128,8 +132,18 @@ class Cluster(object):
 
         :param str name: name of this node, automatically generated if None
 
+        :raises: ValueError: `kind` argument is an invalid string.
+
         :return: created :py:class:`Node`
+
         """
+        if not re.match("^[a-zA-Z0-9-]+$", kind):
+            raise ValueError(
+                "Invalid name `%s`. The `kind` argument may only contains "
+                "characters in [a-z0-9-] range, as it is going to be used as "
+                "hostname" % kind
+            )
+
         if kind not in self.nodes:
             self.nodes[kind] = []
 
