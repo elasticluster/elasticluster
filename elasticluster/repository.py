@@ -80,17 +80,37 @@ class MemRepository(AbstractClusterRepository):
         self.clusters = {}
 
     def save_or_update(self, cluster):
+        """Save or update the cluster in a memory.
+
+        :param cluster: cluster object to store
+        :type cluster: :py:class:`elasticluster.cluster.Cluster`
+        """
         self.clusters[cluster.name] = cluster
 
     def get(self, name):
+        """Retrieves the cluster by the given name.
+
+        :param str name: name of the cluster (identifier)
+        :return: instance of :py:class:`elasticluster.cluster.Cluster` that
+                 matches the given name
+        """
         if name not in self.clusters:
             raise ClusterNotFound("Cluster %s not found." % name)
         return self.clusters.get(name)
 
     def get_all(self):
+        """Retrieves all stored clusters from the memory.
+
+        :return: list of :py:class:`elasticluster.cluster.Cluster`
+        """
         return self.clusters.values()
 
     def delete(self, cluster):
+        """Deletes the cluster from memory.
+
+        :param cluster: cluster to delete
+        :type cluster: :py:class:`elasticluster.cluster.Cluster`
+        """
         if cluster.name not in self.clusters:
             raise ClusterNotFound(
                 "Unable to delete non-existent cluster %s" % cluster.name)
