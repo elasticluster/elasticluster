@@ -252,6 +252,21 @@ repository again and work with it as expected:
     clusters = repository.get_all()
 
 
+Logging
+~~~~~~~
+Elasticluster uses the python `logging` module to log events. A client can
+overwrite the settings as illustrated below:
+::
+    import logging
+
+    import elasticluster
+
+    log = elasticluster.log
+    level = logging.getLevelName('INFO')
+    log.setLevel(level)
+
+The current example only shows how to increase the log level,
+but any settings can be applied compliant with the logging module of python.
 
 .. automodule:: elasticluster
     :members:
