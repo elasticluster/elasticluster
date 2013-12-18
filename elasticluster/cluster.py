@@ -616,6 +616,12 @@ class Node(object):
         log.info("shutting down instance `%s`",
                  self.instance_id)
         self._cloud_provider.stop_instance(self.instance_id)
+        # When an instance is terminated, the EC2 cloud provider will
+        # basically return it as "running" state. Setting the
+        # `instance_id` attribute to None will force `is_alive()`
+        # method not to check with the cloud provider, and forever
+        # forgetting about the instance id.
+        self.instance_id = None
 
     def is_alive(self):
         """Checks if the current node is up and running in the cloud. It
