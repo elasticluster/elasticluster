@@ -184,7 +184,7 @@ class ClusterRepository(AbstractClusterRepository):
         """Save or update the cluster to persistent state.
 
         :param cluster: cluster to save or update
-        :type: :py:class:`elasticluster.cluster.Cluster`
+        :type cluster: :py:class:`elasticluster.cluster.Cluster`
         """
         if not os.path.exists(self.storage_path):
             os.makedirs(self.storage_path)
