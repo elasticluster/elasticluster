@@ -19,6 +19,52 @@ import sys, os
 #sys.path.insert(0, os.path.abspath('.'))
 sys.path.append(os.path.abspath('..'))
 
+class Mock(object):
+    def __init__(self, *args, **kwargs):
+        pass
+    def __call__(self, *args, **kwargs):
+        return Mock()
+    @classmethod
+    def __getattr__(cls, name):
+        if name in ('__file__', '__path__'):
+            return '/dev/null'
+        elif Mock.__isclassname(name):
+            return type(name, (), {})
+        else:
+            return Mock()
+    @staticmethod
+    def __isclassname(name):
+        for char in name:
+            # find first letter in the name
+            if not char.isalpha():
+                continue
+            # class names must begin with uppercase letter
+            if char == char.upper():
+                return True
+            else:
+                return False
+MOCK_MODULES = [
+    'ansible',
+    'ansible.callbacks',
+    'ansible.constants',
+    'ansible.errors',
+    'ansible.playbook',
+    'ansible.utils',
+    'apiclient',
+    'apiclient.discovery',
+    'apiclient.errors',
+    'cli',
+    'cli.app',
+    'oauth2client',
+    'oauth2client.client',
+    'oauth2client.file',
+    'oauth2client.tools',
+    'voluptuous',
+    'voluptuous.voluptuous',
+    ]
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = Mock()
+
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
