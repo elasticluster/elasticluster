@@ -52,23 +52,25 @@ class Configurator(object):
     The cluster configuration dictionary is structured in the following way:
     (see an example @
      https://github.com/gc3-uzh-ch/elasticluster/wiki/Configuration-Module)
-    { "<cluster_template>" : {
-        "setup" : { properties of the setup section },
-        "cloud" : { properties of the cloud section },
-        "login" : { properties of the login section },
-        "cluster" : { properties of the cluster section },
-        "nodes": {  "<node_kind>" : { properties of the node},
-                    "<node_kind>" : { properties of the node},
-                },
-        },
-     "<cluster_template>" : {
-        (see above)
-        }
-     }
+    ::
 
-     :param dict cluster_conf: see description above
-     :param str storage_path: path to store data
-     :raises MultipleInvalid: configuration validation
+        { "<cluster_template>" : {
+            "setup" : { properties of the setup section },
+            "cloud" : { properties of the cloud section },
+            "login" : { properties of the login section },
+            "cluster" : { properties of the cluster section },
+            "nodes": {  "<node_kind>" : { properties of the node},
+                        "<node_kind>" : { properties of the node},
+                    },
+            },
+         "<cluster_template>" : {
+            (see above)
+            }
+         }
+
+   :param dict cluster_conf: see description above
+   :param str storage_path: path to store data
+   :raises MultipleInvalid: configuration validation
     """
 
     cloud_providers_map = {
