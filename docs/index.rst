@@ -85,7 +85,7 @@ properly add the new hosts to the cluster.
   configure
   usage
   playbooks
-
+  api/index
 
 --------------------
  Indices and tables 
