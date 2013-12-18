@@ -59,6 +59,7 @@ MOCK_MODULES = [
     'oauth2client.client',
     'oauth2client.file',
     'oauth2client.tools',
+    'paramiko',
     'voluptuous',
     'voluptuous.voluptuous',
     ]
