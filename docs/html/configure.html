@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -6,14 +8,14 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Configuration of elasticluster &mdash; elasticluster 1.0 documentation</title>
+    <title>Configuration &mdash; elasticluster 1.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
+        URL_ROOT:    '',
         VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -25,7 +27,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="elasticluster 1.0 documentation" href="index.html" />
     <link rel="next" title="Usage" href="usage.html" />
-    <link rel="prev" title="Installation of elasticluster" href="install.html" /> 
+    <link rel="prev" title="Installation" href="install.html" /> 
   </head>
   <body>
     <div class="related">
@@ -35,10 +37,13 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
           <a href="usage.html" title="Usage"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="install.html" title="Installation of elasticluster"
+          <a href="install.html" title="Installation"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">elasticluster 1.0 documentation</a> &raquo;</li> 
       </ul>
@@ -49,8 +54,8 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="configuration-of-elasticluster">
-<h1>Configuration of elasticluster<a class="headerlink" href="#configuration-of-elasticluster" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="configuration">
+<h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
 <p>All the information about how to access a cloud provider and how to
 setup a cluster is stored in a configuration file. The default
 configuration file is stored in your home directory:
@@ -60,8 +65,8 @@ from the command line with the <cite>-c</cite> option.</p>
 file is found it will copy a <a class="reference external" href="https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template&gt;">template configuration file</a> in
 <tt class="docutils literal"><span class="pre">~/.elasticluster/config</span></tt>. Such template is fully commented and self
 documented.</p>
-<div class="section" id="syntax-of-the-configuration-file">
-<h2>Syntax of the configuration file<a class="headerlink" href="#syntax-of-the-configuration-file" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="basic-syntax-of-the-configuration-file">
+<h2>Basic syntax of the configuration file<a class="headerlink" href="#basic-syntax-of-the-configuration-file" title="Permalink to this headline">¶</a></h2>
 <p>The file is parsed by ConfigParser module and has a syntax similar
 to Microsoft Windows INI files.</p>
 <p>It consists of <cite>sections</cite> led by a <tt class="docutils literal"><span class="pre">[sectiontype/name]</span></tt> header and
@@ -85,8 +90,9 @@ the other sections.</dd>
 </dl>
 <p>You must define at least one for each section types in order to have
 a valid configuration file.</p>
+</div>
 <div class="section" id="cloud-section">
-<h3>Cloud Section<a class="headerlink" href="#cloud-section" title="Permalink to this headline">¶</a></h3>
+<h2>Cloud Section<a class="headerlink" href="#cloud-section" title="Permalink to this headline">¶</a></h2>
 <p>A <tt class="docutils literal"><span class="pre">cloud</span></tt> section named <tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
 <div class="highlight-python"><pre>[cloud/&lt;name&gt;]</pre>
 </div>
@@ -96,12 +102,17 @@ specific cloud provider.</p>
 access to different cloud providers and want to deploy different
 clusters in different clouds. The mapping between cluster and cloud
 provider is done in the <cite>cluster</cite> section (see later).</p>
-<div class="section" id="valid-configuration-keys">
-<h4>Valid configuration keys<a class="headerlink" href="#valid-configuration-keys" title="Permalink to this headline">¶</a></h4>
+<p>Currently two cloud providers are available:
+- boto: supports OpenStack and Amazon EC2
+- google: supports Google Compute Engine
+Therefore the following configuration option needs to be set in the cloud
+section:</p>
 <p><tt class="docutils literal"><span class="pre">provider</span></tt></p>
 <blockquote>
 <div>the driver to use to connect to the cloud provider.
-So far, the only accepted value is <cite>boto</cite>.</div></blockquote>
+<cite>boto</cite> or <cite>google</cite></div></blockquote>
+<div class="section" id="valid-configuration-keys-for-boto">
+<h3>Valid configuration keys for <cite>boto</cite><a class="headerlink" href="#valid-configuration-keys-for-boto" title="Permalink to this headline">¶</a></h3>
 <p><tt class="docutils literal"><span class="pre">ec2_url</span></tt></p>
 <blockquote>
 <div><p>the url of the EC2 endpoint. For Amazon is probably
@@ -122,9 +133,26 @@ provider gave you to access its cloud resources.</div></blockquote>
 <p><tt class="docutils literal"><span class="pre">ec2_region</span></tt></p>
 <blockquote>
 <div>the availability zone you want to use.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">auto_ip_assignment</span></tt></p>
+<blockquote>
+<div>if the cloud provider assigns public ip automatically (True or False).
+The default value for this property is <cite>True</cite>. You don&#8217;t have to specify it
+in case the cloud provider assigns public ips automatically.</div></blockquote>
+</div>
+<div class="section" id="valid-configuration-keys-for-google">
+<h3>Valid configuration keys for <cite>google</cite><a class="headerlink" href="#valid-configuration-keys-for-google" title="Permalink to this headline">¶</a></h3>
+<p><tt class="docutils literal"><span class="pre">gce_client_id</span></tt></p>
+<blockquote>
+<div>The API client id generated in the Google API Console</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">gce_client_secret</span></tt></p>
+<blockquote>
+<div>The API client secret generated in the Google API Console</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">gce_project_id</span></tt></p>
+<blockquote>
+<div>The project id of your Google Compute Engine project</div></blockquote>
 </div>
 <div class="section" id="examples">
-<h4>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h4>
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
 <p>For instance, to connect to the <a class="reference external" href="http://hobbes.gc3.uzh.ch">Hobbes private cloud</a> of the <a class="reference external" href="http://www.uzh.ch">University of Zurich</a> you can
 use the following:</p>
 <div class="highlight-python"><pre>[cloud/hobbes]
@@ -132,7 +160,8 @@ provider=ec2_boto
 ec2_url=http://hobbes.gc3.uzh.ch:8773/services/Cloud
 ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
 ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
-ec2_region=nova</pre>
+ec2_region=nova
+auto_ip_assignment=True</pre>
 </div>
 <p>For Amazon instead (region us-east-1) you can use:</p>
 <div class="highlight-python"><pre>[cloud/amazon-us-east-1]
@@ -142,8 +171,15 @@ ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
 ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
 ec2_region=us-east-1</pre>
 </div>
+<p>For Google Compute Engine you can use:</p>
+<blockquote>
+<div>[cloud/google]
+provider=google
+gce_client_id=****REPLACE WITH YOUR CLIENT ID****
+gce_client_secret=****REPLACE WITH YOUR SECRET KEY****
+gce_project_id=****REPLACE WITH YOUR PROJECT ID****</div></blockquote>
 <div class="section" id="openstack-users">
-<h5>OpenStack users<a class="headerlink" href="#openstack-users" title="Permalink to this headline">¶</a></h5>
+<h4>OpenStack users<a class="headerlink" href="#openstack-users" title="Permalink to this headline">¶</a></h4>
 <p>From the horizon web interface you can download a file containing your
 EC2 credentials by logging in in your provider web interface and
 clicking on:</p>
@@ -161,10 +197,26 @@ configuration file:</p>
 <cite>ec2_access_key</cite> using the value of the variable EC2_ACCESS_KEY
 <cite>ec2_secret_key</cite> using the value of the variable EC2_SECRET_KEY</p>
 </div>
+<div class="section" id="google-compute-engine-users">
+<h4>Google Compute Engine users<a class="headerlink" href="#google-compute-engine-users" title="Permalink to this headline">¶</a></h4>
+<p>To generate a client_id and client_secret to access the Google Compute
+Engine visit the following page: <a class="reference external" href="https://code.google.com/apis/console/">https://code.google.com/apis/console/</a>
+1. Select the project defined as gce_project_id
+2. Navigate to <cite>API Access</cite>
+3. Click create another client id
+4. Select <cite>Installed Application</cite> -&gt; <cite>Other</cite>
+5. After clicking the <cite>Create</cite> button you&#8217;ll see your client_id and</p>
+<blockquote>
+<div>secret_key in the list of available client ids</div></blockquote>
+<dl class="docutils">
+<dt><strong>Please note</strong>: you have to set your google username in the login section</dt>
+<dd>below as image_user to be able to use Google Compute Engine</dd>
+</dl>
+</div>
 </div>
 </div>
 <div class="section" id="login-section">
-<h3>Login Section<a class="headerlink" href="#login-section" title="Permalink to this headline">¶</a></h3>
+<h2>Login Section<a class="headerlink" href="#login-section" title="Permalink to this headline">¶</a></h2>
 <p>A <tt class="docutils literal"><span class="pre">login</span></tt> section named <tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
 <div class="highlight-python"><pre>[login/&lt;name&gt;]</pre>
 </div>
@@ -174,10 +226,15 @@ started on the cloud, including the user and the SSH keys to use.</p>
 <cite>cluster</cite> section. Values defined here also can affect the <cite>setup</cite>
 section and the way the system is setup.</p>
 <div class="section" id="mandatory-configuration-keys">
-<h4>Mandatory configuration keys<a class="headerlink" href="#mandatory-configuration-keys" title="Permalink to this headline">¶</a></h4>
+<h3>Mandatory configuration keys<a class="headerlink" href="#mandatory-configuration-keys" title="Permalink to this headline">¶</a></h3>
 <p><tt class="docutils literal"><span class="pre">image_user</span></tt></p>
 <blockquote>
-<div>the remote user you must use to connect to the virtual machine</div></blockquote>
+<div><p>the remote user you must use to connect to the virtual machine.
+In case you&#8217;re using Google Compute Engine you have to set your username</p>
+<blockquote>
+<div>here. So if your gmail address is <a class="reference external" href="mailto:karl&#46;marx&#37;&#52;&#48;gmail&#46;com">karl<span>&#46;</span>marx<span>&#64;</span>gmail<span>&#46;</span>com</a>,
+your username is karl.marx</div></blockquote>
+</div></blockquote>
 <p><tt class="docutils literal"><span class="pre">image_sudo</span></tt></p>
 <blockquote>
 <div>Can be <cite>True</cite> or <cite>False</cite>. <cite>True</cite> means that on the remote machine
@@ -203,7 +260,7 @@ note that Amazon does not accept DSA keys but only RSA ones.</div></blockquote>
 details.</div></blockquote>
 </div>
 <div class="section" id="id1">
-<h4>Examples<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<h3>Examples<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>For a typical Ubuntu machine, both on Amazon and most OpenStack
 providers, these values should be fine:</p>
 <div class="highlight-python"><pre>[login/ubuntu]
@@ -227,7 +284,7 @@ user_key_public=~/.ssh/id_rsa.pub</pre>
 </div>
 </div>
 <div class="section" id="setup-section">
-<h3>Setup Section<a class="headerlink" href="#setup-section" title="Permalink to this headline">¶</a></h3>
+<h2>Setup Section<a class="headerlink" href="#setup-section" title="Permalink to this headline">¶</a></h2>
 <p>A <tt class="docutils literal"><span class="pre">setup</span></tt> section named <tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
 <div class="highlight-python"><pre>[setup/&lt;name&gt;]</pre>
 </div>
@@ -235,20 +292,15 @@ user_key_public=~/.ssh/id_rsa.pub</pre>
 the cluster is started, elasticluster will run a <tt class="docutils literal"><span class="pre">setup</span> <span class="pre">provider</span></tt> in
 order to configure it.</p>
 <div class="section" id="id2">
-<h4>Mandatory configuration keys<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<h3>Mandatory configuration keys<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <p><tt class="docutils literal"><span class="pre">provider</span></tt></p>
 <blockquote>
 <div>the type of setup provider. So far, only <cite>ansible</cite> is supported.</div></blockquote>
 </div>
 <div class="section" id="ansible-specific-mandatory-configuration-keys">
-<h4>Ansible-specific mandatory configuration keys<a class="headerlink" href="#ansible-specific-mandatory-configuration-keys" title="Permalink to this headline">¶</a></h4>
+<h3>Ansible-specific mandatory configuration keys<a class="headerlink" href="#ansible-specific-mandatory-configuration-keys" title="Permalink to this headline">¶</a></h3>
 <p>The following configuration keys are only valid if <cite>provider</cite> is
-<cite>ansible</cite>. They also are all <em>mandatory</em>.</p>
-<p><tt class="docutils literal"><span class="pre">playbook_path</span></tt></p>
-<blockquote>
-<div>Path to the playbook to use when configuring the system. The
-default value printed here points to the playbook distributed with
-elasticluster.</div></blockquote>
+<cite>ansible</cite>.</p>
 <p><tt class="docutils literal"><span class="pre">&lt;class&gt;_groups</span></tt></p>
 <blockquote>
 <div><p>Comma separated list of ansible groups the specific &lt;class&gt; will
@@ -280,16 +332,22 @@ combinations make sense. A common setup is, for instance:</p>
 frontend, and the compute nodes as clients for both slurm and
 ganglia frontend.</p>
 <p>A full list of the available groups is available at the
-<a class="reference internal" href="playbooks.html#playbooks"><em>Available playbooks for elasticluster</em></a> page.</p>
+<a class="reference internal" href="playbooks.html#playbooks"><em>Playbooks distributed with elasticluster</em></a> page.</p>
 </div></blockquote>
 <p><tt class="docutils literal"><span class="pre">&lt;class&gt;_var_&lt;varname&gt;</span></tt></p>
 <blockquote>
 <div>an entry of this type will define a variable called <tt class="docutils literal"><span class="pre">&lt;varname&gt;</span></tt>
 for the specific <tt class="docutils literal"><span class="pre">&lt;class&gt;</span></tt> and add it to the ansible inventory
 file.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">playbook_path</span></tt></p>
+<blockquote>
+<div>Path to the playbook to use when configuring the system. The
+default value printed here points to the playbook distributed with
+elasticluster. The default value points to the playbooks
+distributed with elasticluster.</div></blockquote>
 </div>
 <div class="section" id="id3">
-<h4>Examples<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+<h3>Examples<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <p>Some (working) examples:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">setup</span><span class="o">/</span><span class="n">ansible</span><span class="o">-</span><span class="n">slurm</span><span class="p">]</span>
 <span class="n">provider</span><span class="o">=</span><span class="n">ansible</span>
@@ -317,7 +375,7 @@ file.</div></blockquote>
 </div>
 </div>
 <div class="section" id="cluster-section">
-<h3>Cluster Section<a class="headerlink" href="#cluster-section" title="Permalink to this headline">¶</a></h3>
+<h2>Cluster Section<a class="headerlink" href="#cluster-section" title="Permalink to this headline">¶</a></h2>
 <p>A <tt class="docutils literal"><span class="pre">cluster</span></tt> section named <tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
 <div class="highlight-python"><pre>[cluster/&lt;name&gt;]</pre>
 </div>
@@ -326,7 +384,7 @@ has references to each one of the other sections and define the
 image to use, the default number of compute nodes and the security
 group.</p>
 <div class="section" id="id4">
-<h4>Mandatory configuration keys<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h4>
+<h3>Mandatory configuration keys<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <p><tt class="docutils literal"><span class="pre">cloud</span></tt></p>
 <blockquote>
 <div>the name of a valid <cite>cloud</cite> section. For instance <cite>hobbes</cite> or
@@ -380,7 +438,7 @@ connect to <cite>frontend001</cite> (or the first node of the <cite>frontend</ci
 group).</div></blockquote>
 </div>
 <div class="section" id="optional-configuration-keys">
-<h4>Optional configuration keys<a class="headerlink" href="#optional-configuration-keys" title="Permalink to this headline">¶</a></h4>
+<h3>Optional configuration keys<a class="headerlink" href="#optional-configuration-keys" title="Permalink to this headline">¶</a></h3>
 <p><tt class="docutils literal"><span class="pre">image_userdata</span></tt></p>
 <blockquote>
 <div>shell script to be executed (as root) when the machine
@@ -389,7 +447,7 @@ works on <em>vanilla</em> images, but if you are using other setup
 providers you may need to execute some command to bootstrap it.</div></blockquote>
 </div>
 <div class="section" id="id5">
-<h4>Examples<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h4>
+<h3>Examples<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <p>Some (working) examples:</p>
 <div class="highlight-python"><pre>[cluster/slurm]
 cloud=hobbes
@@ -440,7 +498,7 @@ ssh_to=frontend</pre>
 </div>
 </div>
 <div class="section" id="cluster-node-section">
-<h3>Cluster node section<a class="headerlink" href="#cluster-node-section" title="Permalink to this headline">¶</a></h3>
+<h2>Cluster node section<a class="headerlink" href="#cluster-node-section" title="Permalink to this headline">¶</a></h2>
 <p>A <cite>cluster node</cite> for the node type <tt class="docutils literal"><span class="pre">&lt;nodetype&gt;</span></tt> of the cluster
 <tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
 <div class="highlight-python"><pre>[cluster/&lt;name&gt;/&lt;nodetype&gt;]</pre>
@@ -467,7 +525,6 @@ flavor=bigdisk</pre>
 </div>
 </div>
 </div>
-</div>
 
 
           </div>
@@ -477,12 +534,14 @@ flavor=bigdisk</pre>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Configuration of elasticluster</a><ul>
-<li><a class="reference internal" href="#syntax-of-the-configuration-file">Syntax of the configuration file</a><ul>
+<li><a class="reference internal" href="#">Configuration</a><ul>
+<li><a class="reference internal" href="#basic-syntax-of-the-configuration-file">Basic syntax of the configuration file</a></li>
 <li><a class="reference internal" href="#cloud-section">Cloud Section</a><ul>
-<li><a class="reference internal" href="#valid-configuration-keys">Valid configuration keys</a></li>
+<li><a class="reference internal" href="#valid-configuration-keys-for-boto">Valid configuration keys for <cite>boto</cite></a></li>
+<li><a class="reference internal" href="#valid-configuration-keys-for-google">Valid configuration keys for <cite>google</cite></a></li>
 <li><a class="reference internal" href="#examples">Examples</a><ul>
 <li><a class="reference internal" href="#openstack-users">OpenStack users</a></li>
+<li><a class="reference internal" href="#google-compute-engine-users">Google Compute Engine users</a></li>
 </ul>
 </li>
 </ul>
@@ -508,12 +567,10 @@ flavor=bigdisk</pre>
 </ul>
 </li>
 </ul>
-</li>
-</ul>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="install.html"
-                        title="previous chapter">Installation of elasticluster</a></p>
+                        title="previous chapter">Installation</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="usage.html"
                         title="next chapter">Usage</a></p>
@@ -546,17 +603,20 @@ flavor=bigdisk</pre>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
           <a href="usage.html" title="Usage"
              >next</a> |</li>
         <li class="right" >
-          <a href="install.html" title="Installation of elasticluster"
+          <a href="install.html" title="Installation"
              >previous</a> |</li>
         <li><a href="index.html">elasticluster 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Grid Computing Competence Centre, University of Zurich.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

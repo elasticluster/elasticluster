@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -6,14 +8,14 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Available playbooks for elasticluster &mdash; elasticluster 1.0 documentation</title>
+    <title>Playbooks distributed with elasticluster &mdash; elasticluster 1.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
+        URL_ROOT:    '',
         VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -24,7 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="elasticluster 1.0 documentation" href="index.html" />
-    <link rel="next" title="How to customize elasticluster" href="customize.html" />
+    <link rel="next" title="Elasitcluster programming API" href="api/index.html" />
     <link rel="prev" title="Usage" href="usage.html" /> 
   </head>
   <body>
@@ -35,7 +37,10 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="customize.html" title="How to customize elasticluster"
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api/index.html" title="Elasitcluster programming API"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="usage.html" title="Usage"
@@ -49,8 +54,423 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="available-playbooks-for-elasticluster">
-<span id="playbooks"></span><h1>Available playbooks for elasticluster<a class="headerlink" href="#available-playbooks-for-elasticluster" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="playbooks-distributed-with-elasticluster">
+<span id="playbooks"></span><h1>Playbooks distributed with elasticluster<a class="headerlink" href="#playbooks-distributed-with-elasticluster" title="Permalink to this headline">¶</a></h1>
+<p>After the requested number of Virtual Machines have been started,
+elasticluster uses <a class="reference external" href="http://ansible.cc">Ansible</a> to configure them based on the
+configuration options defined in the configuration file.</p>
+<p>We distribute a few playbooks together with elasticluster to configure
+some of the most wanted clusters. The playbooks are available at the
+<tt class="docutils literal"><span class="pre">share/elasticluster/providers/ansible-playbooks/</span></tt> directory inside
+your virtualenv if you installed using <a class="reference external" href="https://pypi.python.org/pypi/pip">pip</a>, or in the
+<tt class="docutils literal"><span class="pre">elasticluster/providers/ansible-playbooks</span></tt> directory of the github
+source code. You can copy, customize and redistribute them freely
+under the terms of the GPLv3 license.</p>
+<p>A list of the most used playbooks distributed with elasticluster and
+some explanation on how to use them follows.</p>
+<div class="section" id="id1">
+<h2>Slurm<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>Tested on:</p>
+<ul class="simple">
+<li>Ubuntu 12.04</li>
+<li>Ubuntu 13.04</li>
+<li>Debian 7.1 (GCE)</li>
+</ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="32%" />
+<col width="68%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">ansible groups</th>
+<th class="head">role</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">slurm_master</span></tt></td>
+<td>Act as scheduler and submission host</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">slurm_clients</span></tt></td>
+<td>Act as compute node</td>
+</tr>
+</tbody>
+</table>
+<p>This playbook will install the <a class="reference external" href="https://computing.llnl.gov/linux/slurm/">SLURM</a> queue manager using the
+packages distributed with Ubuntu and will create a basic, working
+configuration.</p>
+<p>You are supposed to only define one <tt class="docutils literal"><span class="pre">slurm_master</span></tt> and multiple
+<tt class="docutils literal"><span class="pre">slurm_clients</span></tt>. The first will act as login node and will run the
+scheduler, while the others will only execute the jobs.</p>
+<p>The <tt class="docutils literal"><span class="pre">/home</span></tt> filesystem is exported <em>from</em> the slurm server to the compute nodes.</p>
+<p>A <em>snippet</em> of a typical configuration for a slurm cluster is:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">cluster</span><span class="o">/</span><span class="n">slurm</span><span class="p">]</span>
+<span class="n">frontend_nodes</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">compute_nodes</span><span class="o">=</span><span class="mi">5</span>
+<span class="n">ssh_to</span><span class="o">=</span><span class="n">frontend</span>
+<span class="n">setup_provider</span><span class="o">=</span><span class="n">ansible_slurm</span>
+<span class="o">...</span>
+
+<span class="p">[</span><span class="n">setup</span><span class="o">/</span><span class="n">ansible_slurm</span><span class="p">]</span>
+<span class="n">frontend_groups</span><span class="o">=</span><span class="n">slurm_master</span>
+<span class="n">compute_groups</span><span class="o">=</span><span class="n">slurm_clients</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>You can combine the slurm playbooks with ganglia. In this case the <tt class="docutils literal"><span class="pre">setup</span></tt> stanza will look like:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">setup</span><span class="o">/</span><span class="n">ansible_slurm</span><span class="p">]</span>
+<span class="n">frontend_groups</span><span class="o">=</span><span class="n">slurm_master</span><span class="p">,</span><span class="n">ganglia_master</span>
+<span class="n">compute_groups</span><span class="o">=</span><span class="n">slurm_clients</span><span class="p">,</span><span class="n">ganglia_monitor</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="gridengine">
+<h2>Gridengine<a class="headerlink" href="#gridengine" title="Permalink to this headline">¶</a></h2>
+<p>Tested on:</p>
+<ul class="simple">
+<li>Ubuntu 12.04</li>
+<li>CentOS 6.3 (except for GCE images)</li>
+<li>Debian 7.1 (GCE)</li>
+</ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="38%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">ansible groups</th>
+<th class="head">role</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">gridengine_master</span></tt></td>
+<td>Act as scheduler and submission host</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">gridengine_clients</span></tt></td>
+<td>Act as compute node</td>
+</tr>
+</tbody>
+</table>
+<p>This playbook will install <a class="reference external" href="http://gridengine.info">Grid Engine</a> using the packages
+distributed with Ubuntu or CentOS and will create a basic, working
+configuration.</p>
+<p>You are supposed to only define one <tt class="docutils literal"><span class="pre">gridengine_master</span></tt> and multiple
+<tt class="docutils literal"><span class="pre">gridengine_clients</span></tt>. The first will act as login node and will run the
+scheduler, while the others will only execute the jobs.</p>
+<p>The <tt class="docutils literal"><span class="pre">/home</span></tt> filesystem is exported <em>from</em> the gridengine server to
+the compute nodes. If you are running on a CentOS, also the
+<tt class="docutils literal"><span class="pre">/usr/share/gridengine/default/common</span></tt> directory is shared from the
+gridengine server to the compute nodes.</p>
+<p>A <em>snippet</em> of a typical configuration for a gridengine cluster is:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">cluster</span><span class="o">/</span><span class="n">gridengine</span><span class="p">]</span>
+<span class="n">frontend_nodes</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">compute_nodes</span><span class="o">=</span><span class="mi">5</span>
+<span class="n">ssh_to</span><span class="o">=</span><span class="n">frontend</span>
+<span class="n">setup_provider</span><span class="o">=</span><span class="n">ansible_gridengine</span>
+<span class="o">...</span>
+
+<span class="p">[</span><span class="n">setup</span><span class="o">/</span><span class="n">ansible_gridengine</span><span class="p">]</span>
+<span class="n">frontend_groups</span><span class="o">=</span><span class="n">gridengine_master</span>
+<span class="n">compute_groups</span><span class="o">=</span><span class="n">gridengine_clients</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>You can combine the gridengine playbooks with ganglia. In this case the <tt class="docutils literal"><span class="pre">setup</span></tt> stanza will look like:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">setup</span><span class="o">/</span><span class="n">ansible_gridengine</span><span class="p">]</span>
+<span class="n">frontend_groups</span><span class="o">=</span><span class="n">gridengine_master</span><span class="p">,</span><span class="n">ganglia_master</span>
+<span class="n">compute_groups</span><span class="o">=</span><span class="n">gridengine_clients</span><span class="p">,</span><span class="n">ganglia_monitor</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>Please note that Google Compute Engine provides Centos 6.2 images with
+a non-standard kernel which is <strong>unsupported</strong> by the gridengine
+packages.</p>
+</div>
+<div class="section" id="id2">
+<h2>HTCondor<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>Tested on:</p>
+<ul class="simple">
+<li>Ubuntu 12.04</li>
+</ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="36%" />
+<col width="64%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">ansible groups</th>
+<th class="head">role</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">condor_master</span></tt></td>
+<td>Act as scheduler, submission and
+execution host.</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">condor_workers</span></tt></td>
+<td>Act as execution host only.</td>
+</tr>
+</tbody>
+</table>
+<p>This playbook will install the <a class="reference external" href="http://research.cs.wisc.edu/htcondor/">HTCondor</a> workload management system
+using the packages provided by the Center for High Throughput
+Computing at UW-Madison.</p>
+<p>The <tt class="docutils literal"><span class="pre">/home</span></tt> filesystem is exported <em>from</em> the condor master to the
+compute nodes.</p>
+<p>A <em>snippet</em> of a typical configuration for a slurm cluster is:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">cluster</span><span class="o">/</span><span class="n">condor</span><span class="p">]</span>
+<span class="n">setup_provider</span><span class="o">=</span><span class="n">ansible_condor</span>
+<span class="n">frontend_nodes</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">compute_nodes</span><span class="o">=</span><span class="mi">2</span>
+<span class="n">ssh_to</span><span class="o">=</span><span class="n">frontend</span>
+<span class="o">...</span>
+
+<span class="p">[</span><span class="n">setup</span><span class="o">/</span><span class="n">ansible_condor</span><span class="p">]</span>
+<span class="n">frontend_groups</span><span class="o">=</span><span class="n">condor_master</span>
+<span class="n">compute_groups</span><span class="o">=</span><span class="n">condor_workers</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h2>Ganglia<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<p>Tested on:</p>
+<ul class="simple">
+<li>Ubuntu 12.04</li>
+<li>CentOS 6.3</li>
+<li>Debian 7.1 (GCE)</li>
+<li>CentOS 6.2 (GCE)</li>
+</ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="38%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">ansible groups</th>
+<th class="head">role</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">ganglia_master</span></tt></td>
+<td>Run gmetad and web interface.
+It also run the monitor daemon.</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">ganglia_monitor</span></tt></td>
+<td>Run ganglia monitor daemon.</td>
+</tr>
+</tbody>
+</table>
+<p>This playbook will install <a class="reference external" href="http://ganglia.info">Ganglia</a> monitoring tool using the
+packages distributed with Ubuntu or CentOS and will configure frontend
+and monitors.</p>
+<p>You should run only one <tt class="docutils literal"><span class="pre">ganglia_master</span></tt>. This will install the
+<tt class="docutils literal"><span class="pre">gmetad</span></tt> daemon to collect all the metrics from the monitored nodes
+and will also run apache.</p>
+<p>If the machine in which you installed <tt class="docutils literal"><span class="pre">ganglia_master</span></tt> has IP
+<tt class="docutils literal"><span class="pre">10.2.3.4</span></tt>, the ganglia web interface will be available at the
+address <a class="reference external" href="http://10.2.3.4/ganglia/">http://10.2.3.4/ganglia/</a></p>
+<p>This playbook is supposed to be compatible with all the other available playbooks.</p>
+</div>
+<div class="section" id="id4">
+<h2>IPython cluster<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<p>Tested on:</p>
+<ul class="simple">
+<li>Ubuntu 12.04</li>
+<li>CentOS 6.3</li>
+<li>Debian 7.1 (GCE)</li>
+<li>CentOS 6.2 (GCE)</li>
+</ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="40%" />
+<col width="60%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">ansible groups</th>
+<th class="head">role</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">ipython_controller</span></tt></td>
+<td>Run an IPython cluster controller</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">ipython_engine</span></tt></td>
+<td>Run a number of ipython engine for
+each core</td>
+</tr>
+</tbody>
+</table>
+<p>This playbook will install an <a class="reference external" href="http://ipython.org/ipython-doc/dev/parallel/">IPython cluster</a> to run python code in
+parallel on multiple machines.</p>
+<p>One of the nodes should act as <em>controller</em> of the cluster
+(<tt class="docutils literal"><span class="pre">ipython_controller</span></tt>), running the both the <em>hub</em> and the
+<em>scheduler</em>. Other nodes will act as <em>engine</em>, and will run one
+&#8220;ipython engine&#8221; per core. You can use the <em>controller</em> node for
+computation too by assigning the  <tt class="docutils literal"><span class="pre">ipython_engine</span></tt> class to it as
+well.</p>
+<p>A <em>snippet</em> of typical configuration for an Hadoop cluster is:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">cluster</span><span class="o">/</span><span class="n">ipython</span><span class="p">]</span>
+<span class="n">setup_provider</span><span class="o">=</span><span class="n">ansible_ipython</span>
+<span class="n">controller_nodes</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">worker_nodes</span><span class="o">=</span><span class="mi">4</span>
+<span class="n">ssh_to</span><span class="o">=</span><span class="n">controller</span>
+<span class="o">...</span>
+
+<span class="p">[</span><span class="n">setup</span><span class="o">/</span><span class="n">ansible_ipython</span><span class="p">]</span>
+<span class="n">controller_groups</span><span class="o">=</span><span class="n">ipython_controller</span><span class="p">,</span><span class="n">ipython_engine</span>
+<span class="n">worker_groups</span><span class="o">=</span><span class="n">ipython_engine</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>In order to use the IPython cluster, using the default configuration,
+you are supposed to connect to the controller node via ssh and run
+your code from there.</p>
+</div>
+<div class="section" id="id5">
+<h2>Hadoop<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<p>Tested on:</p>
+<ul class="simple">
+<li>Ubuntu 12.04</li>
+<li>CentOS 6.3</li>
+<li>Debian 7.1 (GCE)</li>
+</ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="39%" />
+<col width="61%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">ansible groups</th>
+<th class="head">role</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">hadoop_namenode</span></tt></td>
+<td>Run the Hadoop NameNode service</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">hadoop_jobtracker</span></tt></td>
+<td>Run the Hadoop JobTracker service</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">hadoop_datanode</span></tt></td>
+<td>Act as datanode for HDFS</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">hadoop_tasktracker</span></tt></td>
+<td>Act as tasktracker node accepting
+jobs from the JobTracker</td>
+</tr>
+</tbody>
+</table>
+<p>Hadoop playbook will install a basic hadoop cluster using the packages
+available on the Hadoop website. The only supported version so far is
+<strong>1.1.2 x86_64</strong> and it works both on CentOS and Ubuntu.</p>
+<p>You must define only one <tt class="docutils literal"><span class="pre">hadoop_namenode</span></tt> and one
+<tt class="docutils literal"><span class="pre">hadoop_jobtracker</span></tt>. Configuration in which both roles belong to the
+same machines are not tested. You can mix <tt class="docutils literal"><span class="pre">hadoop_datanode</span></tt> and
+<tt class="docutils literal"><span class="pre">hadoop_tasktracker</span></tt> without problems though.</p>
+<p>A <em>snippet</em> of a typical configuration for an Hadoop cluster is:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">cluster</span><span class="o">/</span><span class="n">hadoop</span><span class="p">]</span>
+<span class="n">hadoop</span><span class="o">-</span><span class="n">name_nodes</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">hadoop</span><span class="o">-</span><span class="n">jobtracker_nodes</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">hadoop</span><span class="o">-</span><span class="n">task</span><span class="o">-</span><span class="n">data_nodes</span><span class="o">=</span><span class="mi">10</span>
+<span class="n">setup_provider</span><span class="o">=</span><span class="n">ansible_hadoop</span>
+<span class="n">ssh_to</span><span class="o">=</span><span class="n">hadoop</span><span class="o">-</span><span class="n">name</span>
+<span class="o">...</span>
+
+<span class="p">[</span><span class="n">setup</span><span class="o">/</span><span class="n">ansible_hadoop</span><span class="p">]</span>
+<span class="n">hadoop</span><span class="o">-</span><span class="n">name_groups</span><span class="o">=</span><span class="n">hadoop_namenode</span>
+<span class="n">hadoop</span><span class="o">-</span><span class="n">jobtracker_groups</span><span class="o">=</span><span class="n">hadoop_jobtracker</span>
+<span class="n">hadoop</span><span class="o">-</span><span class="n">task</span><span class="o">-</span><span class="n">data_groups</span><span class="o">=</span><span class="n">hadoop_tasktracker</span><span class="p">,</span><span class="n">hadoop_datanode</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id6">
+<h2>GlusterFS<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<p>Tested on:</p>
+<ul class="simple">
+<li>Ubuntu 12.04</li>
+<li>CentOS 6.3</li>
+</ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="72%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">ansible groups</th>
+<th class="head">role</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">gluster_data</span></tt></td>
+<td>Run a gluster <em>brick</em></td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">gluster_client</span></tt></td>
+<td>Install gluster client and install a gluster
+filesystem on <tt class="docutils literal"><span class="pre">/glusterfs</span></tt></td>
+</tr>
+</tbody>
+</table>
+<p>This will install a GlusterFS using all the <tt class="docutils literal"><span class="pre">gluster_data</span></tt> nodes as
+<em>bricks</em>, and any <tt class="docutils literal"><span class="pre">gluster_client</span></tt> to mount this filesystem in
+<tt class="docutils literal"><span class="pre">/glusterfs</span></tt>.</p>
+<p>Setup is very basic, and by default no replicas is set.</p>
+<p>To manage the gluster filesystem you need to connect to a
+<tt class="docutils literal"><span class="pre">gluster_data</span></tt> node.</p>
+</div>
+<div class="section" id="orangefs-pvfs2">
+<h2>OrangeFS/PVFS2<a class="headerlink" href="#orangefs-pvfs2" title="Permalink to this headline">¶</a></h2>
+<p>Tested on:</p>
+<ul class="simple">
+<li>Ubuntu 12.04</li>
+</ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="25%" />
+<col width="75%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">ansible groups</th>
+<th class="head">role</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">pvfs2_meta</span></tt></td>
+<td>Run the pvfs2 metadata service</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">pvfs2_data</span></tt></td>
+<td>Run the pvfs2 data node</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">pvfs2_client</span></tt></td>
+<td>configure as pvfs2 client and mount the filesystem</td>
+</tr>
+</tbody>
+</table>
+<p>The OrangeFS/PVFS2 playbook will configure a pvfs2 cluster. It
+downloads the software from the <a class="reference external" href="http://orangefs.org/">OrangeFS</a> website, compile and
+install it on all the machine, and run the various server and client daemons.</p>
+<p>In addiction, it will mount the filesystem in <tt class="docutils literal"><span class="pre">/pvfs2</span></tt> on all the clients.</p>
+<p>You can combine, for instance, a SLURM cluster with a PVFS2 cluster:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">cluster</span><span class="o">/</span><span class="n">slurm</span><span class="o">+</span><span class="n">pvfs2</span><span class="p">]</span>
+<span class="n">frontend_nodes</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">compute_nodes</span><span class="o">=</span><span class="mi">10</span>
+<span class="n">pvfs2</span><span class="o">-</span><span class="n">nodes</span><span class="o">=</span><span class="mi">10</span>
+<span class="n">ssh_to</span><span class="o">=</span><span class="n">frontend</span>
+<span class="n">setup_provider</span><span class="o">=</span><span class="n">ansible_slurm</span><span class="o">+</span><span class="n">pvfs2</span>
+<span class="o">...</span>
+
+<span class="p">[</span><span class="n">setup</span><span class="o">/</span><span class="n">ansible_slurm</span><span class="o">+</span><span class="n">pvfs2</span><span class="p">]</span>
+<span class="n">frontend_groups</span><span class="o">=</span><span class="n">slurm_master</span><span class="p">,</span><span class="n">pvfs2_client</span>
+<span class="n">compute_groups</span><span class="o">=</span><span class="n">slurm_clients</span><span class="p">,</span><span class="n">pvfs2_client</span>
+<span class="n">pvfs</span><span class="o">-</span><span class="n">nodes_groups</span><span class="o">=</span><span class="n">pvfs2_meta</span><span class="p">,</span><span class="n">pvfs2_data</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>This configuration will create a SLURM cluster with 10 compute nodes,
+10 data nodes and a frontend, and will mount the <tt class="docutils literal"><span class="pre">/pvfs2</span></tt> directory
+from the data nodes to both the compute nodes and the frontend.</p>
+</div>
 </div>
 
 
@@ -59,12 +479,27 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Playbooks distributed with elasticluster</a><ul>
+<li><a class="reference internal" href="#id1">Slurm</a></li>
+<li><a class="reference internal" href="#gridengine">Gridengine</a></li>
+<li><a class="reference internal" href="#id2">HTCondor</a></li>
+<li><a class="reference internal" href="#id3">Ganglia</a></li>
+<li><a class="reference internal" href="#id4">IPython cluster</a></li>
+<li><a class="reference internal" href="#id5">Hadoop</a></li>
+<li><a class="reference internal" href="#id6">GlusterFS</a></li>
+<li><a class="reference internal" href="#orangefs-pvfs2">OrangeFS/PVFS2</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Previous topic</h4>
   <p class="topless"><a href="usage.html"
                         title="previous chapter">Usage</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="customize.html"
-                        title="next chapter">How to customize elasticluster</a></p>
+  <p class="topless"><a href="api/index.html"
+                        title="next chapter">Elasitcluster programming API</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/playbooks.txt"
@@ -94,7 +529,10 @@
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="customize.html" title="How to customize elasticluster"
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api/index.html" title="Elasitcluster programming API"
              >next</a> |</li>
         <li class="right" >
           <a href="usage.html" title="Usage"
@@ -104,7 +542,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2013, Grid Computing Competence Centre, University of Zurich.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>
