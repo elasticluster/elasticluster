@@ -182,6 +182,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         """
         instance = self._load_instance(instance_id)
         instance.terminate()
+        del self._instances[instance_id]
 
     def get_ips(self, instance_id):
         """Retrieves the private and public ip addresses for a given instance.

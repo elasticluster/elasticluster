@@ -610,7 +610,7 @@ class Node(object):
         """
         running = False
         if not self.instance_id:
-            return running
+            return False
 
         try:
             log.debug("Getting information for instance %s",
