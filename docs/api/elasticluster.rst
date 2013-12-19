@@ -9,6 +9,7 @@
 
 Overview
 --------
+
 Elasticluster offers an API to programmatically manage compute clusters on
 cloud infrastructure. This page introduces the basic concepts of the API and
 provides sample code to illustrate the usage of the API. While this document
@@ -17,107 +18,111 @@ respective module documentation
 
 Getting Started
 ---------------
+
 The following subchapters introduce the basic concepts of Elasticluster.
 
 Cluster
 ~~~~~~~
-This is the heart of elasticluster and handles all cluster relevant behavior.
-You can basically start, setup and stop a cluster. Also it provides factory
-methods to add nodes to the cluster. A typical workflow is as follows (see
-slurm_ for a code example):
-    1. create a new cluster
-    2. add nodes to fit your computing needs
-    3. start cluster; start all instances in the cloud
-    4. setup cluster; configure all nodes to fit your computing cluster
-    5. ssh into a node to submit computing jobs
-    6. eventually stop cluster; destroys all instances in the cloud
 
-See the cluster_ api docs for futher details.
+This is the heart of elasticluster and handles all cluster relevant
+behavior.  You can basically start, setup and stop a cluster. Also it
+provides factory methods to add nodes to the cluster. A typical
+workflow is as follows (see slurm_ for a code example):
 
-.. _cluster: ./elasticluster/cluster.html#elasticluster.cluster.Cluster
+1. create a new cluster
+2. add nodes to fit your computing needs
+3. start cluster; start all instances in the cloud
+4. setup cluster; configure all nodes to fit your computing cluster
+5. ssh into a node to submit computing jobs
+6. eventually stop cluster; destroys all instances in the cloud
+
+See documentation of the :py:class:`~elasticluster.cluster.Cluster`
+class for futher details.
 
 Node
 ~~~~
+
 The node represents an instance in a cluster. It holds all information to
 connect to the nodes also manages the cloud instance. It provides the basic
 functionality to interact with the cloud instance, such as start, stop,
 check if the instance is up and ssh connect.
 
-See the node_ api docs for further details.
+See the :py:class:`~elasticluster.cluster.Node` api docs for further details.
 
-.. _node: ./elasticluster/cluster.html#elasticluster.cluster.Node
 
 Cloud Provider
 ~~~~~~~~~~~~~~
+
 Manages the connection to the cloud webservice and offers all functionality
 used by the cluster to provision instances. Elasticluster offers two
 different cloud providers at the current state:
-    * BotoCloudProvider_
-        Cloud provider to connect to EC2 compliant web services (e.g Amazon,
-         Openstack, etc.)
-    * GoogleCloudProvider_
-        Cloud provider to connect to the Google Compute Engine (GCE)
+
+* :py:class:`~elasticluster.providers.ec2_boto.BotoCloudProvider`
+    Cloud provider to connect to EC2 compliant web services (e.g
+    Amazon, Openstack, etc.)
+
+* :py:class:`~elasticluster.providers.gce.GoogleCloudProvider` Cloud
+    provider to connect to the Google Compute Engine (GCE)
 
 All listed cloud providers above can be used to manage a cluster in the
 cloud. If the cloud operator is not supported by the implementations above,
 an alternative implementation can be provided by following the
-AbstractCloudProvider_ contract.
+:py:class:`~elasticluster.providers.AbstractCloudProvider` contract.
 
-
-.. _BotoCloudProvider: ./elasticluster/providers/ec2_boto.html#elasticluster.providers.ec2_boto.BotoCloudProvider
-.. _GoogleCloudProvider: ./elasticluster/providers/gce.html#elasticluster.providers.gce.GoogleCloudProvider
-.. _AbstractCloudProvider: ./elasticluster/providers.html#elasticluster.providers.AbstractCloudProvider
 
 Setup Provider
 ~~~~~~~~~~~~~~
-The setup provider configures in respect to the specified cluster and node
-configuration. The basic implementation AnsibleSetupProvider_ uses ansible_
-to configure the nodes. Ansible is a push based configuration management
-system in which the configuration is stored locally and pushed to all the
-nodes in the cluster.
 
-See the Playbooks_ page for more details on the cluster setups possible with
-the ansible implementation and how the ansible playbooks can be enhanced.
+The setup provider configures in respect to the specified cluster and
+node configuration. The basic implementation
+:py:class:`~elasticluster.providers.ansible_provider.AnsibleSetupProvider`
+uses ansible_ to configure the nodes. Ansible is a push based
+configuration management system in which the configuration is stored
+locally and pushed to all the nodes in the cluster.
+
+See the :ref:`playbooks` page for more
+details on the cluster setups possible with the ansible implementation
+and how the ansible playbooks can be enhanced.
 
 If this implementation does not satisfy the clients needs,
 an alternative implementation can be implemented following the
-AbstractSetupProvider_ contract.
+:py:class:`~elasticluster.providers.AbstractSetupProvider` contract.
 
-.. _ansible: https://github.com/ansible/ansible
-.. _AnsibleSetupProvider: ./elasticluster/providers/ansible_provider.html#elasticluster.providers.ansible_provider.AnsibleSetupProvider
-.. _AbstractSetupProvider: ./elasticluster/providers.html#elasticluster.providers.AbstractSetupProvider
-.. _Playbooks: ../playbooks.html
 
 Cluster Repository
 ~~~~~~~~~~~~~~~~~~
+
 The cluster repository is responsible to keep track of multiple clusters
 over time. Therefore Elasticluster provides two implementations:
-    * MemRepository_
+
+    * :py:class:`~elasticluster.repository.MemRepository`
         Stores the clusters in memory. Therefore after stopping a program
         using this repository, all clusters are not recoverable but possibly
         still running.
-    * ClusterRepository_
+
+    * :py:class:`~elasticluster.repository.ClusterRepository`
         Stores the cluster on disk persistently. This implementation uses
         pickle to serialize and deserialize the cluster.
 
 If a client wants to store the cluster in a database for example,
 an alternative implementation can be provided following the
-AbstractClusterRepository_ contract.
+:py:class:`~elasticluster.repository.AbstractClusterRepository` contract.
 
-.. _AbstractClusterRepository: elasticluster/repository.html#elasticluster.repository.AbstractClusterRepository
-.. _ClusterRepository: elasticluster/repository.html#elasticluster.repository.ClusterRepository
-.. _MemRepository: elasticluster/repository.html#elasticluster.repository.MemRepository
 
 Sample Code
 -----------
 
 .. _slurm:
+
 Start and setup a SLURM cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 The following sample code shows how to start and setup a SLURM cluster on an
 OpenStack cloud and provides further information on each step. Other cluster
 types on other cloud providers can be setup accordingly.
+
 ::
+
     import elasticluster
 
     # Initialise an EC2 compatible cloud provider, in this case an OpenStack
@@ -198,10 +203,12 @@ types on other cloud providers can be setup accordingly.
 
 Asynchronous node start
 ~~~~~~~~~~~~~~~~~~~~~~~
-The `cluster.start()` method is blocking and therefore waits until all nodes
+
+The :py:meth:`~elasticluster.cluster.Cluster.start()` method of the
+:py:meth:`~elasticluster.cluster.Cluster` class is blocking and therefore waits until all nodes
 are alive. If a client wants to use this time for other tasks,
-the nodes can as well be started asynchronous:
-::
+the nodes can as well be started asynchronous::
+
     # retrieve all nodes from the cluster
     nodes = cluster.get_all_nodes()
 
@@ -219,12 +226,13 @@ the nodes can as well be started asynchronous:
 
 Storing a cluster on disk
 ~~~~~~~~~~~~~~~~~~~~~~~~~
+
 By default elasticluster will store the cluster in memory only. Therefore
 after a programm shutdown the cluster will not be available anymore in
 elasticluster, but might still be running on the cloud. The following
 example shows how to store clusters on disk to retrieve after a programm
-restart:
-::
+restart::
+
     # The cluster repository uses pickle to store clusters each in a
     # seperate file in the provided storage directory.
     repository = elasticluster.ClusterRepository('/path/to/storage/dir')
@@ -241,8 +249,8 @@ restart:
     cluster.start()
 
 After a program shutdown we can therefore fetch the cluster from the
-repository again and work with it as expected:
-::
+repository again and work with it as expected::
+
     repository = elasticluster.ClusterRepository('/path/to/storage/dir')
 
     # retrieve the cluster from the repository
@@ -254,9 +262,10 @@ repository again and work with it as expected:
 
 Logging
 ~~~~~~~
+
 Elasticluster uses the python `logging` module to log events. A client can
-overwrite the settings as illustrated below:
-::
+overwrite the settings as illustrated below::
+
     import logging
 
     import elasticluster
@@ -270,3 +279,6 @@ but any settings can be applied compliant with the logging module of python.
 
 .. automodule:: elasticluster
     :members:
+
+.. References
+.. _ansible: https://github.com/ansible/ansible
