@@ -47,19 +47,19 @@ class BotoCloudProvider(AbstractCloudProvider):
     :param str ec2_access_key: access key of the user account
     :param str ec2_secret_key: secret key of the user account
     :param str storage_path: path to store temporary data
-    :param bool auto_ip_assignment: Whether ip are assigned automatically
+    :param bool request_floating_ip: Whether ip are assigned automatically
                                     `True` or floating ips have to be
                                     assigned manually `False`
     """
     __node_start_lock = threading.Lock()  # lock used for node startup
 
     def __init__(self, ec2_url, ec2_region, ec2_access_key, ec2_secret_key,
-                 storage_path=None, auto_ip_assignment=True):
+                 storage_path=None, request_floating_ip=False):
         self._url = ec2_url
         self._region_name = ec2_region
         self._access_key = ec2_access_key
         self._secret_key = ec2_secret_key
-        self.auto_ip_assignment = auto_ip_assignment
+        self.request_floating_ip = request_floating_ip
 
         # read all parameters from url
         proto, opaqueurl = urllib.splittype(ec2_url)
@@ -206,7 +206,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         if instance.update() == "running":
             # If the instance is up&running, ensure it has an IP
             # address.
-            if not instance.ip_address and not self.auto_ip_assignment:
+            if not instance.ip_address and self.request_floating_ip:
                 log.debug("Public ip address has to be assigned through "
                           "elasticluster.")
                 self._allocate_address(instance)

@@ -334,7 +334,7 @@ class ConfigValidator(object):
                             "ec2_access_key": All(str, Length(min=1)),
                             "ec2_secret_key": All(str, Length(min=1)),
                             "ec2_region": All(str, Length(min=1)),
-                            Optional("auto_ip_assignment"): Boolean(str)}
+                            Optional("request_floating_ip"): Boolean(str)}
         cloud_schema_gce = {"provider": 'google',
                             "gce_client_id": All(str, Length(min=1)),
                             "gce_client_secret": All(str, Length(min=1)),

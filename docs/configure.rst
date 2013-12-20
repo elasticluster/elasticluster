@@ -111,11 +111,15 @@ Valid configuration keys for `boto`
 
     the availability zone you want to use.
 
-``auto_ip_assignment``
+``request_floating_ip``
 
-    if the cloud provider assigns public ip automatically (True or False).
-    The default value for this property is `True`. You don't have to specify it
-    in case the cloud provider assigns public ips automatically.
+    request assignment of a floating IP when the instance is
+    started. Valid values: `True`, `False`.
+    Some cloud providers does not automatically assign a public IP
+    to the instances, but this is often needed if you want to connect
+    to the VM from outside. Setting ``request_floating_ip`` to `True`
+    will force `elasticluster` to request such a floating IP if the
+    instance doesn't get one automatically.
 
 
 Valid configuration keys for `google`

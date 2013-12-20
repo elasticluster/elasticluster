@@ -68,6 +68,10 @@
 # 
 # ec2_region: the availability zone you want to use.
 #
+# request_floating_ip: request assignment of a floating IP when the
+#                      instance is started.
+#                      Valid values: `True`, `False`. Default is `False`
+#
 # **OpenStack users**: from the web interface you can download a file
 # containing your EC2 credentials by logging in in your provider web
 # interface and clicking on:
@@ -123,6 +127,7 @@ ec2_url=http://hobbes.gc3.uzh.ch:8773/services/Cloud
 ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
 ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
 ec2_region=nova
+# request_floating_ip=False
 
 # For Amazon instead (region us-east-1) you can use:
 #
@@ -132,6 +137,7 @@ ec2_url=https://ec2.us-east-1.amazonaws.com
 ec2_access_key=****REPLACE WITH YOUR ACCESS ID**** 
 ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
 ec2_region=us-east-1
+# request_floating_ip=False
 
 # For Google Compute Engine you can use:
 #
