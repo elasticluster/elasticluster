@@ -23,7 +23,7 @@
 # for elasticluster.
 
 __elasticluster_list_clusters () {
-    /bin/ls ~/.elasticluster/storage/*.json  | sed 's:.*/::; s:.json::'
+    /bin/ls ~/.elasticluster/storage/*.pickle  | sed 's:.*/::; s:.pickle::'
 }
 
 __elasticluster_list_templates () {
