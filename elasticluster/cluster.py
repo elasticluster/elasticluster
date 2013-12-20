@@ -701,8 +701,9 @@ class Node(object):
         return private, public
 
     def __str__(self):
-        return "name=`%s`, id=`%s`, public_ip=`%s`, private_ip=`%s`" % (
-            self.name, self.instance_id, self.ip_public, self.ip_private)
+        return "name=`%s`, id=`%s`, public_ip=`%s`, private_ip=`%s`, "\
+            "connection_ip=`%s`" % (self.name, self.instance_id, self.ip_public,
+                                    self.ip_private, self.connection_ip())
 
     def pprint(self):
         """Pretty print information about the node.
@@ -710,8 +711,9 @@ class Node(object):
         :return: str - representaion of a node in pretty print
         """
         return """%s
-public IP:   %s
-private IP:  %s
-instance id: %s
+public IP:     %s
+private IP:    %s
+connection IP: %s
+instance id:   %s
 instance flavor: %s""" % (self.name, self.ip_public, self.ip_private,
-                          self.instance_id, self.flavor)
+                          self.connection_ip(), self.instance_id, self.flavor)

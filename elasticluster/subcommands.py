@@ -578,7 +578,7 @@ class SshFrontend(AbstractCommand):
         except NodeNotFound, ex:
             log.error("Unable to connect to the frontend node: %s" % str(ex))
             sys.exit(1)
-        host = frontend.ip_public
+        host = frontend.connection_ip()
         username = frontend.image_user
         log.warning("Ignoring known_hosts file.")
         ssh_cmdline = ["ssh",
@@ -626,7 +626,7 @@ class SftpFrontend(AbstractCommand):
         except NodeNotFound, ex:
             log.error("Unable to connect to the frontend node: %s" % str(ex))
             sys.exit(1)
-        host = frontend.ip_public
+        host = frontend.connection_ip()
         username = frontend.image_user
         sftp_cmdline = ["sftp",
                         "-i", frontend.user_key_private,
