@@ -329,7 +329,7 @@ class Cluster(object):
                 for node in pending_nodes[:]:
                     if node.connect():
                         log.info("Connection to node %s (%s) successful.",
-                                 node.name, node.ip_public)
+                                 node.name, node.connection_ip())
                         pending_nodes.remove(node)
                 if pending_nodes:
                     time.sleep(5)
@@ -650,6 +650,13 @@ class Node(object):
 
         return running
 
+    def connection_ip(self):
+        """Returns the IP to be used to connect to this node.
+
+        If the instance has a public IP address, then this is returned, otherwise, its private IP is returned.
+        """
+        return self.ip_public if self.ip_public else self.ip_private
+
     def connect(self):
         """Connect to the node via ssh using the paramiko library.
 
@@ -658,19 +665,24 @@ class Node(object):
         """
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(IgnorePolicy())
+        remote_ip = self.connection_ip()
+        if not self.ip_public:
+            log.debug("Instance id '%s' has no public ip, using private IP "
+                      "'%s' for connecting", self.instance_id, self.ip_private)
+
         try:
             log.debug("Trying to connect to host %s (%s)",
-                      self.name, self.ip_public)
-            ssh.connect(self.ip_public,
+                      self.name, remote_ip)
+            ssh.connect(remote_ip,
                         username=self.image_user,
                         allow_agent=True,
                         key_filename=self.user_key_private,
                         timeout=Node.connection_timeout)
-            log.debug("Connection to %s succeded!", self.ip_public)
+            log.debug("Connection to %s succeded!", remote_ip)
             return ssh
         except socket.error, ex:
             log.debug("Host %s (%s) not reachable: %s.",
-                      self.name, self.ip_public, ex)
+                      self.name, remote_ip, ex)
         except paramiko.SSHException, ex:
             log.debug("Ignoring error %s connecting to %s",
                       str(ex), self.name)
