@@ -82,7 +82,7 @@
   action: shell gluster volume info ${gluster_volume} || 
           gluster volume create ${gluster_volume} ${gluster_stripes.stdout}
           ${gluster_replicas.stdout} ${gluster_transport.stdout}
-          ${gluster_bricks.stdout}
+          ${gluster_bricks.stdout} force
   when: inventory_hostname == groups.gluster_data[0]
   tags:
     - gluster
