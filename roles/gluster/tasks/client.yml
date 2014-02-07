@@ -25,7 +25,7 @@
   tags:
     - gluster
 
-- name: Create mountpoing
+- name: Create mountpoint
   action: file path=/glusterfs state=directory
   tags:
     - gluster
