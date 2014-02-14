@@ -1,15 +1,4 @@
 ---
-- name: configure ppa
-  action: apt_repository repo=ppa:semiosis/ubuntu-glusterfs-3.4
-  when: is_debian_or_ubuntu
-  tags:
-    - gluster
-
-- name: configure GlusterFS repository
-  action: template src=gluster/templates/etc/yum.repos.d/gluster.repo.j2 dest=/etc/yum.repos.d/gluster.repo
-  when: is_centos
-  tags:
-    - gluster
 
 - name: Install glusterfs packages (Ubuntu)
   action: apt name=$item state=installed update_cache=yes
