@@ -22,6 +22,7 @@
 .. _`GNU General Public License version 3`: http://www.gnu.org/licenses/gpl.html
 .. _`Amazon's Elastic Compute Cloud EC2`: http://aws.amazon.com/ec2/
 .. _`OpenStack`: http://www.openstack.org/
+.. _`Google Compute Engine`: https://cloud.google.com/products/compute-engine/
 .. _`Debian GNU/Linux`: http://www.debian.org
 .. _`Ubuntu`: http://www.ubuntu.com
 .. _`CentOS`: http://www.centos.org/
