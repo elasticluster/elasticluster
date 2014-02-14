@@ -376,7 +376,11 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                                     self._os_auth_url, region_name=self._os_region_name)
         self._instances = {}
         self._cached_instances = []
-        # # recover instances
+        # recover instance objects from the cloud.
+
+        # This is Disabled as we don't want to reload the
+        # instances also for "list" command
+        
         # for vm in self.client.servers.list():
         #     if vm.id in state['instance_ids']:
         #         self._instances[vm.id] = vm
