@@ -120,7 +120,7 @@ class BotoCloudProvider(AbstractCloudProvider):
 
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
-                       username=None):
+                       username=None, **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
 
@@ -244,7 +244,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                       instance.id)
 
     def _load_instance(self, instance_id):
-        """hecks if an instance with the given id is cached. If not it
+        """Checks if an instance with the given id is cached. If not it
         will connect to the cloud and put it into the local cache
         _instances.
 

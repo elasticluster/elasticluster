@@ -33,6 +33,9 @@ class KeypairError(Exception):
 class InstanceError(Exception):
     pass
 
+class FlavorError(Exception):
+    pass
+
 
 class TimeoutError(Exception):
     pass

@@ -37,8 +37,6 @@ except ImportError:
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.exceptions import ConfigurationError
-from elasticluster.providers.ec2_boto import BotoCloudProvider
-from elasticluster.providers.gce import GoogleCloudProvider
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.cluster import Cluster
 from elasticluster.repository import ClusterRepository
@@ -72,11 +70,6 @@ class Configurator(object):
    :param str storage_path: path to store data
    :raises MultipleInvalid: configuration validation
     """
-
-    cloud_providers_map = {
-        "ec2_boto": BotoCloudProvider,
-        "google": GoogleCloudProvider,
-    }
 
     setup_providers_map = {"ansible": AnsibleSetupProvider, }
 
@@ -119,7 +112,20 @@ class Configurator(object):
         """
         conf = self.cluster_conf[cluster_template]['cloud']
 
-        provider = Configurator.cloud_providers_map[conf['provider']]
+
+        try:
+            if conf['provider'] == 'ec2_boto':
+                from elasticluster.providers.ec2_boto import BotoCloudProvider
+                provider = BotoCloudProvider
+            elif conf['provider'] == 'openstack':
+                from elasticluster.providers.openstack import OpenStackCloudProvider
+                provider = OpenStackCloudProvider
+            elif conf['provider'] == 'gce':
+                from elasticluster.providers.gce import GoogleCloudProvider
+                provider = GoogleCloudProvider
+        except ImportError, ex:
+            raise Invalid("Unable to load provider '%s': %s" % (conf['provider'], ex))
+
         providerconf = conf.copy()
         providerconf.pop('provider')
         providerconf['storage_path'] = self.general_conf['storage']
@@ -302,7 +308,7 @@ class ConfigValidator(object):
         with elasticluster. As well all types are converted to the expected
         format if possible.
 
-        :raises: :py:class:`voluptuous.MultipleInvalid` if multiple
+        :raisegs: :py:class:`voluptuous.MultipleInvalid` if multiple
                  properties are not compliant
         :raises: :py:class:`voluptuous.Invalid` if one property is invalid
         """
@@ -340,6 +346,13 @@ class ConfigValidator(object):
                             "gce_client_secret": All(str, Length(min=1)),
                             "gce_project_id": All(str, Length(min=1))}
 
+        cloud_schema_openstack = {"provider": 'openstack',
+                                  "auth_url": All(str, Length(min=1)),
+                                  "username": All(str, Length(min=1)),
+                                  "password": All(str, Length(min=1)),
+                                  "project_name": All(str, Length(min=1)),
+                                  Optional("region_name"): All(str, Length(min=1))}
+
         node_schema = {
             "flavor": All(str, Length(min=1)),
             "image_id": All(str, Length(min=1)),
@@ -351,6 +364,7 @@ class ConfigValidator(object):
         validator_node = Schema(node_schema, required=True, extra=True)
         ec2_validator = Schema(cloud_schema_ec2, required=True, extra=False)
         gce_validator = Schema(cloud_schema_gce, required=True, extra=False)
+        openstack_validator = Schema(cloud_schema_openstack, required=True, extra=False)
 
         if not self.config:
             raise Invalid("No clusters found in configuration.")
@@ -367,6 +381,8 @@ class ConfigValidator(object):
                 self.config[cluster]['cloud'] = ec2_validator(cloud_props)
             elif properties['cloud']['provider'] == "google":
                 self.config[cluster]['cloud'] = gce_validator(cloud_props)
+            elif properties['cloud']['provider'] == "openstack":
+                self.config[cluster]['cloud'] = openstack_validator(cloud_props)
 
             if 'nodes' not in properties or len(properties['nodes']) == 0:
                 raise Invalid(
@@ -418,11 +434,16 @@ class ConfigReader(object):
 
         self.schemas = {
             "cloud": Schema(
-                {"provider": Any('ec2_boto', 'google'),
+                {"provider": Any('ec2_boto', 'google', 'openstack'),
                  "ec2_url": Url(str),
                  "ec2_access_key": All(str, Length(min=1)),
                  "ec2_secret_key": All(str, Length(min=1)),
                  "ec2_region": All(str, Length(min=1)),
+                 "auth_url": All(str, Length(min=1)),
+                 "username": All(str, Length(min=1)),
+                 "password": All(str, Length(min=1)),
+                 "tenant_name": All(str, Length(min=1)),
+                 Optional("region_name"): All(str, Length(min=1)),
                  "gce_project_id": All(str, Length(min=1)),
                  "gce_client_id": All(str, Length(min=1)),
                  "gce_client_secret": All(str, Length(min=1))}, extra=True),

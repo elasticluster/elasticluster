@@ -607,7 +607,7 @@ class Node(object):
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
             self.flavor, self.image, self.image_userdata,
-            username=self.image_user)
+            username=self.image_user, node_name=self.name)
         log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
 
     def stop(self):

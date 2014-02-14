@@ -40,7 +40,7 @@ class AbstractCloudProvider:
     @abstractmethod
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
-                       username=None):
+                       username=None, node_name=None):
         """Starts a new instance on the cloud using the given properties.
         Multiple instances might be started in different threads at the same
         time. The implementation should handle any problems regarding this

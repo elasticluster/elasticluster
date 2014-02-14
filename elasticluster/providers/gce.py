@@ -194,7 +194,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        username=None,
                        # these params are specific to the
                        # GoogleCloudProvider
-                       instance_name=None):
+                       instance_name=None, **kwargs):
         """Starts a new instance with the given properties and returns
         the instance id.
 
