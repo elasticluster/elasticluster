@@ -48,16 +48,19 @@ def ansible_pb_files():
 from setuptools import setup, find_packages
 
 required_packages = [
-    'boto',
     'PyCLI',
     'paramiko',
     'ansible==1.3.3',
-    # required by GCE
+    'voluptuous',
+    'configobj',
+    # EC2 clouds
+    'boto',
+    # OpenStack clouds
+    'python-novaclient',
+    # GCE cloud
     'google-api-python-client',
     'oauth2client',
     'httplib2',
-    'voluptuous',
-    'configobj'
 ]
 
 if sys.version_info[:2] == (2, 6):
