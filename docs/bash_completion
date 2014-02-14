@@ -33,17 +33,56 @@ __elasticluster_list_templates () {
 _elasticluster () {
     local cur prev opts
     local commands="start stop setup list list-nodes list-templates ssh sftp resize"
+    local global_options="-h --help -v -s --storage -c --config --version --verbose"
+    local start_options="-h --help -v --verbose -n --name --nodes --no-setup"
+    local stop_options="-h --help -v --verbose --force --yes"
+    local resize_options="-h --help -v --verbose -a --add -r --remove -t --template --no-setup --yes"
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     case ${prev} in
         elasticluster)
-            COMPREPLY=($(compgen -W "${commands}" -- ${cur}))
+            if [ "`expr substr \"${cur}\" 1 1`" = "-" ]
+            then
+                COMPREPLY=($(compgen -W "${global_options}" -- ${cur}))
+            else
+                COMPREPLY=($(compgen -W "${commands}" -- ${cur}))
+            fi
+            ;;
+        -s|--storage)
+            COMPREPLY=($(compgen -o dirnames -o nospace -- ${cur}))
+            ;;
+        -c|--config)
+            COMPREPLY=($(compgen -o default -o nospace -- ${cur}))
             ;;
         start)
+            if [ "`expr substr \"${cur}\" 1 1`" = "-" ]
+            then
+                COMPREPLY=($(compgen -W "${start_options}" -- ${cur}))
+            else
+                COMPREPLY=($(compgen -W "$(__elasticluster_list_templates)" -- ${cur}))
+            fi
+            ;;
+        stop)
+            if [ "`expr substr \"${cur}\" 1 1`" = "-" ]
+            then
+                COMPREPLY=($(compgen -W "${stop_options}" -- ${cur}))
+            else
+                COMPREPLY=($(compgen -W "$(__elasticluster_list_clusters)" -- ${cur}))
+            fi
+            ;;
+        resize)
+            if [ "`expr substr \"${cur}\" 1 1`" = "-" ]
+            then
+                COMPREPLY=($(compgen -W "${resize_options}" -- ${cur}))
+            else
+                COMPREPLY=($(compgen -W "$(__elasticluster_list_clusters)" -- ${cur}))
+            fi
+            ;;
+        setup|list-templates)
             COMPREPLY=($(compgen -W "$(__elasticluster_list_templates)" -- ${cur}))
             ;;
-        stop|setup|list-nodes|ssh|sftp|resize)
+        setup|list-nodes|ssh|sftp)
             COMPREPLY=($(compgen -W "$(__elasticluster_list_clusters)" -- ${cur}))
             ;;
         *)
