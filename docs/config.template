@@ -44,6 +44,7 @@
 # Currently two cloud providers are available:
 # - ec2_boto:  OpenStack and Amazon EC2
 # - google:    Google Compute Engine
+# - openstack: OpenStack native API
 #
 # Therefore the following configuration option needs to be set in the cloud
 # section:
@@ -95,6 +96,21 @@
 # gce_client_secret: The API client secret generated in the Google API Console
 #
 # gce_project_id:    The project id of your Google Compute Engine project
+#
+#
+# Valid configuration keys for *openstack*
+# ----------------------------------------
+#
+# auth_url:          The URL of the keystone service (main entry point for 
+#                    OpenStack clouds)
+# username:          OpenStack username
+# password:          OpenStack password
+# project_name:      OpenStack project to use (also known as `tenant`)
+# region_name:       OpenStack region (optional) 
+# request_floating_ip: request assignment of a floating IP when the
+#                      instance is started.
+#                      Valid values: `True`, `False`. Default is `False`
+#
 #
 # API Console
 # +++++++++++

@@ -80,7 +80,7 @@ section:
 ``provider``
 
     the driver to use to connect to the cloud provider.
-    `boto` or `google`
+    `ec2_boto`, `openstack` or `google`
 
 
 
@@ -136,6 +136,39 @@ Valid configuration keys for `google`
 ``gce_project_id``
 
     The project id of your Google Compute Engine project
+
+Valid configuration keys for *openstack*
+----------------------------------------
+
+``auth_url``:
+
+    The URL of the keystone service (main entry point for OpenStack
+    clouds)
+
+``username``
+
+    OpenStack username
+
+``password``
+
+    OpenStack password
+``project_name``
+
+    OpenStack project to use (also known as `tenant`)
+
+``region_name``
+
+    OpenStack region (optional) 
+
+``request_floating_ip``
+
+    request assignment of a floating IP when the instance is
+    started. Valid values: `True`, `False`.
+    Some cloud providers does not automatically assign a public IP
+    to the instances, but this is often needed if you want to connect
+    to the VM from outside. Setting ``request_floating_ip`` to `True`
+    will force `elasticluster` to request such a floating IP if the
+    instance doesn't get one automatically.
 
 
 Examples

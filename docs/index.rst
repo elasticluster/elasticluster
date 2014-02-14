@@ -21,10 +21,10 @@
 
 `elasticluster` aims to provide a user-friendly command line tool to
 create, manage and setup computional clusters hosted on cloud
-infrastructures (like `Amazon's Elastic Compute Cloud EC2`_) or a
-private `OpenStack`_ cloud). Its main goal is to get your own private
-cluster up and running with just a few commands; a `YouTube video`_
-demoes the basic features of elasticluster.
+infrastructures (like `Amazon's Elastic Compute Cloud EC2`_, `Google
+Compute Engine`_ or an `OpenStack`_ cloud). Its main goal is to get
+your own private cluster up and running with just a few commands; a
+`YouTube video`_ demoes the basic features of elasticluster.
 
 This project is an effort of the
 `Grid Computing Competence Center`_ at the
