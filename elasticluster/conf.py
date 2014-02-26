@@ -112,7 +112,6 @@ class Configurator(object):
         """
         conf = self.cluster_conf[cluster_template]['cloud']
 
-
         try:
             if conf['provider'] == 'ec2_boto':
                 from elasticluster.providers.ec2_boto import BotoCloudProvider
@@ -120,9 +119,11 @@ class Configurator(object):
             elif conf['provider'] == 'openstack':
                 from elasticluster.providers.openstack import OpenStackCloudProvider
                 provider = OpenStackCloudProvider
-            elif conf['provider'] == 'gce':
+            elif conf['provider'] == 'google':
                 from elasticluster.providers.gce import GoogleCloudProvider
                 provider = GoogleCloudProvider
+            else:
+                raise Invalid("Invalid provider '%s' for cluster '%s'"% (conf['provider'], cluster_template))
         except ImportError, ex:
             raise Invalid("Unable to load provider '%s': %s" % (conf['provider'], ex))
 
