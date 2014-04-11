@@ -160,7 +160,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         if 'public' in IPs:
             public_ip = IPs['public']
-        elif len(IPs['private']) > 1:
+        elif 'private' in IPs and len(IPs['private']) > 1:
             public_ip = IPs['private'][1]
         
         return private_ip, public_ip
