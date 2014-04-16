@@ -25,12 +25,13 @@ __author__ = 'Riccardo Murri <riccardo.murri@uzh.ch>, ' \
 
 
 # stdlib imports
+import copy
 import httplib2
 import os
 import random
+import threading
 import time
 import uuid
-from multiprocessing import Lock
 
 # External modules
 from apiclient.discovery import build
@@ -50,7 +51,7 @@ from elasticluster.exceptions import ImageError, InstanceError, CloudProviderErr
 #: the OAuth scope for the GCE web API
 GCE_SCOPE = 'https://www.googleapis.com/auth/compute'
 GCE_API_NAME = 'compute'
-GCE_API_VERSION = 'v1beta15'
+GCE_API_VERSION = 'v1'
 GCE_URL = 'https://www.googleapis.com/compute/%s/projects/' % GCE_API_VERSION
 GCE_DEFAULT_ZONE = 'us-central1-a'
 GCE_DEFAULT_SERVICE_EMAIL = 'default'
@@ -79,6 +80,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                              file). If no path is specified, the login data
                              has to be entered after every request.
     """
+    __gce_lock = threading.Lock()
 
     def __init__(self, gce_client_id, gce_client_secret, gce_project_id,
                  zone=GCE_DEFAULT_ZONE, network='default',
@@ -97,7 +99,6 @@ class GoogleCloudProvider(AbstractCloudProvider):
         self._instances = {}
         self._cached_instances = []
         self._images = None
-        self._gce_lock = Lock()
 
     def _connect(self):
         """Connects to the cloud web services. If this is the first
@@ -108,7 +109,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                  service.
         """
         # check for existing connection
-        with self._gce_lock:
+        with GoogleCloudProvider.__gce_lock:
             if self._gce:
                 return self._gce
 
@@ -145,7 +146,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
 
         :return: Result of `request.execute`
         """
-        with self._gce_lock:
+        with GoogleCloudProvider.__gce_lock:
             return request.execute(http=self._auth_http)
 
     # The following function was adapted from
@@ -231,7 +232,15 @@ class GoogleCloudProvider(AbstractCloudProvider):
         instance = {
             'name': instance_name,
             'machineType': machine_type_url,
-            'image': image_url,
+            'disks': [{
+                'autoDelete': 'true',
+                'boot': 'true',
+                'type': 'PERSISTENT',
+                'initializeParams' : {
+                    'diskName': "%s-disk" % instance_name,
+                    'sourceImage': image_url
+                    }
+                }],
             'networkInterfaces': [
                 {'accessConfigs': [
                     {'type': 'ONE_TO_ONE_NAT',
@@ -390,3 +399,17 @@ class GoogleCloudProvider(AbstractCloudProvider):
             raise CloudProviderError("The following error occurred while "
                                      "interacting with the cloud provider "
                                      "`%s`" % error)
+
+    def __getstate__(self):
+        """
+        Overwrites the default dictionary for pickle. Only the gce connection
+        is reset in this method in order to enforce a reconnect.
+        """
+        pickle_dict = copy.deepcopy(self.__dict__)
+
+        # the gce connection might be lost when unpickling, therefore we just
+        # save an empty gce connection to mitigate the problems in the first
+        # place.
+        pickle_dict['_gce'] = None
+
+        return pickle_dict
