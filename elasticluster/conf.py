@@ -352,6 +352,7 @@ class ConfigValidator(object):
                                   "username": All(str, Length(min=1)),
                                   "password": All(str, Length(min=1)),
                                   "project_name": All(str, Length(min=1)),
+                                  Optional("request_floating_ip"): Boolean(str),
                                   Optional("region_name"): All(str, Length(min=1))}
 
         node_schema = {
