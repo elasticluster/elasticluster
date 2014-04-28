@@ -131,6 +131,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             security_groups=[security_group], userdata=image_userdata)
 
         self._instances[vm.id] = vm
+        
         return vm.id
 
     def stop_instance(self, instance_id):
@@ -145,25 +146,24 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     def get_ips(self, instance_id):
         """Retrieves the private and public ip addresses for a given instance.
 
-        :return: tuple (ip_private, ip_public)
+        :return: tuple (IPs)
         """
         self._load_instance(instance_id)
         instance = self._load_instance(instance_id)
 
-        # WARNING: automatically assigned floating IPs are listed as
-        # second ip of the 'private' dictionary entry.
-        IPs = instance.networks
-        private_ip = ''
-        public_ip = ''
-        if 'private' in IPs:
-            private_ip = IPs['private'][0]
+        IPs = sum(instance.networks.values(), [])
 
-        if 'public' in IPs:
-            public_ip = IPs['public']
-        elif 'private' in IPs and len(IPs['private']) > 1:
-            public_ip = IPs['private'][1]
-        
-        return private_ip, public_ip
+        # We also need to check if there is any floating IP associated
+        if self.request_floating_ip:
+            # We need to list the floating IPs for this instance
+            floating_ips = [ip for ip in self.client.floating_ips.list() if ip.instance_id == instance.id]
+            if not floating_ips:
+                log.debug("Public ip address has to be assigned through "
+                          "elasticluster.")
+                ip = self._allocate_address(instance)
+                # This is probably the preferred IP we want to use
+                IPs.insert(0, ip)
+        return IPs
 
     def is_instance_running(self, instance_id):
         """Checks if the instance is up and running.
@@ -175,19 +175,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         # Here, it's always better if we update the instance.        
         instance = self._load_instance(instance_id, force_reload=True)
-        if instance.status == 'ACTIVE':
-            # If the instance is up&running, ensure it has an IP
-            # address.
-            (private_ip, public_ip) = self.get_ips(instance_id)
-            if not public_ip and self.request_floating_ip:
-                log.debug("Public ip address has to be assigned through "
-                          "elasticluster.")
-                self._allocate_address(self, instance)
-                # Also update internal cache
-                self._load_instance(instance_id, force_reload=True)
-            return True
-        else:
-            return False
+        return instance.status == 'ACTIVE'
 
     # Protected methods
 
@@ -340,15 +328,16 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         """Allocates a free public ip address to the given instance
 
         :param instance: instance to assign address to
-        :type instance: py:class:`boto.ec2.instance.Reservation`
+        :type instance: py:class:`novaclient.v1_1.servers.Server`
 
         :return: public ip address
         """
         with OpenStackCloudProvider.__node_start_lock:
-            free_ips = self.client.floating_ips.list()
+            free_ips = [i for i in self.client.floating_ips.list() if not i.fixed_ip]
             if not free_ips:
-                ip = self.client.floating_ips.create()
-                instance.add_floating_ip(ip)
+                free_ips.append(self.client.floating_ips.create())
+            ip = free_ips.pop()
+            instance.add_floating_ip(ip)
         return ip.ip
 
     # Fix pickler

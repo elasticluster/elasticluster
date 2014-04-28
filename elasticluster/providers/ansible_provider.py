@@ -252,7 +252,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 for group in self.groups[node.kind]:
                     if group not in inventory:
                         inventory[group] = []
-                    public_ip = node.ip_public if node.ip_public else node.ip_private
+                    public_ip = node.preferred_ip
                     inventory[group].append(
                         (node.name, public_ip, str.join(' ', extra_vars)))
 

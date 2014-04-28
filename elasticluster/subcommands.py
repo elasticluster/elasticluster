@@ -575,6 +575,13 @@ class SshFrontend(AbstractCommand):
 
         try:
             frontend = cluster.get_frontend_node()
+            # ensure we can connect to the host
+            if not frontend.preferred_ip:
+                # Ensure we can connect to the node, and save the value of `preferred_ip`
+                ssh = frontend.connect()
+                ssh.close()
+                cluster.repository.save_or_update(cluster)
+
         except NodeNotFound, ex:
             log.error("Unable to connect to the frontend node: %s" % str(ex))
             sys.exit(1)

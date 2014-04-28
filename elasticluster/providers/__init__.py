@@ -74,7 +74,7 @@ class AbstractCloudProvider:
     def get_ips(self, instance_id):
         """Retrieves the private and public ip addresses for a given instance.
 
-        :return: tuple (ip_private, ip_public)
+        :return: list (IPs)
         """
         pass
 

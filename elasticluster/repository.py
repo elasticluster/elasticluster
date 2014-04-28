@@ -144,16 +144,13 @@ class ClusterRepository(AbstractClusterRepository):
         for fname in allfiles:
             fpath = os.path.join(self.storage_path, fname)
             if fname.endswith('.%s' % file_ending) and os.path.isfile(fpath):
-                cluster_files.append(fpath)
+                cluster_files.append(fname[:-len(file_ending)-1])
             else:
                 log.info("Ignoring invalid storage file %s", fpath)
 
         clusters = list()
         for cluster_file in cluster_files:
-            with open(cluster_file, 'rb') as f:
-                cluster = pickle.load(f)
-                clusters.append(cluster)
-
+            clusters.append(self.get(cluster_file))
         return clusters
 
     def get(self, name):
@@ -168,6 +165,12 @@ class ClusterRepository(AbstractClusterRepository):
 
         with open(path, 'r') as storage:
             cluster = pickle.load(storage)
+            # Compatibility with previous version of Node
+            for node in sum(cluster.nodes.values(), []):
+                if not hasattr(node, 'ips'):
+                    log.debug("Monkey patching old version of `Node` class: %s", node.name)
+                    node.ips = [node.ip_public, node.ip_private]
+                    node.preferred_ip = None
             return cluster
 
     def delete(self, cluster):

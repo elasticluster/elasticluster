@@ -187,12 +187,26 @@ class BotoCloudProvider(AbstractCloudProvider):
     def get_ips(self, instance_id):
         """Retrieves the private and public ip addresses for a given instance.
 
-        :return: tuple (ip_private, ip_public)
+        :return: list (ips)
         """
         self._load_instance(instance_id)
         instance = self._load_instance(instance_id)
+        IPs = [ip for ip in instance.private_ip_address, instance.ip_address if ip]
 
-        return instance.private_ip_address, instance.ip_address
+        # We also need to check if there is any floating IP associated
+        if self.request_floating_ip:
+            # We need to list the floating IPs for this instance
+            floating_ips = [ip for ip in self._connection.get_all_addresses() if ip.instance_id == instance.id]
+            if not floating_ips:
+                log.debug("Public ip address has to be assigned through "
+                          "elasticluster.")
+                ip = self._allocate_address(instance)
+                # This is probably the preferred IP we want to use
+                IPs.insert(0, ip)
+            else:
+                IPs = [ip.public_ip for ip in floating_ips] + IPs
+
+        return list(set(IPs))
 
     def is_instance_running(self, instance_id):
         """Checks if the instance is up and running.
@@ -224,24 +238,23 @@ class BotoCloudProvider(AbstractCloudProvider):
         :return: public ip address
         """
         connection = self._connect()
-        addresses = connection.get_all_addresses()
-        for address in addresses:
-            # Find an unused address
-            if not address.instance_id:
-                # Free address, use it.
-                instance.use_ip(address)
-                log.debug("Assigning ip address `%s` to instance `%s`"
-                          % (address.public_ip, instance.id))
-                return address.public_ip
+        free_addresses = [ ip for ip in connection.get_all_addresses() if not ip.instance_id]
+        if not free_addresses:
+            try:
+                address = connection.allocate_address()
+            except Exception, ex:
+                log.error("Unable to allocate a public IP address to instance `%s`",
+                          instance.id)
+                return None
 
-        # No allocated addresses available.
         try:
-            address = connection.allocate_address()
+            address = free_addresses.pop()
             instance.use_ip(address)
             return address.public_ip
         except Exception, ex:
-            log.error("Unable to allocate a public IP address to instance `%s`",
-                      instance.id)
+            log.error("Unable to associate IP address %s to instance `%s`",
+                      address, instance.id)
+            return None
 
     def _load_instance(self, instance_id):
         """Checks if an instance with the given id is cached. If not it

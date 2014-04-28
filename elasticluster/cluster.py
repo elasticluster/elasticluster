@@ -347,6 +347,11 @@ class Cluster(object):
 
         signal.alarm(0)
 
+        # It might be possible that the node.connect() call updated
+        # the `preferred_ip` attribute, so, let's save the cluster
+        # again.
+        self.repository.save_or_update(self)
+
         # A lot of things could go wrong when starting the cluster. To
         # ensure a stable cluster fitting the needs of the user in terms of
         # cluster size, we check the minimum nodes within the node groups to
@@ -570,11 +575,11 @@ class Node(object):
 
     :ivar instance_id: id of the node instance on the cloud
 
-    :ivar ip_public: public ip of this node
+    :ivar preferred_ip: IP address used to connect to the node.
 
-    :ivar ip_private: private ip of this node
+    :ivar ips: list of all the IPs defined for this node.
     """
-    connection_timeout = 10  #: timeout in seconds to connect to host via ssh
+    connection_timeout = 5  #: timeout in seconds to connect to host via ssh
 
     def __init__(self, name, kind, cloud_provider, user_key_public,
                  user_key_private, user_key_name, image_user, security_group,
@@ -592,8 +597,8 @@ class Node(object):
         self.flavor = flavor
 
         self.instance_id = None
-        self.ip_public = None
-        self.ip_private = None
+        self.preferred_ip = None
+        self.ips = []
 
     def start(self):
         """Starts the node on the cloud using the given
@@ -655,7 +660,7 @@ class Node(object):
 
         If the instance has a public IP address, then this is returned, otherwise, its private IP is returned.
         """
-        return self.ip_public if self.ip_public else self.ip_private
+        return self.preferred_ip
 
     def connect(self):
         """Connect to the node via ssh using the paramiko library.
@@ -665,27 +670,34 @@ class Node(object):
         """
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(IgnorePolicy())
-        remote_ip = self.connection_ip()
-        if not self.ip_public:
-            log.debug("Instance id '%s' has no public ip, using private IP "
-                      "'%s' for connecting", self.instance_id, self.ip_private)
+        # Try connecting using the `preferred_ip`, if
+        # present. Otherwise, try all of them and set `preferred_ip`
+        # using the first that is working.
+        ips=self.ips[:]
+        # This is done in order to "sort" the IPs and put the preferred_ip first.
+        if self.preferred_ip: ips.remove(self.preferred_ip)
 
-        try:
-            log.debug("Trying to connect to host %s (%s)",
-                      self.name, remote_ip)
-            ssh.connect(remote_ip,
-                        username=self.image_user,
-                        allow_agent=True,
-                        key_filename=self.user_key_private,
-                        timeout=Node.connection_timeout)
-            log.debug("Connection to %s succeded!", remote_ip)
-            return ssh
-        except socket.error, ex:
-            log.debug("Host %s (%s) not reachable: %s.",
-                      self.name, remote_ip, ex)
-        except paramiko.SSHException, ex:
-            log.debug("Ignoring error %s connecting to %s",
-                      str(ex), self.name)
+        for ip in [self.preferred_ip] + ips:
+            try:
+                log.debug("Trying to connect to host %s (%s)",
+                          self.name, ip)
+                ssh.connect(ip,
+                            username=self.image_user,
+                            allow_agent=True,
+                            key_filename=self.user_key_private,
+                            timeout=Node.connection_timeout)
+                log.debug("Connection to %s succeded!", ip)
+                if ip != self.preferred_ip:
+                    log.debug("Setting `preferred_ip` to %s", ip)
+                    self.preferred_ip = ip
+                    cluster_changed = True
+                return ssh
+            except socket.error, ex:
+                log.debug("Host %s (%s) not reachable: %s.",
+                          self.name, ip, ex)
+            except paramiko.SSHException, ex:
+                log.debug("Ignoring error %s connecting to %s",
+                          str(ex), self.name)
 
         return None
 
@@ -695,15 +707,13 @@ class Node(object):
         time, but this method is non blocking. To check for a public ip,
         consider calling this method multiple times during a certain timeout.
         """
-        private, public = self._cloud_provider.get_ips(self.instance_id)
-        self.ip_public = public
-        self.ip_private = private
-        return private, public
+        self.ips = self._cloud_provider.get_ips(self.instance_id)
+        return self.ips[:]
 
     def __str__(self):
-        return "name=`%s`, id=`%s`, public_ip=`%s`, private_ip=`%s`, "\
-            "connection_ip=`%s`" % (self.name, self.instance_id, self.ip_public,
-                                    self.ip_private, self.connection_ip())
+        return "name=`%s`, id=`%s`, ips=%s, "\
+            "connection_ip=`%s`" % (self.name, self.instance_id, str.join(', ', self.ips),
+                                    self.preferred_ip)
 
     def pprint(self):
         """Pretty print information about the node.
@@ -711,9 +721,8 @@ class Node(object):
         :return: str - representaion of a node in pretty print
         """
         return """%s
-public IP:     %s
-private IP:    %s
 connection IP: %s
+IPs:    %s
 instance id:   %s
-instance flavor: %s""" % (self.name, self.ip_public, self.ip_private,
-                          self.connection_ip(), self.instance_id, self.flavor)
+instance flavor: %s""" % (self.name, self.preferred_ip, str.join(', ', self.ips),
+                          self.instance_id, self.flavor)
