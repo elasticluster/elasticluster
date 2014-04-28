@@ -267,7 +267,7 @@ class TestNode(unittest.TestCase):
         cloud_provider.start_instance.assert_called_once_with(
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group, self.flavor, self.image,
-            self.image_userdata, username=self.image_user)
+            self.image_userdata, username=self.image_user, node_name=node.name)
         self.assertEqual(node.instance_id, instance_id)
 
     def test_stop(self):
