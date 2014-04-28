@@ -113,7 +113,7 @@ class TestCluster(unittest.TestCase):
         """
         cloud_provider = MagicMock()
         cloud_provider.start_instance.return_value = u'test-id'
-        cloud_provider.get_ips.return_value = ('127.0.0.1', '127.0.0.1')
+        cloud_provider.get_ips.return_value = ['127.0.0.1']
         cloud_provider.is_instance_running.return_value = True
 
         cluster = self.get_cluster(cloud_provider=cloud_provider)
@@ -127,8 +127,7 @@ class TestCluster(unittest.TestCase):
 
         for node in cluster.get_all_nodes():
             assert node.instance_id == u'test-id'
-            assert node.ip_public == '127.0.0.1'
-            assert node.ip_private == '127.0.0.1'
+            assert node.ips == ['127.0.0.1']
 
     def test_check_cluster_size(self):
         nodes = {"compute": 3, "frontend": 1}
@@ -218,7 +217,7 @@ class TestCluster(unittest.TestCase):
         cluster.update()
 
         for node in cluster.get_all_nodes():
-            self.assertEqual(node.ip_private, node.ip_public, ip)
+            self.assertEqual(node.ips[0], ip)
 
 
 class TestNode(unittest.TestCase):
@@ -297,7 +296,7 @@ class TestNode(unittest.TestCase):
 
         provider = node._cloud_provider
         provider.is_instance_running.return_value = True
-        provider.get_ips.return_value = ('127.0.0.1', '127.0.0.1')
+        provider.get_ips.return_value = ['127.0.0.1', '127.0.0.1']
 
         node.is_alive()
 
@@ -328,17 +327,13 @@ class TestNode(unittest.TestCase):
         node.instance_id = instance_id
         provider = node._cloud_provider
 
-        node.ip_private = None
-        node.ip_public = None
-
-        ip_public = '127.0.0.1'
-        ip_private = '127.0.0.2'
-        provider.get_ips.return_value = (ip_private, ip_public)
+        ips = ['127.0.0.1', '127.0.0.2']
+        node.ips = ips
+        provider.get_ips.return_value = ips
 
         node.update_ips()
 
-        self.assertEqual(node.ip_private, ip_private)
-        self.assertEqual(node.ip_public, ip_public)
+        self.assertEqual(node.ips, ips)
         provider.get_ips.assert_called_once_with(instance_id)
 
 if __name__ == "__main__":

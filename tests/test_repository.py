@@ -40,6 +40,7 @@ class FakeCluster(object):
     """
     def __init__(self, name='fake_cluster'):
         self.name = name
+        self.nodes = {}
 
     def __eq__(self, other):
         return self.name == other.name
