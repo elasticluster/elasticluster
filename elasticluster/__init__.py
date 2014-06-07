@@ -22,7 +22,7 @@ import logging
 
 logging.basicConfig()
 log = logging.getLogger("gc3.elasticluster")
-
+log.DO_NOT_FORK = False
 
 # API
 from elasticluster.cluster import Cluster

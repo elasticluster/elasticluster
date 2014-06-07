@@ -106,6 +106,10 @@ class ElastiCluster(cli.app.CommandLineApp):
         loglevel = max(1, logging.WARNING - 10 * max(0, self.params.verbose))
         log.setLevel(loglevel)
 
+        # In debug mode, avoid forking
+        if self.params.verbose > 3:
+            log.DO_NOT_FORK = True
+
         if not os.path.isdir(self.params.storage):
             # We do not create *all* the parents, but we do create the
             # directory if we can.

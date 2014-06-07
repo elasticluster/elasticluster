@@ -258,25 +258,35 @@ class Cluster(object):
             self.keep_running = False
 
         nodes = self.get_all_nodes()
-        thread_pool = Pool(processes=len(nodes))
-        log.debug("Created pool of %d threads" % len(nodes))
-        signal.signal(signal.SIGINT, sigint_handler)
 
-        # This is blocking
-        result = thread_pool.map_async(self._start_node, nodes)
-
-        while not result.ready():
-            result.wait(1)
-            if not self.keep_running:
-                # the user did abort the start of the cluster. We finish the
-                #  current start of a node and save the status to the
-                # storage, so we don't have not managed instances laying
-                # around
-                log.error("Aborting upon Ctrl-C")
-                thread_pool.close()
-                thread_pool.join()
+        if log.DO_NOT_FORK:
+            # Start the nodes sequentially without forking, in order
+            # to ease the debugging
+            for node in nodes:
+                self._start_node(node)
                 self.repository.save_or_update(self)
-                sys.exit(1)
+        else:
+            # Create one thread for each node to start
+            thread_pool = Pool(processes=len(nodes))
+            log.debug("Created pool of %d threads" % len(nodes))
+            # Intercept Ctrl-c
+            signal.signal(signal.SIGINT, sigint_handler)
+
+            # This is blocking
+            result = thread_pool.map_async(self._start_node, nodes)
+
+            while not result.ready():
+                result.wait(1)
+                if not self.keep_running:
+                    # the user did abort the start of the cluster. We
+                    # finish the current start of a node and save the
+                    # status to the storage, so we don't have
+                    # unmanaged instances laying around
+                    log.error("Aborting upon Ctrl-C")
+                    thread_pool.close()
+                    thread_pool.join()
+                    self.repository.save_or_update(self)
+                    sys.exit(1)
 
         # dump the cluster here, so we don't loose any knowledge
         self.repository.save_or_update(self)
@@ -678,6 +688,7 @@ class Node(object):
         if self.preferred_ip: ips.remove(self.preferred_ip)
 
         for ip in [self.preferred_ip] + ips:
+            if not ip: continue
             try:
                 log.debug("Trying to connect to host %s (%s)",
                           self.name, ip)
