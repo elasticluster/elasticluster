@@ -102,10 +102,14 @@
 # ----------------------------------------
 #
 # auth_url:          The URL of the keystone service (main entry point for 
-#                    OpenStack clouds)
-# username:          OpenStack username
-# password:          OpenStack password
-# project_name:      OpenStack project to use (also known as `tenant`)
+#                    OpenStack clouds), same as option --os-auth-url of
+#                    `nova` command
+# username:          OpenStack username, same as option --os-username of 
+#                    `nova` command
+# password:          OpenStack password, same as option --os-password of 
+#                    `nova` command
+# project_name:      OpenStack project to use (also known as `tenant`),
+#                    same as option `--os-tenant-name` of `nova` command
 # region_name:       OpenStack region (optional) 
 # request_floating_ip: request assignment of a floating IP when the
 #                      instance is started.
@@ -137,13 +141,23 @@
 # For instance, to connect to Hobbes <http://hobbes.gc3.uzh.ch> you
 # can use the following:
 
-[cloud/hobbes]
+[cloud/ec2hobbes]
 provider=ec2_boto
 ec2_url=http://hobbes.gc3.uzh.ch:8773/services/Cloud
 ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
 ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
 ec2_region=nova
 # request_floating_ip=False
+
+# Hobbes cloud, using the `openstack` provider
+[cloud/hobbes]
+provider=openstack
+auth_url=http://hobbes.gc3.uzh.ch:5000/v2.0
+username=***REPLACE WITH YOUR USERNAME (OS_USERNAME)***
+password=***REPLACE WITH YOUR PASSWORD (OS_PASSWORD)***
+project_name=***REPLACE WITH YOUR PROJECT NAME (OS_TENANT_NAME)***
+# request_floating_ip=False
+# region_name=
 
 # For Amazon instead (region us-east-1) you can use:
 #
@@ -427,14 +441,14 @@ login=gc3-user
 setup_provider=ansible-slurm
 security_group=default
 # Ubuntu image
-image_id=ami-00000048
+image_id=a9e98055-5aa3-4636-8fc5-f3b2b4ea66bb
 flavor=m1.small
 frontend_nodes=1
 compute_nodes=2
 ssh_to=frontend
 
 [cluster/torque]
-cloud=hobbes
+cloud=ec2hobbes
 frontend_nodes=1
 compute_nodes=2
 security_group=default
@@ -458,7 +472,7 @@ compute_nodes=2
 ssh_to=frontend
 
 [cluster/matlab]
-cloud=hobbes
+cloud=ec2hobbes
 login=gc3-user
 setup_provider=ansible_matlab
 security_group=default
@@ -470,7 +484,7 @@ image_userdata=
 ssh_to=frontend
 
 [cluster/hadoop]
-cloud=hobbes
+cloud=ec2hobbes
 login=gc3-user
 setup_provider=hadoop
 security_group=all_tcp_ports
