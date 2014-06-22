@@ -276,7 +276,6 @@ class GoogleCloudProvider(AbstractCloudProvider):
             log.error("Error creating instance `%s`" % e)
             raise InstanceError("Error creating instance `%s`" % e)
 
-
     def stop_instance(self, instance_id):
         """Stops the instance gracefully.
 
@@ -321,7 +320,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         provider by the given instance id.
 
         :param str instance_id: id of the instance
-        :return: tuple (ip_private, ip_public)
+        :return: list (ips)
         :raises: InstanceError if the ip could not be retrieved.
         """
         gce = self._connect()
@@ -341,12 +340,12 @@ class GoogleCloudProvider(AbstractCloudProvider):
                         ip_public = interfaces[0]['accessConfigs'][0]['natIP']
 
             if ip_private and ip_public:
-                return ip_private, ip_public
+                return [ip_private, ip_public]
             else:
                 raise InstanceError("could not retrieve the ip address for "
                                     "node `%s`, please check the node "
                                     "through the cloud provider interface"
-                                     % instance_id)
+                                    % instance_id)
 
         except (HttpError, CloudProviderError) as e:
             raise InstanceError('could not retrieve the ip address of `%s`: '
