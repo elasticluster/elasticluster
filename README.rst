@@ -65,7 +65,7 @@ If you want to run `elasticluster` from source you have to **install**
 
 ::
 
-    pip install ansible
+    pip install ansible==1.3.3
     python setup.py install
 
 Installing the development version from github
@@ -85,7 +85,7 @@ needed by elasticluster::
 
     virtualenv elasticluster
     . elasticluster/bin/activate
-    pip install ansible
+    pip install ansible==1.3.3
     
 Then you have to download the software. We suggest you to download it
 *within* the created virtualenv::
