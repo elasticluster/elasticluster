@@ -61,6 +61,7 @@ required_packages = [
     'google-api-python-client',
     'oauth2client',
     'httplib2',
+    'python-gflags',
 ]
 
 if sys.version_info[:2] == (2, 6):
