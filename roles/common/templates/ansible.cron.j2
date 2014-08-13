@@ -1,0 +1,17 @@
+#!/bin/bash
+# THIS FILE IS CONTROLLED BY ANSIBLE
+# any local modifications will be overwritten!
+#
+
+
+cd /srv/ansible/playbooks
+. /srv/ansible/venv/bin/activate
+
+myhostname={{ hostname }}
+[ -z ${myhostname} ] && myhostname=`hostname -f`
+
+# Update repository
+git pull
+
+# Run ansible
+ansible-playbook -c local -i hosts site.yml -l $myhostname

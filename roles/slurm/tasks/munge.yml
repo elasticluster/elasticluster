@@ -1,0 +1,11 @@
+---
+- name: munge service
+  action: service name=munge state=started
+  tags: 
+    - munge
+
+- name: configure munge
+  action: copy src=slurm/files/etc/munge/munge.key dest=/etc/munge/munge.key owner=munge group=munge mode=0400
+  notify: restart munge
+  tags: 
+    - munge

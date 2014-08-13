@@ -1,0 +1,12 @@
+---
+- name: restart pbs_mom
+  action: service name=pbs_mom state=restarted
+  when: is_centos
+
+- name: restart pbs_server
+  action: service name=pbs_server state=restarted
+  when: is_centos
+
+- name: restart maui
+  action: service name=maui state=restarted
+  when: is_centos

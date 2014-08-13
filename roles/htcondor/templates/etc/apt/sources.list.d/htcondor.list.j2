@@ -1,0 +1,12 @@
+# THIS FILE IS CONTROLLED BY ANSIBLE
+# any local modifications will be overwritten!
+#
+
+# HTCondor repository
+{% if ansible_distribution == "Debian" %}
+deb [arch=amd64] http://research.cs.wisc.edu/htcondor/debian/stable/ {{ ansible_distribution_release }} contrib
+deb [arch=amd64] http://research.cs.wisc.edu/htcondor/debian/development/ {{ ansible_distribution_release }} contrib
+{% else %}
+deb [arch=amd64] http://research.cs.wisc.edu/htcondor/debian/stable/ wheezy contrib
+deb [arch=amd64] http://research.cs.wisc.edu/htcondor/debian/development/ wheezy contrib
+{% endif %}

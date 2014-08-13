@@ -1,0 +1,45 @@
+---
+#######################
+# Nested VARS example #
+#######################
+#
+# This example is used to explain how you can call nested variables
+# (like, an item of a dictionary) using ansible prior v1.2. It may be
+# a bit tricky because of the way ansible does the expansion of th
+# evariables...
+#
+# Bascially, to expand `hostvars[item]` where `hostvars` is a
+# dictionary-like object and `item` is a variable, you have to do:
+#
+#    ${hostvars.{$item}}
+#
+# Note that the expansion of the dictionary is done with `${...}`
+# while the expansion of the attribute of the dictionary is done with
+# `{$...}`.
+#
+# The following example will define a dictionary `hosts`:
+#
+#     hosts = { 'a': {'b': 'c'}}
+#
+# and try to print `hosts['a']['b']`
+#
+- hosts: all
+  vars:
+    hosts:
+      a:
+        b: c
+    x: a
+    y: b
+  tasks:
+    - debug: msg="${hosts.{$x}.{$y}}"
+
+# The original use case I used for this was taken from this task, in
+# which I wanted to produce an ``/etc/hosts`` file starting from the
+# data sotred in the inventory, adding or updating the IP addresses of
+# all the known hosts.
+#
+# - hosts: all
+#   connection: local
+#   tasks: 
+#     - lineinfile: dest=/tmp/hostfile regexp=".* $item .*" line="${hostvars.{$item}.ansible_default_ipv4.address} $item "
+#       with_items: $hostvars

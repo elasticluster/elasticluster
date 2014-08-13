@@ -1,0 +1,3 @@
+- name: configure EPEL repository
+  action: copy src=etc/yum.repos.d/epel.repo dest=/etc/yum.repos.d/epel.repo owner=root
+  when: is_centos

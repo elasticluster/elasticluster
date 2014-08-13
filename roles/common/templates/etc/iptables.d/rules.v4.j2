@@ -1,0 +1,55 @@
+# THIS FILE IS CONTROLLED BY ANSIBLE
+# any local modifications will be overwritten!
+#
+
+# This files defines iptable netfilter rules, 
+# to be loaded with `iptables-restore < $this_file`
+
+*filter
+
+## create queues and set policy
+:INPUT {{ default_policy }} [0:0]
+:OUTPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+
+## INPUT queue -- inbound traffic
+# accept all inbound packets related to existing connections
+# (this rule comes first as it's likely the one that is hit most times)
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+# Allow all connection from the loopback device
+-A INPUT -i lo -j ACCEPT
+
+# Allow all incoming ssh connections
+-A INPUT -s 0.0.0.0/0 -p tcp --dport 22 -j ACCEPT
+
+# Allow all incoming connections from ``trusted_hosts``
+{% if trusted_hosts %}
+{% for host in trusted_hosts  %}
+-A INPUT -s {{ host }} -j ACCEPT
+{% endfor %}
+
+{% else %}
+{% for host in groups['all']|sort  %}
+-A INPUT -s {{ host }} -j ACCEPT 
+{% endfor %}
+
+{% endif %}
+
+# reject all other inbound, but limit the number of rejections to
+# avoid becoming a DDoS amplifier
+-A INPUT -m limit -s {{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.netmask }} --limit 6/min -j REJECT --reject-with icmp-admin-prohibited
+
+## OUTPUT queue -- outbound traffic
+# allow all outbound traffic
+-A OUTPUT -j ACCEPT
+
+## FORWARD queue -- only relevant if this host is a gateway
+-A FORWARD -j REJECT
+COMMIT
+
+*nat
+:PREROUTING ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+COMMIT

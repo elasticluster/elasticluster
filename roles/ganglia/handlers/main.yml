@@ -1,0 +1,22 @@
+---
+- name: restart apache
+  action: service name=apache2 state=restarted
+  when: is_debian_or_ubuntu
+
+- name: restart apache
+  action: service name=httpd state=restarted
+  when: is_centos
+
+# gmetad and ganglia-monitor init scripts does not support `status`
+# argument.
+- name: restart gmond
+  action: command service ganglia-monitor restart
+  when: is_debian_or_ubuntu
+
+- name: restart gmond
+  action: service name=gmond state=restarted
+  when: is_centos
+
+- name: restart gmetad
+  action: command service gmetad restart
+  when: '"ganglia_master" in group_names'

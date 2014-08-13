@@ -1,0 +1,15 @@
+#
+# Create queues and set their attributes.
+#
+#
+# Create and define queue default
+#
+create queue default
+set queue default queue_type = Execution
+set queue default enabled = True
+set queue default started = True
+#
+# Set server attributes.
+#
+set server scheduling = True
+set server default_queue = default

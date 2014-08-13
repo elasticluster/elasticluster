@@ -1,0 +1,10 @@
+---
+- name: restart slurm
+  action: service name=slurm-llnl state=restarted
+
+- name: restart munge
+  action: service name=munge state=restarted
+
+- name: mount home
+  action: shell mount /home
+

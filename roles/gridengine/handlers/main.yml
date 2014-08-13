@@ -1,0 +1,4 @@
+---
+- name: restart execd
+  action: service name=gridengine-exec state=restarted
+  when: is_debian_or_ubuntu

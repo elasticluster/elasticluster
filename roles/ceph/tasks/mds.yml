@@ -1,0 +1,21 @@
+---
+- action: file dest=/var/lib/ceph/mds/ceph-${ceph-idx} state=directory
+  tags:
+    - ceph
+
+- name: Copying keyring from mon.0
+  action: shell scp root@${groups.ceph_mon[0]}:/etc/ceph/ceph.mon.keyring /etc/ceph/keyring
+          creates=/etc/ceph/keyring
+  tags:
+    - ceph
+
+- name: Copy mon keyring
+  action: shell cp -a /etc/ceph/keyring /var/lib/ceph/mds/ceph-${ceph-idx}/keyring
+          creates=/var/lib/ceph/mds/ceph-${ceph-idx}/keyring
+  tags:
+    - ceph
+
+- name: Ensure ceph-mds is running
+  action: service name=ceph state=started
+  tags:
+    - ceph

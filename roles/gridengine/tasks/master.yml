@@ -1,0 +1,86 @@
+---
+- name: Install GridEngine APT packages
+  action: apt pkg=$item state=latest
+  when: is_debian_or_ubuntu
+  with_items:
+    - gridengine-client
+    - gridengine-common
+    - gridengine-master
+    - gridengine-qmon
+
+- name: Install GridEngine RPM packages
+  action: yum pkg=$item state=latest
+  when: is_centos
+  with_items:
+    - gridengine-qmaster
+    - gridengine-execd
+    - gridengine-qmon
+
+- name: qmaster installation (CentOS)
+  action: shell cd /usr/share/gridengine; ./install_qmaster -auto ./my_configuration.conf creates=/usr/share/gridengine/default/common/cluster_name
+  when: is_centos
+  tags:
+    - sge
+
+- name: add the frontend as submission host
+  action: shell bash -lc 'qconf -as ${groups.gridengine_master[0]}'
+  ignore_errors: yes
+  tags:
+    - sge
+
+- name: upload configuration file for host
+  action: template src=gridengine/templates/newhost.qconf.j2 dest="/root/${item}.conf"
+  with_items: ${groups.gridengine_clients}
+  tags:
+    - sge
+
+- name: add execution hosts
+  action: shell bash -lc 'qconf -Ae "/root/${item}.conf"'
+  with_items: ${groups.gridengine_clients}
+  ignore_errors: yes
+  tags:
+    - sge
+
+- name: upload configuration file for hostgroup
+  action: template src=gridengine/templates/allhosts.grp.conf.j2 dest=/root/allhosts.grp.conf
+  ignore_errors: yes
+  tags:
+    - sge
+
+- name: add default group
+  action: shell bash -lc 'qconf -Ahgrp /root/allhosts.grp.conf'
+  ignore_errors: yes
+  tags:
+    - sge
+
+- name: Update @allhosts group
+  action: shell bash -lc 'qconf -Mhgrp /root/allhosts.grp.conf'
+  ignore_errors: yes
+  tags:
+    - sge
+
+- name: deploy default configuration for main queue
+  action: copy src=gridengine/files/all.q.conf dest=/root/all.q.conf
+  tags:
+    - sge
+
+- name: create default queue
+  action: shell bash -lc 'qconf -Aq /root/all.q.conf'
+  ignore_errors: yes
+  tags:
+    - sge
+
+- name: add hosts to the default queue
+  action: shell bash -lc 'qconf -aattr queue hostlist @allhosts all.q'
+  ignore_errors: yes
+  tags:
+    - sge
+
+- name: Export gridengine cell to the clients
+  action: nfsexport path=/usr/share/gridengine/default/common dest=/etc/exports clients=${groups.gridengine_clients} options=ro,no_root_squash,sync
+  notify: 
+    - ensure nfs service is running
+    - reload exports
+  when: is_centos
+  tags:
+    - sge

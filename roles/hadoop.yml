@@ -1,0 +1,45 @@
+---
+- hosts: hadoop_namenode:hadoop_secnamenode:hadoop_datanode:hadoop_jobtracker:hadoop_tasktracker
+  name: Prerequisites for Hadoop
+  vars_files:
+    - vars/os
+  tasks:
+    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+    - include: common/tasks/iptables.yml trusted_hosts=${groups.all} default_accept=1
+  handlers:
+    - include: common/handlers/main.yml
+
+- hosts: hadoop_namenode:hadoop_secnamenode:hadoop_datanode:hadoop_jobtracker:hadoop_tasktracker
+  name: Install Hadoop
+  vars_files:
+    - vars/os
+  vars:
+    deburl: http://apache.cs.utah.edu/hadoop/common/hadoop-1.2.1/hadoop_1.2.1-1_x86_64.deb
+    rpmurl: http://apache.cs.utah.edu/hadoop/common/hadoop-1.2.1/hadoop-1.2.1-1.x86_64.rpm
+    hd_confdir: "/etc/hadoop/"
+    hd_tmpdir: "/srv/hadoop"
+    hd_namedir: "${hd_tmpdir}/dfs/name"
+    hd_datadir: "${hd_tmpdir}/dfs/data"
+    mapred_localdir: "${hd_tmpdir}/mapred"
+    hdfs_replication: 3
+  tasks: 
+    - include: hadoop/tasks/packages.yml
+    - include: hadoop/tasks/conf.yml
+
+    - name: Start name and data daemons
+      action: command /usr/sbin/start-dfs.sh
+      when: inventory_hostname in groups.hadoop_namenode
+
+    - name: Start job tracker
+      action: command /usr/sbin/start-mapred.sh
+      when: inventory_hostname in groups.hadoop_jobtracker
+
+    - name: Create hdfs:/tmp/hadoop-root/mapred directory
+      action: shell hadoop dfs -mkdir /tmp/hadoop-root/mapred ; echo done
+
+    - name: Set dfs /tmp/hadoop-root/mapred directory world-writable
+      action: shell hadoop dfs -chmod 777 /tmp/hadoop-root/mapred
+
+    - name: Make the hdfs:/ root world writable
+      action: shell hadoop dfs -chmod 777 /
+

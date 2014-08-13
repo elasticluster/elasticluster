@@ -1,0 +1,6 @@
+---
+- name: mount home
+  action: shell mount /home
+
+- name: restart HTCondor
+  action: service name=condor state=restarted

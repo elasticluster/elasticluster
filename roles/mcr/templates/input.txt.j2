@@ -1,0 +1,28 @@
+# THIS FILE IS CONTROLLED BY ANSIBLE
+# any local modifications will be overwritten!
+#
+
+## Parameters to run the MATLAB Compiler Runtime in unattended mode
+
+destinationFolder={{ installdir }}
+agreeToLicense=yes
+outputFile=/tmp/MCRInstaller.log
+
+{% if installkey -%} fileInstallationKey={{ installkey }} {% endif %}
+
+{% if licensefile -%} licensePath=license.dat {% endif %}
+
+
+# Installer mode
+# --------------
+#
+# interactive: Run the installer GUI, waiting for user input on all
+#              dialog boxes.
+#
+# silent:      Run the installer without displaying the GUI.
+#
+# automated:   Run the installer GUI, displaying all dialog boxes, but only
+#              waiting for user input on dialogs that are missing required
+#              input.
+#
+mode=silent

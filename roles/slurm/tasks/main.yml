@@ -1,0 +1,9 @@
+---
+- name: Install required SLURM packages
+  action: apt pkg=$item update_cache=yes force=yes state=latest
+  with_items:
+    - slurm-llnl
+    - munge
+
+- include: slurm.yml
+- include: munge.yml

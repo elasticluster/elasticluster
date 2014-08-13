@@ -1,0 +1,20 @@
+---
+###########################
+# Storing facts to a file #
+###########################
+#
+# This will store some information in `variables.txt`
+#
+# In most cases you may want to use instead:
+# 
+#     ansible -m setup -t ./variables.d all 
+# 
+# which will store in directory `variables.d` all facts gathered by
+# the `setup` module.
+# 
+# However, the template system will also get facts or variables set by
+# modules executed before in the playbook.
+
+- hosts: all
+  tasks:
+    - template: src=variables.j2 dest=./variables.txt

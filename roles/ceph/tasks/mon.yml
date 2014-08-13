@@ -1,0 +1,84 @@
+---
+- action: file dest=/var/lib/ceph/mon/ceph-${ceph-idx} state=directory
+  tags:
+    - ceph
+
+
+# - name: Create key for MON.n on the first mon node
+#   action: shell idx=${hostvars.{$item}.ceph-idx};
+#           ceph-authtool /etc/ceph/ceph.mon.keyring --list | grep -A 1 "\[mon\.$idx\]" | 
+#           tail -1 |sed 's/\s*key\s*=\s*//g' | grep =$ ||
+#           ceph-authtool /etc/ceph/ceph.mon.keyring --gen-key -n mon.$idx -p --cap mon 'allow *' | grep =$
+#   only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
+#   with_items: ${groups.ceph_mon}
+#   tags:
+#     - ceph
+
+
+# - name: Copy keyring to the mon nodes
+#   action: shell scp /etc/ceph/ceph.mon.keyring root@$item:/etc/ceph/
+#   with_items: ${groups.ceph_mon}
+#   register: client_admin_key 
+#   only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
+#   tags:
+#     - ceph
+#     - test
+
+- name: copy keyring in /etc/ceph/ceph.mon.keyring
+  action: shell scp  root@${groups.ceph_mon[0]}:/etc/ceph/ceph.mon.keyring /etc/ceph/ceph.mon.keyring
+          creates=/etc/ceph/ceph.mon.keyring
+  tags:
+    - ceph
+
+- name: copy keyring in /etc/ceph/keyring
+  action: shell cp  /etc/ceph/ceph.mon.keyring /etc/ceph/keyring
+          creates=/etc/ceph/keyring
+  tags:
+    - ceph
+
+- name: copy keyring in /var/lib/ceph/mon/ceph-<idx>
+  action: shell cp -a /etc/ceph/ceph.mon.keyring /var/lib/ceph/mon/ceph-${ceph-idx}/keyring 
+          creates=/var/lib/ceph/mon/ceph-${ceph-idx}/keyring
+  tags:
+    - ceph
+
+# - name: Copy keyring to the osd nodes
+#   action: shell scp /etc/ceph/ceph.mon.keyring root@$item:/etc/ceph/keyring
+#   with_items: ${groups.ceph_osd}
+#   register: client_admin_key 
+#   only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
+#   tags:
+#     - ceph
+
+# - name: Copy keyring to the mds nodes
+#   action: shell scp /etc/ceph/ceph.mon.keyring root@$item:/etc/ceph/keyring
+#   with_items: ${groups.ceph_mds}
+#   register: client_admin_key 
+#   only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
+#   tags:
+#     - ceph
+
+- name: Create monmapfile
+  action: shell  monmaptool --create --generate -c /etc/ceph/ceph.conf /etc/ceph/monmap
+          creates=/etc/ceph/monmap
+  tags:
+    - ceph
+
+- name: Create mon fs
+  action: shell ceph-mon --mkfs -i ${ceph-idx} --monmap /etc/ceph/monmap --keyring /etc/ceph/ceph.mon.keyring
+          creates=/var/lib/ceph/mon/ceph-${ceph-idx}/store.db/CURRENT
+  tags:
+    - ceph
+
+- name: Ensure ceph-mon is running
+  action: service name=ceph state=started
+  tags:
+    - ceph
+
+# - name: Create OSDs
+#   action: shell ceph osd dump | egrep "^osd.${hostvars.{$item}.ceph-idx} " ||  ceph osd create; sleep 2
+#   with_items: ${groups.ceph_osd}
+#   only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
+#   tags:
+#     - ceph
+
