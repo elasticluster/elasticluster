@@ -1,0 +1,78 @@
+# THIS FILE IS CONTROLLED BY ANSIBLE
+# any local modifications will be overwritten!
+#
+
+# maui.cfg 3.3.1
+
+SERVERHOST            {{ groups['maui_master'][0] }}
+# primary admin must be first in list
+ADMIN1                root
+
+# Resource Manager Definition
+
+RMCFG[{{ groups['maui_master'][0] }}] TYPE=PBS
+
+# Allocation Manager Definition
+
+AMCFG[bank]  TYPE=NONE
+
+# full parameter docs at http://supercluster.org/mauidocs/a.fparameters.html
+# use the 'schedctl -l' command to display current configuration
+
+RMPOLLINTERVAL        00:00:30
+
+SERVERPORT            42559
+SERVERMODE            NORMAL
+
+# Admin: http://supercluster.org/mauidocs/a.esecurity.html
+
+
+LOGFILE               maui.log
+LOGFILEMAXSIZE        10000000
+LOGLEVEL              3
+
+# Job Priority: http://supercluster.org/mauidocs/5.1jobprioritization.html
+
+QUEUETIMEWEIGHT       1 
+
+# FairShare: http://supercluster.org/mauidocs/6.3fairshare.html
+
+#FSPOLICY              PSDEDICATED
+#FSDEPTH               7
+#FSINTERVAL            86400
+#FSDECAY               0.80
+
+# Throttling Policies: http://supercluster.org/mauidocs/6.2throttlingpolicies.html
+
+# NONE SPECIFIED
+
+# Backfill: http://supercluster.org/mauidocs/8.2backfill.html
+
+BACKFILLPOLICY        FIRSTFIT
+RESERVATIONPOLICY     CURRENTHIGHEST
+
+# Node Allocation: http://supercluster.org/mauidocs/5.2nodeallocation.html
+
+NODEALLOCATIONPOLICY  MINRESOURCE
+
+# QOS: http://supercluster.org/mauidocs/7.3qos.html
+
+# QOSCFG[hi]  PRIORITY=100 XFTARGET=100 FLAGS=PREEMPTOR:IGNMAXJOB
+# QOSCFG[low] PRIORITY=-1000 FLAGS=PREEMPTEE
+
+# Standing Reservations: http://supercluster.org/mauidocs/7.1.3standingreservations.html
+
+# SRSTARTTIME[test] 8:00:00
+# SRENDTIME[test]   17:00:00
+# SRDAYS[test]      MON TUE WED THU FRI
+# SRTASKCOUNT[test] 20
+# SRMAXTIME[test]   0:30:00
+
+# Creds: http://supercluster.org/mauidocs/6.1fairnessoverview.html
+
+# USERCFG[DEFAULT]      FSTARGET=25.0
+# USERCFG[john]         PRIORITY=100  FSTARGET=10.0-
+# GROUPCFG[staff]       PRIORITY=1000 QLIST=hi:low QDEF=hi
+# CLASSCFG[batch]       FLAGS=PREEMPTEE
+# CLASSCFG[interactive] FLAGS=PREEMPTOR
+

@@ -1,0 +1,6 @@
+---
+- hosts: gc3
+  vars_files:
+    - vars/os
+  tasks:
+    - include: common/tasks/cron_ansible.yml

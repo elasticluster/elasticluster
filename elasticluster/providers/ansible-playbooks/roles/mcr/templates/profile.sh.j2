@@ -1,0 +1,9 @@
+# THIS FILE IS CONTROLLED BY ANSIBLE
+# any local modifications will be overwritten!
+#
+
+# This is suggested by the the MCR installer, which however does not
+# create the profile files itself...
+#
+LD_LIBRARY_PATH={{installdir}}/v717/runtime/glnxa64:{{installdir}}/v717/bin/glnxa64:{{installdir}}/v717/sys/os/glnxa64:{{installdir}}/v717/sys/java/jre/glnxa64/jre/lib/amd64/native_threads:{{installdir}}/v717/sys/java/jre/glnxa64/jre/lib/amd64/server:{{installdir}}/v717/sys/java/jre/glnxa64/jre/lib/amd64:$LD_LIBRARY_PATH
+XAPPLRESDIR={{installdir}}/v717/X11/app-defaults

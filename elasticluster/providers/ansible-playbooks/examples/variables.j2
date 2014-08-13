@@ -1,0 +1,44 @@
+`groups`
+========
+{% for key, value in groups.items() %}
+{{ key }} : {{ value }}
+{% endfor %}
+
+groups:
+{% for group in group_names %}
+{{ group }}
+{% endfor %}
+
+`hostvars`
+==========
+
+{% for key, value in hostvars.items() -%}
+
+{{ key }}:
+  {% if value is mapping %}
+    {%- for key2, value2 in value.items() %}
+
+    {{ key2 }}:
+{% if value2 is string %}
+        '{{ value2 }}'
+{% elif value2 is mapping %}
+      {%- for key3, value3 in value2.items() %}
+
+        {{ key3 }}:
+{% if value3 is string %}
+            '{{ value3 }}'
+{% else %}
+            {{ value3 }}
+{% endif %}
+      {% endfor %}
+{% else %}
+        {{ value2 }}
+    {% endif %}
+  {% endfor %}
+{% elif value is string %}
+    '{{ value }}'
+{% else %}
+    {{ value }}
+  {% endif %}
+{% endfor %}
+

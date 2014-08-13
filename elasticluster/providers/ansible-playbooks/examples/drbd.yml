@@ -1,0 +1,47 @@
+---
+################
+# DRBD example #
+################
+#
+# This is a module created by us, and present in the `modules`
+# directory. This is just an example on how to use it. However, the
+# module is documented in the comments at the beginning of the file.
+#
+# This is a minimal example:
+
+- hosts: all
+  tasks:
+    - action: drbd name=resourcename disk=/dev/drbd1
+              device=/dev/sdb
+              address0=1.1.1.1:7789 address1=1.1.1.2:7789 
+
+# while this will define also the optional variables. Note that the
+# two modules produce the same results, considering the value I've put
+# in this second example in order to show you the default behavior.
+
+- hosts: all
+  tasks:
+    - action: drbd name=resourcename dest=/etc/drbd.d/resourcename.res 
+              disk0=/dev/drdb1 disk1=/dev/drdb1
+              device0=/dev/sdb device1=/dev/sdb
+              address0=1.1.1.1:7789 address1=1.1.1.2:7789 
+              peer0=1.1.1.1:7789 peer1=1.1.1.2:7789 
+              metadisk0=internal metadisk1=internal
+
+# The output produced should be found in /etc/drbd.d/resousrcename.res
+# and should looks like:
+#
+#    resource resourcename {
+#      on 1.1.1.1:7789 {
+#        address 1.1.1.1:7789;
+#        device  /dev/sdb;
+#        disk    /dev/drdb1;
+#        meta-disk internal;
+#      }
+#      on 1.1.1.2:7789 {
+#        address 1.1.1.2:7789;
+#        device  /dev/sdb;
+#        disk    /dev/drdb1;
+#        meta-disk internal;
+#      }
+#    }

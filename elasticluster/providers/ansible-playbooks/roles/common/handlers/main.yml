@@ -1,0 +1,30 @@
+---
+- name: restart sshd
+  action: service name=ssh state=restarted
+  when: is_debian_or_ubuntu
+
+- name: restart sshd
+  action: service name=sshd state=restarted
+  when: is_centos
+
+- name: restart iptables
+  action: service name=iptables-persistent state=restarted
+  when: is_debian_or_ubuntu
+
+- name: restart iptables
+  action: service name=iptables state=restarted
+  when: is_centos
+
+- name: reload exports
+  action: shell exportfs -r
+
+- name: ensure nfs service is running
+  service: name=nfs-kernel-server state=started
+  when: is_debian_or_ubuntu
+
+- name: ensure nfs service is running
+  service: name=nfs state=started
+  when: is_centos
+
+- name: kill-HUP sshd
+  shell: pkill -HUP sbin/sshd

@@ -1,0 +1,45 @@
+---
+# Ubuntu-specific actions
+- name: install nfs server
+  action: apt pkg=nfs-kernel-server state=present update_cache=yes
+  when: is_debian_or_ubuntu
+  tags:
+    -nfs
+
+- name: install nfs server
+  action: yum pkg=nfs-utils state=present
+  when: is_centos
+  tags:
+    - nfs
+
+- name: install nfs client
+  action: apt pkg=nfs-common state=present
+  when: is_debian_or_ubuntu
+  tags:
+    -nfs
+
+# CentOS-specific actions
+- name: install nfs client
+  action: yum pkg=nfs-utils state=present
+  when: is_centos
+  tags:
+    -nfs
+
+# CentOS does not start needed services after installation
+- name: ensure nfs service is running (CentOS)
+  action: service name=$item state=started
+  when: is_centos
+  tags:
+    - nfs
+  with_items:
+    - rpcbind
+    - nfslock
+    - nfs
+
+- name: ensure nfs service is running (Ubuntu)
+  action: service name=$item state=started
+  when: is_debian_or_ubuntu
+  tags:
+    - nfs
+  with_items:
+    - nfs-kernel-server

@@ -1,0 +1,115 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-#
+# @(#)ceph_facts
+#
+#
+# Copyright (C) 2013, GC3, University of Zurich. All rights reserved.
+#
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 2 of the License, or (at your
+# option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+__docformat__ = 'reStructuredText'
+
+
+DOCUMENTATION = """
+---
+module: ceph_facts
+short_description: Get facts about ceph
+description:
+    - This module will get facts related to ceph
+author: Antonio Messina <antonio.s.messina@gmail.com>
+options:
+    none:
+        description:
+            - none
+"""
+
+import os
+import re
+import socket
+from subprocess import check_output
+
+def get_facts_from_config():
+    hostname = socket.gethostname()
+    sections = check_output(['ceph-conf', '--list-all-sections']).splitlines()
+    facts = {}
+    for section in sections:
+        try:
+            host = check_output(['ceph-conf', '--name', section, 'host']).strip()
+        except subprocess.CalledProcessError:
+            continue
+        if host == hostname:
+            facts['ceph-name'] = section
+            facts['ceph-idx'] = section.split('.')[-1]
+            for cmd in ['mon data', 'mds data', 'osd data', 'osd journal', 'mon addr', 'mds addr', 'osd addr', 'devs']:
+                try:
+                    facts[cmd.replace(' ', '-')] = check_output(['ceph-conf', '--name', section, cmd]).strip()
+                except subprocess.CalledProcessError:
+                    continue
+
+            # Get infos on devices
+            facts['ceph-devs'] = {}
+            devs = facts['ceph-devs']
+            try:
+                devices = check_output(['ceph-disk', 'list']).splitlines()
+                disk = None
+                for line in devices:
+                    fields = [i.strip().strip(',') for i in line.split()]
+                    if 'ceph data' in line:
+                        devs[fields[0]] = {
+                            'type': 'data',
+                            'state': fields[3],
+                        }
+                        if fields[3] == 'active':
+                            devs[fields[0]].update({
+                            'osd': fields[6],
+                            'journal': fields[8],
+                            })
+                        elif fields[3] == 'prepared':
+                            devs[fields[0]].update({
+                            'journal': fields[7],
+                            })
+                        if disk:
+                            devs[fields[0]]['disk'] = disk
+                    elif 'ceph journal' in line:
+                        devs[fields[0]] = {
+                            'type': 'journal',
+                        }
+                        if len(fields) > 4:
+                            devs[fields[0]]['data'] = fields[4]
+
+                        if disk:
+                            devs[fields[0]]['disk'] = disk
+                    elif re.match('/dev/[^\s]+\s*:$', line):
+                        disk = line.split(':')[0].strip()
+
+            except subprocess.CalledProcessError:
+                continue
+
+            return facts
+
+
+def main():
+    module = AnsibleModule(argument_spec = dict())
+
+    facts = get_facts_from_config()
+    if facts:
+        module.exit_json(ansible_facts=facts, changed=False)
+    else:
+        module.exit_json(changed=False)
+
+# include magic from lib/ansible/module_common.py
+#<<INCLUDE_ANSIBLE_MODULE_COMMON>>
+main()

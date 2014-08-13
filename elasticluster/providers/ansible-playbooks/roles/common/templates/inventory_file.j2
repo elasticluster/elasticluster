@@ -1,0 +1,18 @@
+# THIS FILE IS CONTROLLED BY ANSIBLE
+# any local modifications will be overwritten!
+#
+
+# Inventory file generated from current configuration.
+
+# Empty groups and special group `all` are not included.
+
+{% for group in groups %}
+{% if groups[group] and group != 'all' %}
+[{{group}}]
+{% for host in groups[group] %}
+{{host}} ansible_ssh_host={{hostvars[host].ansible_default_ipv4.address}}
+{% endfor %}
+
+{% endif %}
+{% endfor %}
+

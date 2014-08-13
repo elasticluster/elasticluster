@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-#
+# @(#)nfsexport
+#
+#
+# Copyright (C) 2013, GC3, University of Zurich. All rights reserved.
+#
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 2 of the License, or (at your
+# option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+__docformat__ = 'reStructuredText'
+
+
+DOCUMENTATION = """
+---
+module: nfsexport
+short_description: This module will configure a nfs exports
+description:
+    - This module will configure an export by writing an entry in the ``/etc/exports`` file.
+    - Please remember to restart the nfs service after updating the ``/etc/exports`` file.
+author: Antonio Messina <antonio.s.messina@gmail.com>
+options:
+    path:
+        description:
+            - Directory to export
+        required: true
+    dest:
+        description:
+            - export file to write.
+        required: false
+        default: /etc/exports
+    clients:
+        description:
+            - Address o list of addresses of the nfs clients
+        required: false
+        default: "'*', which means `all`"
+    options:
+        description:
+            - nfs export options.
+        required: false
+        default: ro,root_squash
+examples:
+    - code: nfsexport path=/home clients=10.0.0.1 options=rw
+"""
+import os
+
+def main():
+    module = AnsibleModule(
+        argument_spec = dict(
+            path      = dict(required=True),
+            dest      = dict(required=False, default='/etc/exports'),
+            clients   = dict(required=False, default='*'),
+            options   = dict(required=False, default='ro,root_squash'),
+            )
+        )
+
+    params = module.params
+    params['path'] = params['path'].strip()
+
+    client_list = params['clients'].split(',')
+    exports = []
+    for client in client_list:
+        exports.append("%s(%s)" % (client, params['options']))
+    clients = str.join(' ', exports)
+    exportline = "%s %s\n" % (params['path'], clients )
+
+    # Check if destination file exists already
+    if os.path.exists(params['dest']):
+        current_exports = open(params['dest'], 'r').readlines()
+        # Check if the parameters match an export which is already
+        # defined
+        for i, line in enumerate(current_exports):
+            path = line.split()[0].strip()
+            if path == params['path']:
+                if line.split(' ', 1)[1].strip() == clients:
+                    # It matches, but it's not changed.
+                    module.exit_json(changed=False)
+                else:
+                    # It matches, and it's changed. Update the file!
+                    current_exports[i] = exportline
+                    fd = open(params['dest'], 'w')
+                    fd.writelines(current_exports)
+                    fd.close()
+                    module.exit_json(changed=True)
+
+        # Export path not present, proceed and add one.
+    fd = open(params['dest'], 'a')
+    fd.write(exportline)
+    fd.close()
+    module.exit_json(changed=True)
+
+    # fd = open(params['dest'], 'w')
+    # fd.write(TEMPLATE)
+    # fd.close()
+    # module.exit_json(changed=True)
+
+# include magic from lib/ansible/module_common.py
+#<<INCLUDE_ANSIBLE_MODULE_COMMON>>
+main()

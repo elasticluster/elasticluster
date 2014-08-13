@@ -1,0 +1,45 @@
+---
+- name: Slurm common Playbook
+  hosts: slurm_master:slurm_clients
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+    - include: slurm/tasks/main.yml
+    - include: common/tasks/iptables.yml trusted_hosts=${groups.all} default_accept=1
+
+    - include: cluster/tasks/packages.yml
+  handlers:
+    - include: common/handlers/main.yml
+    - include: slurm/handlers/main.yml
+
+
+- name: Slurm master Playbook
+  hosts: slurm_master
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: common/tasks/nfs.yml
+
+    - action: nfsexport path=/home dest=/etc/exports clients=${groups.slurm_clients} options=rw,no_root_squash,sync
+      notify: 
+        - ensure nfs service is running
+        - reload exports
+
+    - include: slurm/tasks/master.yml
+  handlers:
+    - include: common/handlers/main.yml
+    - include: slurm/handlers/main.yml
+
+- name: Slurm worker nodes Playbook
+  hosts: slurm_clients
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: common/tasks/nfs-clients.yml nfsserver=${groups.slurm_master[0]} nfspath=/home nfsmount=/home
+  handlers:
+    - include: common/handlers/main.yml
+    - include: slurm/handlers/main.yml
+
+# Get infos with
+# ansible -i hostsfile -m setup hostname

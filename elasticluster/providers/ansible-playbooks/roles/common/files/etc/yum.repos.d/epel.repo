@@ -1,0 +1,10 @@
+# THIS FILE IS CONTROLLED BY ANSIBLE,
+# any local modifications will be overwritten!
+# If you want to make changes, please edit the
+# master file.
+
+[epel]
+name=Extra Packages for Enterprise Linux 6 – $basearch
+baseurl=http://download.fedoraproject.org/pub/epel/6/$basearch
+enabled=1
+gpgcheck=0

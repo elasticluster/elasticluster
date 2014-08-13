@@ -1,0 +1,11 @@
+---
+- name: configure slurm
+  action: template src=slurm/templates/slurm.conf.j2 dest=/etc/slurm-llnl/slurm.conf owner=root group=root mode=0644
+  notify: restart slurm
+  tags: 
+    - slurm
+
+- name: slurm service
+  action: service name=slurm-llnl state=started
+  tags: 
+    - slurm

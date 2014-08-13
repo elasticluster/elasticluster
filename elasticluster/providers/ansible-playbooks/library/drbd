@@ -1,0 +1,192 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-# 
+# @(#)drbd
+# 
+# 
+# Copyright (C) 2013, GC3, University of Zurich. All rights reserved.
+# 
+# 
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 2 of the License, or (at your
+# option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+__docformat__ = 'reStructuredText'
+
+
+DOCUMENTATION = """
+---
+module: drdb
+short_description: This module will configure a drbd resource
+description:
+    - This module will configure a drbd resource by creating a file in (by default) `/etc/drbd.d/<name>.res`
+author: Antonio Messina <antonio.s.messina@gmail.com>
+options:
+    name:
+        description:
+            - Name to use for the resource
+        required: true
+    dest:
+        description:
+            - Destination file.
+        required: false
+        default: /etc/drbd.d/$name.res
+    address0:
+        description:
+            - Address to use for the first peer
+            - in the form A.B.C.D:port
+        required: true
+    address1:
+        description:
+            - Address to use for the first peer
+            - in the form A.B.C.D:port
+        required: true
+    disk:
+        description:
+            - Default disk to use (e.g. /dev/sda7)
+        required: false
+    device:
+        description:
+            - Default device to use (e.g. /dev/drbd1)
+        required: false
+    metadisk:
+        description:
+            - Metadisk to use
+        required: false
+        default: internal
+    disk0:
+        description:
+            - Disk to use for `peer0`
+        required: false
+        default: disk
+    device0:
+        description:
+            - Device to use for `peer0`
+        required: false
+        default: device
+    metadisk0:
+        description:
+            - Metadisk to use for `peer0`
+        required: false
+        default: internal
+    peer0:
+        description:
+            - Name of the first peer
+        required: false
+        default: address0
+    disk1:
+        description:
+            - Disk to use for `peer1`
+        required: false
+        default: disk
+    device1:
+        description:
+            - Device to use for `peer1`
+        required: false
+        default: device
+    metadisk1:
+        description:
+            - Metadisk to use for `peer1`
+        required: false
+        default: internal
+    peer1:
+        description:
+            - Name of the first peer
+        required: false
+        default: address1
+notes:
+    - This module does not install the `drbd-utils` package, so you
+    - have to install it by yourself.
+
+examples:
+    - code: drbd name=myresource disk=/dev/sdb device=/dev/drbd1 address0=10.0.0.1:7789 address1=10.0.0.2:7789
+"""
+import os
+
+DRBDCONFDIR='/etc/drbd.d/'
+TEMPLATE_RESOURCE_FILE = """resource %(name)s {
+  on %(peer0)s {
+    address %(address0)s;
+    device  %(device0)s;
+    disk    %(disk0)s;
+    meta-disk %(metadisk0)s;
+  }
+  on %(peer1)s {
+    address %(address1)s;
+    device  %(device1)s;
+    disk    %(disk1)s;
+    meta-disk %(metadisk1)s;
+  }
+}
+"""
+def main():
+    module = AnsibleModule(
+        argument_spec = dict(
+            dest      = dict(required=False),
+            name      = dict(required=True),
+            address0  = dict(required=True),
+            address1  = dict(required=True),
+            device    = dict(required=False),
+            device0   = dict(required=False),
+            device1   = dict(required=False),
+            disk      = dict(required=False, ),
+            disk0     = dict(required=False),
+            disk1     = dict(required=False),
+            metadisk  = dict(required=False, default='internal'),
+            metadisk0 = dict(required=False),
+            metadisk1 = dict(required=False),
+            peer0     = dict(required=False),
+            peer1     = dict(required=False),
+            )
+        )
+
+    params = module.params
+
+    # Set default values
+    if not params['dest']: params['dest'] = os.path.join(DRBDCONFDIR, "%s.res" % params['name'])
+    if not params['device0']: params['device0'] = params['device']
+    if not params['device1']: params['device1'] = params['device']
+    if not params['disk0']: params['disk0'] = params['disk']
+    if not params['disk1']: params['disk1'] = params['disk']
+    if not params['metadisk0']: params['metadisk0'] = params['metadisk']
+    if not params['metadisk1']: params['metadisk1'] = params['metadisk']
+    if not params['peer0']: params['peer0'] = params['address0']
+    if not params['peer1']: params['peer1'] = params['address1']
+
+    mandatory_params = ['device0', 'device1', 'disk0', 'disk1',
+                        'metadisk0', 'metadisk1', 'peer0', 'peer1',
+                        'address0', 'address1', 'dest', 'name']
+    for p in mandatory_params:
+        if not params[p]:
+            module.fail_json(msg="Missing mandatory parameter `%s`" % p)
+
+    TEMPLATE=TEMPLATE_RESOURCE_FILE % params
+
+    # Check if destination file exists already
+    # This `if` block only handle the `non-to-be-changed` case
+    if os.path.exists(params['dest']):
+        if not os.path.isfile(params['dest']):
+            module.fail_json(msg="Destination file %s is not a file!" % params['dest'])
+
+        # Compare the file and the template
+        data = open(params['dest'], 'r').read()
+        if data == TEMPLATE:
+            module.exit_json(changed=False)
+        
+    fd = open(params['dest'], 'w')
+    fd.write(TEMPLATE)
+    fd.close()
+    module.exit_json(changed=True)
+
+# include magic from lib/ansible/module_common.py
+#<<INCLUDE_ANSIBLE_MODULE_COMMON>>
+main()

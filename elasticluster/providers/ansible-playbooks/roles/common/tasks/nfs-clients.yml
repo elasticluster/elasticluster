@@ -1,0 +1,52 @@
+---
+# This task is used to mount a filesystem via NFS.
+# 
+# Variables you need to define:
+# nfsserver:   the nfs server to mount from
+# nfspath:     the remote filesystem to mount from the nfs server
+# nfsmount:    the directory where you want to mount the filesystem.
+# nfsoptions:  options to use when mounting the filesystem. If not
+#              defined, `rw,sync` will be used.
+#
+# Please note that the task will check if the ${nfsmount} directory
+# exists and create it otherwise.
+#
+
+- name: install nfs client
+  action: apt pkg=nfs-common state=present
+  when: is_debian_or_ubuntu
+  tags:
+    - nfs
+
+- name: install nfs client
+  action: yum pkg=nfs-utils state=present
+  when: is_centos
+  tags:
+    - nfs
+
+- name: Ensure rpcbind is running (CentOS)
+  action: service name=rpcbind state=started enabled=yes
+  when: is_centos
+
+- name: Ensure portmap is running (Ubuntu)
+  action: service name=portmap state=started enabled=yes
+  when: is_ubuntu
+
+- name: Ensure rpcbind is running (Debian)
+  action: service name=rpcbind state=started enabled=yes
+  when: is_debian
+
+- name: Ensure ${nfsmount} directory exists
+  action: file path=${nfsmount} state=directory
+  tags: 
+    - nfs
+
+- action: shell if [ -z "${nfsoptions}" ]; then  echo rw,sync,nfsvers=3; else echo ${nfsoptions}; fi
+  register: _nfsopts
+  sudo: false
+  connection: local
+
+- name: configure /etc/fstab on clients
+  action: mount name=${nfsmount} src=${nfsserver}:${nfspath} fstype=nfs opts=${_nfsopts.stdout} state=mounted
+  tags:
+    - nfs

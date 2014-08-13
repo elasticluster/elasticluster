@@ -1,0 +1,11 @@
+#! /bin/sh
+
+cat <<__EOF__
+This is a placeholder installation script that does nothing.
+
+In order to get this playbook working, you should replace
+the 'MCRInstaller.zip' file with the one copied over from
+a MATLAB installation.
+__EOF__
+
+exit 1

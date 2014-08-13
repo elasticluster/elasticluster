@@ -1,0 +1,7 @@
+---
+- name: makecephs
+  action: shell mkcephfs -a -c /etc/ceph/ceph.conf -k /etc/ceph/ceph.keyring
+  notify: restart ceph
+
+- name: restart ceph
+  action: service name=ceph state=restarted
