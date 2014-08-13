@@ -1,0 +1,116 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+DOCUMENTATION = '''
+---
+module: glance_manage
+short_description: Initialize OpenStack Image (glance) database
+description: Create the tables for the database backend used by glance
+options:
+  action:
+    description:
+      - action to perform. Currently only dbsync is supported.
+    required: true
+  conf:
+    description:
+      - path to glance-registry config file.
+    required: false
+    default: /etc/glance/glance-registry.conf
+requirements: [ glance ]
+examples:
+    - code: 'glance_manage action=dbsync'
+author: Lorin Hochstein
+'''
+
+try:
+    from glance.db.sqlalchemy import migration
+    from glance.common.exception import DatabaseMigrationError
+    from migrate.versioning import api as versioning_api
+except ImportError:
+    glance_found = False
+else:
+    glance_found = True
+
+import subprocess
+
+def is_under_version_control(conf):
+    """ Return true if the database is under version control"""
+    migration.CONF(project='glance', default_config_files=[conf])
+    try:
+        migration.db_version()
+    except DatabaseMigrationError:
+        return False
+    else:
+        return True
+
+
+def will_db_change(conf):
+    """ Check if the database version will change after the sync """
+    # Load the config file options
+    if not is_under_version_control(conf):
+        return True
+    migration.CONF(project='glance', default_config_files=[conf])
+    current_version = migration.db_version()
+    repo_path = migration.get_migrate_repo_path()
+    repo_version = versioning_api.repository.Repository(repo_path).latest
+    return current_version != repo_version
+
+
+def put_under_version_control():
+    """ Create the initial sqlalchemy migrate database tables. """
+    args = ['glance-manage', 'version_control', '0']
+
+    call = subprocess.Popen(args, shell=False,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = call.communicate()
+    return (call.returncode, out, err)
+
+
+def do_dbsync():
+    """ Do a database migration """
+    args = ['glance-manage', 'db_sync']
+
+    call = subprocess.Popen(args, shell=False,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = call.communicate()
+    return (call.returncode, out, err)
+
+
+def main():
+
+    module = AnsibleModule(
+        argument_spec=dict(
+            action=dict(required=True),
+            conf=dict(required=False,
+                      default="/etc/glance/glance-registry.conf")
+        ),
+        supports_check_mode=True
+    )
+    if not glance_found:
+        module.fail_json(msg="glance package could not be found")
+
+    action = module.params['action']
+    if action not in ['dbsync', 'db_sync']:
+        module.fail_json(msg="Only supported action is 'dbsync'")
+
+    conf = module.params['conf']
+
+    changed = will_db_change(conf)
+    if module.check_mode:
+        module.exit_json(changed=changed)
+
+    if not is_under_version_control(conf):
+        (res, stdout, stderr) = put_under_version_control()
+        if res != 0:
+            msg = "failed to put glance db under version control"
+            module.fail_json(msg=msg, stdout=stdout, stderr=stderr)
+
+    (res, stdout, stderr) = do_dbsync()
+    if res != 0:
+        msg = "failed to synchronize glance db with repository"
+        module.fail_json(msg=msg, stdout=stdout, stderr=stderr)
+
+    module.exit_json(changed=changed)
+
+#<<INCLUDE_ANSIBLE_MODULE_COMMON>>
+main()

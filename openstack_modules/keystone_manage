@@ -1,0 +1,95 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+DOCUMENTATION = '''
+---
+module: keystone_manage
+short_description: Initialize OpenStack Identity (keystone) database
+description: Create the tables for the database backend used by keystone
+options:
+  action:
+    description:
+      - action to perform. Currently only dbysnc is supported
+    required: true
+  conf:
+    description:
+      - path to keystone config file.
+    required: false
+    default: /etc/keystone/keystone.conf
+requirements: [ keystone ]
+examples:
+    - code: 'keystone_manage action=dbsync'
+
+author: Lorin Hochstein
+'''
+import subprocess
+
+try:
+    from keystone.common.sql import migration
+    from migrate.versioning import api as versioning_api
+except ImportError:
+    keystone_found = False
+else:
+    keystone_found = True
+
+
+def will_db_change(conf):
+    """ Check if the database version will change after the sync.
+
+    conf is the path to the keystone config file
+
+    """
+    # Load the config file options
+    migration.CONF(project='keystone', default_config_files=[conf])
+    current_version = migration.db_version()
+    repo_path = migration._find_migrate_repo()
+    repo_version = versioning_api.repository.Repository(repo_path).latest
+    return current_version != repo_version
+
+
+def do_dbsync():
+    """Do the dbsync. Returns (returncode, stdout, stderr)"""
+    # We call keystone-manage db_sync on the shell rather than trying to
+    # do this in Python since we have no guarantees about changes to the
+    # internals.
+    args = ['keystone-manage', 'db_sync']
+
+    call = subprocess.Popen(args, shell=False,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = call.communicate()
+    return (call.returncode, out, err)
+
+
+def main():
+
+    module = AnsibleModule(
+        argument_spec=dict(
+            action=dict(required=True),
+            conf=dict(required=False, default="/etc/keystone/keystone.conf")
+        ),
+        supports_check_mode=True
+    )
+
+    if not keystone_found:
+        module.fail_json(msg="keystone package could not be found")
+
+    action = module.params['action']
+    conf = module.params['conf']
+    if action not in ['dbsync', 'db_sync']:
+        module.fail_json(msg="Only supported action is 'dbsync'")
+
+    changed = will_db_change(conf)
+    if module.check_mode:
+        module.exit_json(changed=changed)
+
+    (res, stdout, stderr) = do_dbsync()
+
+    if res == 0:
+        module.exit_json(changed=changed, stdout=stdout, stderr=stderr)
+    else:
+        module.fail_json(msg="keystone-manage returned non-zero value: %d" % res,
+                         stdout=stdout, stderr=stderr)
+
+# this is magic, see lib/ansible/module_common.py
+#<<INCLUDE_ANSIBLE_MODULE_COMMON>>
+main()

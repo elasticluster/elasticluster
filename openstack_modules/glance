@@ -1,0 +1,164 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+DOCUMENTATION = '''
+---
+module: glance
+short_description: Manage OpenStack virtual machine images
+description:
+    - Upload virtual machine images to OpenStack Image Service (glance)
+requirements: [ python-glanceclient ]
+options:
+  name:
+    description:
+      - name of the image
+    required: true
+  format:
+    description:
+      - disk format
+    choices: [ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, iso]
+    required: true
+  is_public:
+    description:
+      - if true, image is public
+    choices: [true, false]
+    aliases: [public]
+    required: false
+    default: false
+  file:
+    description:
+      - path to the file that contains the image
+    required: true
+    aliases: [path]
+  auth_url:
+    description:
+      - URL to Identity service (keystone) catalog endpoint
+    required: true
+  region:
+    description:
+      - OpenStack region name
+    required: false
+    aliases: [region_name]
+  username:
+    description:
+      - user name to authenticate against Identity service
+    aliases: [user, user_name, login_user]
+  password:
+    description:
+      - password to authenticate against Identiy service
+    aliases: [pass, login_password]
+  tenant_name:
+    description:
+      - name of the tenant
+
+examples:
+  - code: 'glance: name=cirros file=/tmp/cirros.img format=qcow2 is_public=true auth_url=http://192.168.206.130:5000/v2.0/ username=admin tenant_name=demo password=secrete region=RegionOne '
+'''
+
+
+try:
+    from glanceclient import Client
+    from keystoneclient.v2_0 import client as ksclient
+except ImportError:
+    glanceclient_found = False
+else:
+    glanceclient_found = True
+
+
+def get_token_and_endpoint(auth_url, username, password, tenant_name,
+                           region_name):
+
+    keystone = ksclient.Client(username=username,
+                               password=password,
+                               tenant_name=tenant_name,
+                               auth_url=auth_url,
+                               region_name=region_name)
+    glance_endpoint = keystone.service_catalog.url_for(
+        service_type="image",
+        endpoint_type="publicURL")
+    return (keystone.auth_token, glance_endpoint)
+
+
+def authenticate(auth_url, username, password, tenant_name, region,
+                 version='1'):
+    """Return a keystone client object"""
+
+    (token, endpoint) = get_token_and_endpoint(auth_url, username, password,
+                                               tenant_name, region)
+
+    return Client(version, endpoint=endpoint, token=token)
+
+
+def get_images(glance, name):
+    """ Retrieve all images with a certain name """
+    images = [x for x in glance.images.list() if x.name == name]
+    return images
+
+
+def create_image(glance, name, path, disk_format, is_public, check_mode):
+    """ Create a new image from a file on the path.
+
+        Return a pair. First element indicates whether a change occurred,
+        second one is the ID of the iamge """
+
+    # If the image(s) already exists, we're done
+    images = get_images(glance, name)
+    if len(images) > 0:
+        return (False, images[0].id)
+
+    if check_mode:
+        return (True, None)
+
+    image = glance.images.create(name=name, disk_format=disk_format,
+                                 container_format='bare',
+                                 is_public=is_public)
+    image.update(data=open(path, 'rb'))
+    return (True, image.id)
+
+
+def main():
+
+    module = AnsibleModule(
+        argument_spec=dict(
+            name=dict(required=True),
+            file=dict(required=True, aliases=['path']),
+            auth_url=dict(required=True),
+            region=dict(required=False, aliases=['region_name']),
+            username=dict(required=True, aliases=['user',
+                                                  'user_name',
+                                                  'login_user']),
+            password=dict(required=True, aliases=['pass', 'login_password']),
+            tenant_name=dict(required=True, aliases=['tenant']),
+            disk_format=dict(required=True,
+                        choices=['ami', 'ari', 'aki', 'vhd', 'vmdk', 'raw',
+                                 'qcow2', 'vdi', 'iso'],
+                        aliases=['disk-format', 'format']),
+            is_public=dict(required=False,
+                           default=False,
+                           aliases=['public'])
+        ),
+        supports_check_mode=True
+    )
+
+    name = module.params['name']
+    path = module.params['file']
+    auth_url = module.params['auth_url']
+    region = module.params['region']
+    username = module.params['username']
+    password = module.params['password']
+    tenant_name = module.params['tenant_name']
+    disk_format = module.params['disk_format']
+    is_public = module.params['is_public']
+    check_mode = module.check_mode
+
+    glance = authenticate(auth_url, username, password, tenant_name, region)
+
+    (changed, id) = create_image(glance, name, path, disk_format, is_public,
+                                 check_mode)
+
+    module.exit_json(changed=changed, name=name, id=id)
+
+# this is magic, see lib/ansible/module_common.py
+#<<INCLUDE_ANSIBLE_MODULE_COMMON>>
+if __name__ == '__main__':
+    main()
