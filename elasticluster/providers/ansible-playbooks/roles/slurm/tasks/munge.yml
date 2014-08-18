@@ -1,4 +1,10 @@
 ---
+- name: patch munge on Ubuntu 14.04
+  lineinfile: dest=/etc/default/munge line='OPTIONS="--force"' regexp='^OPTIONS=' state=present
+  tags: 
+    - munge
+  when: ansible_lsb.id == 'Ubuntu' and ansible_lsb.release == '14.04'
+
 - name: munge service
   action: service name=munge state=started
   tags: 
