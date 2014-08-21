@@ -160,6 +160,7 @@ class Configurator(object):
         extra = conf['cluster'].copy()
         extra.pop('cloud')
         extra.pop('setup_provider')
+        extra['template'] = template
 
         cluster = Cluster(name,
                           self.create_cloud_provider(template),
@@ -194,7 +195,8 @@ class Configurator(object):
         """
         repository = self.create_repository()
         cluster = repository.get(cluster_name)
-
+        if not cluster._setup_provider:
+            cluster._setup_provider = self.create_setup_provider(cluster.extra['template'])
         return cluster
 
     def create_setup_provider(self, cluster_template, name=None):

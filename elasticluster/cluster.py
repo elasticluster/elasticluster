@@ -104,6 +104,11 @@ class Cluster(object):
         self._user_key_public = os.path.expandvars(self._user_key_public)
 
 
+    def __getstate__(self):
+        result = self.__dict__.copy()
+        result['setup_provider'] = None
+        return result
+
     def add_node(self, kind, image_id, image_user, flavor,
                  security_group, image_userdata='', name=None):
         """Adds a new node to the cluster. This factory method provides an
