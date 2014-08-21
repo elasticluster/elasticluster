@@ -579,7 +579,8 @@ class SshFrontend(AbstractCommand):
             if not frontend.preferred_ip:
                 # Ensure we can connect to the node, and save the value of `preferred_ip`
                 ssh = frontend.connect()
-                ssh.close()
+                if ssh
+                    ssh.close()
                 cluster.repository.save_or_update(cluster)
 
         except NodeNotFound, ex:
