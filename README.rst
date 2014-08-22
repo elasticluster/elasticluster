@@ -80,23 +80,13 @@ controlled environment in which you can install elasticluster as
 normal user. 
 
 Assuming you already have ``virtualenv`` installed on your machine,
-you first need to create a virtualenv and install `ansible`, which is
-needed by elasticluster::
+you first need to create a virtualenv and then install elasticluster::
 
     virtualenv elasticluster
     . elasticluster/bin/activate
-    pip install ansible==1.3.3
-    
-Then you have to download the software. We suggest you to download it
-*within* the created virtualenv::
+    pip install git+https://github.com/gc3-uzh-ch/elasticluster.git
 
-    cd elasticluster
-    git clone git://github.com/gc3-uzh-ch/elasticluster.git src
-    cd src
-    python setup.py install
-
-Now the ``elasticluster`` should be available in your current
-environment.
+Now this will download and install ``elasticluster`` and all of its prerequisites into the current environtment
 
 .. References
 
