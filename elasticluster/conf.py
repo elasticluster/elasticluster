@@ -325,6 +325,16 @@ class ConfigValidator(object):
             else:
                 raise Invalid("file could not be found `%s`" % v)
 
+        @message("Unsupported nova API version")
+        def nova_api_version(version):
+            try:
+                from novaclient import client,exceptions
+                client.get_client_class(version)
+                return version
+            except exceptions.UnsupportedVersion as ex:
+                raise Invalid(
+                    "Invalid option for `nova_api_version`: %s" % ex)
+
         # schema to validate all cluster properties
         schema = {"cluster": {"cloud": All(str, Length(min=1)),
                               "setup_provider": All(str, Length(min=1)),
@@ -355,7 +365,8 @@ class ConfigValidator(object):
                                   "password": All(str, Length(min=1)),
                                   "project_name": All(str, Length(min=1)),
                                   Optional("request_floating_ip"): Boolean(str),
-                                  Optional("region_name"): All(str, Length(min=1))}
+                                  Optional("region_name"): All(str, Length(min=1)),
+                                  Optional("nova_api_version"): nova_api_version()}
 
         node_schema = {
             "flavor": All(str, Length(min=1)),
@@ -436,6 +447,16 @@ class ConfigReader(object):
             else:
                 raise Invalid("file could not be found `%s`" % v)
 
+        @message("Unsupported nova API version")
+        def nova_api_version(version):
+            try:
+                from novaclient import client, exceptions
+                client.get_client_class(version)
+                return version
+            except exceptions.UnsupportedVersion:
+                raise Invalid(
+                    "Unsupported nova API version %s." % version)
+
         self.schemas = {
             "cloud": Schema(
                 {"provider": Any('ec2_boto', 'google', 'openstack'),
@@ -450,7 +471,8 @@ class ConfigReader(object):
                  Optional("region_name"): All(str, Length(min=1)),
                  "gce_project_id": All(str, Length(min=1)),
                  "gce_client_id": All(str, Length(min=1)),
-                 "gce_client_secret": All(str, Length(min=1))}, extra=True),
+                 "gce_client_secret": All(str, Length(min=1)),
+                 "nova_client_api": nova_api_version()}, extra=True),
             "cluster": Schema(
                 {"cloud": All(str, Length(min=1)),
                  "setup_provider": All(str, Length(min=1)),

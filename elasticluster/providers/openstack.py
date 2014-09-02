@@ -40,7 +40,7 @@ from elasticluster.providers import AbstractCloudProvider
 from elasticluster.exceptions import SecurityGroupError, KeypairError, \
     ImageError, InstanceError, ClusterError
 
-DEFAULT_OS_COMPUTE_API_VERSION = "1.1"
+DEFAULT_OS_NOVA_API_VERSION = "1.1"
 
 class OpenStackCloudProvider(AbstractCloudProvider):
     """
@@ -65,18 +65,18 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     def __init__(self, username, password, project_name, auth_url,
                  region_name=None, storage_path=None,
                  request_floating_ip=False,
-                 compute_api_version=DEFAULT_OS_COMPUTE_API_VERSION):
+                 nova_api_version=DEFAULT_OS_NOVA_API_VERSION):
         self._os_auth_url = auth_url
         self._os_username = username
         self._os_password = password
         self._os_tenant_name = project_name
         self._os_region_name = region_name
         self.request_floating_ip = request_floating_ip
-        self.compute_api_version = compute_api_version
+        self.nova_api_version = nova_api_version
         self._instances = {}
         self._cached_instances = []
 
-        self.client = client.Client(self.compute_api_version,
+        self.client = client.Client(self.nova_api_version,
                                     self._os_username, self._os_password, self._os_tenant_name,
                                     self._os_auth_url, region_name=self._os_region_name)
  
@@ -349,7 +349,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 'region_name': self._os_region_name,
                 'request_floating_ip': self.request_floating_ip,
                 'instance_ids': self._instances.keys(),
-                'compute_api_version': self.compute_api_version,
+                'nova_api_version': self.nova_api_version,
             }
 
     def __setstate__(self, state):
@@ -359,8 +359,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._os_tenant_name = state['project_name']
         self._os_region_name = state['region_name']
         self.request_floating_ip = state['request_floating_ip']
-        self.compute_api_version = state['compute_api_version']
-        self.client = client.Client(self.compute_api_version,
+        self.nova_api_version = state['nova_api_version']
+        self.client = client.Client(self.nova_api_version,
                                     self._os_username, self._os_password, self._os_tenant_name,
                                     self._os_auth_url, region_name=self._os_region_name)
         self._instances = {}
