@@ -359,7 +359,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._os_tenant_name = state['project_name']
         self._os_region_name = state['region_name']
         self.request_floating_ip = state['request_floating_ip']
-        self.nova_api_version = state['nova_api_version']
+        self.nova_api_version = state.get('nova_api_version', DEFAULT_OS_NOVA_API_VERSION)
         self.client = client.Client(self.nova_api_version,
                                     self._os_username, self._os_password, self._os_tenant_name,
                                     self._os_auth_url, region_name=self._os_region_name)
