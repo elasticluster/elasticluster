@@ -177,6 +177,11 @@ class Configurator(object):
 
         for kind, num in nodes.iteritems():
             conf_kind = conf['nodes'][kind]
+            extra = conf_kind.copy()
+            extra.pop('image_id')
+            extra.pop('flavor')
+            extra.pop('security_group')
+            extra.pop('image_userdata')
             userdata = conf_kind.get('image_userdata', '')
             cluster.add_nodes(kind,
                               num,
@@ -184,7 +189,8 @@ class Configurator(object):
                               conf_login['image_user'],
                               conf_kind['flavor'],
                               conf_kind['security_group'],
-                              image_userdata=userdata)
+                              image_userdata=userdata,
+                              **extra)
         return cluster
 
     def load_cluster(self, cluster_name):
@@ -371,7 +377,7 @@ class ConfigValidator(object):
         node_schema = {
             "flavor": All(str, Length(min=1)),
             "image_id": All(str, Length(min=1)),
-            "security_group": All(str, Length(min=1))
+            "security_group": All(str, Length(min=1)),
         }
 
         # validation
@@ -453,9 +459,9 @@ class ConfigReader(object):
                 from novaclient import client, exceptions
                 client.get_client_class(version)
                 return version
-            except exceptions.UnsupportedVersion:
+            except exceptions.UnsupportedVersion as ex:
                 raise Invalid(
-                    "Unsupported nova API version %s." % version)
+                    "Invalid option for `nova_api_version`: %s" % ex)
 
         self.schemas = {
             "cloud": Schema(

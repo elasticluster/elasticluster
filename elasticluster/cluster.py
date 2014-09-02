@@ -110,7 +110,7 @@ class Cluster(object):
         return result
 
     def add_node(self, kind, image_id, image_user, flavor,
-                 security_group, image_userdata='', name=None):
+                 security_group, image_userdata='', name=None, **extra):
         """Adds a new node to the cluster. This factory method provides an
         easy way to add a new node to the cluster by specifying all relevant
         parameters. The node does not get started nor setup automatically,
@@ -158,13 +158,13 @@ class Cluster(object):
         node = Node(name, kind, self._cloud_provider,
                     self._user_key_public, self.user_key_private,
                     self._user_key_name, image_user, security_group,
-                    image_id, flavor, image_userdata=image_userdata)
+                    image_id, flavor, image_userdata=image_userdata, **extra)
 
         self.nodes[kind].append(node)
         return node
 
     def add_nodes(self, kind, num, image_id, image_user, flavor,
-                  security_group, image_userdata=''):
+                  security_group, image_userdata='', **extra):
         """Helper method to add multiple nodes of the same kind to a cluster.
 
         :param str kind: kind of node to start. this refers to the groups
@@ -187,7 +187,7 @@ class Cluster(object):
         """
         for i in range(num):
             self.add_node(kind, image_id, image_user, flavor,
-                          security_group, image_userdata=image_userdata)
+                          security_group, image_userdata=image_userdata, **extra)
 
     def remove_node(self, node):
         """Removes a node from the cluster, but does not stop it. Use this
@@ -598,7 +598,7 @@ class Node(object):
 
     def __init__(self, name, kind, cloud_provider, user_key_public,
                  user_key_private, user_key_name, image_user, security_group,
-                 image, flavor, image_userdata=None):
+                 image, flavor, image_userdata=None, **extra):
         self.name = name
         self.kind = kind
         self._cloud_provider = cloud_provider
@@ -614,6 +614,7 @@ class Node(object):
         self.instance_id = None
         self.preferred_ip = None
         self.ips = []
+        self.extra_args = extra
 
     def start(self):
         """Starts the node on the cloud using the given
@@ -627,7 +628,7 @@ class Node(object):
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
             self.flavor, self.image, self.image_userdata,
-            username=self.image_user, node_name=self.name)
+            username=self.image_user, node_name=self.name, **self.extra_args)
         log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
 
     def stop(self):

@@ -126,9 +126,16 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                               "%s" % (flavor, self._os_auth_url))
         flavor = flavors[0]
 
+        nics = None
+        if 'network_ids' in kwargs:
+            nics=[{'net-id': netid.strip(), 'v4-fixed-ip': ''} for netid in kwargs['network_ids'].split(',') ]
+            log.debug("Specifying networks for vm %s: %s",
+                      node_name, str.join(', ', [nic['net-id'] for nic in nics]))
+
         vm = self.client.servers.create(
             node_name, image_id, flavor, key_name=key_name,
-            security_groups=[security_group], userdata=image_userdata)
+            security_groups=[security_group], userdata=image_userdata,
+            nics=nics)
 
         self._instances[vm.id] = vm
         
