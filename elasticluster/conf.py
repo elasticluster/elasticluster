@@ -178,10 +178,10 @@ class Configurator(object):
         for kind, num in nodes.iteritems():
             conf_kind = conf['nodes'][kind]
             extra = conf_kind.copy()
-            extra.pop('image_id')
-            extra.pop('flavor')
-            extra.pop('security_group')
-            extra.pop('image_userdata')
+            extra.pop('image_id', None)
+            extra.pop('flavor', None)
+            extra.pop('security_group', None)
+            extra.pop('image_userdata', None)
             userdata = conf_kind.get('image_userdata', '')
             cluster.add_nodes(kind,
                               num,
