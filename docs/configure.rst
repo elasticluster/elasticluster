@@ -233,8 +233,7 @@ Engine visit the following page: https://code.google.com/apis/console/
 5. After clicking the `Create` button you'll see your client_id and
    secret_key in the list of available client ids
 
-**Please note**: you have to set your google username in the login section
-                below as image_user to be able to use Google Compute Engine
+**Please note**: you have to set your google username in the login section  below as image_user to be able to use Google Compute Engine
 
 
 Login Section
