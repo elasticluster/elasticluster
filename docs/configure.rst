@@ -215,16 +215,17 @@ clicking on:
     => "*Download EC2 Credentials*"
 
 The ``ec2rc.sh`` file will contain some values. Update the
-configuration file::
+configuration file:
 
-`ec2_url` using the value of the variable EC2_URL
-`ec2_access_key` using the value of the variable EC2_ACCESS_KEY
-`ec2_secret_key` using the value of the variable EC2_SECRET_KEY
+* `ec2_url` using the value of the variable EC2_URL
+* `ec2_access_key` using the value of the variable EC2_ACCESS_KEY
+* `ec2_secret_key` using the value of the variable EC2_SECRET_KEY
 
 Google Compute Engine users
 +++++++++++++++++++++++++++
 To generate a client_id and client_secret to access the Google Compute
 Engine visit the following page: https://code.google.com/apis/console/
+
 1. Select the project defined as gce_project_id
 2. Navigate to `API Access`
 3. Click create another client id
