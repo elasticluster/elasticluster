@@ -257,8 +257,8 @@ Mandatory configuration keys
 
     the remote user you must use to connect to the virtual machine.
     In case you're using Google Compute Engine you have to set your username
-     here. So if your gmail address is karl.marx@gmail.com,
-     your username is karl.marx
+    here. So if your gmail address is karl.marx@gmail.com,
+    your username is karl.marx
 
 ``image_sudo``
 
