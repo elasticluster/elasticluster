@@ -195,7 +195,7 @@ For Amazon instead (region us-east-1) you can use::
     ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
     ec2_region=us-east-1
 
-For Google Compute Engine you can use:
+For Google Compute Engine you can use::
 
     [cloud/google]
     provider=google
