@@ -207,7 +207,7 @@ OpenStack users
 +++++++++++++++
 
 From the horizon web interface you can download a file containing your
-EC2 credentials by logging in in your provider web interface and
+EC2 credentials by logging into your provider web interface and
 clicking on:
 
 "*settings*" 
@@ -215,7 +215,7 @@ clicking on:
     => "*Download EC2 Credentials*"
 
 The ``ec2rc.sh`` file will contain some values. Update the
-configuration file:
+configuration file::
 
 `ec2_url` using the value of the variable EC2_URL
 `ec2_access_key` using the value of the variable EC2_ACCESS_KEY
