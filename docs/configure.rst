@@ -501,6 +501,13 @@ Optional configuration keys
     works on *vanilla* images, but if you are using other setup
     providers you may need to execute some command to bootstrap it.
 
+``network_ids``
+
+    comma separated list of network IDs the nodes of the cluster will
+    be connected to. Only supported when the cloud provider is
+    `openstack`
+
+
 Examples
 --------
 

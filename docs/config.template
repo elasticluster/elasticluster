@@ -222,6 +222,7 @@ gce_project_id=****REPLACE WITH YOUR PROJECT ID****
 #                  corresponding to the `user_key_private` private
 #                  key. See `user_key_private` for more details.
 #
+#
 # For a typical ubuntu machine, both on Amazon and most OpenStack
 # providers, these values should be fine:
 
@@ -432,6 +433,10 @@ worker_groups=ipython_engine
 #                 the `ansible` provider works on *vanilla* images,
 #                 but if you are using other setup providers you may
 #                 need to execute some command to bootstrap it.
+#
+# network_ids: comma separated list of network IDs the nodes of the
+#              cluster will be connected to. Only supported when the
+#              cloud provider is ``openstack``
 #
 # Some (working) examples:
 
