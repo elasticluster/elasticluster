@@ -195,7 +195,7 @@ For Amazon instead (region us-east-1) you can use::
     ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
     ec2_region=us-east-1
 
-For Google Compute Engine you can use:
+For Google Compute Engine you can use::
 
     [cloud/google]
     provider=google
@@ -207,7 +207,7 @@ OpenStack users
 +++++++++++++++
 
 From the horizon web interface you can download a file containing your
-EC2 credentials by logging in in your provider web interface and
+EC2 credentials by logging into your provider web interface and
 clicking on:
 
 "*settings*" 
@@ -217,14 +217,15 @@ clicking on:
 The ``ec2rc.sh`` file will contain some values. Update the
 configuration file:
 
-`ec2_url` using the value of the variable EC2_URL
-`ec2_access_key` using the value of the variable EC2_ACCESS_KEY
-`ec2_secret_key` using the value of the variable EC2_SECRET_KEY
+* `ec2_url` using the value of the variable EC2_URL
+* `ec2_access_key` using the value of the variable EC2_ACCESS_KEY
+* `ec2_secret_key` using the value of the variable EC2_SECRET_KEY
 
 Google Compute Engine users
 +++++++++++++++++++++++++++
 To generate a client_id and client_secret to access the Google Compute
 Engine visit the following page: https://code.google.com/apis/console/
+
 1. Select the project defined as gce_project_id
 2. Navigate to `API Access`
 3. Click create another client id
@@ -232,8 +233,7 @@ Engine visit the following page: https://code.google.com/apis/console/
 5. After clicking the `Create` button you'll see your client_id and
    secret_key in the list of available client ids
 
-**Please note**: you have to set your google username in the login section
-                below as image_user to be able to use Google Compute Engine
+**Please note**: you have to set your google username in the login section  below as image_user to be able to use Google Compute Engine
 
 
 Login Section
@@ -257,8 +257,8 @@ Mandatory configuration keys
 
     the remote user you must use to connect to the virtual machine.
     In case you're using Google Compute Engine you have to set your username
-     here. So if your gmail address is karl.marx@gmail.com,
-     your username is karl.marx
+    here. So if your gmail address is karl.marx@gmail.com,
+    your username is karl.marx
 
 ``image_sudo``
 
@@ -585,5 +585,5 @@ compute nodes. Your configuration will thus look like::
     flavor=bigdisk
 
 
-.. _`template configuration file`: https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template>
+.. _`template configuration file`: https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template
 
