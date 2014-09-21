@@ -133,11 +133,11 @@
                     <div class="span6">
                             <pre class="prettyprint languague-ini">
 [cloud/hobbes]
-provider=ec2_boto
-ec2_url=http://hobbes.gc3.uzh.ch:8773/services/Cloud
-ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
-ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
-ec2_region=nova
+provider=openstack
+auth_url=http://hobbes.gc3.uzh.ch:5000/v2.0
+username=****REPLACE WITH YOUR USERNAME****
+password=****REPLACE WITH YOUR PASSWORD****
+project_name=****REPLACE WITH YOUR PROJECT/TENANT NAME****
 
 [login/ubuntu]
 image_user=ubuntu
@@ -158,7 +158,7 @@ login=ubuntu
 setup_provider=ansible-slurm
 security_group=default
 # Ubuntu image
-image_id=ami-00000048
+image_id=16618a82-92fd-4615-86e6-d354f9f66af5
 flavor=m1.small
 frontend_nodes=1
 compute_nodes=2
