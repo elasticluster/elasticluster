@@ -637,9 +637,14 @@ class SftpFrontend(AbstractCommand):
         host = frontend.connection_ip()
         username = frontend.image_user
         sftp_cmdline = ["sftp",
-                        "-i", frontend.user_key_private,
                         "-o", "UserKnownHostsFile=/dev/null",
                         "-o", "StrictHostKeyChecking=no"]
+
+        if sys.platform == "darwin":
+            sftp_cmdline.extend(["-i", frontend.user_key_private])
+        else:
+            sftp_cmdline.extend(["-o", "IdentityFile={0}".format(frontend.user_key_private)])
+
         sftp_cmdline.extend(self.params.sftp_args)
         sftp_cmdline.append('%s@%s' % (username, host))
         os.execlp("sftp", *sftp_cmdline)
