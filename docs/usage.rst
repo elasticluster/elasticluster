@@ -40,7 +40,7 @@ elasticluster provides multiple `subcommands` to start, stop, resize,
 inspect your clusters. The available subcommands are:
 
 **start**
-    Create a cluster using one of the configured cluster tmplate.
+    Create a cluster using one of the configured cluster templates.
 
 **stop**
     Stop a cluster and all associated VM instances.
@@ -130,7 +130,7 @@ The following options are available:
 ``--no-setup``
     By default elasticluster will automatically run the **setup**
     command after all the virtual machines are up and running. This
-    option prevent the `setup` step to be run and will leave the
+    option will prevent the `setup` step from being run and will leave the
     cluster unconfigured.
 
 
@@ -144,11 +144,11 @@ When you start a new cluster, elasticluster will:
   option is given).
 
 This process can take several minutes, depending on the load of the
-cloud, the configuration of the cluster and your connection
-speed. `Elasticluster` usually print very few information on what's
-happening, if you run it with `-v` it will display a more verbose
-output (including output of ansible command) to help you understanding
-what is actually happening.
+cloud, the configuration of the cluster and your connection speed. By
+default, `Elasticluster` will print a very limited amount of
+information with resepect to what's happening. If you run it with the
+`-v` option, it will display more verbose output (including output of
+ansible command) to help you understanding what is actually happening.
 
 After the setup process is done a summary of the created cluster is
 printed, similar to the following::
@@ -178,7 +178,7 @@ configure the cluster (in this case, for instance, the section
 The ``Frontend node`` line shows which node is used for the **ssh**
 and **sftp** commands, when connecting to the cluster.
 
-Then a list of how many nodes of each type have been started
+Then a list of how many nodes of each type have been started.
 
 The remaining lines describe how to connect to the cluster either
 by opening an interactive shell to run commands on it, or an sftp
@@ -217,7 +217,7 @@ The following options are available:
 
 ``--yes``
 
-    Since stopping a cluster is a possibly desruptive action,
+    Since stopping a cluster is a possibly disruptive action,
     elasticluster will always ask for confirmation before doing any
     modification, unless this option is given.
 
@@ -225,8 +225,8 @@ The following options are available:
 The ``list`` command
 --------------------
 
-The **list** command print a list of all the cluster that have been
-started. For each cluster, it will print a few information including
+The **list** command prints a list of all the clusters that have been
+started. For each cluster, it will print some information including
 the cloud used and the number of nodes started for each node type::
 
     $ elasticluster list
@@ -262,7 +262,7 @@ the cloud used and the number of nodes started for each node type::
 The ``list-nodes`` command
 --------------------------
 
-The **list-nodes** command print information on the nodes belonging to
+The **list-nodes** command prints information on the nodes belonging to
 a specific cluster.
 
 Basic usage of the command is::
@@ -329,8 +329,8 @@ Example::
 The ``list-templates`` command
 ------------------------------
 
-The **list-templates** command print a list of all the available
-templates defined in the configuration file with a few information for
+The **list-templates** command prints a list of all the available
+templates defined in the configuration file with some information about
 each one of them.
 
 Basic usage of the command is::
@@ -392,10 +392,10 @@ The following options are available:
 The ``resize`` command
 ----------------------
 
-The **resize** command allow you to add or remove nodes from a started
+The **resize** command allows you to add or remove nodes from a started
 cluster. Please, be warned that **this feature is still experimental**,
 and while adding nodes is usually safe, removing nodes can be
-desruptive and can leave the cluster in an unknwonw state.
+disruptive and can leave the cluster in an unknown state.
 
 Moreover, there is currently no way to decide *which nodes* can be
 removed from a cluster, therefore if you shrink a cluster **you must
@@ -435,7 +435,7 @@ The following options are available:
 
 ``-a N1:GROUP1[,N2:GROUP2], --add N1:GROUP1[,N2:GROUP2]``
 
-    This option allow you to specify how many nodes for a specific
+    This option allows you to specify how many nodes for a specific
     group you want to add. You can specify multiple nodes separated by
     a comma.
 
@@ -452,19 +452,19 @@ The following options are available:
 
 ``-r N1:GROUP1[,N2:GROUP2], --remove N1:GROUP1[,N2:GROUP2]``
 
-    This option allow you to specify how many nodes you want to remove
+    This option allows you to specify how many nodes you want to remove
     from a specific group. It follows the same syntax as the ``--add``
     option.
 
-    **WARNING**: elasticluster pick the nodes to remove at random, so
+    **WARNING**: elasticluster picks the nodes to remove at random, so
     **you have to be sure that any of the nodes can be
-    removed**. Moreover, not all the playbooks support shrkinging!
+    removed**. Moreover, not all the playbooks support shrinking!
 
 ``--no-setup``
 
     By default elasticluster will automatically run the **setup**
     command after starting and/or stopping the virtual machines. This
-    option prevent the `setup` step to be run. **WARNING**: use this
+    option will prevent the `setup` step from being run. **WARNING**: use this
     option wisely: depending on the cluster configuration it is
     impossible to know in advance what the status of the cluster will
     be after resizing it and NOT running the `setup` step.
@@ -472,7 +472,7 @@ The following options are available:
 ``--yes``
 
     Since resizing a cluster, especially shrinking, is a possibly
-    desruptive action and is not supported by all the distributed
+    a disruptive action and is not supported by all the distributed
     playbooks, elasticluster will always ask for confirmation before
     doing any modification, unless this option is given.
 
