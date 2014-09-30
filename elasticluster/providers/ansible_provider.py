@@ -24,12 +24,13 @@ import shutil
 import sys
 
 # external imports
+import ansible.utils
 import ansible.callbacks
 from ansible.callbacks import call_callback_module
 import ansible.constants as ansible_constants
 from ansible.errors import AnsibleError
 from ansible.playbook import PlayBook
-import ansible.utils
+
 
 # Elasticluster imports
 import elasticluster
