@@ -194,7 +194,7 @@ class ClusterRepository(AbstractClusterRepository):
 
         path = self._get_cluster_storage_path(cluster.name)
         with open(path, 'wb') as storage:
-            pickle.dump(cluster, storage)
+            pickle.dump(cluster, storage, pickle.HIGHEST_PROTOCOL)
 
     def _get_cluster_storage_path(self, name):
         cluster_file = '%s.%s' % (name, ClusterRepository.file_ending)
