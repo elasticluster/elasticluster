@@ -1,0 +1,6 @@
+*.pyc
+.noseids
+.tox
+build
+dist
+elasticluster.egg-info
