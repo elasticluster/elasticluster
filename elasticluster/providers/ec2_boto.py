@@ -120,7 +120,7 @@ class BotoCloudProvider(AbstractCloudProvider):
 
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
-                       username=None, **kwargs):
+                       username=None, node_name=None, **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
 
@@ -169,6 +169,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                 raise InstanceError(ex)
 
         vm = reservation.instances[-1]
+        vm.add_tag("Name", node_name)
 
         # cache instance object locally for faster access later on
         self._instances[vm.id] = vm

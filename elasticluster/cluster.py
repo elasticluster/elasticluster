@@ -155,7 +155,7 @@ class Cluster(object):
         if not name:
             name = "%s%03d" % (kind, len(self.nodes[kind]) + 1)
 
-        node = Node(name, kind, self._cloud_provider,
+        node = Node(name, self.name, kind, self._cloud_provider,
                     self._user_key_public, self.user_key_private,
                     self._user_key_name, image_user, security_group,
                     image_id, flavor, image_userdata=image_userdata, **extra)
@@ -596,10 +596,11 @@ class Node(object):
     """
     connection_timeout = 5  #: timeout in seconds to connect to host via ssh
 
-    def __init__(self, name, kind, cloud_provider, user_key_public,
+    def __init__(self, name, cluster_name, kind, cloud_provider, user_key_public,
                  user_key_private, user_key_name, image_user, security_group,
                  image, flavor, image_userdata=None, **extra):
         self.name = name
+        self.cluster_name = cluster_name
         self.kind = kind
         self._cloud_provider = cloud_provider
         self.user_key_public = user_key_public
@@ -628,7 +629,7 @@ class Node(object):
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
             self.flavor, self.image, self.image_userdata,
-            username=self.image_user, node_name=self.name, **self.extra_args)
+            username=self.image_user, node_name="%s-%s" % (self.cluster_name, self.name), **self.extra_args)
         log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
 
     def stop(self):

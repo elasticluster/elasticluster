@@ -24,12 +24,13 @@ import shutil
 import sys
 
 # external imports
-import ansible.callbacks
-from ansible.callbacks import call_callback_module
+
+# ansible.utils needs to be imported *before* ansible.callbacks!
+import ansible.utils
+import ansible.callbacks as anscb
 import ansible.constants as ansible_constants
 from ansible.errors import AnsibleError
 from ansible.playbook import PlayBook
-import ansible.utils
 
 # Elasticluster imports
 import elasticluster
@@ -37,12 +38,12 @@ from elasticluster import log
 from elasticluster.providers import AbstractSetupProvider
 
 
-class ElasticlusterPbCallbacks(ansible.callbacks.PlaybookCallbacks):
+class ElasticlusterPbCallbacks(anscb.PlaybookCallbacks):
     def on_no_hosts_matched(self):
-        call_callback_module('playbook_on_no_hosts_matched')
+        anscb.call_callback_module('playbook_on_no_hosts_matched')
 
     def on_no_hosts_remaining(self):
-        call_callback_module('playbook_on_no_hosts_remaining')
+        anscb.call_callback_module('playbook_on_no_hosts_remaining')
 
     def on_task_start(self, name, is_conditional):
         if hasattr(self, 'step') and self.step:
@@ -55,24 +56,24 @@ class ElasticlusterPbCallbacks(ansible.callbacks.PlaybookCallbacks):
             else:
                 self.skip_task = True
 
-        call_callback_module('playbook_on_task_start', name, is_conditional)
+        anscb.call_callback_module('playbook_on_task_start', name, is_conditional)
 
     def on_setup(self):
-        call_callback_module('playbook_on_setup')
+        anscb.call_callback_module('playbook_on_setup')
 
     def on_import_for_host(self, host, imported_file):
-        call_callback_module('playbook_on_import_for_host',
+        anscb.call_callback_module('playbook_on_import_for_host',
                              host, imported_file)
 
     def on_not_import_for_host(self, host, missing_file):
-        call_callback_module('playbook_on_not_import_for_host',
+        anscb.call_callback_module('playbook_on_not_import_for_host',
                              host, missing_file)
 
     def on_play_start(self, pattern):
-        call_callback_module('playbook_on_play_start', pattern)
+        anscb.call_callback_module('playbook_on_play_start', pattern)
 
     def on_stats(self, stats):
-        call_callback_module('playbook_on_stats', stats)
+        anscb.call_callback_module('playbook_on_stats', stats)
 
 
 class AnsibleSetupProvider(AbstractSetupProvider):
@@ -185,13 +186,13 @@ class AnsibleSetupProvider(AbstractSetupProvider):
 
         elasticluster.log.debug("Using playbook file %s.", self._playbook_path)
 
-        stats = ansible.callbacks.AggregateStats()
+        stats = anscb.AggregateStats()
         playbook_cb = ElasticlusterPbCallbacks(verbose=0)
-        runner_cb = ansible.callbacks.DefaultRunnerCallbacks()
+        runner_cb = anscb.DefaultRunnerCallbacks()
 
         if elasticluster.log.level <= logging.INFO:
-            playbook_cb = ansible.callbacks.PlaybookCallbacks()
-            runner_cb = ansible.callbacks.PlaybookRunnerCallbacks(stats)
+            playbook_cb = anscb.PlaybookCallbacks()
+            runner_cb = anscb.PlaybookRunnerCallbacks(stats)
 
         pb = PlayBook(
             playbook=self._playbook_path,

@@ -242,7 +242,7 @@ class TestNode(unittest.TestCase):
 
     def get_node(self):
         cloud_provider = MagicMock()
-        node = Node(self.name, self.node_kind, cloud_provider,
+        node = Node(self.name, 'cluster', self.node_kind, cloud_provider,
                     self.user_key_public, self.user_key_private,
                     self.user_key_name, self.image_user,
                     self.security_group, self.image, self.flavor,
