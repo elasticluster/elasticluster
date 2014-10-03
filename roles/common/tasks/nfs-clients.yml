@@ -8,7 +8,7 @@
 # nfsoptions:  options to use when mounting the filesystem. If not
 #              defined, `rw,sync` will be used.
 #
-# Please note that the task will check if the ${nfsmount} directory
+# Please note that the task will check if the {{nfsmount}} directory
 # exists and create it otherwise.
 #
 
@@ -40,17 +40,17 @@
   action: service name=rpcbind state=started enabled=yes
   when: is_debian
 
-- name: Ensure ${nfsmount} directory exists
-  action: file path=${nfsmount} state=directory
+- name: Ensure {{nfsmount}} directory exists
+  action: file path={{nfsmount}} state=directory
   tags: 
     - nfs
 
-- action: shell if [ -z "${nfsoptions}" ]; then  echo rw,sync,nfsvers=3; else echo ${nfsoptions}; fi
+- action: shell if [ -z "{{nfsoptions}}" ]; then  echo rw,sync,nfsvers=3; else echo {{nfsoptions}o}; fi
   register: _nfsopts
   sudo: false
   connection: local
 
 - name: configure /etc/fstab on clients
-  action: mount name=${nfsmount} src=${nfsserver}:${nfspath} fstype=nfs opts=${_nfsopts.stdout} state=mounted
+  action: mount name={{nfsmount}} src={{nfsserver}}:{{nfspath}} fstype=nfs opts={{_nfsopts.stdout}} state=mounted
   tags:
     - nfs

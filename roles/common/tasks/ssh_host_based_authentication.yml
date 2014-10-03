@@ -2,12 +2,12 @@
 # These steps are needed for docker machines
 - name: Overwrite /sbin/initctl
   shell: dpkg-divert --local --rename --add /sbin/initctl creates=/sbin/initctl.distrib
-  when: $is_debian_or_ubuntu and is_docker_container is defined
+  when: is_debian_or_ubuntu and is_docker_container is defined
   notify: kill-HUP sshd
 
 - name: Link /sbin/initctl to /bin/true
   file: src=/bin/true dest=/sbin/initctl state=link
-  when: $is_debian_or_ubuntu and is_docker_container is defined
+  when: is_debian_or_ubuntu and is_docker_container is defined
 
 - name: Setup SSH known hosts file
   action: template dest=/etc/ssh/ssh_known_hosts src=common/templates/etc/ssh/ssh_known_hosts.j2 owner=root group=root mode=0644

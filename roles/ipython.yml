@@ -7,11 +7,11 @@
     - include: common/handlers/main.yml
 
   tasks:
-    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
-    - include: common/tasks/iptables.yml trusted_hosts=${groups.all}
+    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
+    - include: common/tasks/iptables.yml trusted_hosts={{groups.all}}
 
     - name: Install PIP (Ubuntu)
-      action: apt name=$item
+      action: apt name={{item}}
       when: is_debian_or_ubuntu
       with_items:
         - build-essential
@@ -24,7 +24,7 @@
         - ipython
 
     - name: Install PIP (CentOS)
-      action: yum name=$item
+      action: yum name={{item}}
       with_items:
         - gcc
         - gcc-c++
@@ -39,7 +39,7 @@
     # Note: use_mirrors=yes (default) does not work with CentOS 6.3
     # Note: ipython[all] does not seem to work.
     - name: Install ipython and commonly used Python packages
-      action: pip name=$item use_mirrors=no
+      action: pip name={{item}} use_mirrors=no
       with_items:
         - ipython
         - ipython-cluster-helper

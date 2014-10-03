@@ -39,7 +39,7 @@ options:
         description:
             - Destination file.
         required: false
-        default: /etc/drbd.d/$name.res
+        default: /etc/drbd.d/{{name}}.res
     address0:
         description:
             - Address to use for the first peer

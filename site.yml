@@ -3,7 +3,7 @@
   hosts: all
   gather_facts: yes
   tasks:
-    - group_by: key="$gc3group"
+    - group_by: key="{{gc3group}}"
 
 - include: roles/gc3.yml
 - include: roles/common.yml

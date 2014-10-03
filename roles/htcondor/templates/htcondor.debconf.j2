@@ -8,7 +8,7 @@ Value: false
 
 Name: condor/centralmanager
 Template: condor/centralmanager
-Value: ${groups.condor_master[0]}
+Value: {{groups.condor_master[0]}}
 
 Name: condor/daemons
 Template: condor/daemons
@@ -20,11 +20,11 @@ Value: MASTER,SCHEDD,STARTD
 
 Name: condor/uiddomain
 Template: condor/uiddomain
-Value: ${groups.condor_master[0]}
+Value: {{groups.condor_master[0]}}
 
 Name: condor/filesystemdomain
 Template: condor/filesystemdomain
-Value: ${groups.condor_master[0]}
+Value: {{groups.condor_master[0]}}
 
 Name: condor/personal
 Template: condor/personal
@@ -36,7 +36,7 @@ Value: 0
 
 Name: condor/allowwrite
 Template: condor/allowwrite
-Value: ${groups.all}
+Value: {{groups.all}}
 
 Name: condor/startpolicy
 Template: condor/startpolicy

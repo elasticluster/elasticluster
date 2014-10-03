@@ -16,8 +16,8 @@
 #
 
 - name: Install iptables packages (Ubuntu)
-  action: apt pkg=$item update_cache=yes
-  when: $is_debian_or_ubuntu and is_docker_container is not defined
+  action: apt pkg={{item}} update_cache=yes
+  when: is_debian_or_ubuntu and is_docker_container is not defined
   with_items:
     - iptables
     - iptables-persistent
@@ -29,7 +29,7 @@
   tags: iptables
 
 - action: set_fact destfile=/etc/iptables/rules.v4
-  when: $is_debian_or_ubuntu and is_docker_container is not defined
+  when: is_debian_or_ubuntu and is_docker_container is not defined
   tags: iptables
 
 - action: set_fact destfile=/etc/sysconfig/iptables

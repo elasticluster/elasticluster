@@ -4,9 +4,9 @@
   vars_files:
     - vars/os
   tasks: 
-    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
     - include: slurm/tasks/main.yml
-    - include: common/tasks/iptables.yml trusted_hosts=${groups.all} default_accept=1
+    - include: common/tasks/iptables.yml trusted_hosts={{groups.all}} default_accept=1
 
     - include: cluster/tasks/packages.yml
   handlers:
@@ -21,7 +21,7 @@
   tasks: 
     - include: common/tasks/nfs.yml
 
-    - action: nfsexport path=/home dest=/etc/exports clients=${groups.slurm_clients} options=rw,no_root_squash,sync
+    - action: nfsexport path=/home dest=/etc/exports clients={{groups.slurm_clients}} options=rw,no_root_squash,sync
       notify: 
         - ensure nfs service is running
         - reload exports
@@ -36,7 +36,7 @@
   vars_files:
     - vars/os
   tasks: 
-    - include: common/tasks/nfs-clients.yml nfsserver=${groups.slurm_master[0]} nfspath=/home nfsmount=/home
+    - include: common/tasks/nfs-clients.yml nfsserver={{groups.slurm_master[0]}} nfspath=/home nfsmount=/home
   handlers:
     - include: common/handlers/main.yml
     - include: slurm/handlers/main.yml

@@ -1,6 +1,6 @@
 ---
 - name: Install GridEngine APT packages
-  action: apt pkg=$item state=latest
+  action: apt pkg={{item}} state=latest
   when: is_debian_or_ubuntu
   with_items:
     - gridengine-client
@@ -9,7 +9,7 @@
     - gridengine-qmon
 
 - name: Install GridEngine RPM packages
-  action: yum pkg=$item state=latest
+  action: yum pkg={{item}} state=latest
   when: is_centos
   with_items:
     - gridengine-qmaster
@@ -23,20 +23,20 @@
     - sge
 
 - name: add the frontend as submission host
-  action: shell bash -lc 'qconf -as ${groups.gridengine_master[0]}'
+  action: shell bash -lc 'qconf -as {{groups.gridengine_master[0]}}'
   ignore_errors: yes
   tags:
     - sge
 
 - name: upload configuration file for host
-  action: template src=gridengine/templates/newhost.qconf.j2 dest="/root/${item}.conf"
-  with_items: ${groups.gridengine_clients}
+  action: template src=gridengine/templates/newhost.qconf.j2 dest="/root/{{item}}.conf"
+  with_items: {{groups.gridengine_clients}}
   tags:
     - sge
 
 - name: add execution hosts
-  action: shell bash -lc 'qconf -Ae "/root/${item}.conf"'
-  with_items: ${groups.gridengine_clients}
+  action: shell bash -lc 'qconf -Ae "/root/{{item}}.conf"'
+  with_items: {{groups.gridengine_clients}}
   ignore_errors: yes
   tags:
     - sge
@@ -77,7 +77,7 @@
     - sge
 
 - name: Export gridengine cell to the clients
-  action: nfsexport path=/usr/share/gridengine/default/common dest=/etc/exports clients=${groups.gridengine_clients} options=ro,no_root_squash,sync
+  action: nfsexport path=/usr/share/gridengine/default/common dest=/etc/exports clients={{groups.gridengine_clients}} options=ro,no_root_squash,sync
   notify: 
     - ensure nfs service is running
     - reload exports

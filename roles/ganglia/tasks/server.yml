@@ -1,6 +1,6 @@
 ---
 - name: Install ganglia server (Ubuntu)
-  action: apt pkg=$item state=latest update_cache=yes
+  action: apt pkg={{item}} state=latest update_cache=yes
   with_items:
     - ganglia-monitor
     - ganglia-webfrontend
@@ -10,7 +10,7 @@
     - ganglia
 
 - name: Install ganglia server (CentOS)
-  action: yum pkg=$item state=latest
+  action: yum pkg={{item}} state=latest
   with_items:
     - ganglia-gmond
     - ganglia-gmetad
@@ -46,7 +46,7 @@
     - ganglia
 
 - name: Ensure ganglia daemons are running
-  action: service name=$item state=started
+  action: service name={{item}} state=started
   when: is_centos
   with_items:
     - gmond
