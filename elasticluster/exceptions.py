@@ -22,7 +22,15 @@ class ConfigurationError(Exception):
     pass
 
 
+class VpcError(Exception):
+    pass
+
+
 class SecurityGroupError(Exception):
+    pass
+
+
+class SubnetError(Exception):
     pass
 
 

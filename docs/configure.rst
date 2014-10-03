@@ -133,6 +133,11 @@ Valid configuration keys for `boto`
 
     the availability zone you want to use.
 
+``vpc``
+
+    the name or ID of the AWS Virtual Private Cloud to provision
+    resources in.
+
 ``request_floating_ip``
 
     request assignment of a floating IP when the instance is
@@ -216,6 +221,7 @@ For Amazon instead (region us-east-1) you can use::
     ec2_access_key=****REPLACE WITH YOUR ACCESS ID**** 
     ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
     ec2_region=us-east-1
+    vpc=vpc-deadbeef
 
 For Google Compute Engine you can use::
 
@@ -525,9 +531,9 @@ Optional configuration keys
 
 ``network_ids``
 
-    comma separated list of network IDs the nodes of the cluster will
-    be connected to. Only supported when the cloud provider is
-    `openstack`
+    comma separated list of network or subnet IDs the nodes of the cluster
+    will be connected to. Only supported when the cloud provider is
+    `ec2_boto` or `openstack`
 
 
 Examples
@@ -546,6 +552,7 @@ Some (working) examples::
     frontend_nodes=1
     compute_nodes=2
     frontend_class=frontend
+    network_ids=subnet-c0ffee
 
     [cluster/torque]
     cloud=hobbes

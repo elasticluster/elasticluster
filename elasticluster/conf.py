@@ -359,7 +359,8 @@ class ConfigValidator(object):
                             "ec2_access_key": All(str, Length(min=1)),
                             "ec2_secret_key": All(str, Length(min=1)),
                             "ec2_region": All(str, Length(min=1)),
-                            Optional("request_floating_ip"): Boolean(str)}
+                            Optional("request_floating_ip"): Boolean(str),
+                            Optional("vpc"): All(str, Length(min=1))}
         cloud_schema_gce = {"provider": 'google',
                             "gce_client_id": All(str, Length(min=1)),
                             "gce_client_secret": All(str, Length(min=1)),
@@ -378,6 +379,7 @@ class ConfigValidator(object):
             "flavor": All(str, Length(min=1)),
             "image_id": All(str, Length(min=1)),
             "security_group": All(str, Length(min=1)),
+            Optional("network_ids"): All(str, Length(min=1)),
         }
 
         # validation
@@ -419,6 +421,20 @@ class ConfigValidator(object):
                         "character (`-`)" % node)
 
                 validator_node(props)
+
+                if properties['cloud']['provider'] == 'ec2_boto' and \
+                   'vpc' in self.config[cluster]['cloud'] and \
+                   'network_ids' not in props:
+                    raise Invalid("Node group `%s/%s` is being used in "
+                        "a VPC, so it must specify network_ids." %
+                        (cluster, node))
+
+                if properties['cloud']['provider'] == 'ec2_boto' and \
+                   'network_ids' in props and \
+                   'vpc' not in self.config[cluster]['cloud']:
+                    raise Invalid("Cluster `%s` must specify a VPC to place "
+                        "`%s` instances in %s" %
+                        (cluster, node, props['network_ids']))
 
         self._post_validate()
 
