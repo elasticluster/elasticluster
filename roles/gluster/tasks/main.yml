@@ -30,7 +30,7 @@
 
 - name: Configure peers (Only on the first host)
   action: shell gluster peer probe {{item}}
-  with_items: {{groups.gluster_data}}
+  with_items: "{{groups.gluster_data}}"
   when: inventory_hostname == groups.gluster_data[0]
   tags:
     - gluster

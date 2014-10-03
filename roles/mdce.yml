@@ -16,7 +16,7 @@
 - hosts: mdce_worker:mdce_master
   vars:
     nfsmount: /usr/local/MATLAB
-    mbin: {{nfsmount}}/R2013a/toolbox/distcomp/bin/
+    mbin: "{{nfsmount}}/R2013a/toolbox/distcomp/bin/"
   tasks:
     - include: common/tasks/deb.yml
     - name: install missing X11 packages
@@ -35,7 +35,7 @@
 - hosts: mdce_master
   vars:
     nfsmount: /usr/local/MATLAB
-    mbin: {{nfsmount}}/R2013a/toolbox/distcomp/bin/
+    mbin: "{{nfsmount}}/R2013a/toolbox/distcomp/bin/"
   tasks:
     - action: shell nohup {{mbin}}/startjobmanager -name AnsibleMatlabCluster
       ignore_errors: true
@@ -44,7 +44,7 @@
 - hosts: mdce_worker
   vars:
     nfsmount: /usr/local/MATLAB
-    mbin: {{nfsmount}}/R2013a/toolbox/distcomp/bin/
+    mbin: "{{nfsmount}}/R2013a/toolbox/distcomp/bin/"
   tasks:
     # I don't know if it's necessary to run a worker per core or just one per machine
     # - action: shell for i in `seq 1 $(nproc)`; do nohup $mbin/startworker -jobmanager AnsibleMatlabCluster -jobmanagerhost ${groups.mdce_master[0]} ; done; echo "done"
