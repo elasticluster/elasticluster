@@ -21,10 +21,13 @@
   tasks: 
     - include: common/tasks/nfs.yml
 
-    - action: nfsexport path=/home dest=/etc/exports clients="{{groups.slurm_clients}}" options=rw,no_root_squash,sync
+    - nfsexport: path=/home dest=/etc/exports clients="{{groups.slurm_clients}}" options=rw,no_root_squash,sync
       notify: 
         - ensure nfs service is running
         - reload exports
+
+      tags:
+        - nfs
 
     - include: slurm/tasks/master.yml
   handlers:
