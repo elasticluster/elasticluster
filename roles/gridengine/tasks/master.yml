@@ -30,13 +30,13 @@
 
 - name: upload configuration file for host
   action: template src=gridengine/templates/newhost.qconf.j2 dest="/root/{{item}}.conf"
-  with_items: "{{groups.gridengine_clients}}"
+  with_items: groups.gridengine_clients
   tags:
     - sge
 
 - name: add execution hosts
   action: shell bash -lc 'qconf -Ae "/root/{{item}}.conf"'
-  with_items: "{{groups.gridengine_clients}}"
+  with_items: groups.gridengine_clients
   ignore_errors: yes
   tags:
     - sge
