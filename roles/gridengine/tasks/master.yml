@@ -77,7 +77,7 @@
     - sge
 
 - name: Export gridengine cell to the clients
-  action: nfsexport path=/usr/share/gridengine/default/common dest=/etc/exports clients={{groups.gridengine_clients}} options=ro,no_root_squash,sync
+  nfsexport: path=/usr/share/gridengine/default/common dest=/etc/exports clients="{{groups.gridengine_clients}}" options=ro,no_root_squash,sync
   notify: 
     - ensure nfs service is running
     - reload exports

@@ -30,11 +30,11 @@
 
 - name: Ensure portmap is running (Ubuntu prior to Trusty Thar)
   action: service name=portmap state=started enabled=yes
-  when: is_ubuntu and ansible_lsb.major_release|int < 14
+  when: is_ubuntu and ansible_lsb.major_release is defined and ansible_lsb.major_release|int < 14
 
 - name: Ensure rpcbind is running (Ubuntu Trusty Tahr or newer)
   action: service name=rpcbind state=started enabled=yes
-  when: is_ubuntu and ansible_lsb.major_release|int >= 14
+  when: is_ubuntu and ansible_lsb.major_release is defined and ansible_lsb.major_release|int >= 14
 
 - name: Ensure rpcbind is running (Debian)
   action: service name=rpcbind state=started enabled=yes
