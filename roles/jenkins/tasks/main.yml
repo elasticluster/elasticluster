@@ -47,7 +47,7 @@
   when: inventory_hostname in groups.gc3
 
 - name: configure jenkins job
-  action: copy src=jenkins/files/jobs/{{item}}/config.xml dest=/var/lib/jenkins/jobs/$item/config.xml owner=jenkins
+  action: copy src=jenkins/files/jobs/{{item}}/config.xml dest=/var/lib/jenkins/jobs/{{item}}/config.xml owner=jenkins
   with_items: "{{j_jobs}}"
   when: inventory_hostname in groups.gc3
   notify:
