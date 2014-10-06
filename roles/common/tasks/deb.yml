@@ -1,0 +1,25 @@
+# Ensure that python-apt is installed on a debian/ubuntu machine
+- name: Ensure that package cache is updated
+  action: shell apt-get update -y
+  when: is_debian_or_ubuntu
+
+- name: Check if `python-apt` package is installed
+  action: shell apt-get install -y {{item}}
+  with_items:
+    - python-apt
+    - sysvinit-utils
+    - software-properties-common
+    - python-software-properties
+    - python-pycurl
+  when: is_debian_or_ubuntu
+
+- name: Ensure extra reposistories are present (Ubuntu)
+  action: apt_repository repo="deb http://archive.ubuntu.com/ubuntu {{ansible_distribution_release}} universe multiverse" state=present
+  when: is_ubuntu
+
+- name: Ensure aptidude packages is installed
+  action: apt name=aptitude state=installed update_cache=yes
+  when: is_debian_or_ubuntu
+  with_items:
+    - aptitude
+

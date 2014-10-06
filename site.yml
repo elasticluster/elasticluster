@@ -6,6 +6,7 @@
     - group_by: key="$gc3group"
 
 - include: roles/gc3.yml
+- include: roles/common.yml
 - include: roles/slurm.yml
 - include: roles/jenkins.yml
 - include: roles/ganglia.yml
@@ -16,3 +17,5 @@
 - include: roles/pvfs2.yml
 - include: roles/ceph.yml
 - include: roles/gluster.yml
+- include: roles/ipython.yml
+- include: roles/htcondor.yml

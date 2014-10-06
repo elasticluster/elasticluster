@@ -8,5 +8,3 @@
 - name: mount home
   action: shell mount /home
 
-- name: reload exports
-  action: shell exportfs -r

@@ -29,6 +29,7 @@ module: nfsexport
 short_description: This module will configure a nfs exports
 description:
     - This module will configure an export by writing an entry in the ``/etc/exports`` file.
+    - Please remember to restart the nfs service after updating the ``/etc/exports`` file.
 author: Antonio Messina <antonio.s.messina@gmail.com>
 options:
     path:
@@ -67,14 +68,14 @@ def main():
 
     params = module.params
     params['path'] = params['path'].strip()
-
-    client_list = params['clients'].split(',')
+    client_list = params['clients'] \
+                  if isinstance(params['clients'], list) \
+                     else [host.strip().strip("'") for host in params['clients'].strip('[]').split(',')]
     exports = []
     for client in client_list:
         exports.append("%s(%s)" % (client, params['options']))
     clients = str.join(' ', exports)
     exportline = "%s %s\n" % (params['path'], clients )
-
     # Check if destination file exists already
     if os.path.exists(params['dest']):
         current_exports = open(params['dest'], 'r').readlines()

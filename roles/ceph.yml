@@ -6,9 +6,7 @@
     - fsid: 00baac7a-0ad4-4ab7-9d5e-fdaf7d122aee
     - osd_devs: /dev/vdb1
   tasks:
-    - include: common/tasks/hosts.yml hosts=${groups.all}
-    - include: common/tasks/hostname.yml
-    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
     - include: ceph/tasks/main.yml
   handlers:
     - include: common/handlers/main.yml
@@ -64,11 +62,11 @@
 # - hosts: all
 #   name: print
 #   tasks:
-#     - action: 'debug msg="Index $inventory_hostname: ${ceph-idx}"'
+#     - action: 'debug msg="Index {{inventory_hostname}}: {{ceph_idx}}"'
 #       tags:
 #         - test
 
-#     - action: 'debug msg="Index $inventory_hostname: ${hostvars.{$inventory_hostname}.ceph-name}"'
+#     - action: 'debug msg="Index {{inventory_hostname}}: {{hostvars.{{inventory_hostname}}.ceph_name}}"'
 #       tags:
 #         - cephtest
       

@@ -4,6 +4,7 @@
   vars_files:
     - vars/os
   tasks:
+    - include: common/tasks/deb.yml
     - include: ganglia/tasks/server.yml
   tags:
     - ganglia
@@ -15,6 +16,7 @@
   vars_files:
     - vars/os
   tasks:
+    - include: common/tasks/deb.yml
     - include: ganglia/tasks/client.yml
   handlers:
     - include: ganglia/handlers/main.yml

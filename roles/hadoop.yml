@@ -4,11 +4,8 @@
   vars_files:
     - vars/os
   tasks:
-    - include: common/tasks/hosts.yml hosts=${groups.all}
-    - include: common/tasks/hostname.yml
-    # This must run *before* start-*.sh because otherwise passwordless
-    # authentication does not work.
-    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
+    - include: common/tasks/iptables.yml trusted_hosts={{groups.all}} default_accept=1
   handlers:
     - include: common/handlers/main.yml
 
@@ -17,25 +14,25 @@
   vars_files:
     - vars/os
   vars:
-    deburl: http://apache.cs.utah.edu/hadoop/common/hadoop-1.1.2/hadoop_1.1.2-1_x86_64.deb
-    rpmurl: http://apache.cs.utah.edu/hadoop/common/hadoop-1.1.2/hadoop-1.1.2-1.x86_64.rpm
+    deburl: http://apache.cs.utah.edu/hadoop/common/hadoop-1.2.1/hadoop_1.2.1-1_x86_64.deb
+    rpmurl: http://apache.cs.utah.edu/hadoop/common/hadoop-1.2.1/hadoop-1.2.1-1.x86_64.rpm
     hd_confdir: "/etc/hadoop/"
     hd_tmpdir: "/srv/hadoop"
-    hd_namedir: "${hd_tmpdir}/dfs/name"
-    hd_datadir: "${hd_tmpdir}/dfs/data"
-    mapred_localdir: "${hd_tmpdir}/mapred"
+    hd_namedir: "{{hd_tmpdir}}/dfs/name"
+    hd_datadir: "{{hd_tmpdir}}/dfs/data"
+    mapred_localdir: "{{hd_tmpdir}}/mapred"
     hdfs_replication: 3
   tasks: 
     - include: hadoop/tasks/packages.yml
     - include: hadoop/tasks/conf.yml
 
     - name: Start name and data daemons
-      action: shell start-dfs.sh
-      only_if: '"$inventory_hostname" in ${groups.hadoop_namenode}'
+      action: command /usr/sbin/start-dfs.sh
+      when: inventory_hostname in groups.hadoop_namenode
 
     - name: Start job tracker
-      action: shell start-mapred.sh
-      only_if: '"$inventory_hostname" in ${groups.hadoop_jobtracker}'
+      action: command /usr/sbin/start-mapred.sh
+      when: inventory_hostname in groups.hadoop_jobtracker
 
     - name: Create hdfs:/tmp/hadoop-root/mapred directory
       action: shell hadoop dfs -mkdir /tmp/hadoop-root/mapred ; echo done

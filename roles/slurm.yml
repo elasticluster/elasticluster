@@ -1,21 +1,35 @@
 ---
+- name: Slurm common Playbook
+  hosts: slurm_master:slurm_clients
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
+    - include: slurm/tasks/main.yml
+    - include: common/tasks/iptables.yml trusted_hosts={{groups.all}} default_accept=1
+
+    - include: cluster/tasks/packages.yml
+  handlers:
+    - include: common/handlers/main.yml
+    - include: slurm/handlers/main.yml
+
+
 - name: Slurm master Playbook
   hosts: slurm_master
   vars_files:
     - vars/os
   tasks: 
-    - include: common/tasks/hosts.yml hosts=${groups.all}
-    - include: common/tasks/hostname.yml
-    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
-    - include: slurm/tasks/main.yml
-    - include: slurm/tasks/nfs.yml
-    - include: common/tasks/iptables.yml trusted_hosts=${groups.all}
+    - include: common/tasks/nfs.yml
 
-    - action: nfsexport path=/home dest=/etc/exports clients=${groups.slurm_clients} options=rw,no_root_squash,sync
-      notify: reload exports
+    - nfsexport: path=/home dest=/etc/exports clients="{{groups.slurm_clients}}" options=rw,no_root_squash,sync
+      notify: 
+        - ensure nfs service is running
+        - reload exports
+
+      tags:
+        - nfs
 
     - include: slurm/tasks/master.yml
-    - include: cluster/tasks/packages.yml
   handlers:
     - include: common/handlers/main.yml
     - include: slurm/handlers/main.yml
@@ -25,12 +39,7 @@
   vars_files:
     - vars/os
   tasks: 
-    - include: common/tasks/hosts.yml hosts=${groups.all}
-    - include: common/tasks/hostname.yml
-    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
-    - include: slurm/tasks/main.yml
-    - include: common/tasks/nfs-clients.yml nfsserver=${groups.slurm_master[0]} nfspath=/home nfsmount=/home
-    - include: cluster/tasks/packages.yml
+    - include: common/tasks/nfs-clients.yml nfsserver={{groups.slurm_master[0]}} nfspath=/home nfsmount=/home
   handlers:
     - include: common/handlers/main.yml
     - include: slurm/handlers/main.yml

@@ -3,26 +3,48 @@
 # everything from a set of hosts and denying everything but ssh
 # connections from any other host.
 #
-# Variables you need to define:
-# trusted_hosts:   list of ip addresses
+# Mandatory variables:
+#
+#
+# Optional variables:
+#
+# trusted_hosts:  list of ip addresses. By default, all the hosts in
+#                 the group `all`.
+#
+# default_accept: if equal to `1` or `true`, all connection *from
+#                 internet* are accepted (but not from the internal
+#
 
-- action: apt pkg=$item update_cache=yes
-  only_if: $is_ubuntu
+- name: Install iptables packages (Ubuntu)
+  action: apt pkg={{item}} update_cache=yes
+  when: is_debian_or_ubuntu
   with_items:
     - iptables
     - iptables-persistent
+  tags: iptables
 
-- action: yum pkg=iptables
-  only_if: $is_centos
+- name: Install iptables package (CentOS)
+  action: yum pkg=iptables
+  when: is_centos
+  tags: iptables
 
 - action: set_fact destfile=/etc/iptables/rules.v4
-  only_if: $is_ubuntu
+  when: is_debian_or_ubuntu and is_docker_container is not defined
   tags: iptables
 
 - action: set_fact destfile=/etc/sysconfig/iptables
-  only_if: $is_centos
+  when: is_centos
+  tags: iptables
+
+- action: set_fact default_policy=ACCEPT
+  when: 'default_accept is defined and default_accept.lower() in ["1", "true"]'
+  tags: iptables
+
+- action: set_fact default_policy=DROP
+  when: default_policy is not defined
   tags: iptables
 
 - action: template dest={{ destfile }} src=common/templates/etc/iptables.d/rules.v4.j2 owner=root group=root mode=0644
+  when: is_docker_container is not defined
   notify: restart iptables
   tags: iptables

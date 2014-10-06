@@ -4,11 +4,9 @@
   vars_files:
     - vars/os
   tasks:
-    - include: common/tasks/hosts.yml hosts=${groups.all}
-    - include: common/tasks/hostname.yml
-    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
     - include: cluster/tasks/packages.yml
-    - include: common/tasks/iptables.yml trusted_hosts=${groups.all}
+    - include: common/tasks/iptables.yml trusted_hosts={{groups.all}}
   handlers:
     - include: common/handlers/main.yml
 
@@ -18,10 +16,13 @@
     - vars/os
   tasks: 
     - include: gridengine/tasks/master.yml
-    - include: slurm/tasks/nfs.yml
-    - action: nfsexport path=/home dest=/etc/exports clients=${groups.gridengine_clients} options=rw,no_root_squash,sync
-      notify: reload exports
+    - include: common/tasks/nfs.yml
+    - nfsexport: path=/home dest=/etc/exports clients="{{groups.gridengine_clients}}" options=rw,no_root_squash,sync
+      notify: 
+        - ensure nfs service is running
+        - reload exports
   handlers:
+    - include: common/handlers/main.yml
     - include: slurm/handlers/main.yml
     - include: gridengine/handlers/main.yml
 
@@ -30,10 +31,11 @@
   vars_files:
     - vars/os
   tasks: 
-    - include: common/tasks/nfs-clients.yml nfsserver=${groups.gridengine_master[0]} nfspath=/home nfsmount=/home
-    - include: common/tasks/nfs-clients.yml nfsserver=${groups.gridengine_master[0]} nfspath=/usr/share/gridengine/default/common nfsmount=/usr/share/gridengine/default/common
-      only_if: $is_centos
+    - include: common/tasks/nfs-clients.yml nfsserver={{groups.gridengine_master[0]}} nfspath=/home nfsmount=/home
+    - include: common/tasks/nfs-clients.yml nfsserver={{groups.gridengine_master[0]}} nfspath=/usr/share/gridengine/default/common nfsmount=/usr/share/gridengine/default/common
+      when: is_centos
     - include: gridengine/tasks/clients.yml
   handlers:
+    - include: common/handlers/main.yml
     - include: gridengine/handlers/main.yml
 

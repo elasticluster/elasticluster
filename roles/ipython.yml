@@ -1,0 +1,85 @@
+---
+- name: IPython cluster Playbook
+  hosts: ipython_controller:ipython_engine
+  vars_files:
+    - vars/os
+  handlers:
+    - include: common/handlers/main.yml
+
+  tasks:
+    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
+    - include: common/tasks/iptables.yml trusted_hosts={{groups.all}}
+
+    - name: Install PIP (Ubuntu)
+      action: apt name={{item}}
+      when: is_debian_or_ubuntu
+      with_items:
+        - build-essential
+        - gfortran
+        - python-pip
+        - python-dev
+        - libblas-dev
+        - liblapack-dev
+      tags:
+        - ipython
+
+    - name: Install PIP (CentOS)
+      action: yum name={{item}}
+      with_items:
+        - gcc
+        - gcc-c++
+        - python-pip
+        - python-devel
+        - blas-devel
+        - lapack-devel
+      when: is_centos
+      tags:
+        - ipython
+
+    # Note: use_mirrors=yes (default) does not work with CentOS 6.3
+    # Note: ipython[all] does not seem to work.
+    - name: Install ipython and commonly used Python packages
+      action: pip name={{item}} use_mirrors=no
+      with_items:
+        - ipython
+        - ipython-cluster-helper
+        - numpy
+        - scipy
+      tags:
+        - ipython
+
+    - name: Fix for GCE CentOS images
+      action: shell find /usr/lib/python2.6/site-packages -name  top_level.txt -exec chmod a+r {} \;
+      ignore_errors: yes
+      when: is_centos
+      tags:
+        - ipython
+
+- name: IPython controller Playbook (standard user operations)
+  hosts: ipython_controller:ipython_engine
+  sudo: False
+  tasks:
+
+    - name: create ipython profile
+      action: shell ipython profile create --parallel creates=~/.ipython/profile_default
+      tags:
+        - ipython
+
+    - name: Deploy ipcluster configuration file
+      action: template src=ipython/templates/ipcluster_config.py.j2 dest=~/.ipython/profile_default/ipcluster_config.py
+      tags: 
+        - ipython
+
+    - name: Deploy ipcontroller configuration file
+      action: template src=ipython/templates/ipcontroller_config.py.j2 dest=~/.ipython/profile_default/ipcontroller_config.py
+      tags: 
+        - ipython
+
+    - name: Create ipython cluster!
+      action: shell ipcluster start
+      when: 'inventory_hostname in groups["ipython_controller"]'
+      tags: 
+        - ipython
+
+  handlers:
+    - include: common/handlers/main.yml

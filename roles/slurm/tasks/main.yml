@@ -1,6 +1,6 @@
 ---
-- name: install packages
-  action: apt pkg=$item update_cache=yes force=yes state=latest
+- name: Install required SLURM packages
+  action: apt pkg={{item}} update_cache=yes force=yes state=latest
   with_items:
     - slurm-llnl
     - munge

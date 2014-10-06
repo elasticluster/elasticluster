@@ -1,0 +1,12 @@
+---
+- name: Common setup
+  hosts: all
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: common/tasks/deb.yml
+    - include: common/tasks/epel_repo.yml
+    - include: common/tasks/hosts.yml hosts={{groups.all}}
+    - include: common/tasks/hostname.yml
+  handlers:
+    - include: common/handlers/main.yml

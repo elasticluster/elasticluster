@@ -1,35 +1,48 @@
 ---
 - name: Install ganglia server (Ubuntu)
-  action: apt pkg=$item state=latest update_cache=yes
+  action: apt pkg={{item}} state=latest update_cache=yes
   with_items:
     - ganglia-monitor
     - ganglia-webfrontend
     - gmetad
-  only_if: $is_ubuntu
+  when: is_debian_or_ubuntu
   tags:
     - ganglia
 
 - name: Install ganglia server (CentOS)
-  action: yum pkg=$item state=latest
+  action: yum pkg={{item}} state=latest
   with_items:
     - ganglia-gmond
     - ganglia-gmetad
     - ganglia-web
-  only_if: $is_centos
+  when: is_centos
   tags:
     - ganglia
 
 - name: Configure apache link
   action: file src=/etc/ganglia-webfrontend/apache.conf dest=/etc/apache2/conf.d/ganglia.conf state=link
   notify: restart apache
-  only_if: $is_ubuntu
+  when: is_debian_or_ubuntu and not is_ubuntu_trusty
+  tags:
+    - ganglia
+
+- name: Configure apache link (conf-available)
+  action: file src=/etc/ganglia-webfrontend/apache.conf dest=/etc/apache2/conf-available/ganglia.conf state=link
+  when: is_ubuntu_trusty
+  tags:
+    - ganglia
+
+- name: Configure apache link (conf-enabled)
+  action: file src=/etc/apache2/conf-available/ganglia.conf dest=/etc/apache2/conf-enabled/ganglia.conf state=link
+  notify: restart apache
+  when: is_ubuntu_trusty
   tags:
     - ganglia
 
 - name: Configure apache to allow access to ganglia from everywere
   action: copy src=ganglia/files/etc/httpd/conf.d/ganglia.conf dest=/etc/httpd/conf.d/ganglia.conf
   notify: restart apache
-  only_if: $is_centos
+  when: is_centos
   tags:
     - ganglia
 
@@ -41,13 +54,13 @@
 
 - name: Ensure httpd is running
   action: service name=httpd state=started
-  only_if: $is_centos
+  when: is_centos
   tags:
     - ganglia
 
 - name: Ensure ganglia daemons are running
-  action: service name=$item state=started
-  only_if: $is_centos
+  action: service name={{item}} state=started
+  when: is_centos
   with_items:
     - gmond
     - gmetad

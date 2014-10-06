@@ -4,9 +4,21 @@
   vars_files:
     - vars/os
   tasks:
-    - include: common/tasks/hosts.yml hosts=${groups.all}
-    - include: common/tasks/hostname.yml
-    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
+    - include: common/tasks/iptables.yml trusted_hosts={{groups.all}} default_accept=1
+
+    - name: configure ppa
+      action: apt_repository repo=ppa:semiosis/ubuntu-glusterfs-3.4
+      when: is_debian_or_ubuntu
+      tags:
+        - gluster
+
+    - name: configure GlusterFS repository
+      action: template src=gluster/templates/etc/yum.repos.d/gluster.repo.j2 dest=/etc/yum.repos.d/gluster.repo
+      when: is_centos
+      tags:
+        - gluster
+        
   handlers:
     - include: common/handlers/main.yml
 

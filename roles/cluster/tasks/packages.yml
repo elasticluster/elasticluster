@@ -1,6 +1,6 @@
 ---
 - name: install compilers (CentOS)
-  action: yum name=$item state=present
+  action: yum name={{item}} state=present
   with_items:
     - gcc-c++
     - make
@@ -11,29 +11,29 @@
     - blacs-openmpi
     - blas-devel
     - atlas-devel
-  only_if: $is_centos
+  when: is_centos
 
 # openmpi1.5 => precise
 # openmpi1.6 => quantal
 - name: install compilers (Ubuntu)
-  action: apt name=$item state=present update_cache=yes
+  action: apt name={{item}} state=present update_cache=yes
   with_items:
     - build-essential
     - gfortran
     - libatlas-dev
     - libnetcdf-dev
-  only_if: $is_ubuntu
+  when: is_debian_or_ubuntu
 
 - name: install extra packages (Ubuntu precise)
-  action: apt name=$item state=present update_cache=yes
-  only_if: $is_ubuntu_precise
+  action: apt name={{item}} state=present update_cache=yes
+  when: is_ubuntu_precise
   with_items:
     - openmpi1.5-checkpoint
     - libopenmpi1.5-dev
 
 - name: install compilers (Ubuntu raring)
-  action: apt name=$item state=present update_cache=yes
-  only_if: $is_ubuntu_raring
+  action: apt name={{item}} state=present update_cache=yes
+  when: is_ubuntu_raring
   with_items:
     - openmpi1.6-checkpoint
     - libopenmpi1.6-dev

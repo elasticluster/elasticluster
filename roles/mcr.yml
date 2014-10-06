@@ -11,27 +11,26 @@
     # installkey: xxxxx-xxxxx-xxxxx-xxxxx.....
 
   tasks:
-    - include: common/tasks/hosts.yml hosts=${groups.all}
-    - include: common/tasks/hostname.yml
+    - include: common/tasks/iptables.yml trusted_hosts={{groups.all}}
 
     - name: make temp directory
-      action: file dest=$tmpdir/MCRInstaller state=directory
+      action: file dest={{tmpdir}}/MCRInstaller state=directory
 
     - name: copy MCR installer zipfile
-      action: copy src=$mcr_installer dest=$tmpdir/MCRInstaller/MCRInstaller.zip force=yes backup=no 
+      action: copy src={{mcr_installer}} dest={{tmpdir}}/MCRInstaller/MCRInstaller.zip force=yes backup=no 
 
     - name: copy installation response file
-      action: template src=mcr/templates/input.txt.j2 dest=$tmpdir/MCRInstaller/MCRInstaller.input force=yes backup=no
+      action: template src=mcr/templates/input.txt.j2 dest={{tmpdir}}/MCRInstaller/MCRInstaller.input force=yes backup=no
 
     - name: unzip installation files (may fail if `unzip` is not installed)
-      action: command unzip -q -o $tmpdir/MCRInstaller/MCRInstaller.zip -d $tmpdir/MCRInstaller
+      action: command unzip -q -o {{tmpdir}}/MCRInstaller/MCRInstaller.zip -d {{tmpdir}}/MCRInstaller
       
     - name: Install license file, if present
-      action: copy src=$licensefile dest=$tmpdir/MCRInstaller/license.dat force=yes backup=no
-      only_if: "'$licensefile' != ''"
+      action: copy src={{licensefile}} dest={{tmpdir}}/MCRInstaller/license.dat force=yes backup=no
+      when: licensefile
 
     - name: run MCR Installer
-      action: command $tmpdir/MCRInstaller/install -inputFile $tmpdir/MCRInstaller/MCRInstaller.input
+      action: command {{tmpdir}}/MCRInstaller/install -inputFile {{tmpdir}}/MCRInstaller/MCRInstaller.input
 
     - name: copy profile setup script
       action: template src=mcr/templates/profile.sh.j2 dest=/etc/profile.d/MATLAB_Compiler_Runtime.sh force=yes backup=no
@@ -39,7 +38,10 @@
       ignore_errors: yes
 
     - name: cleanup temporary installation files
-      action: command rm -r -f -v $tmpdir/MCRInstaller
+      action: command rm -r -f -v {{tmpdir}}/MCRInstaller
+
+  handlers:
+    - include: common/handlers/main.yml
 
   tags:
     - matlab

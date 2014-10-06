@@ -8,41 +8,51 @@
 # nfsoptions:  options to use when mounting the filesystem. If not
 #              defined, `rw,sync` will be used.
 #
-# Please note that the task will check if the ${nfsmount} directory
+# Please note that the task will check if the {{nfsmount}} directory
 # exists and create it otherwise.
 #
 
 - name: install nfs client
   action: apt pkg=nfs-common state=present
-  only_if: $is_ubuntu
+  when: is_debian_or_ubuntu
   tags:
     - nfs
 
 - name: install nfs client
   action: yum pkg=nfs-utils state=present
-  only_if: $is_centos
+  when: is_centos
   tags:
     - nfs
 
 - name: Ensure rpcbind is running (CentOS)
   action: service name=rpcbind state=started enabled=yes
-  only_if: $is_centos
+  when: is_centos
 
-- name: Ensure portmap is running (Ubuntu)
+- name: Ensure portmap is running (Ubuntu prior to Trusty Thar)
   action: service name=portmap state=started enabled=yes
-  only_if: $is_ubuntu
+  when: is_ubuntu and ansible_lsb.major_release is defined and ansible_lsb.major_release|int < 14
 
-- name: Ensure ${nfsmount} directory exists
-  action: file path=${nfsmount} state=directory
+- name: Ensure rpcbind is running (Ubuntu Trusty Tahr or newer)
+  action: service name=rpcbind state=started enabled=yes
+  when: is_ubuntu and ansible_lsb.major_release is defined and ansible_lsb.major_release|int >= 14
+
+- name: Ensure rpcbind is running (Debian)
+  action: service name=rpcbind state=started enabled=yes
+  when: is_debian
+
+- name: Ensure {{nfsmount}} directory exists
+  action: file path={{nfsmount}} state=directory
   tags: 
     - nfs
 
-- action: shell if [ -z "${nfsoptions}" ]; then  echo rw,sync; else echo ${nfsoptions}; fi
+- shell: if [ -z "$nfsoptions" ]; then  echo rw,sync,nfsvers=3; else echo $nfsoptions; fi
   register: _nfsopts
   sudo: false
   connection: local
+  tags:
+    - nfs
 
 - name: configure /etc/fstab on clients
-  action: mount name=${nfsmount} src=${nfsserver}:${nfspath} fstype=nfs opts=${_nfsopts.stdout} state=mounted
+  action: mount name={{nfsmount}} src={{nfsserver}}:{{nfspath}} fstype=nfs opts={{_nfsopts.stdout}} state=mounted
   tags:
     - nfs

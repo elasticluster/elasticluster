@@ -1,17 +1,17 @@
 ---
 - name: Install ganglia monitor (Ubuntu)
-  action: apt pkg=$item state=latest update_cache=yes
+  action: apt pkg={{item}} state=latest update_cache=yes
   with_items:
     - ganglia-monitor
-  only_if: $is_ubuntu
+  when: is_debian_or_ubuntu
   tags:
     - ganglia
 
 - name: Install ganglia monitor (CentOS)
-  action: yum pkg=$item state=latest
+  action: yum pkg={{item}} state=latest
   with_items:
     - ganglia-gmond
-  only_if: $is_centos
+  when: is_centos
   tags:
     - ganglia
 
@@ -26,6 +26,6 @@
 
 - name: Ensure gmond is running.
   action: service name=gmond state=started
-  only_if: $is_centos
+  when: is_centos
   tags:
     - ganglia

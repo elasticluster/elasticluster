@@ -1,0 +1,44 @@
+---
+- name: HTCondor common Playbook
+  hosts: condor_master:condor_workers
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
+    - include: common/tasks/iptables.yml trusted_hosts={{groups.all}} default_accept=1
+    - include: cluster/tasks/packages.yml
+    - include: htcondor/tasks/common.yml
+
+  handlers:
+    - include: common/handlers/main.yml
+    - include: htcondor/handlers/common.yml
+
+- name: HTCondor master Playbook
+  hosts: condor_master
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: common/tasks/nfs.yml
+
+    - nfsexport: path=/home dest=/etc/exports clients="{{groups.condor_workers}}" options=rw,no_root_squash,sync
+      notify: 
+        - ensure nfs service is running
+        - reload exports
+
+  handlers:
+    - include: common/handlers/main.yml
+    - include: htcondor/handlers/common.yml
+
+
+- name: HTCondor worker nodes Playbook
+  hosts: condor_workers
+  vars_files:
+    - vars/os
+  tasks: 
+    - include: common/tasks/nfs-clients.yml nfsserver={{groups.condor_master[0]}} nfspath=/home nfsmount=/home
+  handlers:
+    - include: common/handlers/main.yml
+    - include: htcondor/handlers/common.yml
+
+# Get infos with
+# ansible -i hostsfile -m setup hostname
