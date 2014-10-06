@@ -1,7 +1,7 @@
 ---
 
 - name: Install glusterfs packages (Ubuntu)
-  action: apt name=$item state=installed update_cache=yes
+  apt: name={{item}} state=installed update_cache=yes
   with_items:
     - glusterfs-server
     - glusterfs-client
@@ -10,7 +10,7 @@
     - gluster
 
 - name: Install glusterfs packages (CentOS)
-  action: yum name=$item state=installed
+  yum: name={{item}} state=installed
   with_items:
     - glusterfs-server
     - glusterfs-client
@@ -19,24 +19,24 @@
     - gluster
 
 - name: Ensure the GlusterFS service is running (CentOS)
-  action: service name=glusterd state=started
+  service: name=glusterd state=started
   when: is_centos
   tags:
     - gluster
 
-- action: file path=${gluster_brick_dir} state=directory
+- file: path={{gluster_brick_dir}} state=directory
   tags:
     - gluster
 
 - name: Configure peers (Only on the first host)
-  action: shell gluster peer probe $item
-  with_items: ${groups.gluster_data}
+  shell: gluster peer probe {{item}}
+  with_items: groups.gluster_data
   when: inventory_hostname == groups.gluster_data[0]
   tags:
     - gluster
 
 - name: Set default stripe options
-  action: shell if [ -z "${gluster_stripes}" ]; then echo ""; else echo "stripe ${gluster_stripes}"; fi
+  shell: if [ "{{gluster_stripes|default('x')}}" = "x" ]; then echo ""; else echo "stripe {{gluster_stripes|default('')}}"; fi
   register: gluster_stripes
   connection: local
   sudo: false
@@ -44,7 +44,7 @@
     - gluster
 
 - name: Set default replica options
-  action: shell if [ -z "${gluster_replicas}" ]; then echo ""; else echo "replica ${gluster_replicas}"; fi
+  shell: if [ "{{gluster_replicas | default('x')}}" = "x" ]; then echo ""; else echo "replica {{gluster_replicas|default('')}}"; fi
   register: gluster_replicas
   connection: local
   sudo: false
@@ -52,7 +52,7 @@
     - gluster
 
 - name: Set default transport options
-  action: shell if [ -z "${gluster_transport}" ]; then echo "transport tcp"; else echo "transport ${gluster_transport}"; fi
+  shell: if [  "{{gluster_transport|default('x')}}" = "x" ]; then echo "transport tcp"; else echo "transport {{gluster_transport|default('')}}"; fi
   register: gluster_transport
   connection: local
   sudo: false
@@ -60,7 +60,7 @@
     - gluster
 
 - name: Build bricks list
-  action: shell echo ${groups.gluster_data} | sed "s%,%:${gluster_brick_dir} %g; s%$%:${gluster_brick_dir}%"
+  shell: echo {{groups.gluster_data | join(',')}} | sed "s%,%:{{gluster_brick_dir}} %g; s%$%:{{gluster_brick_dir}}%"
   register: gluster_bricks
   connection: local
   sudo: false
@@ -68,17 +68,17 @@
     - gluster
 
 - name: Create default volume
-  action: shell gluster volume info ${gluster_volume} || 
-          gluster volume create ${gluster_volume} ${gluster_stripes.stdout}
-          ${gluster_replicas.stdout} ${gluster_transport.stdout}
-          ${gluster_bricks.stdout} force
+  shell: gluster volume info {{gluster_volume}} || 
+          gluster volume create {{gluster_volume}} {{gluster_stripes.stdout}}
+          {{gluster_replicas.stdout}} {{gluster_transport.stdout}}
+          {{gluster_bricks.stdout}} force
   when: inventory_hostname == groups.gluster_data[0]
   tags:
     - gluster
 
 - name: Start default volume
-  action: 'shell gluster volume info ${gluster_volume} | grep "Status: Started" || 
-          gluster volume start ${gluster_volume}'
+  shell: 'gluster volume info {{gluster_volume}} | grep "Status: Started" || 
+          gluster volume start {{gluster_volume}}'
   when: inventory_hostname == groups.gluster_data[0]
   tags:
     - gluster

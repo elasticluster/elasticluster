@@ -12,7 +12,7 @@
   when: is_debian_or_ubuntu
 
 - name: get base version for CentOS distribution
-  action: shell echo $ansible_distribution_version | cut -d. -f1
+  action: shell echo {{ansible_distribution_version}} | cut -d. -f1
   register: centos_base_version_cmd
   when: is_centos
 

@@ -12,12 +12,12 @@
     - ceph
 
 - name: Install required package for apt_repository.
-  action: apt pkg=$item state=present
+  action: apt pkg={{item}} state=present
   when: is_debian_or_ubuntu
   with_items:
     - ceph
     - pdsh
-    - linux-image-extra-$ansible_kernel
+    - linux-image-extra-{{ansible_kernel}}
   tags:
     - ceph
 
