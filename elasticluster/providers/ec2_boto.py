@@ -102,7 +102,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                                                endpoint=self._ec2host)
 
             # connect to webservice
-            self._ec2_connection = boto.connect_ec2(
+            ec2_connection = boto.connect_ec2(
                 aws_access_key_id=self._access_key,
                 aws_secret_access_key=self._secret_key,
                 is_secure=self._secure,
@@ -111,7 +111,7 @@ class BotoCloudProvider(AbstractCloudProvider):
             log.debug("EC2 connection has been successful.")
 
             if self._vpc:
-                self._vpc_connection = boto.connect_vpc(
+                vpc_connection = boto.connect_vpc(
                     aws_access_key_id=self._access_key,
                     aws_secret_access_key=self._secret_key,
                     is_secure=self._secure,
@@ -119,7 +119,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                     path=self._ec2path, region=region)
                 log.debug("VPC connection has been successful.")
 
-                for vpc in self._vpc_connection.get_all_vpcs():
+                for vpc in vpc_connection.get_all_vpcs():
                     log.debug("Checking whether %s matches %s/%s" %
                         (self._vpc, vpc.tags['Name'], vpc.id))
                     if self._vpc in [vpc.tags['Name'], vpc.id]:
@@ -139,10 +139,10 @@ class BotoCloudProvider(AbstractCloudProvider):
         except Exception as e:
             log.error("connection to ec2 could not be "
                       "established: message=`%s`", str(e))
-            self._ec2_connection = None
-            self._vpc_connection = None
             raise
 
+        self._ec2_connection, self._vpc_connection = (
+            ec2_connection, vpc_connection)
         return self._ec2_connection
 
     def start_instance(self, key_name, public_key_path, private_key_path,
