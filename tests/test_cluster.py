@@ -226,6 +226,7 @@ class TestNode(unittest.TestCase):
         f, path = tempfile.mkstemp()
         self.path = path
 
+        self.cluster_name = "cluster"
         self.name = "test"
         self.node_kind = "frontend"
         self.user_key_public = self.path
@@ -242,10 +243,11 @@ class TestNode(unittest.TestCase):
 
     def get_node(self):
         cloud_provider = MagicMock()
-        node = Node(self.name, 'cluster', self.node_kind, cloud_provider,
-                    self.user_key_public, self.user_key_private,
-                    self.user_key_name, self.image_user,
-                    self.security_group, self.image, self.flavor,
+        node = Node(self.name, self.cluster_name, self.node_kind, 
+                    cloud_provider, self.user_key_public, 
+                    self.user_key_private, self.user_key_name, 
+                    self.image_user, self.security_group, 
+                    self.image, self.flavor,
                     self.image_userdata)
 
         return node
@@ -263,10 +265,12 @@ class TestNode(unittest.TestCase):
 
         node.start()
 
+
+        node_name = "%s-%s" % (self.cluster_name, node.name)
         cloud_provider.start_instance.assert_called_once_with(
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group, self.flavor, self.image,
-            self.image_userdata, username=self.image_user, node_name=node.name)
+            self.image_userdata, username=self.image_user, node_name=node_name)
         self.assertEqual(node.instance_id, instance_id)
 
     def test_stop(self):
