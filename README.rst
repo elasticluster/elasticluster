@@ -25,7 +25,7 @@ Documentation for elasticluster is available on the `Read The Docs
 Features
 ========
 
-`Elasticluster`_ is in active development, but the following features at the current state:
+`Elasticluster`_ is in active development, but offers the following features at the current state:
 
 * Simple configuration file to define cluster templates
 * Can start and manage multiple independent clusters at the same time
@@ -43,6 +43,9 @@ Features
 
 `Elasticluster`_ is currently in active development: please use the
 GitHub issue tracker to `file enhancement requests and ideas`_
+
+We appreciate pull requests for new features and enhancements. Please
+use the master branch as starting point.
 
 
 Quickstart
@@ -65,7 +68,7 @@ If you want to run `elasticluster` from source you have to **install**
 
 ::
 
-    pip install ansible==1.3.3
+    pip install ansible
     python setup.py install
 
 Installing the development version from github
@@ -85,7 +88,7 @@ needed by elasticluster::
 
     virtualenv elasticluster
     . elasticluster/bin/activate
-    pip install ansible==1.3.3
+    pip install ansible
     
 Then you have to download the software. We suggest you to download it
 *within* the created virtualenv::
