@@ -464,7 +464,7 @@ class BotoCloudProvider(AbstractCloudProvider):
             subnet
             for subnet
              in subnets
-             if name in [subnet.tags['Name'], subnet.id]
+             if name in [subnet.tags.get('Name'), subnet.id]
         ]
         if len(matching_subnets) == 0:
             raise SubnetError(
