@@ -7,7 +7,7 @@
     auth service required = cephx
     auth client required = cephx
 
-    fsid = ${fsid}
+    fsid = {{fsid}}
 
     # mon initial members = {% for host in groups['ceph_mon']|sort %}{{ host }}{% if not loop.last %},{% endif %}{% endfor %}
 
@@ -31,7 +31,7 @@
     osd journal size = 1000
 
     osd mkfs type = xfs
-    devs = ${osd_devs}
+    devs = {{osd_devs}}
     osd addr = {{ hostvars[host].ansible_default_ipv4.address }}:6789
     osd data = /var/lib/ceph/osd/ceph-{{ loop.index0 }}
 

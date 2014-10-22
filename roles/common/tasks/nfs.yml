@@ -27,7 +27,7 @@
 
 # CentOS does not start needed services after installation
 - name: ensure nfs service is running (CentOS)
-  action: service name=$item state=started
+  action: service name={{item}} state=started
   when: is_centos
   tags:
     - nfs
@@ -37,7 +37,7 @@
     - nfs
 
 - name: ensure nfs service is running (Ubuntu)
-  action: service name=$item state=started
+  action: service name={{item}} state=started
   when: is_debian_or_ubuntu
   tags:
     - nfs

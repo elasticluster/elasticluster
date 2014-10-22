@@ -7,19 +7,19 @@
     - gluster
 
 - name: Install glusterfs packages (CentOS)
-  action: yum name=$item state=installed
+  action: yum name={{item}} state=installed
   with_items:
     - glusterfs-client
   when: is_centos
   tags:
     - gluster
 
-- name: Create mountpoing
+- name: Create mountpoint
   action: file path=/glusterfs state=directory
   tags:
     - gluster
 
 - name: Mount the glusterfs filesystem
-  action: mount name=/glusterfs fstype=glusterfs src=${groups.gluster_data[0]}:${gluster_volume} state=mounted
+  action: mount name=/glusterfs fstype=glusterfs src={{groups.gluster_data[0]}}:{{gluster_volume}} state=mounted
   tags:
     - gluster

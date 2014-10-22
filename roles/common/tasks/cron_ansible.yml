@@ -1,6 +1,6 @@
 ---
 - name: Ensure needed packages for ansible are installed
-  action: apt pkg=$item state=present
+  action: apt pkg={{item}} state=present
   with_items:
     - python-pip
     - python-dev

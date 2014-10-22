@@ -51,17 +51,17 @@ def get_facts_from_config():
         except subprocess.CalledProcessError:
             continue
         if host == hostname:
-            facts['ceph-name'] = section
-            facts['ceph-idx'] = section.split('.')[-1]
+            facts['ceph_name'] = section
+            facts['ceph_idx'] = section.split('.')[-1]
             for cmd in ['mon data', 'mds data', 'osd data', 'osd journal', 'mon addr', 'mds addr', 'osd addr', 'devs']:
                 try:
-                    facts[cmd.replace(' ', '-')] = check_output(['ceph-conf', '--name', section, cmd]).strip()
+                    facts[cmd.replace(' ', '_')] = check_output(['ceph-conf', '--name', section, cmd]).strip()
                 except subprocess.CalledProcessError:
                     continue
 
             # Get infos on devices
-            facts['ceph-devs'] = {}
-            devs = facts['ceph-devs']
+            facts['ceph_devs'] = {}
+            devs = facts['ceph_devs']
             try:
                 devices = check_output(['ceph-disk', 'list']).splitlines()
                 disk = None

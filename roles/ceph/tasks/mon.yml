@@ -1,5 +1,5 @@
 ---
-- action: file dest=/var/lib/ceph/mon/ceph-${ceph-idx} state=directory
+- action: file dest=/var/lib/ceph/mon/ceph-{{ceph_idx}} state=directory
   tags:
     - ceph
 
@@ -25,7 +25,7 @@
 #     - test
 
 - name: copy keyring in /etc/ceph/ceph.mon.keyring
-  action: shell scp  root@${groups.ceph_mon[0]}:/etc/ceph/ceph.mon.keyring /etc/ceph/ceph.mon.keyring
+  action: shell scp  root@{{groups.ceph_mon[0]}}:/etc/ceph/ceph.mon.keyring /etc/ceph/ceph.mon.keyring
           creates=/etc/ceph/ceph.mon.keyring
   tags:
     - ceph
@@ -37,8 +37,8 @@
     - ceph
 
 - name: copy keyring in /var/lib/ceph/mon/ceph-<idx>
-  action: shell cp -a /etc/ceph/ceph.mon.keyring /var/lib/ceph/mon/ceph-${ceph-idx}/keyring 
-          creates=/var/lib/ceph/mon/ceph-${ceph-idx}/keyring
+  action: shell cp -a /etc/ceph/ceph.mon.keyring /var/lib/ceph/mon/ceph-{{ceph_idx}}/keyring 
+          creates=/var/lib/ceph/mon/ceph-{{ceph_idx}}/keyring
   tags:
     - ceph
 
@@ -65,8 +65,8 @@
     - ceph
 
 - name: Create mon fs
-  action: shell ceph-mon --mkfs -i ${ceph-idx} --monmap /etc/ceph/monmap --keyring /etc/ceph/ceph.mon.keyring
-          creates=/var/lib/ceph/mon/ceph-${ceph-idx}/store.db/CURRENT
+  action: shell ceph-mon --mkfs -i {{ceph_idx}} --monmap /etc/ceph/monmap --keyring /etc/ceph/ceph.mon.keyring
+          creates=/var/lib/ceph/mon/ceph-{{ceph_idx}}/store.db/CURRENT
   tags:
     - ceph
 
