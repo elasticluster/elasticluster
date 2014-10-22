@@ -20,6 +20,28 @@ file is found it will copy a `template configuration file`_ in
 ``~/.elasticluster/config``. Such template is fully commented and self
 documented.
 
+Therefore, after installing `elasticluster` for the first time, we
+suggest to run the following command::
+
+    elasticluster list-templates
+
+If you don't already have a configuration file, this command will
+create one for you. Of course, the file is not complete, as it does
+not contain any authentication information, and you will get an error
+similar to the following::
+
+    WARNING:gc3.elasticluster:Deploying default configuration file to /home/antonio/.elasticluster/config.
+    WARNING:gc3.elasticluster:Ignoring Cluster `ipython`: required key not provided @ data['image_user']
+    WARNING:gc3.elasticluster:Ignoring cluster `ipython`.
+    Error validating configuration file '/home/antonio/.elasticluster/config': `required key not provided @ data['image_user']`
+
+In this case, you have to edit the configuration file in
+``~/.elasticluster/config`` and update it with the correct values.
+
+Please refer to the following section to understand the syntax of the
+configuration file and to know which options you need to set in order
+to use `elasticluster`.
+
 
 Basic syntax of the configuration file
 ======================================
