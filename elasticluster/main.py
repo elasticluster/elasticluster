@@ -71,7 +71,9 @@ class ElastiCluster(cli.app.CommandLineApp):
 
         # global parameters
         self.add_param('-v', '--verbose', action='count', default=0,
-                       help="Increase verbosity.")
+                       help="Increase verbosity. If at least four `-v` option "
+                       "are given, elasticluster will create new VMs "
+                       "sequentially instead of doing it in parallel.")
         self.add_param('-s', '--storage', metavar="PATH",
                        help="Path to the storage folder. Default: `%s`" %
                             Configurator.default_storage_dir,
