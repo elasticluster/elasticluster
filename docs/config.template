@@ -241,8 +241,8 @@ image_user=gc3-user
 image_user_sudo=root
 image_sudo=True
 user_key_name=elasticluster
-user_key_private=~/.ssh/id_dsa.cloud
-user_key_public=~/.ssh/id_dsa.cloud.pub
+user_key_private=~/.ssh/id_dsa
+user_key_public=~/.ssh/id_dsa.pub
 
 # while for google
 #
@@ -251,8 +251,8 @@ image_user=***REPLACE WITH YOUR GOOGLE LOGIN***
 image_user_sudo=root
 image_sudo=True
 user_key_name=elasticluster
-user_key_private=~/.ssh/id_dsa.cloud
-user_key_public=~/.ssh/id_dsa.cloud.pub
+user_key_private=~/.ssh/id_dsa
+user_key_public=~/.ssh/id_dsa.pub
 
 
 # Setup Section
@@ -446,7 +446,7 @@ login=gc3-user
 setup_provider=ansible-slurm
 security_group=default
 # Ubuntu image
-image_id=a9e98055-5aa3-4636-8fc5-f3b2b4ea66bb
+image_id=16618a82-92fd-4615-86e6-d354f9f66af5
 flavor=m1.small
 frontend_nodes=1
 compute_nodes=2
