@@ -107,18 +107,14 @@ Waittime=0
 # 
 # SCHEDULING 
 #DefMemPerCPU=0 
-FastSchedule=0
+#FastSchedule=0
 #MaxMemPerCPU=0 
 #SchedulerRootFilter=1 
 #SchedulerTimeSlice=30 
 SchedulerType=sched/backfill
 SchedulerPort=7321
-# NOTE: If we don't know the number of CPUs of each node, we need to
-# set FastSchedule=0 and SelectType=select/linear Please check SLURM's
-# FAQ and manpage of slurm.conf
-# https://computing.llnl.gov/linux/slurm/faq.html#fast_schedule
-SelectType=select/linear
-SelectTypeParameters=CR_Memory
+SelectType=select/cons_res
+SelectTypeParameters=CR_Core_Memory
 # 
 # 
 # JOB PRIORITY 
@@ -176,7 +172,6 @@ SlurmdLogFile=/var/log/slurm-llnl/slurmd.log
 # 
 # Sockets=1 CoresPerSocket=1 ThreadsPerCore=1
 {% for host in groups['slurm_clients'] %}
-NodeName={{host}} 
+NodeName={{host}} RealMemory={{hostvars[host]['ansible_memtotal_mb']}} CPUs={{hostvars[host]['ansible_processor_vcpus']}} Sockets={{hostvars[host]['ansible_processor_vcpus']}} CoresPerSocket=1 ThreadsPerCore=1
 {% endfor %}
 PartitionName=cloud Nodes={% for host in groups['slurm_clients'] %}{{host}},{%endfor%} MaxTime=INFINITE State=UP Default=YES
-
