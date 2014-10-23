@@ -73,10 +73,19 @@ Then you have to download the software. We suggest you to download it
 Now the ``elasticluster`` should be available in your current
 environment.
 
-.. _`github elasticluster repository`: https://github.com/gc3-uzh-ch/elasticluster
 
 Notes on MacOSX installation
 ----------------------------
+
+Xcode
++++++
+
+In order to install `elasticluster`, you need to have `Xcode`_
+installed in your system. It's free and you can install it directly
+from the `AppStore`_.
+
+`pip` issues when installing from source
+++++++++++++++++++++++++++++++++++++++++
 
 When installing `elasticluster` on MacOSX operating systems you may
 get some errors while running `python setup.py install`, because
@@ -165,3 +174,9 @@ you should:
     pip install google-api-python-client
     [...]
     python setup.py install
+
+
+.. _`github elasticluster repository`: https://github.com/gc3-uzh-ch/elasticluster
+.. _`Xcode`: https://developer.apple.com/xcode/
+.. _`AppStore`: http://www.apple.com/osx/apps/app-store/
+
