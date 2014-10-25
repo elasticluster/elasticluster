@@ -308,3 +308,10 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                     log.warning(
                         "AnsibileProvider: Ignoring error while deleting "
                         "inventory file %s: %s", inventory_path, ex)
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        # Compatibility fix: allow loading clusters created before
+        # option `ssh_pipelining` was added.
+        if 'ssh_pipelining' not in state:
+            self.ssh_pipelining = True
