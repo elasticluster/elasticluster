@@ -391,6 +391,7 @@ class ConfigValidator(object):
         schema = {"cluster": {"cloud": All(str, Length(min=1)),
                               "setup_provider": All(str, Length(min=1)),
                               "login": All(str, Length(min=1)),
+                              Optional("ssh_hostkeys_from_console_output"): Boolean(str),
                           },
                   "setup": {"provider": All(str, Length(min=1)),
                             Optional("playbook_path"): check_file(),

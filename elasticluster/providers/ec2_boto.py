@@ -263,6 +263,10 @@ class BotoCloudProvider(AbstractCloudProvider):
         instance = self._load_instance(instance_id)
 
         if instance.update() == "running":
+            output = instance.get_console_output()
+            if not output.output:
+                return False
+
             # If the instance is up&running, ensure it has an IP
             # address.
             if not instance.ip_address and self.request_floating_ip:
@@ -509,3 +513,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         self._ec2_connection = None
         self._vpc_connection = None
         
+    def get_console_output(self, instance_id):
+        instance = self._load_instance(instance_id)
+        instance.update()
+        return instance.get_console_output().output
