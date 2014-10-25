@@ -509,18 +509,17 @@ the frontend of the cluster you can run::
 
     elasticluster ssh <clustername> -- hostname -f
 
-Note that since the IP address of the virtual machines are likely to
-be reused by different virtual machines, in order to avoid annoying
-warning messages from ssh elasticluster will add the following options
-to the `ssh` command line:
+Note that elasticluster will save in
+`~/.elasticluster/storage/<clustername>.known_hosts` the ssh host keys
+of the VM instances after the first connection, and re-use them to
+protect you from a Man-In-The-Middle attack. Therefore, the following
+options are passed to `ssh` command line:
 
-``-o UserKnownHostsFile=/dev/null``
-    Use an empty virtual file to check the host key of the remote
-    machine.
+``-o UserKnownHostsFile=~/.elasticluster/storage/<clustername>.known_hosts``
+    Use the generated known hosts file to protect against MIIT attacks.
 
-``-o StrictHostKeyChecking=no``
-    Disable check of the host key of the remove machine, without
-    prompting to ask if the key can be accepted or not.
+``-o StrictHostKeyChecking=yes``
+    Enable check of the host key of the remote machine.
 
 The ``sftp`` command
 -------------------
@@ -546,16 +545,15 @@ The usage of the `sftp` command is as follow::
 All the options and arguments following the ``--`` characters will be
 passed directly to the ``sftp`` command.
 
-Note that since the IP address of the virtual machines are likely to
-be reused by different virtual machines, in order to avoid annoying
-warning messages from ssh elasticluster will add the following options
-to the `sftp` command line:
+Note that elasticluster will save in
+`~/.elasticluster/storage/<clustername>.known_hosts` the ssh host keys
+of the VM instances after the first connection, and re-use them to
+protect you from a Man-In-The-Middle attack. Therefore, the following
+options are passed to `sftp` command line:
 
-``-o UserKnownHostsFile=/dev/null``
-    Use an empty virtual file to check the host key of the remote
-    machine.
+``-o UserKnownHostsFile=~/.elasticluster/storage/<clustername>.known_hosts``
+    Use the generated known hosts file to protect against MIIT attacks.
 
-``-o StrictHostKeyChecking=no``
-    Disable check of the host key of the remove machine, without
-    prompting to ask if the key can be accepted or not.
+``-o StrictHostKeyChecking=yes``
+    Enable check of the host key of the remote machine.
 
