@@ -332,6 +332,12 @@ user_key_public=~/.ssh/id_rsa.pub
 #                playbook distributed with elasticluster. Default is
 #                to use the playbooks distributed with elasticluster
 #
+# ssh_pipelining: True|False
+#                enable or disable ssh pipelining when setting up the
+#                cluster. By default ssh pipelining is enabled, as it
+#                improves connection speed. Adding this option to
+#                `False` will disable it.
+
 # Some (working) examples:
 
 [setup/ansible-slurm]

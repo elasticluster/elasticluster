@@ -350,6 +350,7 @@ class ConfigValidator(object):
                           },
                   "setup": {"provider": All(str, Length(min=1)),
                             Optional("playbook_path"): check_file(),
+                            Optional("ssh_pipelining"): Boolean(str),
                         },
                   "login": {"image_user": All(str, Length(min=1)),
                             "image_user_sudo": All(str, Length(min=1)),

@@ -112,13 +112,14 @@ class AnsibleSetupProvider(AbstractSetupProvider):
 
     def __init__(self, groups, playbook_path=None, environment_vars=dict(),
                  storage_path=None, sudo=True, sudo_user='root',
-                 ansible_module_dir=None, **extra_conf):
+                 ansible_module_dir=None, ssh_pipelining=True, **extra_conf):
         self.groups = groups
         self._playbook_path = playbook_path
         self.environment = environment_vars
         self._storage_path = storage_path
         self._sudo_user = sudo_user
         self._sudo = sudo
+        self.ssh_pipelining = ssh_pipelining
         self.extra_conf = extra_conf
 
         if not self._playbook_path:
@@ -164,6 +165,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         ansible_constants.HOST_KEY_CHECKING = False
         ansible_constants.DEFAULT_PRIVATE_KEY_FILE = private_key_file
         ansible_constants.DEFAULT_SUDO_USER = self._sudo_user
+        ansible_constants.ANSIBLE_SSH_PIPELINING = self.ssh_pipelining
 
         # check paths
         if not inventory_path:
