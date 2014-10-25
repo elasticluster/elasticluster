@@ -93,6 +93,11 @@ class Cluster(object):
         self._user_key_public = user_key_public
         self.user_key_private = user_key_private
         self.repository = repository if repository else MemRepository()
+        self.known_hosts_file = None
+        if hasattr(self.repository, 'storage_path'):
+            self.known_hosts_file = os.path.join(self.repository.storage_path,
+                                       "%s.known_hosts" % self.name)
+
         self.ssh_to = extra.get('ssh_to')
         self.extra = extra.copy()
         self.nodes = dict()
@@ -108,6 +113,12 @@ class Cluster(object):
         result = self.__dict__.copy()
         result['setup_provider'] = None
         return result
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        # New attribute added to Cluster class, need to ensure it is defined.
+        if 'known_hosts_file' not in state:
+            self.known_hosts_file = None
 
     def add_node(self, kind, image_id, image_user, flavor,
                  security_group, image_userdata='', name=None, **extra):
@@ -339,12 +350,30 @@ class Cluster(object):
         signal.alarm(Cluster.startup_timeout)
         pending_nodes = self.get_all_nodes()[:]
 
+        if self.known_hosts_file and not os.path.exists(self.known_hosts_file):
+            # Create the file if it's not present, otherwise the
+            # following lines will raise an error
+            try:
+                fd = open(self.known_hosts_file, 'a')
+                fd.close()
+            except IOError as err:
+                log.warning("Error while opening known_hosts file `%s`: `%s`"
+                            " NOT using known_hosts_file.",
+                            self.known_hosts_file, err)
+                self.known_hosts_file = None
+        keys = paramiko.hostkeys.HostKeys(self.known_hosts_file)
+
         try:
             while pending_nodes:
                 for node in pending_nodes[:]:
-                    if node.connect():
+                    ssh = node.connect(keyfile=self.known_hosts_file)
+                    if ssh:
                         log.info("Connection to node %s (%s) successful.",
                                  node.name, node.connection_ip())
+                        # Add host keys to the keys object.
+                        for host, key in ssh.get_host_keys().items():
+                            for ktype, keydata in key.items():
+                                keys.add(host, ktype, keydata)
                         pending_nodes.remove(node)
                 if pending_nodes:
                     time.sleep(5)
@@ -366,6 +395,10 @@ class Cluster(object):
         # the `preferred_ip` attribute, so, let's save the cluster
         # again.
         self.repository.save_or_update(self)
+
+        # Save host keys
+        if self.known_hosts_file:
+            keys.save(self.known_hosts_file)
 
         # A lot of things could go wrong when starting the cluster. To
         # ensure a stable cluster fitting the needs of the user in terms of
@@ -483,6 +516,9 @@ class Cluster(object):
             log.warning("Not all instances have been terminated. However, "
                         "as requested, the cluster has been force-removed.")
             self._setup_provider.cleanup(self)
+            # Remove ssh known hosts
+            if self.known_hosts_file:
+                os.remove(self.known_hosts_file)
             self.repository.delete(self)
 
     def get_frontend_node(self):
@@ -679,14 +715,17 @@ class Node(object):
         """
         return self.preferred_ip
 
-    def connect(self):
+    def connect(self, keyfile=None):
         """Connect to the node via ssh using the paramiko library.
 
         :return: :py:class:`paramiko.SSHClient` - ssh connection or None on
                  failure
         """
         ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(IgnorePolicy())
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        if keyfile and os.path.exists(keyfile):
+            ssh.load_host_keys(keyfile)
+
         # Try connecting using the `preferred_ip`, if
         # present. Otherwise, try all of them and set `preferred_ip`
         # using the first that is working.
@@ -709,6 +748,7 @@ class Node(object):
                     log.debug("Setting `preferred_ip` to %s", ip)
                     self.preferred_ip = ip
                     cluster_changed = True
+                # Connection successful.
                 return ssh
             except socket.error, ex:
                 log.debug("Host %s (%s) not reachable: %s.",

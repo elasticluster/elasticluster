@@ -578,7 +578,8 @@ class SshFrontend(AbstractCommand):
             # ensure we can connect to the host
             if not frontend.preferred_ip:
                 # Ensure we can connect to the node, and save the value of `preferred_ip`
-                ssh = frontend.connect()
+
+                ssh = frontend.connect(keyfile=cluster.known_hosts_file)
                 if ssh:
                     ssh.close()
                 cluster.repository.save_or_update(cluster)
@@ -588,11 +589,12 @@ class SshFrontend(AbstractCommand):
             sys.exit(1)
         host = frontend.connection_ip()
         username = frontend.image_user
-        log.warning("Ignoring known_hosts file.")
+        knownhostsfile = cluster.known_hosts_file if cluster.known_hosts_file \
+                         else '/dev/null'
         ssh_cmdline = ["ssh",
                        "-i", frontend.user_key_private,
-                       "-o", "UserKnownHostsFile=/dev/null",
-                       "-o", "StrictHostKeyChecking=no",
+                       "-o", "UserKnownHostsFile=%s" % knownhostsfile,
+                       "-o", "StrictHostKeyChecking=yes",
                        '%s@%s' % (username, host)]
         ssh_cmdline.extend(self.params.ssh_args)
         log.debug("Running command `%s`" % str.join(' ', ssh_cmdline))
@@ -636,9 +638,11 @@ class SftpFrontend(AbstractCommand):
             sys.exit(1)
         host = frontend.connection_ip()
         username = frontend.image_user
+        knownhostsfile = cluster.known_hosts_file if cluster.known_hosts_file \
+                         else '/dev/null'
         sftp_cmdline = ["sftp",
-                        "-o", "UserKnownHostsFile=/dev/null",
-                        "-o", "StrictHostKeyChecking=no",
+                        "-o", "UserKnownHostsFile=%s" % knownhostsfile,
+                        "-o", "StrictHostKeyChecking=yes",
                         "-o", "IdentityFile=%s" % frontend.user_key_private]
         sftp_cmdline.extend(self.params.sftp_args)
         sftp_cmdline.append('%s@%s' % (username, host))
