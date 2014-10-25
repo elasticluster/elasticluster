@@ -26,11 +26,23 @@ under the terms of the GPLv3 license.
 A list of the most used playbooks distributed with elasticluster and
 some explanation on how to use them follows.
 
+In some cases, extra variables can be set to playbooks to modify its
+default behavior. In these cases, you can either define a variable
+global to the cluster using::
+
+    global_var_<varname>=<value>
+
+or, if the variable must be defined only for a specific group of nodes::
+
+    <groupname>_var_<varname>=<value>
+
+
 Slurm
 =====
 
 Tested on:
 
+* Ubuntu 14.04
 * Ubuntu 12.04
 * Ubuntu 13.04
 * Debian 7.1 (GCE)
@@ -73,6 +85,21 @@ You can combine the slurm playbooks with ganglia. In this case the ``setup`` sta
     frontend_groups=slurm_master,ganglia_master
     compute_groups=slurm_clients,ganglia_monitor
     ...
+
+Extra variables can be set, by editing the `setup/` section:
+
++----------------------------------+-----------------+-------------------------------------------------+
+| variable name                    | default         | description                                     |
++==================================+=================+=================================================+
+| ``slurm_selecttype``             | `select/linear` | Value of `SelectType` in `slurm.conf`           |
++----------------------------------+-----------------+-------------------------------------------------+
+| ``slurm_selecttypeparameters``   | `CR_Memory`     | Value of `SelectTypeParameters` in `slurm.conf` |
++----------------------------------+-----------------+-------------------------------------------------+
+
+You may define them globally (e.g.
+``global_var_slurm_selecctype=select/cons_res``) or only for a
+specific group of nodes (e.g
+``frontend_var_slurm_selecttype=select/cons_res``).
 
 
 Gridengine
@@ -321,6 +348,16 @@ Setup is very basic, and by default no replicas is set.
 
 To manage the gluster filesystem you need to connect to a
 ``gluster_data`` node.
+
+Extra variables can be set, by editing the `setup/` section:
+
++----------------------+------------+-----------------------------------------+
+| variable name        | default    | description                             |
++======================+============+=========================================+
+| ``gluster_stripes``  | no stripe  | set the stripe value for default volume |
++----------------------+------------+-----------------------------------------+
+| ``gluster_replicas`` | no replica | set replica value for default volume    |
++----------------------+------------+-----------------------------------------+
 
 OrangeFS/PVFS2
 ==============

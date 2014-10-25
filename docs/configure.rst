@@ -403,7 +403,15 @@ The following configuration keys are only valid if `provider` is
 
     an entry of this type will define a variable called ``<varname>``
     for the specific ``<class>`` and add it to the ansible inventory
-    file.
+    file. Please refer to the documentation of the playbook
+    ot know which variables you can set and its meaning.
+
+``global_var_<varname>``
+
+    An entry of this type will define a variable called ``<varname>``
+    for all the nodes in the cluster, and add it to the ansible
+    inventory file. Please refer to the documentation of the playbook
+    ot know which variables you can set and its meaning.
 
 ``playbook_path``
 
