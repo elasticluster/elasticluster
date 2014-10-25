@@ -117,8 +117,8 @@ SchedulerPort=7321
 # set FastSchedule=0 and SelectType=select/linear Please check SLURM's
 # FAQ and manpage of slurm.conf
 # https://computing.llnl.gov/linux/slurm/faq.html#fast_schedule
-SelectType=select/linear
-SelectTypeParameters=CR_Memory
+SelectType={{slurm_selecttype|default('select/linear')}}
+SelectTypeParameters={{slurm_selecttypeparameters|default('CR_Memory')}}
 # 
 # 
 # JOB PRIORITY 
