@@ -93,9 +93,12 @@ access to different cloud providers and want to deploy different
 clusters in different clouds. The mapping between cluster and cloud
 provider is done in the `cluster` section (see later).
 
-Currently two cloud providers are available:
-- boto: supports OpenStack and Amazon EC2
+Currently three cloud providers are available:
+
+- openstack: supports OpenStack cloud
+- boto: supports Amazon EC2 and compatible cloud
 - google: supports Google Compute Engine
+
 Therefore the following configuration option needs to be set in the cloud
 section:
 
@@ -158,6 +161,10 @@ Valid configuration keys for `google`
 ``gce_project_id``
 
     The project id of your Google Compute Engine project
+
+``zone``
+
+    The GCE zone to be used. Default is `us-central1-a`.
 
 Valid configuration keys for *openstack*
 ----------------------------------------

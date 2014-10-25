@@ -346,26 +346,33 @@ class ConfigValidator(object):
         # schema to validate all cluster properties
         schema = {"cluster": {"cloud": All(str, Length(min=1)),
                               "setup_provider": All(str, Length(min=1)),
-                              "login": All(str, Length(min=1))},
+                              "login": All(str, Length(min=1)),
+                          },
                   "setup": {"provider": All(str, Length(min=1)),
-                            Optional("playbook_path"): check_file()},
+                            Optional("playbook_path"): check_file(),
+                        },
                   "login": {"image_user": All(str, Length(min=1)),
                             "image_user_sudo": All(str, Length(min=1)),
                             "image_sudo": Boolean(str),
                             "user_key_name": All(str, Length(min=1)),
                             "user_key_private": check_file(),
-                            "user_key_public": check_file()}}
+                            "user_key_public": check_file(),
+                        },
+        }
 
         cloud_schema_ec2 = {"provider": 'ec2_boto',
                             "ec2_url": Url(str),
                             "ec2_access_key": All(str, Length(min=1)),
                             "ec2_secret_key": All(str, Length(min=1)),
                             "ec2_region": All(str, Length(min=1)),
-                            Optional("request_floating_ip"): Boolean(str)}
+                            Optional("request_floating_ip"): Boolean(str),
+        }
         cloud_schema_gce = {"provider": 'google',
                             "gce_client_id": All(str, Length(min=1)),
                             "gce_client_secret": All(str, Length(min=1)),
-                            "gce_project_id": All(str, Length(min=1))}
+                            "gce_project_id": All(str, Length(min=1)),
+                            Optional("zone"): All(str, Length(min=1)),
+        }
 
         cloud_schema_openstack = {"provider": 'openstack',
                                   "auth_url": All(str, Length(min=1)),
@@ -374,7 +381,8 @@ class ConfigValidator(object):
                                   "project_name": All(str, Length(min=1)),
                                   Optional("request_floating_ip"): Boolean(str),
                                   Optional("region_name"): All(str, Length(min=1)),
-                                  Optional("nova_api_version"): nova_api_version()}
+                                  Optional("nova_api_version"): nova_api_version(),
+        }
 
         node_schema = {
             "flavor": All(str, Length(min=1)),
