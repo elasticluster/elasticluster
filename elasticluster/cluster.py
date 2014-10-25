@@ -504,6 +504,7 @@ class Cluster(object):
                           "like node `%s` did not start correctly."
                           % node.name)
                 self.nodes[node.kind].remove(node)
+
         if not self.get_all_nodes():
             log.debug("Removing cluster %s.", self.name)
             self._setup_provider.cleanup(self)
@@ -516,10 +517,12 @@ class Cluster(object):
             log.warning("Not all instances have been terminated. However, "
                         "as requested, the cluster has been force-removed.")
             self._setup_provider.cleanup(self)
-            # Remove ssh known hosts
-            if self.known_hosts_file:
-                os.remove(self.known_hosts_file)
             self.repository.delete(self)
+
+        # Remove also ssh known hosts
+        if self.known_hosts_file:
+            os.remove(self.known_hosts_file)
+
 
     def get_frontend_node(self):
         """Returns the first node of the class specified in the
