@@ -239,10 +239,12 @@ class Configurator(object):
             # Environment variables parsing
             environment[nodekind] = dict()
             for key, value in conf.iteritems():
-                prefix = "%s_var_" % nodekind
-                if key.startswith(prefix):
-                    var = key.replace(prefix, '')
-                    environment[nodekind][var] = value
+                # Set both group and global variables
+                for prefix in ["%s_var_" % nodekind,
+                               "global_var_"]:
+                    if key.startswith(prefix):
+                        var = key.replace(prefix, '')
+                        environment[nodekind][var] = value
 
         provider = Configurator.setup_providers_map[provider_name]
         return provider(groups, playbook_path=playbook_path,
