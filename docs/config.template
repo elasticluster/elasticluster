@@ -72,6 +72,8 @@
 # request_floating_ip: request assignment of a floating IP when the
 #                      instance is started.
 #                      Valid values: `True`, `False`. Default is `False`
+# vpc:      the name or ID of the AWS Virtual Private Cloud to provision
+#           resources in.
 #
 # **OpenStack users**: from the web interface you can download a file
 # containing your EC2 credentials by logging in in your provider web

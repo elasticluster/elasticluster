@@ -198,6 +198,7 @@ class Start(AbstractCommand):
             print(cluster_summary(cluster))
         except (KeyError, ImageError, SecurityGroupError, ClusterError) as ex:
             print("Your cluster could not start `%s`" % ex)
+            raise
 
 
 class Stop(AbstractCommand):

@@ -111,6 +111,7 @@ class ElastiCluster(cli.app.CommandLineApp):
         # In debug mode, avoid forking
         if self.params.verbose > 3:
             log.DO_NOT_FORK = True
+            log.raiseExceptions = True
 
         if not os.path.isdir(self.params.storage):
             # We do not create *all* the parents, but we do create the

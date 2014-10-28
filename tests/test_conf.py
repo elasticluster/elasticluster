@@ -47,6 +47,14 @@ def minimal_configuration(valid_path):
     cfg.set('cloud/boto1', 'ec2_secret_key', 'XXXXXX')
     cfg.set('cloud/boto1', 'ec2_region', 'us-east-1')
 
+    cfg.add_section('cloud/boto_vpc')
+    cfg.set('cloud/boto_vpc', 'provider', 'ec2_boto')
+    cfg.set('cloud/boto_vpc', 'ec2_url', 'https://ec2.us-east-1.amazonaws.com')
+    cfg.set('cloud/boto_vpc', 'ec2_access_key', 'XXXXXX')
+    cfg.set('cloud/boto_vpc', 'ec2_secret_key', 'XXXXXX')
+    cfg.set('cloud/boto_vpc', 'ec2_region', 'us-east-1')
+    cfg.set('cloud/boto_vpc', 'vpc', 'vpc-c0ffee')
+
     cfg.add_section('cloud/google1')
     cfg.set('cloud/google1', 'provider', 'google')
     cfg.set('cloud/google1', 'gce_project_id', 'gc3-uzh')
@@ -62,6 +70,17 @@ def minimal_configuration(valid_path):
     cfg.set('cluster/c1', 'flavor', 'm1.tiny')
     cfg.set('cluster/c1', 'misc_nodes', '10')
     cfg.set('cluster/c1', 'security_group', 'default')
+
+    cfg.add_section('cluster/boto_vpc')
+    cfg.set('cluster/boto_vpc', 'cloud', 'boto_vpc')
+    cfg.set('cluster/boto_vpc', 'login', 'log1')
+    cfg.set('cluster/boto_vpc', 'setup_provider', 'sp1')
+    cfg.set('cluster/boto_vpc', 'login', 'log1')
+    cfg.set('cluster/boto_vpc', 'image_id', 'i-12345')
+    cfg.set('cluster/boto_vpc', 'flavor', 'm1.tiny')
+    cfg.set('cluster/boto_vpc', 'misc_nodes', '10')
+    cfg.set('cluster/boto_vpc', 'security_group', 'default')
+    cfg.set('cluster/boto_vpc', 'network_ids', 'subnet-deadbeef')
 
     cfg.add_section('cluster/c2')
     cfg.set('cluster/c2', 'cloud', 'google1')
@@ -287,6 +306,28 @@ class TestConfigValidator(unittest.TestCase):
                     validator = ConfigValidator(config_tmp)
                     self.assertRaises(Invalid, validator.validate)
 
+    def test_invalid_ec2_vpc_config(self):
+        """
+        Invalid EC2 VPC configuration
+        """
+        # VPC without cluster network_ids definition
+        config = copy.deepcopy(self.config)
+        self.assertEqual(config["mycluster"]["cloud"]["provider"], "ec2_boto")
+        config["mycluster"]["cloud"]["vpc"] = "vpc-c0ffee"
+        if "network_ids" in config["mycluster"]["cluster"]:
+            del config["mycluster"]["cluster"]["network_ids"]
+        validator = ConfigValidator(config)
+        self.assertRaises(Invalid, validator.validate)
+
+        # network_ids definition without a VPC
+        config = copy.deepcopy(self.config)
+        self.assertEqual(config["mycluster"]["cloud"]["provider"], "ec2_boto")
+        config["mycluster"]["nodes"]["frontend"]["network_ids"] = "subnet-deadbeef"
+        if "vpc" in config["mycluster"]["cloud"]:
+            del config["mycluster"]["cloud"]["vpc"]
+        validator = ConfigValidator(config)
+        self.assertRaises(Invalid, validator.validate)
+
 
 class TestConfigReader(unittest.TestCase):
     def setUp(self):
@@ -449,6 +490,7 @@ flavor=bigdisk
         cfg = minimal_configuration(self.path)
         cfg.remove_section('cluster/c1')
         cfg.remove_section('cluster/c2')
+        cfg.remove_section('cluster/boto_vpc')
         self.assertRaises(Invalid, self._check_read_config_object, cfg)
 
     def test_read_missing_section_cloud(self):

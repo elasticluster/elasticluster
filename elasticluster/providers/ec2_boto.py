@@ -30,8 +30,8 @@ from paramiko.ssh_exception import SSHException
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.providers import AbstractCloudProvider
-from elasticluster.exceptions import SecurityGroupError, KeypairError, \
-    ImageError, InstanceError, ClusterError
+from elasticluster.exceptions import VpcError, SecurityGroupError, \
+    SubnetError, KeypairError, ImageError, InstanceError, ClusterError
 
 
 class BotoCloudProvider(AbstractCloudProvider):
@@ -54,11 +54,12 @@ class BotoCloudProvider(AbstractCloudProvider):
     __node_start_lock = threading.Lock()  # lock used for node startup
 
     def __init__(self, ec2_url, ec2_region, ec2_access_key, ec2_secret_key,
-                 storage_path=None, request_floating_ip=False):
+                 vpc=None, storage_path=None, request_floating_ip=False):
         self._url = ec2_url
         self._region_name = ec2_region
         self._access_key = ec2_access_key
         self._secret_key = ec2_secret_key
+        self._vpc = vpc
         self.request_floating_ip = request_floating_ip
 
         # read all parameters from url
@@ -76,8 +77,11 @@ class BotoCloudProvider(AbstractCloudProvider):
             self._secure = False
 
         # will be initialized upon first connect
-        self._connection = None
+        self._ec2_connection = None
+        self._vpc_connection = None
+        self._vpc_id = None
         self._region = None
+
         self._instances = {}
         self._cached_instances = []
         self._images = None
@@ -89,8 +93,8 @@ class BotoCloudProvider(AbstractCloudProvider):
         :raises: Generic exception on error
         """
         # check for existing connection
-        if self._connection:
-            return self._connection
+        if self._ec2_connection:
+            return self._ec2_connection
 
         try:
             log.debug("Connecting to ec2 host %s", self._ec2host)
@@ -98,29 +102,51 @@ class BotoCloudProvider(AbstractCloudProvider):
                                                endpoint=self._ec2host)
 
             # connect to webservice
-            self._connection = boto.connect_ec2(
+            self._ec2_connection = boto.connect_ec2(
                 aws_access_key_id=self._access_key,
                 aws_secret_access_key=self._secret_key,
                 is_secure=self._secure,
                 host=self._ec2host, port=self._ec2port,
                 path=self._ec2path, region=region)
+            log.debug("EC2 connection has been successful.")
+
+            if self._vpc:
+                self._vpc_connection = boto.connect_vpc(
+                    aws_access_key_id=self._access_key,
+                    aws_secret_access_key=self._secret_key,
+                    is_secure=self._secure,
+                    host=self._ec2host, port=self._ec2port,
+                    path=self._ec2path, region=region)
+                log.debug("VPC connection has been successful.")
+
+                for vpc in self._vpc_connection.get_all_vpcs():
+                    log.debug("Checking whether %s matches %s/%s" %
+                        (self._vpc, vpc.tags['Name'], vpc.id))
+                    if self._vpc in [vpc.tags['Name'], vpc.id]:
+                        self._vpc_id = vpc.id
+                        if self._vpc != self._vpc_id:
+                            log.debug("VPC %s matches %s" %
+                                (self._vpc, self._vpc_id))
+                        break
+                else:
+                    raise VpcError('VPC %s does not exist.' % self._vpc)
 
             # list images to see if the connection works
-            log.debug("Connection has been successful.")
-            # images = self._connection.get_all_images()
+            # images = self._ec2_connection.get_all_images()
             # log.debug("%d images found on cloud %s",
             #           len(images), self._ec2host)
 
         except Exception as e:
-            log.error("connection to cloud could not be "
+            log.error("connection to ec2 could not be "
                       "established: message=`%s`", str(e))
             raise
 
-        return self._connection
+        return self._ec2_connection
 
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
-                       username=None, node_name=None, **kwargs):
+                       username=None, node_name=None, network_ids=None,
+                       **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
 
@@ -154,13 +180,29 @@ class BotoCloudProvider(AbstractCloudProvider):
             self._check_keypair(key_name, public_key_path, private_key_path)
 
         log.debug("Checking security group `%s`.", security_group)
-        self._check_security_group(security_group)
+        security_group_id = self._check_security_group(security_group)
         # image_id = self._find_image_id(image_id)
+
+        if network_ids:
+            interfaces = []
+            for subnet in network_ids.split(','):
+                subnet_id = self._check_subnet(subnet)
+
+                interfaces.append(ec2.networkinterface.NetworkInterfaceSpecification(
+                    subnet_id=subnet_id, groups=[security_group_id],
+                    associate_public_ip_address=self.request_floating_ip))
+            interfaces = ec2.networkinterface.NetworkInterfaceCollection(*interfaces)
+
+            security_groups = []
+        else:
+            interfaces = None
+            security_groups = [security_group]
 
         try:
             reservation = connection.run_instances(
-                image_id, key_name=key_name, security_groups=[security_group],
-                instance_type=flavor, user_data=image_userdata)
+                image_id, key_name=key_name, security_groups=security_groups,
+                instance_type=flavor, user_data=image_userdata,
+                network_interfaces=interfaces)
         except Exception, ex:
             log.error("Error starting instance: %s", ex)
             if "TooManyInstances" in ex:
@@ -195,9 +237,9 @@ class BotoCloudProvider(AbstractCloudProvider):
         IPs = [ip for ip in instance.private_ip_address, instance.ip_address if ip]
 
         # We also need to check if there is any floating IP associated
-        if self.request_floating_ip:
+        if self.request_floating_ip and not self._vpc:
             # We need to list the floating IPs for this instance
-            floating_ips = [ip for ip in self._connection.get_all_addresses() if ip.instance_id == instance.id]
+            floating_ips = [ip for ip in self._ec2_connection.get_all_addresses() if ip.instance_id == instance.id]
             if not floating_ips:
                 log.debug("Public ip address has to be assigned through "
                           "elasticluster.")
@@ -377,19 +419,60 @@ class BotoCloudProvider(AbstractCloudProvider):
         """Checks if the security group exists.
 
         :param str name: name of the security group
+        :return: str - security group id of the security group
         :raises: `SecurityGroupError` if group does not exist
         """
         connection = self._connect()
-        security_groups = connection.get_all_security_groups()
-        if not security_groups:
+
+        filters = {}
+        if self._vpc:
+            filters = {'vpc-id': self._vpc_id}
+
+        security_groups = connection.get_all_security_groups(filters=filters)
+
+        matching_groups = [
+            group
+            for group
+             in security_groups
+             if name in [group.name, group.id]
+        ]
+        if len(matching_groups) == 0:
             raise SecurityGroupError(
                 "the specified security group %s does not exist" % name)
-
-        security_groups = dict((s.name, s) for s in security_groups)
-
-        if name not in security_groups:
+        elif len(matching_groups) == 1:
+            return matching_groups[0].id
+        elif self._vpc and len(matching_groups) > 1:
             raise SecurityGroupError(
-                "the specified security group %s does not exist" % name)
+                "the specified security group name %s matches "
+                "more than one security group" % name)
+
+    def _check_subnet(self, name):
+        """Checks if the subnet exists.
+
+        :param str name: name of the subnet
+        :return: str - subnet id of the subnet
+        :raises: `SubnetError` if group does not exist
+        """
+        # Subnets only exist in VPCs, so we don't need to worry about
+        # the EC2 Classic case here.
+        subnets = self._vpc_connection.get_all_subnets(
+            filters={'vpcId': self._vpc_id})
+
+        matching_subnets = [
+            subnet
+            for subnet
+             in subnets
+             if name in [subnet.tags.get('Name'), subnet.id]
+        ]
+        if len(matching_subnets) == 0:
+            raise SubnetError(
+                "the specified subnet %s does not exist" % name)
+        elif len(matching_subnets) == 1:
+            return matching_subnets[0].id
+        else:
+            raise SubnetError(
+                "the specified subnet name %s matches more than "
+                "one subnet" % name)
 
     def _find_image_id(self, image_id):
         """Finds an image id to a given id or name.
@@ -412,3 +495,15 @@ class BotoCloudProvider(AbstractCloudProvider):
         else:
             raise ImageError(
                 "Could not find given image id `%s`" % image_id)
+    
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['_ec2_connection']
+        del d['_vpc_connection']
+        return d
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self._ec2_connection = None
+        self._vpc_connection = None
+        

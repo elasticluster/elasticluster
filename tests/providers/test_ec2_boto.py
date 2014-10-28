@@ -23,7 +23,8 @@ import unittest
 
 from mock import MagicMock, PropertyMock
 
-from elasticluster.exceptions import KeypairError, InstanceError, SecurityGroupError, ImageError
+from elasticluster.exceptions import KeypairError, InstanceError, \
+    SecurityGroupError, SubnetError, ImageError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 
 
@@ -88,7 +89,7 @@ class TestBotoCloudProvider(unittest.TestCase):
         try:
             provider = self._create_provider()
             con = MagicMock()
-            provider._connection = con
+            provider._ec2_connection = con
 
             # key mock
             mock_key = MagicMock()
@@ -113,7 +114,8 @@ class TestBotoCloudProvider(unittest.TestCase):
 
             con.run_instances.assert_called_once_with(image_id,
                     key_name=key_name, security_groups=[security_group],
-                    instance_type=flavor, user_data=image_userdata)
+                    instance_type=flavor, user_data=image_userdata,
+                    network_interfaces=None)
 
 
         except:
@@ -191,7 +193,7 @@ class TestBotoCloudProvider(unittest.TestCase):
         # check instance which does not exist :)
         con = MagicMock()
         provider = self._create_provider()
-        provider._connection = con
+        provider._ec2_connection = con
         with self.assertRaises(InstanceError):
             provider._load_instance("not-existing")
 
@@ -225,29 +227,74 @@ class TestBotoCloudProvider(unittest.TestCase):
         # ensure that the instance has been cached
         self.assertEqual(con.get_all_instances.call_count, 0)
 
-
-
     def test_check_security_group(self):
         """
         BotoCloudProvider: check security group
         """
         provider = self._create_provider()
+        provider._vpc = 'vpc-c0ffee'
         con = MagicMock()
-        provider._connection = con
+        provider._ec2_connection = con
 
-        # check security group that does not exist
-        con.get_all_security_groups.return_value = None
+        # security group that does not exist
+        con.get_all_security_groups.return_value = []
         with self.assertRaises(SecurityGroupError):
             provider._check_security_group("not-existing")
 
         group = MagicMock()
         type(group).name = PropertyMock(return_value="key-exists")
+        type(group).id = PropertyMock(return_value="id-exists")
         con.get_all_security_groups.return_value = [group]
         with self.assertRaises(SecurityGroupError):
             provider._check_security_group("not-existing")
 
-        # check security group that exists
+        # security group that exists
         provider._check_security_group("key-exists")
+        provider._check_security_group("id-exists")
+
+        group2 = MagicMock()
+        type(group2).name = PropertyMock(return_value="key-exists")
+        type(group2).id = PropertyMock(return_value="id-exists2")
+        con.get_all_security_groups.return_value = [group, group2]
+
+        # VPC and security groups with the same name
+        with self.assertRaises(SecurityGroupError):
+            provider._check_security_group("key-exists")
+
+    def test_check_subnet(self):
+        """
+        BotoCloudProvider: check subnet IDs
+        """
+        provider = self._create_provider()
+        con = MagicMock()
+        provider._ec2_connection = con
+        vpc = MagicMock()
+        provider._vpc_connection = vpc
+
+        # subnet that does not exist
+        vpc.get_all_subnets.return_value = []
+        with self.assertRaises(SubnetError):
+            provider._check_subnet("not-existing")
+
+        subnet = MagicMock()
+        type(subnet).tags = PropertyMock(return_value={"Name": "key-exists"})
+        type(subnet).id = PropertyMock(return_value="id-exists")
+        vpc.get_all_subnets.return_value = [subnet]
+        with self.assertRaises(SubnetError):
+            provider._check_subnet("not-existing")
+
+        # subnet that exists, by name or by key
+        provider._check_subnet("key-exists")
+        provider._check_subnet("id-exists")
+
+        subnet2 = MagicMock()
+        type(subnet2).tags = PropertyMock(return_value={"Name": "key-exists"})
+        type(subnet2).id = PropertyMock(return_value="id-exists2")
+        vpc.get_all_subnets.return_value = [subnet, subnet2]
+
+        # subnets with the same name
+        with self.assertRaises(SubnetError):
+            provider._check_subnet("key-exists")
 
     def test_find_image_id(self):
         """
@@ -264,7 +311,7 @@ class TestBotoCloudProvider(unittest.TestCase):
         con.get_all_images.return_value = [image]
 
         provider = self._create_provider()
-        provider._connection = con
+        provider._ec2_connection = con
 
         self.assertEqual(provider._find_image_id(name), image_id)
         self.assertEqual(provider._find_image_id(image_id), image_id)
@@ -297,7 +344,7 @@ class TestBotoCloudProvider(unittest.TestCase):
             key_result.fingerprint = fingerprint
             key_results = [key_result]
             connection.get_all_key_pairs.return_value = key_results
-        provider._connection = connection
+        provider._ec2_connection = connection
         provider._ec2host = host
 
         try:
