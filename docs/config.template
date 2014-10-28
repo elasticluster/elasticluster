@@ -74,6 +74,10 @@
 #                      Valid values: `True`, `False`. Default is `False`
 # vpc:      the name or ID of the AWS Virtual Private Cloud to provision
 #           resources in.
+# instance_profile: an IAM instance profile that contains roles allowing
+#                   EC2 instances to have specified privileges. For example,
+#                   you can allow EC2 instances to access S3 without
+#                   passing credentials in.
 #
 # **OpenStack users**: from the web interface you can download a file
 # containing your EC2 credentials by logging in in your provider web

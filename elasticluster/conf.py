@@ -412,6 +412,7 @@ class ConfigValidator(object):
                             "ec2_region": All(str, Length(min=1)),
                             Optional("request_floating_ip"): Boolean(str),
                             Optional("vpc"): All(str, Length(min=1)),
+                            Optional("instance_profile"): All(str, Length(min=1)),
         }
         cloud_schema_gce = {"provider": 'google',
                             "gce_client_id": All(str, Length(min=1)),

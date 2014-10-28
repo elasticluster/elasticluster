@@ -158,6 +158,13 @@ Valid configuration keys for `boto`
     will force `elasticluster` to request such a floating IP if the
     instance doesn't get one automatically.
 
+``instance_profile``
+
+     An `IAM instance profile
+     <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html>`_
+     that contains roles allowing EC2 instances to have specified
+     privileges. For example, you can allow EC2 instances to access S3 without
+     passing credentials in.
 
 Valid configuration keys for `google`
 -------------------------------------
