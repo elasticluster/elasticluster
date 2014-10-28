@@ -520,7 +520,7 @@ class Cluster(object):
             self.repository.delete(self)
 
         # Remove also ssh known hosts
-        if self.known_hosts_file:
+        if self.known_hosts_file and os.path.exists(self.known_hosts_file):
             os.remove(self.known_hosts_file)
 
 
@@ -787,3 +787,4 @@ IPs:    %s
 instance id:   %s
 instance flavor: %s""" % (self.name, self.preferred_ip, str.join(', ', self.ips),
                           self.instance_id, self.flavor)
+
