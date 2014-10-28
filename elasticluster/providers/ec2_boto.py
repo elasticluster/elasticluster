@@ -52,6 +52,7 @@ class BotoCloudProvider(AbstractCloudProvider):
     :param bool request_floating_ip: Whether ip are assigned automatically
                                     `True` or floating ips have to be
                                     assigned manually `False`
+    :param str instance_profile: Instance profile with IAM role permissions
     """
     __node_start_lock = threading.Lock()  # lock used for node startup
 
@@ -61,12 +62,13 @@ class BotoCloudProvider(AbstractCloudProvider):
 
     def __init__(self, ec2_url, ec2_region, ec2_access_key=None,
                  ec2_secret_key=None, vpc=None, storage_path=None,
-                 request_floating_ip=False):
+                 request_floating_ip=False, instance_profile=None):
         self._url = ec2_url
         self._region_name = ec2_region
         self._access_key = ec2_access_key
         self._secret_key = ec2_secret_key
         self._vpc = vpc
+        self._instance_profile = instance_profile
         self.request_floating_ip = request_floating_ip
 
         # read all parameters from url
@@ -218,7 +220,8 @@ class BotoCloudProvider(AbstractCloudProvider):
                 request = connection.request_spot_instances(
                                 price,image_id, key_name=key_name, security_groups=security_groups,
                                 instance_type=flavor, user_data=image_userdata,
-                                network_interfaces=interfaces)[-1]
+                                network_interfaces=interfaces,
+                                instance_profile_name=self._instance_profile)[-1]
 
                 # wait until spot request is fullfilled (will wait
                 # forever if no timeout is given)
@@ -236,7 +239,8 @@ class BotoCloudProvider(AbstractCloudProvider):
                 reservation = connection.run_instances(
                     image_id, key_name=key_name, security_groups=security_groups,
                     instance_type=flavor, user_data=image_userdata,
-                    network_interfaces=interfaces)
+                    network_interfaces=interfaces,
+                    instance_profile_name=self._instance_profile)
         except Exception as ex:
             log.error("Error starting instance: %s", ex)
             if "TooManyInstances" in ex:

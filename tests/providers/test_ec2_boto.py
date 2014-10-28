@@ -117,7 +117,7 @@ class TestBotoCloudProvider(unittest.TestCase):
             con.run_instances.assert_called_once_with(image_id,
                     key_name=key_name, security_groups=[security_group],
                     instance_type=flavor, user_data=image_userdata,
-                    network_interfaces=None)
+                    network_interfaces=None, instance_profile_name=None)
 
 
         except:

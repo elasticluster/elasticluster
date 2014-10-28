@@ -192,6 +192,14 @@ Valid configuration keys for `ec2_boto`
     **Note:** Ignored if ``price`` is zero (default).
 
 
+``instance_profile``
+
+     Name of an `IAM instance profile`__ that contains roles allowing
+     EC2 instances to have specified privileges. For example, you can
+     allow EC2 instances to access S3 without passing credentials in.
+
+     .. __: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html
+
 
 Valid configuration keys for `google`
 -------------------------------------
