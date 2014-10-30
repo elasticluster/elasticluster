@@ -203,7 +203,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # Read key. We do it as first thing because we need it either
         # way, to check the fingerprint of the remote keypair if it
         # exists already, or to create a new keypair.
-
         pkey = None
         try:
             pkey = DSSKey.from_private_key_file(private_key_path)
@@ -228,13 +227,16 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             # Check if a keypair `name` exists on the cloud.
             keypair = self.client.keypairs.get(name)
 
-            # Check if it has the correct keypair
-            fingerprint = str.join(
-                ':', (i.encode('hex') for i in pkey.get_fingerprint()))
-            if fingerprint != keypair.fingerprint:
-                raise KeypairError(
-                    "Keypair `%s` is present but has "
-                    "different fingerprint. Aborting!" % name)
+            # Check if it has the correct keypair, but only if we can read the local key
+            if pkey:
+                fingerprint = str.join(
+                    ':', (i.encode('hex') for i in pkey.get_fingerprint()))
+                if fingerprint != keypair.fingerprint:
+                    raise KeypairError(
+                        "Keypair `%s` is present but has "
+                        "different fingerprint. Aborting!" % name)
+            else:
+                log.warning("Unable to check if the keypair is using the correct key.")
         except NotFound:
             log.warning(
                 "Keypair `%s` not found on resource `%s`, Creating a new one",
