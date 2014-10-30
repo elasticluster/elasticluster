@@ -15,6 +15,13 @@ configuration file is stored in your home directory:
 ``~/.elasticluster/config`` but you can specify a different location
 from the command line with the `-c` option.
 
+In case the directory `~/.elasticluster/config.d` exists (or, if you
+run with `-c <PATH>`, the directory `<PATH>.d`), all files named
+`*.conf` contained in that directory are read and parsed. In this way,
+you can handle multiple clusters easily by distributing the
+configuration over multiple files, and disable only some of them by
+renaming the files.
+
 When `elasticluster` is run for the first time, if no configuration
 file is found it will copy a `template configuration file`_ in
 ``~/.elasticluster/config``. Such template is fully commented and self

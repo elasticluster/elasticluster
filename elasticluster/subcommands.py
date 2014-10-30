@@ -156,7 +156,7 @@ class Start(AbstractCommand):
             cluster_name = self.params.cluster
 
         configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage)
 
         # overwrite configuration
         for option, value in self.params.extra_conf.iteritems():
@@ -230,7 +230,7 @@ class Stop(AbstractCommand):
         """
         cluster_name = self.params.cluster
         configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage)
         try:
             cluster = configurator.load_cluster(cluster_name)
         except (ClusterNotFound, ConfigurationError), ex:
@@ -303,7 +303,7 @@ class ResizeCluster(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage)
 
         # Get current cluster configuration
         cluster_name = self.params.cluster
@@ -400,7 +400,7 @@ class ListClusters(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage)
         repository = configurator.create_repository()
         clusters = repository.get_all()
 
@@ -439,7 +439,7 @@ class ListTemplates(AbstractCommand):
     def execute(self):
 
         configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage)
         config = configurator.cluster_conf
 
         print("""%d cluster templates found in configuration file.""" % len(config))
@@ -489,7 +489,7 @@ class ListNodes(AbstractCommand):
         information like id and ip.
         """
         configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -526,7 +526,7 @@ class SetupCluster(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -564,7 +564,7 @@ class SshFrontend(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -622,7 +622,7 @@ class SftpFrontend(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)

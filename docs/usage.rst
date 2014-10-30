@@ -37,7 +37,9 @@ The following options are general and are accepted by any subcommand:
 ``-c PATH, --config PATH``
 
     Path to the configuration file. By default this is
-    ``~/.elasticluster/config``
+    ``~/.elasticluster/config``. If a directory named ``<PATH>.d``
+    (or, by default, ``~/.elasticluster/config.d``) exists, all files
+    contained in that directory and ending in `.conf` are read too.
 
 
 elasticluster provides multiple `subcommands` to start, stop, resize,

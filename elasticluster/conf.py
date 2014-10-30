@@ -91,13 +91,13 @@ class Configurator(object):
         validator.validate()
 
     @classmethod
-    def fromConfig(cls, configfile, storage_path=None):
+    def fromConfig(cls, configfiles, storage_path=None):
         """Helper method to initialize Configurator from an ini file.
 
-        :param str configfile: path to the ini file
+        :param str configfile: path to the ini file(s)
         :return: :py:class:`Configurator`
         """
-        config_reader = ConfigReader(configfile)
+        config_reader = ConfigReader(configfiles)
         conf = config_reader.read_config()
         return Configurator(conf, storage_path=storage_path)
 
@@ -461,11 +461,11 @@ class ConfigReader(object):
     cloud_section = "cloud"
     node_section = "node"
 
-    def __init__(self, configfile):
-        self.configfile = configfile
+    def __init__(self, configfiles):
+        self.configfiles = configfiles
 
         configparser = RawConfigParser()
-        config_tmp = configparser.read(self.configfile)
+        config_tmp = configparser.read(self.configfiles)
         self.conf = dict()
         for section in configparser.sections():
             self.conf[section] = dict(configparser.items(section))

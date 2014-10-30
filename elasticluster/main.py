@@ -79,8 +79,9 @@ class ElastiCluster(cli.app.CommandLineApp):
                             Configurator.default_storage_dir,
                        default=Configurator.default_storage_dir)
         self.add_param('-c', '--config', metavar='PATH',
-                       help="Path to the configuration file. Default: `%s`" %
-                            self.default_configuration_file,
+                       help="Path to the configuration file. Default: `%s`. "
+                       "If directory PATH.d, also all files like "
+                       "PATH.d/*.conf are parsed." % self.default_configuration_file,
                        default=self.default_configuration_file)
         self.add_param('--version', action='store_true',
                        help="Print version information and exit.")
@@ -142,6 +143,16 @@ class ElastiCluster(cli.app.CommandLineApp):
                         self.params.config)
                     sys.exit(1)
 
+        self.params.config_files = [self.params.config]
+        cfgdir = "%s.d" % self.params.config
+        if os.path.isdir(cfgdir):
+            # Directory ~/.elasticluster/config.d found.
+            # Find configuration files to include
+            for fname in os.listdir(cfgdir):
+                if fname.endswith('.conf'):
+                    # Valid (?) config file. Add it to the extra config files list
+                    self.params.config_files.append(os.path.join(cfgdir, fname))
+
         if self.params.func:
             try:
                 self.params.func.pre_run()
@@ -163,12 +174,12 @@ class ElastiCluster(cli.app.CommandLineApp):
             return self.params.func()
         except MultipleInvalid as ex:
             for error in ex.errors:
-                print("Error validating configuration file '%s': `%s`"
-                      % (self.params.config, error))
+                print("Error validating configuration files '%s': `%s`"
+                      % (str.join("', '", self.params.config_files), error))
             sys.exit(1)
         except Invalid as ex:
-            print("Error validating configuration file '%s': `%s`"
-                  % (self.params.config, ex))
+            print("Error validating configuration files '%s': `%s`"
+                  % (str.join("', '", self.params.config_files), ex))
             sys.exit(1)
 
 
