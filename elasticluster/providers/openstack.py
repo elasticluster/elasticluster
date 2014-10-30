@@ -66,10 +66,10 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                  region_name=None, storage_path=None,
                  request_floating_ip=False,
                  nova_api_version=DEFAULT_OS_NOVA_API_VERSION):
-        self._os_auth_url = auth_url
-        self._os_username = username
-        self._os_password = password
-        self._os_tenant_name = project_name
+        self._os_auth_url = os.getenv('OS_AUTH_URL', auth_url)
+        self._os_username = os.getenv('OS_USERNAME', username)
+        self._os_password = os.getenv('OS_PASSWORD', password)
+        self._os_tenant_name = os.getenv('OS_TENANT_NAME', project_name)
         self._os_region_name = region_name
         self.request_floating_ip = request_floating_ip
         self.nova_api_version = nova_api_version

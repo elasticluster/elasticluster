@@ -184,18 +184,28 @@ Valid configuration keys for *openstack*
 ``auth_url``:
 
     The URL of the keystone service (main entry point for OpenStack
-    clouds)
+    clouds). If an environment variable `OS_AUTH_URL` is set when
+    elasticluster starts, the config option will be ignored and the
+    value of the variable will be used instead.
 
 ``username``
 
-    OpenStack username
+    OpenStack username. If an environment variable `OS_USERNAME` is
+    set when elasticluster starts, the config option will be ignored
+    and the value of the variable will be used instead.
 
 ``password``
 
-    OpenStack password
+    OpenStack password. If an environment variable `OS_PASSWORD` is
+    set when elasticluster starts, the config option will be ignored
+    and the value of the variable will be used instead.
+
 ``project_name``
 
-    OpenStack project to use (also known as `tenant`)
+    OpenStack project to use (also known as `tenant`). If an
+    environment variable `OS_TENANT_NAME` is set when elasticluster
+    starts, the config option will be ignored and the value of the
+    variable will be used instead.
 
 ``region_name``
 

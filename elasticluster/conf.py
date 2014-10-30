@@ -130,7 +130,7 @@ class Configurator(object):
         providerconf = conf.copy()
         providerconf.pop('provider')
         providerconf['storage_path'] = self.general_conf['storage']
-
+        
         return provider(**providerconf)
 
     def create_cluster(self, template, name=None):
@@ -274,9 +274,10 @@ class ConfigValidator(object):
         * reading environment variables
         * interpolating configuraiton options
         """
-        # read cloud provider environment variables (ec2_boto or google)
+        # read cloud provider environment variables (ec2_boto or google, openstack)
         for cluster, props in self.config.iteritems():
             if "cloud" in props and "provider" in props['cloud']:
+
                 for param, value in props['cloud'].iteritems():
                     PARAM = param.upper()
                     if not value and PARAM in os.environ:
@@ -539,6 +540,7 @@ class ConfigReader(object):
 
         errors = MultipleInvalid()
         for cluster in clusters:
+            # Get the name of the cluster
             name = re.search(ConfigReader.cluster_section + "/(.*)",
                              cluster).groups()[0]
             if not name:

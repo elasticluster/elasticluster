@@ -55,6 +55,13 @@ def minimal_configuration(valid_path):
     cfg.set('cloud/boto_vpc', 'ec2_region', 'us-east-1')
     cfg.set('cloud/boto_vpc', 'vpc', 'vpc-c0ffee')
 
+    cfg.add_section('cloud/hobbes')
+    cfg.set('cloud/hobbes', 'provider', 'openstack')
+    cfg.set('cloud/hobbes', 'auth_url', 'http://hobbes.gc3.uzh.ch::5000/v2.0')
+    cfg.set('cloud/hobbes', 'username', 'XXXXXX')
+    cfg.set('cloud/hobbes', 'password', 'XXXXXX')
+    cfg.set('cloud/hobbes', 'project_name', 'test-tenant')
+
     cfg.add_section('cloud/google1')
     cfg.set('cloud/google1', 'provider', 'google')
     cfg.set('cloud/google1', 'gce_project_id', 'gc3-uzh')
@@ -81,6 +88,18 @@ def minimal_configuration(valid_path):
     cfg.set('cluster/boto_vpc', 'misc_nodes', '10')
     cfg.set('cluster/boto_vpc', 'security_group', 'default')
     cfg.set('cluster/boto_vpc', 'network_ids', 'subnet-deadbeef')
+
+
+    cfg.add_section('cluster/os-hobbes')
+    cfg.set('cluster/os-hobbes', 'cloud', 'hobbes')
+    cfg.set('cluster/os-hobbes', 'login', 'log1')
+    cfg.set('cluster/os-hobbes', 'setup_provider', 'sp1')
+    cfg.set('cluster/os-hobbes', 'login', 'log1')
+    cfg.set('cluster/os-hobbes', 'image_id', 'i-12345')
+    cfg.set('cluster/os-hobbes', 'flavor', 'm1.tiny')
+    cfg.set('cluster/os-hobbes', 'misc_nodes', '10')
+    cfg.set('cluster/os-hobbes', 'security_group', 'default')
+
 
     cfg.add_section('cluster/c2')
     cfg.set('cluster/c2', 'cloud', 'google1')
@@ -151,7 +170,51 @@ class Configuration(object):
                         "image_id": "ami-00000048",
                         }
                     }
+                },
+
+            "os-cluster": {
+                "setup": {
+                    "provider": "ansible",
+                    "playbook_path": "%(ansible_pb_dir)s/site.yml",
+                    "frontend_groups": "slurm_master",
+                    "compute_groups": "slurm_clients",
+                    },
+                "cloud": {
+                    "provider": "openstack",
+                    "auth_url": "http://cloud.gc3.uzh.ch:5000/v2.0",
+                    "username": "myusername",
+                    "password": "mypassword",
+                    "project_name": "myproject",
+                    },
+                "login": {
+                    "image_user": "gc3-user",
+                    "image_user_sudo": "root",
+                    "image_sudo": "True",
+                    "user_key_name": "***name of SSH keypair on Hobbes***",
+                    "user_key_private": path,
+                    "user_key_public": path,
+                    },
+                "cluster": {
+                    "cloud": "hobbes",
+                    "login": "gc3-user",
+                    "setup_provider": "my-slurm-cluster",
+                    "frontend_nodes": "1",
+                    "compute_nodes": "2",
+                    },
+                "nodes": {
+                    "frontend": {
+                        "security_group": "default",
+                        "flavor": "m1.tiny",
+                        "image_id": "ami-00000048",
+                        },
+                    "compute": {
+                        "security_group": "default",
+                        "flavor": "m1.large",
+                        "image_id": "ami-00000048",
+                        }
+                    }
                 }
+
             }
 
         return config
@@ -235,7 +298,22 @@ class TestConfigurator(unittest.TestCase):
         sudo = self.config['mycluster']['login']['image_sudo']
         self.assertEqual(provider._sudo, sudo)
 
+    def test_setup_provider_using_environment(self):
+        config = copy.deepcopy(self.config)
+        configurator = Configurator(config)
+        # Save current variable, modify it and check if it's correctly read
+        SAVEDUSERNAME=os.getenv('OS_USERNAME')
+        os.environ['OS_USERNAME'] = 'newusername'
+        provider = configurator.create_cloud_provider("os-cluster")
+        try:
 
+            self.assertEqual(provider._os_username, 'newusername')
+        except:
+            if SAVEDUSERNAME:
+                os.environ['OS_USERNAME'] = SAVEDUSERNAME
+            else:
+                del os.environ['OS_USERNAME']
+            raise
 
 
 class TestConfigValidator(unittest.TestCase):
@@ -366,6 +444,15 @@ ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
 ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
 ec2_region=nova
 
+[cloud/os-hobbes]
+provider=openstack
+auth_url=http://hobbes.gc3.uzh.ch:5000/v2.0
+username=antonio
+password=***
+project_name=academic-cloud
+request_floating_ip=False
+nova_api_version=2
+
 [cloud/amazon-us-east-1]
 provider=ec2_boto
 ec2_url=https://ec2.us-east-1.amazonaws.com
@@ -411,6 +498,18 @@ worker_groups=mdce_worker,ganglia_monitor
 
 [cluster/slurm]
 cloud=hobbes
+login=gc3-user
+setup_provider=ansible-slurm
+security_group=default
+image_id=ami-00000048
+flavor=m1.small
+frontend_nodes=1
+compute_nodes=2
+ssh_to=frontend
+
+
+[cluster/os-slurm]
+cloud=os-hobbes
 login=gc3-user
 setup_provider=ansible-slurm
 security_group=default
@@ -491,6 +590,7 @@ flavor=bigdisk
         cfg.remove_section('cluster/c1')
         cfg.remove_section('cluster/c2')
         cfg.remove_section('cluster/boto_vpc')
+        cfg.remove_section('cluster/os-hobbes')
         self.assertRaises(Invalid, self._check_read_config_object, cfg)
 
     def test_read_missing_section_cloud(self):

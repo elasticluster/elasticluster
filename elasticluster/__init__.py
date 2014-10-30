@@ -30,6 +30,7 @@ from elasticluster.repository import AbstractClusterRepository, ClusterRepositor
 from elasticluster.providers import AbstractCloudProvider, AbstractSetupProvider
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.providers.ec2_boto import BotoCloudProvider
+from elasticluster.providers.openstack import OpenStackCloudProvider
 from elasticluster.providers.gce import GoogleCloudProvider
 
 

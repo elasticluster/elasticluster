@@ -105,14 +105,23 @@
 # ----------------------------------------
 #
 # auth_url:          The URL of the keystone service (main entry point for 
-#                    OpenStack clouds), same as option --os-auth-url of
-#                    `nova` command
+#                    OpenStack clouds), same as option --os-auth-url
+#                    of `nova` command. If an environment variable
+#                    `OS_AUTH_URL` is set, this option is ignored.
+#
 # username:          OpenStack username, same as option --os-username of 
-#                    `nova` command
+#                    `nova` command. If an environment variable
+#                    `OS_USERNAME` is set, this option is ignored.
+#
 # password:          OpenStack password, same as option --os-password of 
-#                    `nova` command
+#                    `nova` command. If an environment variable
+#                    `OS_PASSWORD` is set, this option is ignored.
+#
 # project_name:      OpenStack project to use (also known as `tenant`),
-#                    same as option `--os-tenant-name` of `nova` command
+#                    same as option `--os-tenant-name` of `nova`
+#                    command. If an environment variable
+#                    `OS_TENANT_NAME` is set, this option is ignored.
+#
 # region_name:       OpenStack region (optional) 
 # request_floating_ip: request assignment of a floating IP when the
 #                      instance is started.
