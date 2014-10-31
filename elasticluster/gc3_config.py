@@ -43,27 +43,7 @@ slurm_sinfo_regexp =  re.compile('^(?P<hostnames>[^ \t]+)\s+'
                                  '(?P<features>[^ ]+)\s+'
                                  '(?P<reason>[^ \t]+)')
 
-slurm_scontrol_regexp = re.compile('PartitionName=(?P<PartitionName>[^ \t]+)\s+'
-                                   'AllocNodes=(?P<AllocNodes>[^ \t]+)\s+'
-                                   'AllowGroups=(?P<AllowGroups>[^ \t]+)\s+'
-                                   'Default=(?P<Default>[^ \t]+)\s+'
-                                   'DefaultTime=(?P<DefaultTime>[^ \t]+)\s+'
-                                   'DisableRootJobs=(?P<DisableRootJobs>[^ \t]+)\s+'
-                                   'GraceTime=(?P<GraceTime>[^ \t]+)\s+'
-                                   'Hidden=(?P<Hidden>[^ \t]+)\s+'
-                                   'MaxNodes=(?P<MaxNodes>[^ \t]+)\s+'
-                                   'MaxTime=(?P<MaxTime>[^ \t]+)\s+'
-                                   'MinNodes=(?P<MinNodes>[^ \t]+)\s+'
-                                   'Nodes=(?P<Nodes>[^ \t]+)\s+'
-                                   'Priority=(?P<Priority>[^ \t]+)\s+'
-                                   'RootOnly=(?P<RootOnly>[^ \t]+)\s+'
-                                   'Shared=(?P<Shared>[^ \t]+)\s+'
-                                   'PreemptMode=(?P<PreemptMode>[^ \t]+)\s+'
-                                   'State=(?P<State>[^ \t]+)\s+'
-                                   'TotalCPUs=(?P<TotalCPUs>[^ \t]+)\s+'
-                                   'TotalNodes=(?P<TotalNodes>[^ \t]+)\s+'
-                                   'DefMemPerNode=(?P<DefMemPerNode>[^ \t]+)\s+'
-                                   'MaxMemPerNode=(?P<MaxMemPerNode>[^ \t]+)')
+slurm_scontrol_maxtime_regexp = re.compile('.*\sMaxTime=(?P<MaxTime>[^ \t]+)\s+')
 
 def inspect_slurm_cluster(ssh, node_information):
     (_in, _out, _err) = ssh.exec_command("sinfo -Nel")
@@ -90,8 +70,13 @@ def inspect_slurm_cluster(ssh, node_information):
 
     (_in, _out, _err) = ssh.exec_command("scontrol -o show part")
     # Assuming only one partition
-    maxtime = slurm_scontrol_regexp.group('MaxTime')
-    node_information['max_walltime'] = maxtime if maxtime != 'UNLIMITED' else '672hours'
+    line = _out.read()
+    match = slurm_scontrol_maxtime_regexp.match(line)
+    node_information['max_walltime'] = '672hours'
+    if match:
+        maxtime = match.group('MaxTime')
+        if maxtime != 'UNLIMITED':
+            node_information['max_walltime'] = maxtime
     
     return node_information
 
@@ -141,7 +126,7 @@ def create_gc3_config_snippet(cluster):
     cfg.add_section(resource_section)
     cfg.set(resource_section, 'enabled', 'yes')
     cfg.set(resource_section, 'transport', 'ssh')
-    cfg.set(resource_section, 'frontend', frontend_node.ip_public)
+    cfg.set(resource_section, 'frontend', frontend_node.preferred_ip)
     cfg.set(resource_section, 'type', cluster_info['type'])
     cfg.set(resource_section, 'architecture', cluster_info['architecture'])
     cfg.set(resource_section, 'max_cores', cluster_info.get('max_cores', 1))
