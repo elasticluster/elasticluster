@@ -46,11 +46,7 @@ slurm_sinfo_regexp =  re.compile('^(?P<hostnames>[^ \t]+)\s+'
 slurm_scontrol_maxtime_regexp = re.compile('.*\sMaxTime=(?P<MaxTime>[^ \t]+)\s+')
 
 def inspect_slurm_cluster(ssh, node_information):
-    (_in, _out, _err) = ssh.exec_command("sinfo -Nel")
-    # Skip all lines until we catch the header
-    for line in _out:
-        if line.startswith('NODELIST'):
-            break
+    (_in, _out, _err) = ssh.exec_command("sinfo -hNel")
 
     nodes = []
     for line in _out:
@@ -85,6 +81,93 @@ def inspect_pbs_cluster(ssh):
     pass
 
 
+sge_qhost_regexp = re.compile('(?P<hostname>[^\s]+)\s+'
+                              '(?P<arch>[^\s]+)\s+'
+                              '(?P<ncpus>[0-9]+)\s+'
+                              '(?P<load>[^\s]+)\s+'
+                              '(?P<memory>[0-9\.MGT]+)\s+')
+
+# This function is took from GC3Pie, http://code.google.com/p/gc3pie/
+# module gc3pie.gc3libs.utils
+def to_bytes(s):
+    """
+    Convert string `s` to an integer number of bytes.  Suffixes like
+    'KB', 'MB', 'GB' (up to 'YB'), with or without the trailing 'B',
+    are allowed and properly accounted for.  Case is ignored in
+    suffixes.
+
+    Examples::
+
+      >>> to_bytes('12')
+      12
+      >>> to_bytes('12B')
+      12
+      >>> to_bytes('12KB')
+      12000
+      >>> to_bytes('1G')
+      1000000000
+
+    Binary units 'KiB', 'MiB' etc. are also accepted:
+
+      >>> to_bytes('1KiB')
+      1024
+      >>> to_bytes('1MiB')
+      1048576
+
+    """
+    last = -1
+    unit = s[last].lower()
+    if unit.isdigit():
+        # `s` is a integral number
+        return int(s)
+    if unit == 'b':
+        # ignore the the 'b' or 'B' suffix
+        last -= 1
+        unit = s[last].lower()
+    if unit == 'i':
+        k = 1024
+        last -= 1
+        unit = s[last].lower()
+    else:
+        k = 1000
+    # convert the substring of `s` that does not include the suffix
+    if unit.isdigit():
+        return int(s[0:(last+1)])
+    if unit == 'k':
+        return int(float(s[0:last])*k)
+    if unit == 'm':
+        return int(float(s[0:last])*k*k)
+    if unit == 'g':
+        return int(float(s[0:last])*k*k*k)
+    if unit == 't':
+        return int(float(s[0:last])*k*k*k*k)
+    if unit == 'p':
+        return int(float(s[0:last])*k*k*k*k*k)
+    if unit == 'e':
+        return int(float(s[0:last])*k*k*k*k*k*k)
+    if unit == 'z':
+        return int(float(s[0:last])*k*k*k*k*k*k*k)
+    if unit == 'y':
+        return int(float(s[0:last])*k*k*k*k*k*k*k*k)
+
+def inspect_sge_cluster(ssh, node_information):
+    (_in, _out, _err) = ssh.exec_command("qhost")
+    nodes = []
+    for line in _out:
+        match = sge_qhost_regexp.match(line)
+        if match:
+            nodes.append((match.group('hostname'),
+                         int(match.group('ncpus')),
+                         to_bytes(match.group('memory'))))
+    node_information['num_nodes'] = len(nodes)
+    node_information['max_cores'] = sum(i[1] for i in nodes)
+    node_information['max_cores_per_job'] = node_information['max_cores']
+    node_information['max_memory_per_core'] = max(i[2] for i in nodes)
+    # No easy way to see the maximum walltime for a SGE cluster. We
+    # should run qstat -g c to list the queues, and then run qconf -sq
+    # <queue> and look for s_rt and h_rt
+    node_information['max_walltime'] = '672hours'
+
 def inspect_node(node):
     """
     This function accept a `elasticluster.cluster.Node` class,
@@ -105,6 +188,8 @@ def inspect_node(node):
 
     if node_information['type'] == 'slurm':
         inspect_slurm_cluster(ssh, node_information)
+    elif node_information['type'] == 'sge':
+        inspect_sge_cluster(ssh, node_information)
     ssh.close()
     return node_information
 
