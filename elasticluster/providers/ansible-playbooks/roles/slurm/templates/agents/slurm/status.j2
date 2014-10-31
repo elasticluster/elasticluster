@@ -1,0 +1,20 @@
+#!/bin/sh
+# -*- mode: shell-script -*-
+
+PENDING=$(squeue -h -t PENDING |wc -l)
+USEDNODES=$[$(squeue -h -t RUNNING | tr -s ' ' | cut -d ' ' -f 8|paste -sd+)]
+
+AVNODES=$(sinfo -h -r | tr -s ' ' | cut -d ' ' -f 4)
+
+showcontrol show node
+NodeName=compute006 Arch=x86_64 CoresPerSocket=1
+   CPUAlloc=4 CPUErr=0 CPUTot=4 CPULoad=4.03 Features=(null)
+   Gres=(null)
+   NodeAddr=compute006 NodeHostName=compute006
+   OS=Linux RealMemory=7795 AllocMem=4000 Sockets=4 Boards=1
+   State=ALLOCATED ThreadsPerCore=1 TmpDisk=20093 Weight=1
+   BootTime=2014-10-13T15:18:06 SlurmdStartTime=2014-10-13T15:25:58
+   CurrentWatts=0 LowestJoules=0 ConsumedJoules=0
+   ExtSensorsJoules=n/s ExtSensorsWatts=0 ExtSensorsTemp=n/s
+
+

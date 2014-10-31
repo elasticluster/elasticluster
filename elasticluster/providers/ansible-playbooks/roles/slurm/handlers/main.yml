@@ -1,6 +1,6 @@
 ---
 - name: restart slurm
-  action: service name=slurm-llnl state=restarted
+  action: service name={{slurm_name}} state=restarted
 
 - name: restart munge
   action: service name=munge state=restarted
