@@ -575,6 +575,9 @@ class SshFrontend(AbstractCommand):
             return
 
         try:
+            # XXX: ugly fix.
+            # `ssh_to` is loaded from saved cluster. To allow overriding it from the configuration file, we have to modify it here!
+            cluster.ssh_to = configurator.cluster_conf[cluster.extra['template']]['cluster'].get('ssh_to', cluster.ssh_to)
             frontend = cluster.get_frontend_node()
             # ensure we can connect to the host
             if not frontend.preferred_ip:
@@ -633,6 +636,7 @@ class SftpFrontend(AbstractCommand):
             return
 
         try:
+            cluster.ssh_to = configurator.cluster_conf[cluster.extra['template']]['cluster'].get('ssh_to', cluster.ssh_to)
             frontend = cluster.get_frontend_node()
         except NodeNotFound, ex:
             log.error("Unable to connect to the frontend node: %s" % str(ex))
