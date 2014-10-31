@@ -25,7 +25,7 @@ MaxJobId=4294901760
 #GroupUpdateForce=0
 # 
 #GroupUpdateTime=600 
-JobCheckpointDir=/var/lib/slurm-llnl/checkpoint 
+JobCheckpointDir=/var/lib/{{slurm_name}}/checkpoint 
 #JobCredentialPrivateKey=
 #JobCredentialPublicCertificate=
 #
@@ -58,17 +58,17 @@ ProctrackType=proctrack/linuxproc
 #
 ReturnToService=2
 #SallocDefaultCommand= 
-SlurmctldPidFile=/var/run/slurm-llnl/slurmctld.pid
+SlurmctldPidFile=/var/run/{{slurm_name}}/slurmctld.pid
 SlurmctldPort=6817
 #
-SlurmdPidFile=/var/run/slurm-llnl/slurmd.pid
+SlurmdPidFile=/var/run/{{slurm_name}}/slurmd.pid
 SlurmdPort=6818
-SlurmdSpoolDir=/var/lib/slurm-llnl/slurmd
+SlurmdSpoolDir=/var/lib/{{slurm_name}}/slurmd
 SlurmUser=slurm
 #
 #SrunEpilog=
 #SrunProlog=
-StateSaveLocation=/var/lib/slurm-llnl/slurmctld
+StateSaveLocation=/var/lib/{{slurm_name}}/slurmctld
 SwitchType=switch/none
 #
 # TaskEpilog=/site/apps/slurm/bin/task_epilog
@@ -155,9 +155,9 @@ JobCompType=jobcomp/filetxt
 JobAcctGatherFrequency=30
 JobAcctGatherType=jobacct_gather/none
 SlurmctldDebug=3
-SlurmctldLogFile=/var/log/slurm-llnl/slurmctld.log
+SlurmctldLogFile=/var/log/{{slurm_name}}/slurmctld.log
 SlurmdDebug=3
-SlurmdLogFile=/var/log/slurm-llnl/slurmd.log
+SlurmdLogFile=/var/log/{{slurm_name}}/slurmd.log
 #SlurmSchedLogFile= 
 #SlurmSchedLogLevel= 
 # 
