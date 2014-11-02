@@ -24,5 +24,6 @@
    elasticluster/providers/ansible_provider.rst
    elasticluster/providers/ec2_boto.rst
    elasticluster/providers/gce.rst
+   elasticluster/providers/openstack.rst
    elasticluster/repository.rst
    elasticluster/subcommands.rst
