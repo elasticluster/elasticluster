@@ -86,7 +86,7 @@ def cluster_summary(cluster):
                   "%s", str(ex))
     msg = """
 Cluster name:     %s
-Frontend node: %s
+Default ssh to node: %s
 """ % (cluster.name, frontend)
 
     for cls in cluster.nodes:
@@ -156,7 +156,7 @@ class Start(AbstractCommand):
             cluster_name = self.params.cluster
 
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage,
+            self.params.config, storage_path=self.params.storage,
             include_config_dirs=True)
 
         # overwrite configuration
@@ -231,7 +231,7 @@ class Stop(AbstractCommand):
         """
         cluster_name = self.params.cluster
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage,
+            self.params.config, storage_path=self.params.storage,
             include_config_dirs=True)
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -305,7 +305,7 @@ class ResizeCluster(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage,
+            self.params.config, storage_path=self.params.storage,
             include_config_dirs=True)
 
         # Get current cluster configuration
@@ -403,7 +403,7 @@ class ListClusters(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage,
+            self.params.config, storage_path=self.params.storage,
             include_config_dirs=True)
         repository = configurator.create_repository()
         clusters = repository.get_all()
@@ -443,7 +443,7 @@ class ListTemplates(AbstractCommand):
     def execute(self):
 
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage,
+            self.params.config, storage_path=self.params.storage,
             include_config_dirs=True)
         config = configurator.cluster_conf
 
@@ -494,7 +494,7 @@ class ListNodes(AbstractCommand):
         information like id and ip.
         """
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage,
+            self.params.config, storage_path=self.params.storage,
             include_config_dirs=True)
         cluster_name = self.params.cluster
         try:
@@ -532,7 +532,7 @@ class SetupCluster(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage,
+            self.params.config, storage_path=self.params.storage,
             include_config_dirs=True)
         cluster_name = self.params.cluster
         try:
@@ -571,7 +571,7 @@ class SshFrontend(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage,
+            self.params.config, storage_path=self.params.storage,
             include_config_dirs=True)
         cluster_name = self.params.cluster
         try:
@@ -583,10 +583,6 @@ class SshFrontend(AbstractCommand):
             return
 
         try:
-            # XXX: ugly fix.
-            # `ssh_to` is loaded from saved cluster. To allow overriding it from the configuration file, we have to modify it here!
-            cluster.ssh_to = configurator.cluster_conf[cluster.extra['template']]['cluster'].get('ssh_to', cluster.ssh_to)
-            frontend = cluster.get_frontend_node()
             # ensure we can connect to the host
             if not frontend.preferred_ip:
                 # Ensure we can connect to the node, and save the value of `preferred_ip`
@@ -633,7 +629,7 @@ class SftpFrontend(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage,
+            self.params.config, storage_path=self.params.storage,
             include_config_dirs=True)
         cluster_name = self.params.cluster
         try:

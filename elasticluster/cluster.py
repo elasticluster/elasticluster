@@ -120,6 +120,33 @@ class Cluster(object):
         if 'known_hosts_file' not in state:
             self.known_hosts_file = None
 
+    def __update_option(self, cfg, key, attr):
+        oldvalue = getattr(self, attr)
+        if key in cfg and cfg[key] != oldvalue:
+            setattr(self, attr, cfg[key])
+            return oldvalue
+        return False
+
+    def update_config(self, cluster_config, login_config):
+        """Update current configuration.
+
+        This method is usually called after loading a `Cluster`
+        instance from a persistent storage. Note that not all fields
+        are actually updated, but only those that can be safely
+        updated.
+        """
+
+        oldvalue = self.__update_option(cluster_config, 'ssh_to', 'ssh_to')
+        if oldvalue:
+            log.debug("Attribute 'ssh_to' updated: %s -> %s", oldvalue, self.ssh_to)
+
+        for key, attr in [('user_key_private', 'user_key_private'),
+                          ('user_key_public', '_user_key_public'),
+                          ]:
+            oldvalue = self.__update_option(login_config, key, attr)
+            if oldvalue:
+                log.debug("Attribute %s updated: %s -> %s", attr, oldvalue, getattr(self, attr))
+
     def add_node(self, kind, image_id, image_user, flavor,
                  security_group, image_userdata='', name=None, **extra):
         """Adds a new node to the cluster. This factory method provides an

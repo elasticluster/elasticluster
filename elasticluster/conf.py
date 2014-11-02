@@ -241,7 +241,10 @@ class Configurator(object):
             cluster._setup_provider = self.create_setup_provider(cluster.extra['template'])
         if not cluster._cloud_provider:
             cluster._cloud_provider = self.create_cloud_provider(cluster.extra['template'])
-        
+        cluster.update_config(
+            self.cluster_conf[cluster.extra['template']]['cluster'],
+            self.cluster_conf[cluster.extra['template']]['login']
+        )
         return cluster
 
     def create_setup_provider(self, cluster_template, name=None):
