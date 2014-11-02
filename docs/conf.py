@@ -58,6 +58,8 @@ MOCK_MODULES = [
     'cli.app',
     'configobj',
     'google_api_python_client',
+    'novaclient',
+    'novaclient.exceptions',
     'httplib2',
     'oauth2client',
     'oauth2client.client',
