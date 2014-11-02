@@ -43,32 +43,41 @@ from elasticluster.repository import ClusterRepository
 
 
 class Configurator(object):
-    """The Configurator is responsible for (I) keeping track of the
-    configuration and (II) offer factory methods to create all kind of
-    objects that need information from the configuration.
+    """The `Configurator` class is responsible for
 
-    The cluster configuration dictionary is structured in the following way:
-    (see an example @
-     https://github.com/gc3-uzh-ch/elasticluster/wiki/Configuration-Module)
-    ::
+    1) keeping track of the configuration and 
 
-        { "<cluster_template>" : {
-            "setup" : { properties of the setup section },
-            "cloud" : { properties of the cloud section },
-            "login" : { properties of the login section },
-            "cluster" : { properties of the cluster section },
-            "nodes": {  "<node_kind>" : { properties of the node},
-                        "<node_kind>" : { properties of the node},
-                    },
-            },
-         "<cluster_template>" : {
-            (see above)
-            }
-         }
+    2) offer factory methods to create all kind of objects that need
+    information from the configuration.
 
-   :param dict cluster_conf: see description above
-   :param str storage_path: path to store data
-   :raises MultipleInvalid: configuration validation
+    The cluster configuration dictionary is structured in the
+    following way: (see an example @
+    https://github.com/gc3-uzh-ch/elasticluster/wiki/Configuration-Module)::
+
+          { "<cluster_template>" : {
+              "setup" : { properties of the setup section },
+              "cloud" : { properties of the cloud section },
+              "login" : { properties of the login section },
+              "cluster" : { properties of the cluster section },
+              "nodes": {  "<node_kind>" : { properties of the node},
+                          "<node_kind>" : { properties of the node},
+                      },
+              },
+           "<cluster_template>" : {
+              (see above)
+              }
+           }
+
+
+    It is also responsible for loading a cluster from a valid
+    `repository.AbstractClusterRepository`.
+
+    :param dict cluster_conf: see description above
+
+    :param str storage_path: path to store data
+
+    :raises MultipleInvalid: configuration validation
+
     """
 
     setup_providers_map = {"ansible": AnsibleSetupProvider, }
@@ -166,11 +175,12 @@ class Configurator(object):
         :param str template: name of the cluster template
 
         :param str name: name of the cluster. If not defined, the cluster
-        will be named after the template.
+                         will be named after the template.
 
-        :return: :py:class:`elasticluster.cluster.cluster` instance
+        :return: :py:class:`elasticluster.cluster.cluster` instance:
 
         :raises ConfigurationError: cluster template not found in config
+
         """
         if not name:
             name = template
@@ -229,6 +239,9 @@ class Configurator(object):
         cluster = repository.get(cluster_name)
         if not cluster._setup_provider:
             cluster._setup_provider = self.create_setup_provider(cluster.extra['template'])
+        if not cluster._cloud_provider:
+            cluster._cloud_provider = self.create_cloud_provider(cluster.extra['template'])
+        
         return cluster
 
     def create_setup_provider(self, cluster_template, name=None):
