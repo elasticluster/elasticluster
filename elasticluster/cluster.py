@@ -111,7 +111,8 @@ class Cluster(object):
 
     def __getstate__(self):
         result = self.__dict__.copy()
-        result['setup_provider'] = None
+        result['_setup_provider'] = None
+        result['_cloud_provider'] = None
         return result
 
     def __setstate__(self, state):
