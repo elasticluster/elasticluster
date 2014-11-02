@@ -57,6 +57,9 @@ Manages the connection to the cloud webservice and offers all functionality
 used by the cluster to provision instances. Elasticluster offers two
 different cloud providers at the current state:
 
+* :py:class:`~elasticluster.providers.openstack.OpenStackCloudProvider`
+    Cloud provider to connect to an OpenStack cloud.
+
 * :py:class:`~elasticluster.providers.ec2_boto.BotoCloudProvider`
     Cloud provider to connect to EC2 compliant web services (e.g
     Amazon, Openstack, etc.)
