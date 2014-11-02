@@ -91,12 +91,38 @@ class Configurator(object):
         validator.validate()
 
     @classmethod
-    def fromConfig(cls, configfiles, storage_path=None):
+    def fromConfig(cls, configfiles, storage_path=None,
+                   include_config_dirs=False):
         """Helper method to initialize Configurator from an ini file.
 
-        :param str configfile: path to the ini file(s)
+        :param str configfiles: path to the ini file(s). For each file
+                                in `configfiles`, if a directory `*.d`
+                                exists, also reads all the `*.conf`
+                                files in that directory.
+
+        :param str storage_path: path to the storage directory. If
+                                 defined, a
+                                 :py:class:`repository.ClusterRepository`
+                                 class will be instantiated.
+
+        :param str include_config_dirs: Default is False. If True, for
+                               each `file` in `configfiles` also files
+                               in `file.d` ending with `.conf` will be
+                               loaded
+
         :return: :py:class:`Configurator`
+
         """
+        # FIXME: This is not python3 compatible!
+        if isinstance(configfiles, basestring):
+            configfiles = [configfiles]
+        for cfgfile in configfiles[:]:
+            cfgdir = cfgfile + '.d'
+            if os.path.isfile(cfgfile) and os.path.isdir(cfgdir):
+                for fname in os.listdir(cfgdir):
+                    fullpath = os.path.join(cfgdir, fname)
+                    if fname.endswith('.conf') and fullpath not in configfiles:
+                        configfiles.append(fullpath)
         config_reader = ConfigReader(configfiles)
         conf = config_reader.read_config()
         return Configurator(conf, storage_path=storage_path)

@@ -145,15 +145,6 @@ class ElastiCluster(cli.app.CommandLineApp):
                         self.params.config)
                     sys.exit(1)
 
-        self.params.config_files = [self.params.config]
-        cfgdir = "%s.d" % self.params.config
-        if os.path.isdir(cfgdir):
-            # Directory ~/.elasticluster/config.d found.
-            # Find configuration files to include
-            for fname in os.listdir(cfgdir):
-                if fname.endswith('.conf'):
-                    # Valid (?) config file. Add it to the extra config files list
-                    self.params.config_files.append(os.path.join(cfgdir, fname))
 
         if self.params.func:
             try:

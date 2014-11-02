@@ -156,7 +156,8 @@ class Start(AbstractCommand):
             cluster_name = self.params.cluster
 
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage,
+            include_config_dirs=True)
 
         # overwrite configuration
         for option, value in self.params.extra_conf.iteritems():
@@ -230,7 +231,8 @@ class Stop(AbstractCommand):
         """
         cluster_name = self.params.cluster
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage,
+            include_config_dirs=True)
         try:
             cluster = configurator.load_cluster(cluster_name)
         except (ClusterNotFound, ConfigurationError), ex:
@@ -303,7 +305,8 @@ class ResizeCluster(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage,
+            include_config_dirs=True)
 
         # Get current cluster configuration
         cluster_name = self.params.cluster
@@ -400,7 +403,8 @@ class ListClusters(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage,
+            include_config_dirs=True)
         repository = configurator.create_repository()
         clusters = repository.get_all()
 
@@ -439,7 +443,8 @@ class ListTemplates(AbstractCommand):
     def execute(self):
 
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage,
+            include_config_dirs=True)
         config = configurator.cluster_conf
 
         print("""%d cluster templates found in configuration file.""" % len(config))
@@ -489,7 +494,8 @@ class ListNodes(AbstractCommand):
         information like id and ip.
         """
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage,
+            include_config_dirs=True)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -526,7 +532,8 @@ class SetupCluster(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage,
+            include_config_dirs=True)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -564,7 +571,8 @@ class SshFrontend(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage,
+            include_config_dirs=True)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -625,7 +633,8 @@ class SftpFrontend(AbstractCommand):
 
     def execute(self):
         configurator = Configurator.fromConfig(
-            self.params.config_files, storage_path=self.params.storage)
+            self.params.config_files, storage_path=self.params.storage,
+            include_config_dirs=True)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -673,7 +682,8 @@ class GC3Config(AbstractCommand):
         Load the cluster and build a GC3Pie configuration snippet.
         """
         configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage)
+            self.params.config, storage_path=self.params.storage,
+            include_config_dirs=True)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
