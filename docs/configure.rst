@@ -567,6 +567,15 @@ Optional configuration keys
     will be connected to. Only supported when the cloud provider is
     `ec2_boto` or `openstack`
 
+``<class>_min_nodes``
+
+    Define the minimum amount of nodes of type `<class>` that must be
+    up&running to configure the cluster. When starting a cluster,
+    creation of some instances may fail. If at least min_nodes are
+    started correctly (i.e. are not in error state), the cluster is
+    configured anyway, otherwise creation of the cluster will fail.
+
+
 
 Examples
 --------
