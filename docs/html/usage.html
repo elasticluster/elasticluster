@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -15,7 +13,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -37,9 +35,6 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="playbooks.html" title="Playbooks distributed with elasticluster"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -57,14 +52,19 @@
   <div class="section" id="usage">
 <h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
 <p>The syntax of the elasticluster command is:</p>
-<div class="highlight-python"><pre>elasticluster [-v] [-s PATH] [-c PATH] [subcommand] [subcommand args and opts]</pre>
+<div class="highlight-python"><div class="highlight"><pre>elasticluster [-v] [-s PATH] [-c PATH] [subcommand] [subcommand args and opts]
+</pre></div>
 </div>
 <p>The following options are general and are accepted by any subcommand:</p>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">-h,</span> <span class="pre">--help</span></tt></dt>
 <dd>Show an help message and exits.</dd>
 <dt><tt class="docutils literal"><span class="pre">-v,</span> <span class="pre">--verbose</span></tt></dt>
-<dd>Adding one or more <cite>-v</cite> will increase the verbosity accordingly.</dd>
+<dd>Adding one or more <cite>-v</cite> will increase the verbosity. Usually
+elasticluster creates new VMs in parallel, to speedup the process,
+but if you run it with at least <em>four</em> <cite>-v</cite> options, elasticluster
+will not fork and will start the VMs sequentially. Useful for
+debugging.</dd>
 </dl>
 <p><tt class="docutils literal"><span class="pre">-s</span> <span class="pre">PATH,</span> <span class="pre">--storage</span> <span class="pre">PATH</span></tt></p>
 <blockquote>
@@ -77,7 +77,9 @@ be able to access the cluster anymore!</p>
 <p><tt class="docutils literal"><span class="pre">-c</span> <span class="pre">PATH,</span> <span class="pre">--config</span> <span class="pre">PATH</span></tt></p>
 <blockquote>
 <div>Path to the configuration file. By default this is
-<tt class="docutils literal"><span class="pre">~/.elasticluster/config</span></tt></div></blockquote>
+<tt class="docutils literal"><span class="pre">~/.elasticluster/config</span></tt>. If a directory named <tt class="docutils literal"><span class="pre">&lt;PATH&gt;.d</span></tt>
+(or, by default, <tt class="docutils literal"><span class="pre">~/.elasticluster/config.d</span></tt>) exists, all files
+contained in that directory and ending in <cite>.conf</cite> are read too.</div></blockquote>
 <p>elasticluster provides multiple <cite>subcommands</cite> to start, stop, resize,
 inspect your clusters. The available subcommands are:</p>
 <dl class="docutils">
@@ -118,14 +120,16 @@ configuration, defined in the configuration file. You can start as
 many clusters you want using the same cluster configuration, by
 providing different <tt class="docutils literal"><span class="pre">--name</span></tt> options.</p>
 <p>Basic usage of the command is:</p>
-<div class="highlight-python"><pre>usage: elasticluster start [-h] [-v] [-n CLUSTER_NAME]
+<div class="highlight-python"><div class="highlight"><pre>usage: elasticluster start [-h] [-v] [-n CLUSTER_NAME]
                            [--nodes N1:GROUP[,N2:GROUP2,...]] [--no-setup]
-                           cluster</pre>
+                           cluster
+</pre></div>
 </div>
 <p><tt class="docutils literal"><span class="pre">cluster</span></tt> is the name of a <cite>cluster</cite> section in the configuration
 file. For instance, to start the cluster defined by the section
 <tt class="docutils literal"><span class="pre">[cluster/slurm]</span></tt> you must run the command:</p>
-<div class="highlight-python"><pre>elasticluster start slurm</pre>
+<div class="highlight-python"><div class="highlight"><pre>elasticluster start slurm
+</pre></div>
 </div>
 <p>The following options are available:</p>
 <dl class="docutils">
@@ -150,7 +154,8 @@ type of nodes in the configuration file:</p>
 </div>
 <p>and you want to run instead 10 data nodes and 10 task nodes, you
 can run elasticluster with option:</p>
-<div class="highlight-python"><pre>elasticluster ... --nodes 10:hadoop-data,10:hadoop-task</pre>
+<div class="highlight-python"><div class="highlight"><pre>elasticluster ... --nodes 10:hadoop-data,10:hadoop-task
+</pre></div>
 </div>
 </div></blockquote>
 <dl class="docutils">
@@ -177,7 +182,7 @@ output (including output of ansible command) to help you understanding
 what is actually happening.</p>
 <p>After the setup process is done a summary of the created cluster is
 printed, similar to the following:</p>
-<div class="highlight-python"><pre>Cluster name:     slurm
+<div class="highlight-python"><div class="highlight"><pre>Cluster name:     slurm
 Cluster template: slurm
 Frontend node: frontend001
 - compute nodes: 2
@@ -189,7 +194,8 @@ To login on the frontend node, run the command:
 
 To upload or download files to the cluster, use the command:
 
-    elasticluster sftp slurm</pre>
+    elasticluster sftp slurm
+</pre></div>
 </div>
 <p>The first line tells you the name of the cluster, which is the one you
 are supposed to use with the <strong>stop</strong>, <strong>list-nodes</strong>, <strong>resize</strong>,
@@ -211,7 +217,8 @@ delete all information related to the cluster saved on the local disk.</p>
 <p><strong>WARNING</strong>: elasticluster doesn&#8217;t do any kind of test to check if the
 cluster is <em>used</em>!</p>
 <p>Basic usage of the command is:</p>
-<div class="highlight-python"><pre>usage: elasticluster stop [-h] [-v] [--force] [--yes] cluster</pre>
+<div class="highlight-python"><div class="highlight"><pre>usage: elasticluster stop [-h] [-v] [--force] [--yes] cluster
+</pre></div>
 </div>
 <p>Like the <strong>start</strong> command, <tt class="docutils literal"><span class="pre">cluster</span></tt> is the name of a <cite>cluster</cite>
 section in the configuration file.</p>
@@ -239,10 +246,10 @@ modification, unless this option is given.</div></blockquote>
 <p>The <strong>list</strong> command print a list of all the cluster that have been
 started. For each cluster, it will print a few information including
 the cloud used and the number of nodes started for each node type:</p>
-<div class="highlight-python"><pre>$ elasticluster list
+<div class="highlight-python"><div class="highlight"><pre>$ elasticluster list
 
 The following clusters have been started.
-Please note that there's no guarantee that they are fully configured:
+Please note that there&#39;s no guarantee that they are fully configured:
 
 centossge
 ---------
@@ -266,7 +273,8 @@ slurm13.04
   template:       slurm13.04
   cloud:          hobbes
   - frontend nodes: 1
-  - compute nodes: 2</pre>
+  - compute nodes: 2
+</pre></div>
 </div>
 </div>
 <div class="section" id="the-list-nodes-command">
@@ -274,7 +282,8 @@ slurm13.04
 <p>The <strong>list-nodes</strong> command print information on the nodes belonging to
 a specific cluster.</p>
 <p>Basic usage of the command is:</p>
-<div class="highlight-python"><pre>usage: elasticluster list-nodes [-h] [-v] [-u] cluster</pre>
+<div class="highlight-python"><div class="highlight"><pre>usage: elasticluster list-nodes [-h] [-v] [-u] cluster
+</pre></div>
 </div>
 <p><tt class="docutils literal"><span class="pre">cluster</span></tt> is the name of a cluster that has been <em>started</em> previously.</p>
 <p>The following options are available:</p>
@@ -290,7 +299,7 @@ a specific cluster.</p>
 provider to get up-to-date information, unless <cite>-u</cite> option is
 given.</div></blockquote>
 <p>Example:</p>
-<div class="highlight-python"><pre>$ elasticluster list-nodes centossge
+<div class="highlight-python"><div class="highlight"><pre>$ elasticluster list-nodes centossge
 
 Cluster name:     centossge
 Cluster template: centossge
@@ -326,7 +335,8 @@ compute nodes:
     public IP:   130.60.24.48
     private IP:  10.10.10.29
     instance id: i-0000299e
-    instance flavor: m1.small</pre>
+    instance flavor: m1.small
+</pre></div>
 </div>
 </div>
 <div class="section" id="the-list-templates-command">
@@ -335,13 +345,14 @@ compute nodes:
 templates defined in the configuration file with a few information for
 each one of them.</p>
 <p>Basic usage of the command is:</p>
-<div class="highlight-python"><pre>usage: elasticluster list-templates [-h] [-v] [clusters [clusters ...]]</pre>
+<div class="highlight-python"><div class="highlight"><pre>usage: elasticluster list-templates [-h] [-v] [clusters [clusters ...]]
+</pre></div>
 </div>
 <p><cite>clusters</cite> is used to limit the clusters to be listed and uses a
 globbing-like pattern matching. For instance, to show all the cluster
 templates that contains the word <tt class="docutils literal"><span class="pre">slurm</span></tt> in their name you can run
 the following:</p>
-<div class="highlight-python"><pre>$ elasticluster list-templates *slurm*
+<div class="highlight-python"><div class="highlight"><pre>$ elasticluster list-templates *slurm*
 11 cluster templates found.
 
 name:     aws-slurm
@@ -362,7 +373,8 @@ frontend nodes: 1
 name:     slurm13.04
 cloud:     hobbes
 compute nodes: 2
-frontend nodes: 1</pre>
+frontend nodes: 1
+</pre></div>
 </div>
 </div>
 <div class="section" id="the-setup-command">
@@ -372,7 +384,8 @@ again. It is usually needed only when you customize and update your
 playbooks, in order to re-configure the cluster, since the <strong>start</strong>
 command already run <cite>ansible</cite> when all the machines are started.</p>
 <p>Basic usage of the command is:</p>
-<div class="highlight-python"><pre>usage: elasticluster setup [-h] [-v] cluster</pre>
+<div class="highlight-python"><div class="highlight"><pre>usage: elasticluster setup [-h] [-v] cluster
+</pre></div>
 </div>
 <p><tt class="docutils literal"><span class="pre">cluster</span></tt> is the name of a cluster that has been <em>started</em> previously.</p>
 <p>The following options are available:</p>
@@ -407,10 +420,11 @@ machines already configured (unless <tt class="docutils literal"><span class="pr
 <p>Growing a cluster (adding nodes to the cluster) should be supported by
 all the playbooks included in the elasticluster package.</p>
 <p>Basic usage of the command is:</p>
-<div class="highlight-python"><pre>usage: elasticluster resize [-h] [-a N1:GROUP1[,N2:GROUP2]]
+<div class="highlight-python"><div class="highlight"><pre>usage: elasticluster resize [-h] [-a N1:GROUP1[,N2:GROUP2]]
                             [-r N1:GROUP1[,N2:GROUP2]] [-v] [--no-setup]
                             [--yes]
-                            cluster</pre>
+                            cluster
+</pre></div>
 </div>
 <p><tt class="docutils literal"><span class="pre">cluster</span></tt> is the name of a cluster that has been <em>started</em> previously.</p>
 <p>The following options are available:</p>
@@ -433,7 +447,8 @@ the default values stored in the configuration file:</p>
 </div>
 <p>and assuming you want to <em>add</em> 5 more data nodes and 10 more task
 nodes, you can run:</p>
-<div class="highlight-python"><pre>elasticluster resize -a 5:hadoop-data,10:hadoop-task</pre>
+<div class="highlight-python"><div class="highlight"><pre>elasticluster resize -a 5:hadoop-data,10:hadoop-task
+</pre></div>
 </div>
 </div></blockquote>
 <p><tt class="docutils literal"><span class="pre">-r</span> <span class="pre">N1:GROUP1[,N2:GROUP2],</span> <span class="pre">--remove</span> <span class="pre">N1:GROUP1[,N2:GROUP2]</span></tt></p>
@@ -474,25 +489,26 @@ the first host of the group specified by the <tt class="docutils literal"><span 
 <span class="pre">list-nodes</span> <span class="pre">&lt;cluster&gt;</span></tt> will show which host will be used as frontend
 node.</p>
 <p>The usage of the <cite>ssh</cite> command is as follow:</p>
-<div class="highlight-python"><pre>elasticluster ssh &lt;clustername&gt; [ -- ssh arguments]</pre>
+<div class="highlight-python"><div class="highlight"><pre>elasticluster ssh &lt;clustername&gt; [ -- ssh arguments]
+</pre></div>
 </div>
 <p>All the options and arguments following the <tt class="docutils literal"><span class="pre">--</span></tt> characters will be
 passed directly to the <tt class="docutils literal"><span class="pre">ssh</span></tt> command.</p>
 <p>For instance, if you just want to run the <tt class="docutils literal"><span class="pre">hostname</span> <span class="pre">-f</span></tt> command on
 the frontend of the cluster you can run:</p>
-<div class="highlight-python"><pre>elasticluster ssh &lt;clustername&gt; -- hostname -f</pre>
+<div class="highlight-python"><div class="highlight"><pre>elasticluster ssh &lt;clustername&gt; -- hostname -f
+</pre></div>
 </div>
-<p>Note that since the IP address of the virtual machines are likely to
-be reused by different virtual machines, in order to avoid annoying
-warning messages from ssh elasticluster will add the following options
-to the <cite>ssh</cite> command line:</p>
+<p>Note that elasticluster will save in
+<cite>~/.elasticluster/storage/&lt;clustername&gt;.known_hosts</cite> the ssh host keys
+of the VM instances after the first connection, and re-use them to
+protect you from a Man-In-The-Middle attack. Therefore, the following
+options are passed to <cite>ssh</cite> command line:</p>
 <dl class="docutils">
-<dt><tt class="docutils literal"><span class="pre">-o</span> <span class="pre">UserKnownHostsFile=/dev/null</span></tt></dt>
-<dd>Use an empty virtual file to check the host key of the remote
-machine.</dd>
-<dt><tt class="docutils literal"><span class="pre">-o</span> <span class="pre">StrictHostKeyChecking=no</span></tt></dt>
-<dd>Disable check of the host key of the remove machine, without
-prompting to ask if the key can be accepted or not.</dd>
+<dt><tt class="docutils literal"><span class="pre">-o</span> <span class="pre">UserKnownHostsFile=~/.elasticluster/storage/&lt;clustername&gt;.known_hosts</span></tt></dt>
+<dd>Use the generated known hosts file to protect against MIIT attacks.</dd>
+<dt><tt class="docutils literal"><span class="pre">-o</span> <span class="pre">StrictHostKeyChecking=yes</span></tt></dt>
+<dd>Enable check of the host key of the remote machine.</dd>
 </dl>
 </div>
 <div class="section" id="the-sftp-command">
@@ -510,21 +526,21 @@ the first host of the group specified by the <tt class="docutils literal"><span 
 <span class="pre">list-nodes</span> <span class="pre">&lt;cluster&gt;</span></tt> will show which host will be used as frontend
 node.</p>
 <p>The usage of the <cite>sftp</cite> command is as follow:</p>
-<div class="highlight-python"><pre>elasticluster sftp &lt;clustername&gt; [ -- sftp arguments]</pre>
+<div class="highlight-python"><div class="highlight"><pre>elasticluster sftp &lt;clustername&gt; [ -- sftp arguments]
+</pre></div>
 </div>
 <p>All the options and arguments following the <tt class="docutils literal"><span class="pre">--</span></tt> characters will be
 passed directly to the <tt class="docutils literal"><span class="pre">sftp</span></tt> command.</p>
-<p>Note that since the IP address of the virtual machines are likely to
-be reused by different virtual machines, in order to avoid annoying
-warning messages from ssh elasticluster will add the following options
-to the <cite>sftp</cite> command line:</p>
+<p>Note that elasticluster will save in
+<cite>~/.elasticluster/storage/&lt;clustername&gt;.known_hosts</cite> the ssh host keys
+of the VM instances after the first connection, and re-use them to
+protect you from a Man-In-The-Middle attack. Therefore, the following
+options are passed to <cite>sftp</cite> command line:</p>
 <dl class="docutils">
-<dt><tt class="docutils literal"><span class="pre">-o</span> <span class="pre">UserKnownHostsFile=/dev/null</span></tt></dt>
-<dd>Use an empty virtual file to check the host key of the remote
-machine.</dd>
-<dt><tt class="docutils literal"><span class="pre">-o</span> <span class="pre">StrictHostKeyChecking=no</span></tt></dt>
-<dd>Disable check of the host key of the remove machine, without
-prompting to ask if the key can be accepted or not.</dd>
+<dt><tt class="docutils literal"><span class="pre">-o</span> <span class="pre">UserKnownHostsFile=~/.elasticluster/storage/&lt;clustername&gt;.known_hosts</span></tt></dt>
+<dd>Use the generated known hosts file to protect against MIIT attacks.</dd>
+<dt><tt class="docutils literal"><span class="pre">-o</span> <span class="pre">StrictHostKeyChecking=yes</span></tt></dt>
+<dd>Enable check of the host key of the remote machine.</dd>
 </dl>
 </div>
 </div>
@@ -586,9 +602,6 @@ prompting to ask if the key can be accepted or not.</dd>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="playbooks.html" title="Playbooks distributed with elasticluster"
              >next</a> |</li>
         <li class="right" >
@@ -599,7 +612,7 @@ prompting to ask if the key can be accepted or not.</dd>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Grid Computing Competence Centre, University of Zurich.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

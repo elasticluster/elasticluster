@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -15,7 +13,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -61,10 +59,36 @@ setup a cluster is stored in a configuration file. The default
 configuration file is stored in your home directory:
 <tt class="docutils literal"><span class="pre">~/.elasticluster/config</span></tt> but you can specify a different location
 from the command line with the <cite>-c</cite> option.</p>
+<p>In case the directory <cite>~/.elasticluster/config.d</cite> exists (or, if you
+run with <cite>-c &lt;PATH&gt;</cite>, the directory <cite>&lt;PATH&gt;.d</cite>), all files named
+<cite>*.conf</cite> contained in that directory are read and parsed. In this way,
+you can handle multiple clusters easily by distributing the
+configuration over multiple files, and disable only some of them by
+renaming the files.</p>
 <p>When <cite>elasticluster</cite> is run for the first time, if no configuration
-file is found it will copy a <a class="reference external" href="https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template&gt;">template configuration file</a> in
+file is found it will copy a <a class="reference external" href="https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template">template configuration file</a> in
 <tt class="docutils literal"><span class="pre">~/.elasticluster/config</span></tt>. Such template is fully commented and self
 documented.</p>
+<p>Therefore, after installing <cite>elasticluster</cite> for the first time, we
+suggest to run the following command:</p>
+<div class="highlight-python"><div class="highlight"><pre>elasticluster list-templates
+</pre></div>
+</div>
+<p>If you don&#8217;t already have a configuration file, this command will
+create one for you. Of course, the file is not complete, as it does
+not contain any authentication information, and you will get an error
+similar to the following:</p>
+<div class="highlight-python"><div class="highlight"><pre>WARNING:gc3.elasticluster:Deploying default configuration file to /home/antonio/.elasticluster/config.
+WARNING:gc3.elasticluster:Ignoring Cluster `ipython`: required key not provided @ data[&#39;image_user&#39;]
+WARNING:gc3.elasticluster:Ignoring cluster `ipython`.
+Error validating configuration file &#39;/home/antonio/.elasticluster/config&#39;: `required key not provided @ data[&#39;image_user&#39;]`
+</pre></div>
+</div>
+<p>In this case, you have to edit the configuration file in
+<tt class="docutils literal"><span class="pre">~/.elasticluster/config</span></tt> and update it with the correct values.</p>
+<p>Please refer to the following section to understand the syntax of the
+configuration file and to know which options you need to set in order
+to use <cite>elasticluster</cite>.</p>
 <div class="section" id="basic-syntax-of-the-configuration-file">
 <h2>Basic syntax of the configuration file<a class="headerlink" href="#basic-syntax-of-the-configuration-file" title="Permalink to this headline">¶</a></h2>
 <p>The file is parsed by ConfigParser module and has a syntax similar
@@ -94,7 +118,8 @@ a valid configuration file.</p>
 <div class="section" id="cloud-section">
 <h2>Cloud Section<a class="headerlink" href="#cloud-section" title="Permalink to this headline">¶</a></h2>
 <p>A <tt class="docutils literal"><span class="pre">cloud</span></tt> section named <tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
-<div class="highlight-python"><pre>[cloud/&lt;name&gt;]</pre>
+<div class="highlight-python"><div class="highlight"><pre>[cloud/&lt;name&gt;]
+</pre></div>
 </div>
 <p>The cloud section defines all properties needed to connect to a
 specific cloud provider.</p>
@@ -102,22 +127,26 @@ specific cloud provider.</p>
 access to different cloud providers and want to deploy different
 clusters in different clouds. The mapping between cluster and cloud
 provider is done in the <cite>cluster</cite> section (see later).</p>
-<p>Currently two cloud providers are available:
-- boto: supports OpenStack and Amazon EC2
-- google: supports Google Compute Engine
-Therefore the following configuration option needs to be set in the cloud
+<p>Currently three cloud providers are available:</p>
+<ul class="simple">
+<li>openstack: supports OpenStack cloud</li>
+<li>boto: supports Amazon EC2 and compatible cloud</li>
+<li>google: supports Google Compute Engine</li>
+</ul>
+<p>Therefore the following configuration option needs to be set in the cloud
 section:</p>
 <p><tt class="docutils literal"><span class="pre">provider</span></tt></p>
 <blockquote>
 <div>the driver to use to connect to the cloud provider.
-<cite>boto</cite> or <cite>google</cite></div></blockquote>
+<cite>ec2_boto</cite>, <cite>openstack</cite> or <cite>google</cite></div></blockquote>
 <div class="section" id="valid-configuration-keys-for-boto">
 <h3>Valid configuration keys for <cite>boto</cite><a class="headerlink" href="#valid-configuration-keys-for-boto" title="Permalink to this headline">¶</a></h3>
 <p><tt class="docutils literal"><span class="pre">ec2_url</span></tt></p>
 <blockquote>
 <div><p>the url of the EC2 endpoint. For Amazon is probably
 something like:</p>
-<div class="highlight-python"><pre>https://ec2.us-east-1.amazonaws.com</pre>
+<div class="highlight-python"><div class="highlight"><pre>https://ec2.us-east-1.amazonaws.com
+</pre></div>
 </div>
 <p>replace <tt class="docutils literal"><span class="pre">us-east-1</span></tt> with the zone you want to use
 while for OpenStack you can get it from the web interface</p>
@@ -133,11 +162,19 @@ provider gave you to access its cloud resources.</div></blockquote>
 <p><tt class="docutils literal"><span class="pre">ec2_region</span></tt></p>
 <blockquote>
 <div>the availability zone you want to use.</div></blockquote>
-<p><tt class="docutils literal"><span class="pre">auto_ip_assignment</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">vpc</span></tt></p>
 <blockquote>
-<div>if the cloud provider assigns public ip automatically (True or False).
-The default value for this property is <cite>True</cite>. You don&#8217;t have to specify it
-in case the cloud provider assigns public ips automatically.</div></blockquote>
+<div>the name or ID of the AWS Virtual Private Cloud to provision
+resources in.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">request_floating_ip</span></tt></p>
+<blockquote>
+<div>request assignment of a floating IP when the instance is
+started. Valid values: <cite>True</cite>, <cite>False</cite>.
+Some cloud providers does not automatically assign a public IP
+to the instances, but this is often needed if you want to connect
+to the VM from outside. Setting <tt class="docutils literal"><span class="pre">request_floating_ip</span></tt> to <cite>True</cite>
+will force <cite>elasticluster</cite> to request such a floating IP if the
+instance doesn&#8217;t get one automatically.</div></blockquote>
 </div>
 <div class="section" id="valid-configuration-keys-for-google">
 <h3>Valid configuration keys for <cite>google</cite><a class="headerlink" href="#valid-configuration-keys-for-google" title="Permalink to this headline">¶</a></h3>
@@ -150,38 +187,82 @@ in case the cloud provider assigns public ips automatically.</div></blockquote>
 <p><tt class="docutils literal"><span class="pre">gce_project_id</span></tt></p>
 <blockquote>
 <div>The project id of your Google Compute Engine project</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">zone</span></tt></p>
+<blockquote>
+<div>The GCE zone to be used. Default is <cite>us-central1-a</cite>.</div></blockquote>
+</div>
+<div class="section" id="valid-configuration-keys-for-openstack">
+<h3>Valid configuration keys for <em>openstack</em><a class="headerlink" href="#valid-configuration-keys-for-openstack" title="Permalink to this headline">¶</a></h3>
+<p><tt class="docutils literal"><span class="pre">auth_url</span></tt>:</p>
+<blockquote>
+<div>The URL of the keystone service (main entry point for OpenStack
+clouds). If an environment variable <cite>OS_AUTH_URL</cite> is set when
+elasticluster starts, the config option will be ignored and the
+value of the variable will be used instead.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">username</span></tt></p>
+<blockquote>
+<div>OpenStack username. If an environment variable <cite>OS_USERNAME</cite> is
+set when elasticluster starts, the config option will be ignored
+and the value of the variable will be used instead.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">password</span></tt></p>
+<blockquote>
+<div>OpenStack password. If an environment variable <cite>OS_PASSWORD</cite> is
+set when elasticluster starts, the config option will be ignored
+and the value of the variable will be used instead.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">project_name</span></tt></p>
+<blockquote>
+<div>OpenStack project to use (also known as <cite>tenant</cite>). If an
+environment variable <cite>OS_TENANT_NAME</cite> is set when elasticluster
+starts, the config option will be ignored and the value of the
+variable will be used instead.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">region_name</span></tt></p>
+<blockquote>
+<div>OpenStack region (optional)</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">request_floating_ip</span></tt></p>
+<blockquote>
+<div>request assignment of a floating IP when the instance is
+started. Valid values: <cite>True</cite>, <cite>False</cite>.
+Some cloud providers does not automatically assign a public IP
+to the instances, but this is often needed if you want to connect
+to the VM from outside. Setting <tt class="docutils literal"><span class="pre">request_floating_ip</span></tt> to <cite>True</cite>
+will force <cite>elasticluster</cite> to request such a floating IP if the
+instance doesn&#8217;t get one automatically.</div></blockquote>
 </div>
 <div class="section" id="examples">
 <h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
 <p>For instance, to connect to the <a class="reference external" href="http://hobbes.gc3.uzh.ch">Hobbes private cloud</a> of the <a class="reference external" href="http://www.uzh.ch">University of Zurich</a> you can
 use the following:</p>
-<div class="highlight-python"><pre>[cloud/hobbes]
+<div class="highlight-python"><div class="highlight"><pre>[cloud/hobbes]
 provider=ec2_boto
 ec2_url=http://hobbes.gc3.uzh.ch:8773/services/Cloud
 ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
 ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
 ec2_region=nova
-auto_ip_assignment=True</pre>
+auto_ip_assignment=True
+</pre></div>
 </div>
 <p>For Amazon instead (region us-east-1) you can use:</p>
-<div class="highlight-python"><pre>[cloud/amazon-us-east-1]
+<div class="highlight-python"><div class="highlight"><pre>[cloud/amazon-us-east-1]
 provider=ec2_boto
 ec2_url=https://ec2.us-east-1.amazonaws.com
 ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
 ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
-ec2_region=us-east-1</pre>
+ec2_region=us-east-1
+vpc=vpc-one
+</pre></div>
 </div>
 <p>For Google Compute Engine you can use:</p>
-<blockquote>
-<div>[cloud/google]
+<div class="highlight-python"><div class="highlight"><pre>[cloud/google]
 provider=google
 gce_client_id=****REPLACE WITH YOUR CLIENT ID****
 gce_client_secret=****REPLACE WITH YOUR SECRET KEY****
-gce_project_id=****REPLACE WITH YOUR PROJECT ID****</div></blockquote>
+gce_project_id=****REPLACE WITH YOUR PROJECT ID****
+</pre></div>
+</div>
 <div class="section" id="openstack-users">
 <h4>OpenStack users<a class="headerlink" href="#openstack-users" title="Permalink to this headline">¶</a></h4>
 <p>From the horizon web interface you can download a file containing your
-EC2 credentials by logging in in your provider web interface and
+EC2 credentials by logging into your provider web interface and
 clicking on:</p>
 <dl class="docutils">
 <dt>&#8220;<em>settings</em>&#8220;</dt>
@@ -193,32 +274,33 @@ clicking on:</p>
 </dl>
 <p>The <tt class="docutils literal"><span class="pre">ec2rc.sh</span></tt> file will contain some values. Update the
 configuration file:</p>
-<p><cite>ec2_url</cite> using the value of the variable EC2_URL
-<cite>ec2_access_key</cite> using the value of the variable EC2_ACCESS_KEY
-<cite>ec2_secret_key</cite> using the value of the variable EC2_SECRET_KEY</p>
+<ul class="simple">
+<li><cite>ec2_url</cite> using the value of the variable EC2_URL</li>
+<li><cite>ec2_access_key</cite> using the value of the variable EC2_ACCESS_KEY</li>
+<li><cite>ec2_secret_key</cite> using the value of the variable EC2_SECRET_KEY</li>
+</ul>
 </div>
 <div class="section" id="google-compute-engine-users">
 <h4>Google Compute Engine users<a class="headerlink" href="#google-compute-engine-users" title="Permalink to this headline">¶</a></h4>
 <p>To generate a client_id and client_secret to access the Google Compute
-Engine visit the following page: <a class="reference external" href="https://code.google.com/apis/console/">https://code.google.com/apis/console/</a>
-1. Select the project defined as gce_project_id
-2. Navigate to <cite>API Access</cite>
-3. Click create another client id
-4. Select <cite>Installed Application</cite> -&gt; <cite>Other</cite>
-5. After clicking the <cite>Create</cite> button you&#8217;ll see your client_id and</p>
-<blockquote>
-<div>secret_key in the list of available client ids</div></blockquote>
-<dl class="docutils">
-<dt><strong>Please note</strong>: you have to set your google username in the login section</dt>
-<dd>below as image_user to be able to use Google Compute Engine</dd>
-</dl>
+Engine visit the following page: <a class="reference external" href="https://code.google.com/apis/console/">https://code.google.com/apis/console/</a></p>
+<ol class="arabic simple">
+<li>Select the project defined as gce_project_id</li>
+<li>Navigate to <cite>API Access</cite></li>
+<li>Click create another client id</li>
+<li>Select <cite>Installed Application</cite> -&gt; <cite>Other</cite></li>
+<li>After clicking the <cite>Create</cite> button you&#8217;ll see your client_id and
+secret_key in the list of available client ids</li>
+</ol>
+<p><strong>Please note</strong>: you have to set your google username in the login section  below as image_user to be able to use Google Compute Engine</p>
 </div>
 </div>
 </div>
 <div class="section" id="login-section">
 <h2>Login Section<a class="headerlink" href="#login-section" title="Permalink to this headline">¶</a></h2>
 <p>A <tt class="docutils literal"><span class="pre">login</span></tt> section named <tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
-<div class="highlight-python"><pre>[login/&lt;name&gt;]</pre>
+<div class="highlight-python"><div class="highlight"><pre>[login/&lt;name&gt;]
+</pre></div>
 </div>
 <p>This section contains information on how to access the instances
 started on the cloud, including the user and the SSH keys to use.</p>
@@ -229,12 +311,10 @@ section and the way the system is setup.</p>
 <h3>Mandatory configuration keys<a class="headerlink" href="#mandatory-configuration-keys" title="Permalink to this headline">¶</a></h3>
 <p><tt class="docutils literal"><span class="pre">image_user</span></tt></p>
 <blockquote>
-<div><p>the remote user you must use to connect to the virtual machine.
-In case you&#8217;re using Google Compute Engine you have to set your username</p>
-<blockquote>
-<div>here. So if your gmail address is <a class="reference external" href="mailto:karl&#46;marx&#37;&#52;&#48;gmail&#46;com">karl<span>&#46;</span>marx<span>&#64;</span>gmail<span>&#46;</span>com</a>,
+<div>the remote user you must use to connect to the virtual machine.
+In case you&#8217;re using Google Compute Engine you have to set your username
+here. So if your gmail address is <a class="reference external" href="mailto:karl&#46;marx&#37;&#52;&#48;gmail&#46;com">karl<span>&#46;</span>marx<span>&#64;</span>gmail<span>&#46;</span>com</a>,
 your username is karl.marx</div></blockquote>
-</div></blockquote>
 <p><tt class="docutils literal"><span class="pre">image_sudo</span></tt></p>
 <blockquote>
 <div>Can be <cite>True</cite> or <cite>False</cite>. <cite>True</cite> means that on the remote machine
@@ -263,30 +343,33 @@ details.</div></blockquote>
 <h3>Examples<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>For a typical Ubuntu machine, both on Amazon and most OpenStack
 providers, these values should be fine:</p>
-<div class="highlight-python"><pre>[login/ubuntu]
+<div class="highlight-python"><div class="highlight"><pre>[login/ubuntu]
 image_user=ubuntu
 image_user_sudo=root
 image_sudo=True
 user_key_name=elasticluster
 user_key_private=~/.ssh/id_rsa
-user_key_public=~/.ssh/id_rsa.pub</pre>
+user_key_public=~/.ssh/id_rsa.pub
+</pre></div>
 </div>
 <p>while for Hobbes appliances you will need to use the <cite>gc3-user</cite>
 instead:</p>
-<div class="highlight-python"><pre>[login/gc3-user]
+<div class="highlight-python"><div class="highlight"><pre>[login/gc3-user]
 image_user=gc3-user
 image_user_sudo=root
 image_sudo=True
 user_key_name=elasticluster
 user_key_private=~/.ssh/id_rsa
-user_key_public=~/.ssh/id_rsa.pub</pre>
+user_key_public=~/.ssh/id_rsa.pub
+</pre></div>
 </div>
 </div>
 </div>
 <div class="section" id="setup-section">
 <h2>Setup Section<a class="headerlink" href="#setup-section" title="Permalink to this headline">¶</a></h2>
 <p>A <tt class="docutils literal"><span class="pre">setup</span></tt> section named <tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
-<div class="highlight-python"><pre>[setup/&lt;name&gt;]</pre>
+<div class="highlight-python"><div class="highlight"><pre>[setup/&lt;name&gt;]
+</pre></div>
 </div>
 <p>This section contain information on <em>how to setup</em> a cluster. After
 the cluster is started, elasticluster will run a <tt class="docutils literal"><span class="pre">setup</span> <span class="pre">provider</span></tt> in
@@ -338,7 +421,14 @@ ganglia frontend.</p>
 <blockquote>
 <div>an entry of this type will define a variable called <tt class="docutils literal"><span class="pre">&lt;varname&gt;</span></tt>
 for the specific <tt class="docutils literal"><span class="pre">&lt;class&gt;</span></tt> and add it to the ansible inventory
-file.</div></blockquote>
+file. Please refer to the documentation of the playbook
+ot know which variables you can set and its meaning.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">global_var_&lt;varname&gt;</span></tt></p>
+<blockquote>
+<div>An entry of this type will define a variable called <tt class="docutils literal"><span class="pre">&lt;varname&gt;</span></tt>
+for all the nodes in the cluster, and add it to the ansible
+inventory file. Please refer to the documentation of the playbook
+ot know which variables you can set and its meaning.</div></blockquote>
 <p><tt class="docutils literal"><span class="pre">playbook_path</span></tt></p>
 <blockquote>
 <div>Path to the playbook to use when configuring the system. The
@@ -377,7 +467,8 @@ distributed with elasticluster.</div></blockquote>
 <div class="section" id="cluster-section">
 <h2>Cluster Section<a class="headerlink" href="#cluster-section" title="Permalink to this headline">¶</a></h2>
 <p>A <tt class="docutils literal"><span class="pre">cluster</span></tt> section named <tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
-<div class="highlight-python"><pre>[cluster/&lt;name&gt;]</pre>
+<div class="highlight-python"><div class="highlight"><pre>[cluster/&lt;name&gt;]
+</pre></div>
 </div>
 <p>The cluster section defines a <cite>template</cite> for a cluster. This section
 has references to each one of the other sections and define the
@@ -445,11 +536,23 @@ group).</div></blockquote>
 starts. This is usually not needed because the <cite>ansible</cite> provider
 works on <em>vanilla</em> images, but if you are using other setup
 providers you may need to execute some command to bootstrap it.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">network_ids</span></tt></p>
+<blockquote>
+<div>comma separated list of network or subnet IDs the nodes of the cluster
+will be connected to. Only supported when the cloud provider is
+<cite>ec2_boto</cite> or <cite>openstack</cite></div></blockquote>
+<p><tt class="docutils literal"><span class="pre">&lt;class&gt;_min_nodes</span></tt></p>
+<blockquote>
+<div>Define the minimum amount of nodes of type <cite>&lt;class&gt;</cite> that must be
+up&amp;running to configure the cluster. When starting a cluster,
+creation of some instances may fail. If at least min_nodes are
+started correctly (i.e. are not in error state), the cluster is
+configured anyway, otherwise creation of the cluster will fail.</div></blockquote>
 </div>
 <div class="section" id="id5">
 <h3>Examples<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <p>Some (working) examples:</p>
-<div class="highlight-python"><pre>[cluster/slurm]
+<div class="highlight-python"><div class="highlight"><pre>[cluster/slurm]
 cloud=hobbes
 login=gc3-user
 setup_provider=ansible-slurm
@@ -460,6 +563,7 @@ flavor=m1.small
 frontend_nodes=1
 compute_nodes=2
 frontend_class=frontend
+network_ids=subnet-one
 
 [cluster/torque]
 cloud=hobbes
@@ -493,7 +597,8 @@ flavor=m1.medium
 frontend_nodes=1
 worker_nodes=10
 image_userdata=
-ssh_to=frontend</pre>
+ssh_to=frontend
+</pre></div>
 </div>
 </div>
 </div>
@@ -501,7 +606,8 @@ ssh_to=frontend</pre>
 <h2>Cluster node section<a class="headerlink" href="#cluster-node-section" title="Permalink to this headline">¶</a></h2>
 <p>A <cite>cluster node</cite> for the node type <tt class="docutils literal"><span class="pre">&lt;nodetype&gt;</span></tt> of the cluster
 <tt class="docutils literal"><span class="pre">&lt;name&gt;</span></tt> starts with:</p>
-<div class="highlight-python"><pre>[cluster/&lt;name&gt;/&lt;nodetype&gt;]</pre>
+<div class="highlight-python"><div class="highlight"><pre>[cluster/&lt;name&gt;/&lt;nodetype&gt;]
+</pre></div>
 </div>
 <p>This section allows you to override some configuration values for
 specific group of nodes. Assume you have a standard slurm cluster
@@ -514,14 +620,15 @@ more memory and more cores but are not eager about disk space.</p>
 <p>This is achieved defining, for instance, a <cite>bigdisk</cite> flavor (the
 name is just fictional) for the frontend and <cite>8cpu32g</cite> for the
 compute nodes. Your configuration will thus look like:</p>
-<div class="highlight-python"><pre>[cluster/slurm]
+<div class="highlight-python"><div class="highlight"><pre>[cluster/slurm]
 ...
 flavor=8cpu32g
 frontend_nodes=1
 compute_nodes=10
 
 [cluster/slurm/frontend]
-flavor=bigdisk</pre>
+flavor=bigdisk
+</pre></div>
 </div>
 </div>
 </div>
@@ -539,6 +646,7 @@ flavor=bigdisk</pre>
 <li><a class="reference internal" href="#cloud-section">Cloud Section</a><ul>
 <li><a class="reference internal" href="#valid-configuration-keys-for-boto">Valid configuration keys for <cite>boto</cite></a></li>
 <li><a class="reference internal" href="#valid-configuration-keys-for-google">Valid configuration keys for <cite>google</cite></a></li>
+<li><a class="reference internal" href="#valid-configuration-keys-for-openstack">Valid configuration keys for <em>openstack</em></a></li>
 <li><a class="reference internal" href="#examples">Examples</a><ul>
 <li><a class="reference internal" href="#openstack-users">OpenStack users</a></li>
 <li><a class="reference internal" href="#google-compute-engine-users">Google Compute Engine users</a></li>
@@ -616,7 +724,7 @@ flavor=bigdisk</pre>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Grid Computing Competence Centre, University of Zurich.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

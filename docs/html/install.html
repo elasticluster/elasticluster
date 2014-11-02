@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -15,7 +13,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -36,9 +34,6 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
         <li class="right" >
           <a href="configure.html" title="Configuration"
              accesskey="N">next</a> |</li>
@@ -64,17 +59,22 @@ following section: <a class="reference internal" href="#installing-from-pypi">In
 it.</p>
 <p>If you instead want to test the <em>development</em> version, go to the
 <a class="reference internal" href="#installing-from-github">Installing from github</a> section.</p>
+<p>In both cases, it&#8217;s strongly suggested to install <cite>elasticluster</cite> in a
+<a class="reference external" href="https://pypi.python.org/pypi/virtualenv">python virtualenv</a>, so that you can easily uninstall or upgrade
+<cite>elasticluster</cite>.</p>
 <div class="section" id="installing-from-pypi">
 <h2>Installing from PyPI<a class="headerlink" href="#installing-from-pypi" title="Permalink to this headline">¶</a></h2>
 <p>It&#8217;s quite easy to install <cite>elasticluster</cite> using
 <a class="reference external" href="https://pypi.python.org/pypi/pip">pip</a>; the command below is all you
 need to install <cite>elasticluster</cite> on your system:</p>
-<div class="highlight-python"><pre>pip install elasticluster</pre>
+<div class="highlight-python"><div class="highlight"><pre>pip install elasticluster
+</pre></div>
 </div>
 <p>If you want to run <cite>elasticluster</cite> from source you have to <strong>install</strong>
 <a class="reference external" href="http://ansible.cc">Ansible</a> <strong>first:</strong></p>
-<div class="highlight-python"><pre>pip install ansible
-python setup.py install</pre>
+<div class="highlight-python"><div class="highlight"><pre>pip install ansible
+python setup.py install
+</pre></div>
 </div>
 </div>
 <div class="section" id="installing-from-github">
@@ -88,21 +88,115 @@ normal user.</p>
 <p>Assuming you already have <tt class="docutils literal"><span class="pre">virtualenv</span></tt> installed on your machine,
 you first need to create a virtualenv and install <cite>ansible</cite>, which is
 needed by elasticluster:</p>
-<div class="highlight-python"><pre>virtualenv elasticluster
+<div class="highlight-python"><div class="highlight"><pre>virtualenv elasticluster
 . elasticluster/bin/activate
-pip install ansible</pre>
+pip install ansible
+</pre></div>
 </div>
 <p>Then you have to download the software. We suggest you to download it
 <em>within</em> the created virtualenv:</p>
-<div class="highlight-python"><pre>cd elasticluster
+<div class="highlight-python"><div class="highlight"><pre>cd elasticluster
 git clone git://github.com/gc3-uzh-ch/elasticluster.git src
 cd src
-git submodule init
-git submodule update
-python setup.py install</pre>
+python setup.py install
+</pre></div>
 </div>
 <p>Now the <tt class="docutils literal"><span class="pre">elasticluster</span></tt> should be available in your current
 environment.</p>
+</div>
+<div class="section" id="notes-on-macosx-installation">
+<h2>Notes on MacOSX installation<a class="headerlink" href="#notes-on-macosx-installation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="xcode">
+<h3>Xcode<a class="headerlink" href="#xcode" title="Permalink to this headline">¶</a></h3>
+<p>In order to install <cite>elasticluster</cite>, you need to have <a class="reference external" href="https://developer.apple.com/xcode/">Xcode</a>
+installed in your system. It&#8217;s free and you can install it directly
+from the <a class="reference external" href="http://www.apple.com/osx/apps/app-store/">AppStore</a>.</p>
+</div>
+<div class="section" id="pip-issues-when-installing-from-source">
+<h3><cite>pip</cite> issues when installing from source<a class="headerlink" href="#pip-issues-when-installing-from-source" title="Permalink to this headline">¶</a></h3>
+<p>When installing <cite>elasticluster</cite> on MacOSX operating systems you may
+get some errors while running <cite>python setup.py install</cite>, because
+<a class="reference external" href="https://pypi.python.org/pypi/pip">pip</a> is not always able to automatically resolve the
+dependencies.</p>
+<p>In these cases, you need to find the package that is failing and
+install it manually using <cite>pip</cite>.</p>
+<p>For instance, if during the installation you get something like:</p>
+<div class="highlight-python"><div class="highlight"><pre>Running requests-2.4.3/setup.py -q bdist_egg --dist-dir /var/folders/tZ/tZ2B3RaeGVq7+ptdJIbdj++++TI/-Tmp-/easy_install-CrTFFL/requests-2.4.3/egg-dist-tmp-JZ2MOD
+Adding requests 2.4.3 to easy-install.pth file
+Traceback (most recent call last):
+  File &quot;setup.py&quot;, line 109, in &lt;module&gt;
+    &#39;elasticluster = elasticluster.main:main&#39;,
+  File &quot;/System/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/distutils/core.py&quot;, line 152, in setup
+    dist.run_commands()
+  File &quot;/System/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/distutils/dist.py&quot;, line 975, in run_commands
+    self.run_command(cmd)
+  File &quot;/System/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/distutils/dist.py&quot;, line 995, in run_command
+    cmd_obj.run()
+  File &quot;/Users/michela/elasticluster/build/setuptools/setuptools/command/install.py&quot;, line 65, in run
+  File &quot;/Users/michela/elasticluster/build/setuptools/setuptools/command/install.py&quot;, line 115, in do_egg_install
+  File &quot;/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py&quot;, line 360, in run
+
+  File &quot;/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py&quot;, line 576, in easy_install
+
+  File &quot;/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py&quot;, line 627, in install_item
+
+  File &quot;/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py&quot;, line 682, in process_distribution
+
+  File &quot;/Users/michela/elasticluster/build/setuptools/pkg_resources.py&quot;, line 631, in resolve
+    dist = best[req.key] = env.best_match(req, ws, installer)
+  File &quot;/Users/michela/elasticluster/build/setuptools/pkg_resources.py&quot;, line 871, in best_match
+    return self.obtain(req, installer)
+  File &quot;/Users/michela/elasticluster/build/setuptools/pkg_resources.py&quot;, line 883, in obtain
+    return installer(requirement)
+  File &quot;/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py&quot;, line 595, in easy_install
+
+  File &quot;/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py&quot;, line 627, in install_item
+
+  File &quot;/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py&quot;, line 659, in process_distribution
+
+  File &quot;/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py&quot;, line 532, in install_egg_scripts
+
+  File &quot;/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py&quot;, line 734, in install_wrapper_scripts
+
+  File &quot;/private/var/folders/tZ/tZ2B3RaeGVq7+ptdJIbdj++++TI/-Tmp-/easy_install-qch0dG/python-keystoneclient-0.11.1/pbr-0.10.0-py2.6.egg/pbr/packaging.py&quot;, line 512, in override_get_script_args
+AttributeError: &#39;NoneType&#39; object has no attribute &#39;get_script_header&#39;
+</pre></div>
+</div>
+<p>you probably need to install <cite>pbr</cite> manually using:</p>
+<div class="highlight-python"><div class="highlight"><pre>pip install pbr
+</pre></div>
+</div>
+<p>In some MacOSX version, even if the installation <em>seems</em> to succeed,
+you may get the following error the first time you run <cite>elasticluster</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre>Traceback (most recent call last):
+  File &quot;/Users/michela/el2/bin/elasticluster&quot;, line 9, in &lt;module&gt;
+    load_entry_point(&#39;elasticluster==1.1-dev&#39;, &#39;console_scripts&#39;, &#39;elasticluster&#39;)()
+  File &quot;/Users/michela/el2/build/setuptools/pkg_resources.py&quot;, line 356, in load_entry_point
+    return get_distribution(dist).load_entry_point(group, name)
+  File &quot;/Users/michela/el2/build/setuptools/pkg_resources.py&quot;, line 2431, in load_entry_point
+    return ep.load()
+  File &quot;/Users/michela/el2/build/setuptools/pkg_resources.py&quot;, line 2147, in load
+    [&#39;__name__&#39;])
+  File &quot;build/bdist.macosx-10.6-universal/egg/elasticluster/__init__.py&quot;, line 33, in &lt;module&gt;
+  File &quot;build/bdist.macosx-10.6-universal/egg/elasticluster/providers/gce.py&quot;, line 37, in &lt;module&gt;
+  File &quot;build/bdist.macosx-10.6-universal/egg/apiclient/discovery.py&quot;, line 52, in &lt;module&gt;
+  File &quot;build/bdist.macosx-10.6-universal/egg/apiclient/errors.py&quot;, line 27, in &lt;module&gt;
+ImportError: No module named anyjson
+</pre></div>
+</div>
+<p>In this case, the issue is caused by <cite>google-api-python-client</cite>, and
+you should:
+1) uninstall it using <cite>pip uninstall</cite>
+2) reinstall it using <cite>pip install</cite>
+3) re-run elasticluster installation</p>
+<div class="highlight-python"><div class="highlight"><pre>pip uninstall google-api-python-client
+[...]
+pip install google-api-python-client
+[...]
+python setup.py install
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 
@@ -117,6 +211,11 @@ environment.</p>
 <li><a class="reference internal" href="#">Installation</a><ul>
 <li><a class="reference internal" href="#installing-from-pypi">Installing from PyPI</a></li>
 <li><a class="reference internal" href="#installing-from-github">Installing from github</a></li>
+<li><a class="reference internal" href="#notes-on-macosx-installation">Notes on MacOSX installation</a><ul>
+<li><a class="reference internal" href="#xcode">Xcode</a></li>
+<li><a class="reference internal" href="#pip-issues-when-installing-from-source"><cite>pip</cite> issues when installing from source</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -156,9 +255,6 @@ environment.</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="configure.html" title="Configuration"
              >next</a> |</li>
         <li class="right" >
@@ -169,7 +265,7 @@ environment.</p>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Grid Computing Competence Centre, University of Zurich.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>
