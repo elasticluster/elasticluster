@@ -39,7 +39,7 @@ from elasticluster import log
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.cluster import Cluster
-from elasticluster.repository import ClusterRepository
+from elasticluster.repository import PickleRepository
 
 
 class Configurator(object):
@@ -111,7 +111,7 @@ class Configurator(object):
 
         :param str storage_path: path to the storage directory. If
                                  defined, a
-                                 :py:class:`repository.ClusterRepository`
+                                 :py:class:`repository.PickleRepository`
                                  class will be instantiated.
 
         :param str include_config_dirs: Default is False. If True, for
@@ -297,7 +297,7 @@ class Configurator(object):
 
     def create_repository(self):
         storage_path = self.general_conf['storage']
-        repository = ClusterRepository(storage_path)
+        repository = PickleRepository(storage_path)
         return repository
 
 

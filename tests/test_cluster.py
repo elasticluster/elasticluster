@@ -29,7 +29,7 @@ from elasticluster.conf import Configurator
 from elasticluster.cluster import Cluster, Node
 from elasticluster.exceptions import ClusterError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
-from elasticluster.repository import ClusterRepository
+from elasticluster.repository import PickleRepository
 from tests.test_conf import Configuration
 
 
@@ -54,7 +54,7 @@ class TestCluster(unittest.TestCase):
         setup = Mock()
         configurator = Configurator(config)
         conf_login = configurator.cluster_conf['mycluster']['login']
-        repository = ClusterRepository(self.storage_path)
+        repository = PickleRepository(self.storage_path)
 
         cluster = Cluster("mycluster", cloud_provider,
                           setup, repository, conf_login['user_key_name'],

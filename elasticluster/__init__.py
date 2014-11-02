@@ -26,7 +26,7 @@ log.DO_NOT_FORK = False
 
 # API
 from elasticluster.cluster import Cluster
-from elasticluster.repository import AbstractClusterRepository, ClusterRepository
+from elasticluster.repository import AbstractClusterRepository, PickleRepository
 from elasticluster.providers import AbstractCloudProvider, AbstractSetupProvider
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.providers.ec2_boto import BotoCloudProvider

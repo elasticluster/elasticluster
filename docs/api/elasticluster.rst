@@ -100,7 +100,7 @@ over time. Therefore Elasticluster provides two implementations:
         using this repository, all clusters are not recoverable but possibly
         still running.
 
-    * :py:class:`~elasticluster.repository.ClusterRepository`
+    * :py:class:`~elasticluster.repository.PickleRepository`
         Stores the cluster on disk persistently. This implementation uses
         pickle to serialize and deserialize the cluster.
 
@@ -235,7 +235,7 @@ restart::
 
     # The cluster repository uses pickle to store clusters each in a
     # seperate file in the provided storage directory.
-    repository = elasticluster.ClusterRepository('/path/to/storage/dir')
+    repository = elasticluster.PickleRepository('/path/to/storage/dir')
 
     # On cluster initialisation we can pass the repository as optional
     # argument.
@@ -251,7 +251,7 @@ restart::
 After a program shutdown we can therefore fetch the cluster from the
 repository again and work with it as expected::
 
-    repository = elasticluster.ClusterRepository('/path/to/storage/dir')
+    repository = elasticluster.PickleRepository('/path/to/storage/dir')
 
     # retrieve the cluster from the repository
     cluster = repository.get('my-cluster')

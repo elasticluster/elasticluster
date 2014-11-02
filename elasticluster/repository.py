@@ -117,7 +117,7 @@ class MemRepository(AbstractClusterRepository):
         del self.clusters[cluster.name]
 
 
-class ClusterRepository(AbstractClusterRepository):
+class PickleRepository(AbstractClusterRepository):
     """This implementation of :py:class:`AbstractClusterRepository` stores the
     cluster on the local disc using pickle. Therefore the cluster object and
     all its dependencies will be saved in a pickle (binary) file.
@@ -138,7 +138,7 @@ class ClusterRepository(AbstractClusterRepository):
 
         :return: list of :py:class:`elasticluster.cluster.Cluster`
         """
-        file_ending = ClusterRepository.file_ending
+        file_ending = PickleRepository.file_ending
         allfiles = os.listdir(self.storage_path)
         cluster_files = []
         for fname in allfiles:
@@ -197,5 +197,5 @@ class ClusterRepository(AbstractClusterRepository):
             pickle.dump(cluster, storage, pickle.HIGHEST_PROTOCOL)
 
     def _get_cluster_storage_path(self, name):
-        cluster_file = '%s.%s' % (name, ClusterRepository.file_ending)
+        cluster_file = '%s.%s' % (name, PickleRepository.file_ending)
         return os.path.join(self.storage_path, cluster_file)

@@ -31,11 +31,11 @@ import unittest
 
 import nose.tools as nt
 
-from elasticluster.repository import ClusterRepository, MemRepository
+from elasticluster.repository import PickleRepository, MemRepository
 
 class FakeCluster(object):
     """Fake class used for the storage cluster class.  The only thing the
-    ClusterRepository class assumes is that the saved class has a `name`
+    PickleRepository class assumes is that the saved class has a `name`
     attribute.
     """
     def __init__(self, name='fake_cluster'):
@@ -79,10 +79,10 @@ class MemRepositoryTests(unittest.TestCase):
         nt.assert_false(cluster.name in self.storage.clusters)
     
 
-class ClusterRepositoryTests(MemRepositoryTests):
+class PickleRepositoryTests(MemRepositoryTests):
     def setUp(self):
         self.path = tempfile.mkdtemp()
-        self.storage = ClusterRepository(self.path)
+        self.storage = PickleRepository(self.path)
 
     def tearDown(self):
         shutil.rmtree(self.path, ignore_errors=True)
