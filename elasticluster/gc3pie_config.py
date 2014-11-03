@@ -3,7 +3,7 @@
 # @(#)gc3_config.py
 # 
 # 
-# Copyright (C) 2013, GC3, University of Zurich. All rights reserved.
+# Copyright (C) 2013-2014, GC3, University of Zurich. All rights reserved.
 # 
 # 
 # This program is free software; you can redistribute it and/or modify it
@@ -193,7 +193,7 @@ def inspect_node(node):
     ssh.close()
     return node_information
 
-def create_gc3_config_snippet(cluster):
+def create_gc3pie_config_snippet(cluster):
     """
     Create a configuration file snippet to be used with GC3Pie.
     """

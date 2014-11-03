@@ -662,14 +662,14 @@ class SftpFrontend(AbstractCommand):
         os.execlp("sftp", *sftp_cmdline)
 
 
-class GC3Config(AbstractCommand):
+class GC3PieConfig(AbstractCommand):
     """
     Print a GC3Pie configuration snippet for a specific cluster
     """
 
     def setup(self, subparsers):
         parser = subparsers.add_parser(
-            "gc3-config", help="Print a GC3Pie configuration snippet.",
+            "gc3pie-config", help="Print a GC3Pie configuration snippet.",
             description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
@@ -691,6 +691,6 @@ class GC3Config(AbstractCommand):
                       (cluster_name, ex))
             return
 
-        from elasticluster.gc3_config import create_gc3_config_snippet
+        from elasticluster.gc3pie_config import create_gc3pie_config_snippet
 
-        print(create_gc3_config_snippet(cluster))
+        print(create_gc3pie_config_snippet(cluster))

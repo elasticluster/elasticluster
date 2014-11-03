@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013 GC3, University of Zurich
+#   Copyright (C) 2013-2014 GC3, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ from elasticluster.subcommands import ListTemplates
 from elasticluster.subcommands import ResizeCluster
 from elasticluster.subcommands import SshFrontend
 from elasticluster.subcommands import SftpFrontend
-from elasticluster.subcommands import GC3Config
+from elasticluster.subcommands import GC3PieConfig
 from elasticluster.conf import Configurator
 from elasticluster.exceptions import ConfigurationError
 
@@ -68,7 +68,7 @@ class ElastiCluster(cli.app.CommandLineApp):
                     ResizeCluster(self.params),
                     SshFrontend(self.params),
                     SftpFrontend(self.params),
-                    GC3Config(self.params),
+                    GC3PieConfig(self.params),
                     ]
 
         # global parameters
