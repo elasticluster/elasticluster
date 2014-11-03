@@ -675,6 +675,7 @@ class GC3PieConfig(AbstractCommand):
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
+        parser.add_argument('-a', '--append', metavar='FILE', help='append configuration to file FILE')
 
     def execute(self):
         """
@@ -693,4 +694,14 @@ class GC3PieConfig(AbstractCommand):
 
         from elasticluster.gc3pie_config import create_gc3pie_config_snippet
 
-        print(create_gc3pie_config_snippet(cluster))
+        if self.params.append:
+            path = os.path.expanduser(self.params.append)
+            try:
+                fd = open(path, 'a')
+                fd.write(create_gc3pie_config_snippet(cluster))
+                fd.close()
+            except IOError as ex:
+                log.error("Unable to write configuration to file %s: %s",
+                          path, ex)
+        else:
+            print(create_gc3pie_config_snippet(cluster))

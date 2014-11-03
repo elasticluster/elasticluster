@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-# 
-# @(#)gc3_config.py
+# @(#)gc3pie_config.py
 # 
 # 
 # Copyright (C) 2013-2014, GC3, University of Zurich. All rights reserved.
@@ -176,7 +176,10 @@ def inspect_node(node):
     """
     node_information = {}
     ssh = node.connect()
-    
+    if not ssh:
+        log.error("Unable to connect to node %s", node.name)
+        return
+
     (_in, _out, _err) = ssh.exec_command("(type >& /dev/null -a srun && echo slurm) \
                       || (type >& /dev/null -a qconf && echo sge) \
                       || (type >& /dev/null -a pbsnodes && echo pbs) \
@@ -212,6 +215,16 @@ def create_gc3pie_config_snippet(cluster):
     cfg.set(resource_section, 'enabled', 'yes')
     cfg.set(resource_section, 'transport', 'ssh')
     cfg.set(resource_section, 'frontend', frontend_node.preferred_ip)
+    if not cluster_info:
+        log.error("Unable to gather enough information from the cluster. "
+                  "Following informatino are only partial!")
+        cluster_info = {'architecture': 'unknown',
+                        'type': 'unknown',
+                        'max_cores': -1,
+                        'max_cores_per_job': -1,
+                        'max_memory_per_core': -1,
+                        'max_walltime': '672hours'}
+
     cfg.set(resource_section, 'type', cluster_info['type'])
     cfg.set(resource_section, 'architecture', cluster_info['architecture'])
     cfg.set(resource_section, 'max_cores', cluster_info.get('max_cores', 1))
