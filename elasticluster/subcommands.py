@@ -585,6 +585,7 @@ class SshFrontend(AbstractCommand):
                       (cluster_name, ex))
             return
 
+        frontend = cluster.get_frontend_node()
         try:
             # ensure we can connect to the host
             if not frontend.preferred_ip:
