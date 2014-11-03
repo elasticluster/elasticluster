@@ -48,6 +48,12 @@ if __name__ == "__main__":
     repository = repository.PickleRepository(storage_path)
     clusters = repository.get_all()
 
+    for cluster in clusters:
+        # Fix known_hosts file missing attribute
+        known_hosts_file = "%s/%s.known_hosts" % (storage_path, cluster.name)
+        if os.path.isfile(known_hosts_file) and known_hosts_file != cluster.known_hosts_file:
+            cluster.known_hosts_file = known_hosts_file
+            
     for cl in clusters:
         print("Saving cluster %s" % cl.name)
         cl.repository.save_or_update(cl)
