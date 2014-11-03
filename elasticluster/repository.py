@@ -199,3 +199,4 @@ class PickleRepository(AbstractClusterRepository):
     def _get_cluster_storage_path(self, name):
         cluster_file = '%s.%s' % (name, PickleRepository.file_ending)
         return os.path.join(self.storage_path, cluster_file)
+

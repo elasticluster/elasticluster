@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013 GC3, University of Zurich
+# Copyright (C) 2013-2014 GC3, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
+__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.messina@s3it.uzh.ch>'
 
 # stdlib imports
 from abc import ABCMeta, abstractmethod
@@ -86,8 +86,9 @@ def cluster_summary(cluster):
                   "%s", str(ex))
     msg = """
 Cluster name:     %s
+Cluster template: %s
 Default ssh to node: %s
-""" % (cluster.name, frontend)
+""" % (cluster.name, cluster.template, frontend)
 
     for cls in cluster.nodes:
         msg += "- %s nodes: %d\n" % (cls, len(cluster.nodes[cls]))
@@ -419,6 +420,8 @@ Please note that there's no guarantee that they are fully configured:
                 print("%s " % cluster.name)
                 print("-" * len(cluster.name))
                 print("  name:           %s" % cluster.name)
+                if cluster.name != cluster.template:
+                    print("  template:       %s" % cluster.template)
                 for cls in cluster.nodes:
                     print("  - %s nodes: %d" % (cls, len(cluster.nodes[cls])))
                 print("")

@@ -87,6 +87,7 @@ class Cluster(object):
                  user_key_name, user_key_public,
                  user_key_private, repository=None, **extra):
         self.name = name
+        self.template = extra.get('template', None)
         self._cloud_provider = cloud_provider
         self._setup_provider = setup_provider
         self._user_key_name = user_key_name
