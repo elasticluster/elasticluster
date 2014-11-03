@@ -166,13 +166,10 @@ class ElastiCluster(cli.app.CommandLineApp):
         try:
             return self.params.func()
         except MultipleInvalid as ex:
-            for error in ex.errors:
-                print("Error validating configuration files '%s': `%s`"
-                      % (str.join("', '", self.params.config), error))
-            sys.exit(1)
+            print("Error parsing configuration files: %s" % str.join(', ', [str(e) for e in ex.errors]))
         except Invalid as ex:
-            print("Error validating configuration files '%s': `%s`"
-                  % (str.join("', '", self.params.config), ex))
+            print("Error parsing configuration files: %s" % ex)
+            print("Exiting.")
             sys.exit(1)
 
 

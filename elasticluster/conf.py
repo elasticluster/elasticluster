@@ -88,7 +88,6 @@ class Configurator(object):
     def __init__(self, cluster_conf, storage_path=None):
         self.general_conf = dict()
         self.cluster_conf = cluster_conf
-
         if storage_path:
             storage_path = os.path.expanduser(storage_path)
             storage_path = os.path.expandvars(storage_path)
@@ -165,7 +164,7 @@ class Configurator(object):
         providerconf = conf.copy()
         providerconf.pop('provider')
         providerconf['storage_path'] = self.general_conf['storage']
-        
+
         return provider(**providerconf)
 
     def create_cluster(self, template, name=None):
@@ -452,14 +451,17 @@ class ConfigValidator(object):
             if 'provider' not in properties['cloud']:
                 raise Invalid(
                     "Missing `provider` option in cluster `%s`" % cluster)
-
-            cloud_props = properties['cloud']
-            if properties['cloud']['provider'] == "ec2_boto":
-                self.config[cluster]['cloud'] = ec2_validator(cloud_props)
-            elif properties['cloud']['provider'] == "google":
-                self.config[cluster]['cloud'] = gce_validator(cloud_props)
-            elif properties['cloud']['provider'] == "openstack":
-                self.config[cluster]['cloud'] = openstack_validator(cloud_props)
+            try:
+                cloud_props = properties['cloud']
+                if properties['cloud']['provider'] == "ec2_boto":
+                    self.config[cluster]['cloud'] = ec2_validator(cloud_props)
+                elif properties['cloud']['provider'] == "google":
+                    self.config[cluster]['cloud'] = gce_validator(cloud_props)
+                elif properties['cloud']['provider'] == "openstack":
+                    self.config[cluster]['cloud'] = openstack_validator(cloud_props)
+            except MultipleInvalid as ex:
+                raise Invalid("Invalid configuration for cloud section `cloud/%s`: %s" % (properties['cluster']['cloud'], str.join(", ", [str(i) for i in ex.errors])))
+                                
 
             if 'nodes' not in properties or len(properties['nodes']) == 0:
                 raise Invalid(
@@ -581,6 +583,9 @@ class ConfigReader(object):
         conf_values = dict()
 
         errors = MultipleInvalid()
+        # FIXME: to be refactored:
+        # we should check independently each one of the sections, and raise errors accordingly.
+        
         for cluster in clusters:
             # Get the name of the cluster
             name = re.search(ConfigReader.cluster_section + "/(.*)",
@@ -626,8 +631,8 @@ class ConfigReader(object):
                     "cluster `%s` login section `%s` does not exists" % (
                         cluster, login_name))
             except MultipleInvalid, ex:
-                for error in ex.errors:
-                    errors.add(error)
+                errors.add(Invalid("Error in login section `%s`: %s" % (
+                    login_name, str.join(', ', [str(e) for e in ex.errors]))))
 
             try:
                 values['cloud'] = dict(self.conf[cloud_name])
@@ -661,15 +666,17 @@ class ConfigReader(object):
                         values['nodes'][node_name] = values['cluster']
 
                 if errors.errors:
-                    for error in errors.errors:
-                        log.warning(
-                            "Ignoring Cluster `%s`: %s" % (name, error))
-                    log.warning("Ignoring cluster `%s`." % name)
+                    log.error("Ignoring cluster `%s`: %s" % (
+                        name, str.join(", ", [str(e) for e in errors.errors])))
                 else:
                     conf_values[name] = values
             except KeyError, ex:
                 errors.add("Error in section `%s`" % cluster)
 
+        # FIXME: do we really need to raise an exception if we cannot
+        # parse *part* of the configuration files? We should just
+        # ignore those with errors and return both the parsed
+        # configuration values _and_ a list of errors
         if errors.errors:
             raise errors
         return conf_values

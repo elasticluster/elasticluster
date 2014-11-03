@@ -468,7 +468,7 @@ name:     %s""" % template)
                         nodekind,
                         len(cluster.nodes[nodekind])))
             except ConfigurationError, ex:
-                log.warning("unable to load cluster `%s`: %s", template, ex)
+                log.error("unable to load cluster `%s`: %s", template, ex)
 
 
 class ListNodes(AbstractCommand):
@@ -495,7 +495,7 @@ class ListNodes(AbstractCommand):
         """
         Lists all nodes within the specified cluster with certain
         information like id and ip.
-        """
+        """        
         configurator = Configurator.fromConfig(
             self.params.config, storage_path=self.params.storage,
             include_config_dirs=True)
