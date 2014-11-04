@@ -46,6 +46,7 @@ from elasticluster.subcommands import SftpFrontend
 from elasticluster.subcommands import GC3PieConfig
 from elasticluster.conf import Configurator
 from elasticluster.exceptions import ConfigurationError
+from elasticluster.migration_tools import MigrationCommand
 
 class ElastiCluster(cli.app.CommandLineApp):
     name = "elasticluster"
@@ -69,6 +70,7 @@ class ElastiCluster(cli.app.CommandLineApp):
                     SshFrontend(self.params),
                     SftpFrontend(self.params),
                     GC3PieConfig(self.params),
+                    MigrationCommand(self.params),
                     ]
 
         # global parameters
