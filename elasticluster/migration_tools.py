@@ -71,7 +71,8 @@ def __setstate_upgrade__(self, state):
     if 'thread_pool_max_size' not in state:
         self._patches['thread_pool_max_size'] = (NotPresent(), 10)
 
-    self.__dict__.update(self._patches)
+    for attr, values in self._patches.items():
+        self.__dict__[attr] = values[1]
 
 def patch_cluster():
     """
