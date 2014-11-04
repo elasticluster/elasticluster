@@ -373,13 +373,16 @@ class Cluster(object):
                 if starting_nodes:
                     time.sleep(10)
         except TimeoutError as timeout:
+            # FIXME: this is wrong: the reason why `node.is_alive()` fails could be caused by a network error, and we shouldn't just delete the nodes.
+            
             log.error("Not all nodes were started correctly within the given"
                       " timeout `%s`" % Cluster.startup_timeout)
-            for node in starting_nodes:
-                log.error("Stopping node `%s`, since it could not start "
-                          "within the given timeout" % node.name)
-                node.stop()
-                self.remove_node(node)
+            log.error("Please check if image, keypair, and network configuration is correct and try again.")
+            # for node in starting_nodes:
+            #     log.error("Stopping node `%s`, since it could not start "
+            #               "within the given timeout" % node.name)
+            #     node.stop()
+            #     self.remove_node(node)
 
         signal.alarm(0)
 
