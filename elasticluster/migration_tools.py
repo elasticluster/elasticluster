@@ -61,6 +61,16 @@ def __setstate_upgrade__(self, state):
     if 'template' not in state:
         self._patches['template'] = (NotPresent(), self.extra['template'])
 
+    # commit 7b4ed108a699c6801b2d22790ae30368f416c246
+    # Author: Antonio Messina <antonio.s.messina@gmail.com>
+    # Date:   Tue Nov 4 11:36:40 2014 +0100
+
+    #     Add a configuration option `thread_pool_max_size` to limit
+    #     the maximum amount of processes that are created when
+    #     starting virtual machine
+    if 'thread_pool_max_size' not in state:
+        self._patches['thread_pool_max_size'] = (NotPresent(), 10)
+
     self.__dict__.update(self._patches)
 
 def patch_cluster():
