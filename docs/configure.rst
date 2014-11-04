@@ -575,7 +575,10 @@ Optional configuration keys
     started correctly (i.e. are not in error state), the cluster is
     configured anyway, otherwise creation of the cluster will fail.
 
+``thread_pool_max_size``
 
+    The maximum number of process to be created when virtual machines
+    are started. Default is 10.
 
 Examples
 --------

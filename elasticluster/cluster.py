@@ -85,9 +85,11 @@ class Cluster(object):
 
     def __init__(self, name, cloud_provider, setup_provider,
                  user_key_name, user_key_public,
-                 user_key_private, repository=None, **extra):
+                 user_key_private, repository=None, thread_pool_max_size=10,
+                 **extra):
         self.name = name
         self.template = extra.get('template', None)
+        self.thread_pool_max_size = thread_pool_max_size
         self._cloud_provider = cloud_provider
         self._setup_provider = setup_provider
         self._user_key_name = user_key_name
@@ -323,7 +325,8 @@ class Cluster(object):
                 self.repository.save_or_update(self)
         else:
             # Create one thread for each node to start
-            thread_pool = Pool(processes=len(nodes))
+            thread_pool = Pool(processes=min(len(nodes),
+                                             self.thread_pool_max_size))
             log.debug("Created pool of %d threads" % len(nodes))
             # Intercept Ctrl-c
             signal.signal(signal.SIGINT, sigint_handler)

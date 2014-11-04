@@ -35,6 +35,8 @@ def __fix_setstate__(self, state):
         self.known_hosts_file = None
     if 'template' not in state:
         self.template = self.extra['template']
+    if 'thread_pool_max_size' not in state:
+        self.thread_pool_max_size = 10
 
 cluster.Cluster.__setstate__ = __fix_setstate__
 
