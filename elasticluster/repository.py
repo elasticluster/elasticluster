@@ -150,7 +150,12 @@ class PickleRepository(AbstractClusterRepository):
 
         clusters = list()
         for cluster_file in cluster_files:
-            clusters.append(self.get(cluster_file))
+            try:
+                cluster = self.get(cluster_file)
+                clusters.append(cluster)
+            except (ImportError, AttributeError) as ex:
+                log.error("Unable to load cluster %s: `%s`", cluster_file, ex)
+                log.error("If cluster %s was created with a previous version of elasticluster, you may need to run `elasticluster migrate %s %s` to update it.", cluster_file, self.storage_path, cluster_file)
         return clusters
 
     def get(self, name):
