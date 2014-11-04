@@ -50,8 +50,13 @@ def __setstate_upgrade__(self, state):
     # Date:   Sat Oct 25 16:57:58 2014 +0200
     #
     #     Save host keys in `storage_path` as <clustername>.known_hosts and use it when connecting to the cluster
-    if 'known_hosts_file' not in state:
-        self._patches['known_hosts_file'] = (NotPresent(), None)
+    old_known_hosts_file = state.get('known_hosts_file', NotPresent())
+
+    path = "%s/%s.known_hosts" % (self.repository.storage_path, self.name)
+    known_hosts_file = path if os.path.isfile(path) else None
+
+    if old_known_hosts_file != known_hosts_file:
+        self._patches['known_hosts_file'] = (NotPresent(), known_hosts_file)
 
     # commit 6413374799e945953492e699cca4bcabf572b5df
     # Author: Antonio Messina <antonio.s.messina@gmail.com>
