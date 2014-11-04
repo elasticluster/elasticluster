@@ -193,8 +193,19 @@ class Cluster(object):
             self.nodes[kind] = []
 
         if not name:
-            name = "%s%03d" % (kind, len(self.nodes[kind]) + 1)
+            nodenames = [i.name for i in self.nodes[kind]]
+            numnodes = len(nodenames)
+            for index in range(numnodes+1, numnodes+50):
+                _name = "%s%03d" % (kind, index)
+                if _name in nodenames:
+                    continue
+                else:
+                    name = _name
+                    break
 
+        if not name:
+            log.error("while adding a new node of type `%s`, I was unable to find a good name for it.", kind)
+            return None
         node = Node(name, self.name, kind, self._cloud_provider,
                     self._user_key_public, self.user_key_private,
                     self._user_key_name, image_user, security_group,
