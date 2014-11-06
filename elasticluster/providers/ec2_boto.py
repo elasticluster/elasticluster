@@ -121,8 +121,8 @@ class BotoCloudProvider(AbstractCloudProvider):
 
                 for vpc in vpc_connection.get_all_vpcs():
                     log.debug("Checking whether %s matches %s/%s" %
-                        (self._vpc, vpc.tags['Name'], vpc.id))
-                    if self._vpc in [vpc.tags['Name'], vpc.id]:
+                        (self._vpc, vpc.tags.get('Name'), vpc.id))
+                    if self._vpc in [vpc.tags.get('Name'), vpc.id]:
                         self._vpc_id = vpc.id
                         if self._vpc != self._vpc_id:
                             log.debug("VPC %s matches %s" %
