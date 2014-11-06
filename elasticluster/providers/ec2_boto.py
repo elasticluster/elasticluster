@@ -17,6 +17,7 @@
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
 
 # System imports
+import hashlib
 import os
 import urllib
 import threading
@@ -24,6 +25,7 @@ import threading
 # External modules
 import boto
 from boto import ec2
+from Crypto.PublicKey import RSA
 from paramiko import DSSKey, RSAKey, PasswordRequiredException
 from paramiko.ssh_exception import SSHException
 
@@ -403,19 +405,24 @@ class BotoCloudProvider(AbstractCloudProvider):
             cloud_keypair = keypairs[name]
 
             if pkey:
-                fingerprint = str.join(
-                    ':', (i.encode('hex') for i in pkey.get_fingerprint()))
+                if "amazon" in self._ec2host:
+                    # AWS takes the MD5 hash of the key's DER representation.
+                    key = RSA.importKey(open(private_key_path).read())
+                    der = key.publickey().exportKey('DER')
+
+                    m = hashlib.md5()
+                    m.update(der)
+                    digest = m.hexdigest()
+                    fingerprint = ':'.join([
+                        digest[i:i + 2] for i in range(0, len(digest), 2)])
+                else:
+                    fingerprint = str.join(
+                        ':', (i.encode('hex') for i in pkey.get_fingerprint()))
 
                 if fingerprint != cloud_keypair.fingerprint:
-                    if "amazon" in self._ec2host:
-                        log.error(
-                            "Apparently, Amazon does not compute the RSA key "
-                            "fingerprint as we do! We cannot check if the "
-                            "uploaded keypair is correct!")
-                    else:
-                        raise KeypairError(
-                            "Keypair `%s` is present but has "
-                            "different fingerprint. Aborting!" % name)
+                    raise KeypairError(
+                        "Keypair `%s` is present but has "
+                        "different fingerprint. Aborting!" % name)
 
     def _check_security_group(self, name):
         """Checks if the security group exists.
