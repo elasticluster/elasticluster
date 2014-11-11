@@ -780,7 +780,13 @@ class Node(object):
         # using the first that is working.
         ips=self.ips[:]
         # This is done in order to "sort" the IPs and put the preferred_ip first.
-        if self.preferred_ip: ips.remove(self.preferred_ip)
+        if self.preferred_ip:
+            if self.preferred_ip in ips:
+                ips.remove(self.preferred_ip)
+            else:
+                # Preferred is changed?
+                log.debug("IP %s does not seem to belong to %s anymore. Ignoring!", self.preferred_ip, self.name)
+                self.preferred_ip = ips[0]
 
         for ip in [self.preferred_ip] + ips:
             if not ip: continue
