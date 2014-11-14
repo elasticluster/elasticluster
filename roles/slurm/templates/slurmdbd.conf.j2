@@ -1,0 +1,136 @@
+############################################################################### 
+#                   Sample configuration file for slurmdbd
+###############################################################################
+#
+# /etc/slurm-llnl/slurmdb.conf is an ASCII file which describes Slurm
+# Database Daemon (SlurmDBD) configuration information.
+# The contents of the file are case insensitive except for the names of
+# nodes and files. Any text following a "#" in the configuration file is
+# treated as a comment through the end of that line. The size of each
+# line in the file is limited to 1024 characters. Changes to the
+# configuration file take effect upon restart of SlurmDbd or daemon
+# receipt of the SIGHUP signal unless otherwise noted.
+#
+# This file should be only on the computer where SlurmDBD executes and
+# should only be readable by the user which executes SlurmDBD (e.g.
+# "slurm"). This file should be protected from unauthorized access since
+# it contains a database password.
+###############################################################################
+
+# AuthType
+# Define the authentication method for communications between
+# SLURM components. Acceptable values at present include
+# "auth/none", "auth/authd", and "auth/munge". The default value
+# is "auth/none", which means the UID included in communication
+# messages is not verified. This may be fine for testing
+# purposes, but do not use "auth/none" if you desire any security.
+# "auth/authd" indicates that Brett Chun’s authd is to be used
+# (see "http://www.theether.org/authd/" for more information).
+# "auth/munge" indicates that LLNL’s Munge system is to be used
+# (this is the best supported authentication mechanism for SLURM,
+# see "http://home.gna.org/munge/" for more information).
+# SlurmDbd must be terminated prior to changing the value of
+# AuthType and later restarted.
+AuthType=auth/munge
+
+# AuthInfo
+# Additional information to be used for authentication of
+# communications with the Slurm control daemon (slurmctld) on each
+# cluster. The interpretation of this option is specific to the
+# configured AuthType. In the case of auth/munge, this can be
+# configured to use a Munge daemon specifically configured to provide
+# authentication between clusters while the default Munge daemon
+# provides authentication within a cluster. In that case, this
+# will specify the pathname of the socket to use. The default
+# value is NULL, which results in the default authentication
+# mechanism being used.
+AuthInfo=/var/run/munge/munge.socket.2
+
+# DbdHost
+# The name of the machine where the Slurm Database Daemon is
+# executed. This should be a node name without the full domain
+# name (e.g. "lx0001"). This value must be specified.
+DbdHost=localhost
+
+# DbdPort
+# The port number that the Slurm Database Daemon (slurmdbd)
+# listens to for work. The default value is SLURMDBD_PORT as
+# established at system build time. If none is explicitly
+# specified, it will be set to 6819. This value must be equal
+# to the SlurmDbdPort parameter in the slurm.conf file.
+
+# DebugLevel
+# The level of detail to provide the Slurm Database Daemon’s logs.
+# Values from 0 to 7 are legal, with ‘0’ being "quiet" operation
+# and ‘7’ being insanely verbose. The default value is 3.
+DebugLevel=3
+
+# MessageTimeout
+# Time permitted for a round-trip  communication  to  complete  in
+# seconds. Default value is 10 seconds.
+
+# StorageHost
+# Define the name of the host the database is running where we are
+# going to store the data. Ideally this should be the host on
+# which slurmdbd executes.
+StorageHost=localhost
+
+# StorageLoc
+# Specify the name of the database as the location where
+# accounting records are written.
+StorageLoc={{slurmdbd_mysql_db}}
+
+# StoragePass
+# Define the password used to gain access to the database to store
+# the job accounting data.
+StoragePass={{slurmdbd_mysql_pwd}}
+
+# StoragePort
+# The port number that the Slurm Database Daemon (slurmdbd)
+# communicates with the database.
+
+# StorageType
+# Define the accounting storage mechanism type. Acceptable values
+# at present include "accounting_storage/gold",
+# "accounting_storage/mysql", and "accounting_storage/pgsql".
+# The value "accounting_storage/gold" indicates that account
+# records will be written to Gold
+# (http://www.clusterresources.com/pages/products/gold-allocation-manager.php),
+# which maintains its own database. The value
+# "accounting_storage/mysql" indicates that accounting records
+# should be written to a MySQL database specified by the StorageLoc
+# parameter. The value "accounting_storage/pgsql" indicates that
+# accounting records should be written to a PostgreSQL database
+# specified by the StorageLoc parameter. This value must be
+# specified.
+StorageType=accounting_storage/mysql
+
+# StorageUser
+# Define the name of the user we are going to connect to the
+# database with to store the job accounting data.
+StorageUser={{slurmdbd_mysql_user}}
+
+################################################################################
+# WARNING!
+# If you are running slurmdbd on Debian or derived system please leave
+# the above values untouched
+################################################################################
+# LogFile
+# Fully qualified pathname of a file into which the Slurm Database
+# Daemon’s logs are written. The default value is none (performs
+# logging via syslog).
+LogFile=/var/log/{{slurm_name}}/slurmdbd.log
+
+# PidFile
+# Fully qualified pathname of a file into which the Slurm Database
+# Daemon may write its process ID. This may be used for automate
+# signal processing. The default value is "/var/run/slurmdbd.pid".
+PidFile=/var/run/{{slurm_name}}/slurmdbd.pid
+
+# SlurmUser
+# The name of the user that the slurmctld daemon executes as.
+# This user must exist on the machine executing the Slurm Database
+# Daemon and have the same user ID as the hosts on which slurmctld
+# execute. For security purposes, a user other than "root" is
+# recommended. The default value is "root".
+SlurmUser=slurm

@@ -18,6 +18,7 @@
     - perl-DBI
     - rpm-build
     - gcc
+    - mysql-devel
   when: is_centos
 
 - name: Download SLURM source package (CentOS)

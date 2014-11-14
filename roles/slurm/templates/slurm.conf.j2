@@ -122,26 +122,26 @@ SelectTypeParameters={{slurm_selecttypeparameters|default('CR_Memory')}}
 # 
 # 
 # JOB PRIORITY 
-#PriorityType=priority/basic 
+PriorityType=priority/multifactor
 #PriorityDecayHalfLife= 
 #PriorityCalcPeriod= 
 #PriorityFavorSmall= 
 #PriorityMaxAge= 
 #PriorityUsageResetPeriod= 
-#PriorityWeightAge= 
-#PriorityWeightFairshare= 
-#PriorityWeightJobSize= 
-#PriorityWeightPartition= 
-#PriorityWeightQOS= 
+PriorityWeightAge=0
+PriorityWeightFairshare=0
+PriorityWeightJobSize=0
+PriorityWeightPartition=0
+PriorityWeightQOS=10000
 # 
 # 
 # LOGGING AND ACCOUNTING 
 #AccountingStorageEnforce=0 
 #AccountingStorageHost=
-AccountingStorageLoc=/var/tmp/slurm-acct.txt
+AccountingStorageLoc={{ groups['slurm_master'][0] }}
 #AccountingStoragePass=
 #AccountingStoragePort=
-AccountingStorageType=accounting_storage/filetxt
+AccountingStorageType=accounting_storage/slurmdbd
 #AccountingStorageUser=
 AccountingStoreJobComment=YES
 ClusterName=gc3cluster
@@ -176,7 +176,7 @@ SlurmdLogFile=/var/log/{{slurm_name}}/slurmd.log
 # 
 # Sockets=1 CoresPerSocket=1 ThreadsPerCore=1
 {% for host in groups['slurm_clients'] %}
-NodeName={{host}} 
+NodeName={{host}} RealMemory={{hostvars[host]['ansible_memtotal_mb']}} CPUs={{hostvars[host]['ansible_processor_vcpus']}} Sockets={{hostvars[host]['ansible_processor_vcpus']}} CoresPerSocket=1 ThreadsPerCore=1
 {% endfor %}
 PartitionName=cloud Nodes={% for host in groups['slurm_clients'] %}{{host}},{%endfor%} MaxTime=INFINITE State=UP Default=YES
 

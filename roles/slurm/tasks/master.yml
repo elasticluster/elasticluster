@@ -4,3 +4,65 @@
   with_items:
     - slurm-acct.txt
     - slurm-jobs.txt
+
+- name: Install slurmdbd and MySQL, used for accounting
+  apt: name={{item}} state=installed
+  with_items:
+    - "{{ slurmdbd_name }}"
+    - mysql-server
+    - python-mysqldb
+  when: is_debian_or_ubuntu
+  tags:
+    - slurm
+
+
+- name: Install MySQL, used for accounting
+  yum: name={{item}} state=installed
+  with_items:
+    - mysql-server
+    - MySQL-python
+  when: is_centos
+  tags:
+    - slurm
+
+- name: Ensure MySQL daemon is up (CentOS)
+  service: name=mysqld state=started
+  when: is_centos
+  tags:
+    - slurm
+
+- name: Create MySQL user `slurm` for slurmdbd
+  mysql_db: name={{slurmdbd_mysql_db}} state=present
+  tags:
+    - slurm
+
+- name: Create MySQL user `slurm` for slurmdbd
+  mysql_user: name={{slurmdbd_mysql_user}} password={{slurmdbd_mysql_pwd}} priv={{slurmdbd_mysql_db}}.*:ALL state=present
+  tags:
+    - slurm
+
+- name: Deploy template for slurmdbd
+  template: src=slurm/templates/slurmdbd.conf.j2 dest=/etc/{{slurm_name}}/slurmdbd.conf owner=root group=root mode=0644
+  notify: restart slurmdbd
+  tags:
+    - slurm
+
+- name: Ensure SLURMdbd is running
+  service: name={{slurmdbd_name}} state=started
+  tags: 
+    - slurm
+
+- name: Create cluster in accounting database
+  shell: sacctmgr list cluster -p -n | grep ^gc3cluster || sacctmgr -i -Q add cluster gc3cluster
+  tags:
+    - slurm
+
+- name: Create an account for default cluster
+  shell: sacctmgr list account Cluster=gc3cluster -i -p -n | grep '^gc3|gc3|' || sacctmgr -i -Q add account gc3 Cluster=gc3cluster
+  tags:
+    - slurm
+
+- name: Add default user to cluster
+  shell: sacctmgr list user Account=gc3 -i -p -n | grep '^{{ansible_ssh_user}}|gc3|' || sacctmgr -i -Q add user {{ansible_ssh_user}} DefaultAccount=gc3
+  tags:
+    - slurm
