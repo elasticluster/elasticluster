@@ -237,12 +237,12 @@ class Configurator(object):
         repository = self.create_repository()
         cluster = repository.get(cluster_name)
         if not cluster._setup_provider:
-            cluster._setup_provider = self.create_setup_provider(cluster.extra['template'])
+            cluster._setup_provider = self.create_setup_provider(cluster.template)
         if not cluster._cloud_provider:
-            cluster._cloud_provider = self.create_cloud_provider(cluster.extra['template'])
+            cluster._cloud_provider = self.create_cloud_provider(cluster.template)
         cluster.update_config(
-            self.cluster_conf[cluster.extra['template']]['cluster'],
-            self.cluster_conf[cluster.extra['template']]['login']
+            self.cluster_conf[cluster.template]['cluster'],
+            self.cluster_conf[cluster.template]['login']
         )
         return cluster
 
@@ -279,13 +279,15 @@ class Configurator(object):
 
             # Environment variables parsing
             environment[nodekind] = dict()
-            for key, value in conf.iteritems():
+            for key, value in list(conf.items()) + list(self.cluster_conf[cluster_template]['cluster'].items()):
                 # Set both group and global variables
                 for prefix in ["%s_var_" % nodekind,
                                "global_var_"]:
                     if key.startswith(prefix):
                         var = key.replace(prefix, '')
                         environment[nodekind][var] = value
+                        log.debug("setting variable %s=%s for node kind %s",
+                                  var, value, nodekind)
 
         provider = Configurator.setup_providers_map[provider_name]
         return provider(groups, playbook_path=playbook_path,
