@@ -580,6 +580,22 @@ Optional configuration keys
     The maximum number of process to be created when virtual machines
     are started. Default is 10.
 
+``root_volume_size``
+
+    Size of the root volume, in gigabytes (GiB). The /home directory of this
+    volume on the first frontend node is shared to compute nodes using NFS.
+    Defaults to the original size of the base AMI specified by image_id.
+
+``root_volume_type``
+
+    `Root volume storage type <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html>`_,
+    `gp2` (general purpose SSD), `io1` (provisioned IOPS SSD), or `standard`
+    (the default, magnetic).
+
+``root_volume_iops``
+
+    Specific IOPS target for provisioned IOPS SSD (`io1`) volumes.
+
 Examples
 --------
 

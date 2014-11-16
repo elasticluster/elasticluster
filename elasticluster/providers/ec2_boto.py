@@ -148,7 +148,8 @@ class BotoCloudProvider(AbstractCloudProvider):
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
                        username=None, node_name=None, network_ids=None,
-                       **kwargs):
+                       root_volume_size=None, root_volume_type=None,
+                       root_volume_iops=None, **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
 
@@ -168,6 +169,9 @@ class BotoCloudProvider(AbstractCloudProvider):
         :param str image_id: image type (os) to use for the instance
         :param str image_userdata: command to execute after startup
         :param str username: username for the given ssh key, default None
+        :param str root_volume_size: Target size, in GiB, for the root volume
+        :param str root_volume_type: Type of root volume (standard, gp2, io1)
+        :param str root_volume_iops: Provisioned IOPS for the root volume
 
         :return: str - instance id of the started instance
         """
@@ -200,11 +204,24 @@ class BotoCloudProvider(AbstractCloudProvider):
             interfaces = None
             security_groups = [security_group]
 
+        if root_volume_size:
+            dev_sda1 = ec2.blockdevicemapping.BlockDeviceType()
+            dev_sda1.size = int(root_volume_size)
+            dev_sda1.delete_on_termination = True
+            if root_volume_type:
+                dev_sda1.volume_type = root_volume_type
+            if root_volume_iops:
+                dev_sda1.iops = int(root_volume_iops)
+            bdm = ec2.blockdevicemapping.BlockDeviceMapping()
+            bdm["/dev/sda1"] = dev_sda1
+        else:
+            bdm = None
+
         try:
             reservation = connection.run_instances(
                 image_id, key_name=key_name, security_groups=security_groups,
                 instance_type=flavor, user_data=image_userdata,
-                network_interfaces=interfaces)
+                network_interfaces=interfaces, block_device_map=bdm)
         except Exception, ex:
             log.error("Error starting instance: %s", ex)
             if "TooManyInstances" in ex:

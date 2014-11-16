@@ -468,6 +468,18 @@ worker_groups=ipython_engine
 #          configured anyway, otherwise creation of the cluster will
 #          fail.
 #
+# root_volume_size: Size of the root volume, in gigabytes (GiB). The /home
+#                   directory of this volume on the first frontend node is
+#                   shared to compute nodes using NFS. Defaults to the
+#                   original size of the base AMI specified by image_id.
+#
+# root_volume_type: Root volume storage type, `gp2` (general purpose SSD),
+#                   `io1` (provisioned IOPS SSD), or `standard` (the default,
+#                   magnetic).
+#
+# root_volume_iops: Specific IOPS target for provisioned IOPS SSD (`io1`)
+#                   volumes.
+#
 # Some (working) examples:
 
 [cluster/slurm]
