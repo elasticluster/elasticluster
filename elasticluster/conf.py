@@ -118,7 +118,7 @@ SCHEMA = {
                 Optional("accelerator_count", default=0): nonnegative_int,
                 Optional("accelerator_type"): nonempty_str,
                 Optional("min_cpu_platform"): nonempty_str,
-                # allow other keys w/out restrictions
+                # allow other string keys w/out restrictions
                 Optional(str): str,
             },
         },
@@ -130,7 +130,7 @@ SCHEMA = {
         Optional("accelerator_type"): nonempty_str,
         Optional("allow_project_ssh_keys", default=True): boolean,
         Optional("min_cpu_platform"): nonempty_str,
-        # allow other keys w/out restrictions
+        # allow other string keys w/out restrictions
         Optional(str): str,
     },
     'login': {
