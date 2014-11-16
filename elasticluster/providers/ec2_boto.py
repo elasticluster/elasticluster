@@ -181,6 +181,10 @@ class BotoCloudProvider(AbstractCloudProvider):
                        security_group, flavor, image_id, image_userdata,
                        username=None, node_name=None, network_ids=None,
                        price=None, timeout=None,
+                       root_volume_device=None,
+                       root_volume_size=None,
+                       root_volume_type=None,
+                       root_volume_iops=None,
                        **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
@@ -204,6 +208,10 @@ class BotoCloudProvider(AbstractCloudProvider):
         :param float price: Spot instance price (if 0, do not use spot instances).
         :param int price: Timeout (in seconds) waiting for spot instances;
                           only used if price > 0.
+        :param str root_volume_device: Root volume device path if not /dev/sda1
+        :param str root_volume_size: Target size, in GiB, for the root volume
+        :param str root_volume_type: Type of root volume (standard, gp2, io1)
+        :param str root_volume_iops: Provisioned IOPS for the root volume
 
         :return: str - instance id of the started instance
         """
@@ -243,6 +251,20 @@ class BotoCloudProvider(AbstractCloudProvider):
         if timeout is None:
             timeout = self.timeout
 
+        if root_volume_size:
+            dev_root = ec2.blockdevicemapping.BlockDeviceType()
+            dev_root.size = int(root_volume_size)
+            dev_root.delete_on_termination = True
+            if root_volume_type:
+                dev_root.volume_type = root_volume_type
+            if root_volume_iops:
+                dev_root.iops = int(root_volume_iops)
+            bdm = ec2.blockdevicemapping.BlockDeviceMapping()
+            dev_name = root_volume_device if root_volume_device else "/dev/sda1"
+            bdm[dev_name] = dev_root
+        else:
+            bdm = None
+
         try:
             #start spot instance if bid is specified
             if price:
@@ -250,7 +272,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                 request = connection.request_spot_instances(
                                 price,image_id, key_name=key_name, security_groups=security_groups,
                                 instance_type=flavor, user_data=image_userdata,
-                                network_interfaces=interfaces,
+                                network_interfaces=interfaces, block_device_map=bdm,
                                 instance_profile_name=self._instance_profile)[-1]
 
                 # wait until spot request is fullfilled (will wait
@@ -269,7 +291,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                 reservation = connection.run_instances(
                     image_id, key_name=key_name, security_groups=security_groups,
                     instance_type=flavor, user_data=image_userdata,
-                    network_interfaces=interfaces,
+                    network_interfaces=interfaces, block_device_map=bdm,
                     instance_profile_name=self._instance_profile)
         except Exception as ex:
             log.error("Error starting instance: %s", ex)
