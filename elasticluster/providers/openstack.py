@@ -32,7 +32,7 @@ import hashlib
 # External modules
 from novaclient import client
 from novaclient.exceptions import NotFound
-from paramiko import DSSKey, RSAKey, PasswordRequiredException
+from paramiko import DSSKey, RSAKey, PasswordRequiredException, Agent
 from paramiko.ssh_exception import SSHException
 
 # Elasticluster imports
@@ -186,16 +186,99 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         instance = self._load_instance(instance_id, force_reload=True)
         return instance.status == 'ACTIVE'
 
-    # Protected methods
-    @classmethod
-    def _get_fp_from_publickey(cls, public_key_path):
-        with open(public_key_path, 'r') as fd:
-            raw_fp=fd.readline().strip()
-        key = base64.b64decode(raw_fp.split()[1].encode('ascii'))
-        fp_plain = hashlib.md5(key).hexdigest()
-        return ':'.join(a+b for a,b in zip(fp_plain[::2], fp_plain[1::2]))
 
     def _check_keypair(self, name, public_key_path, private_key_path):
+        """First checks if the keypair is valid, then checks if the keypair
+        is registered with on the cloud. If not the keypair is added to the
+        users ssh keys.
+
+        :param str name: name of the ssh key
+        :param str public_key_path: path to the ssh public key file
+        :param str private_key_path: path to the ssh private key file
+
+        :raises: `KeypairError` if key is not a valid RSA or DSA key,
+                 the key could not be uploaded or the fingerprint does not
+                 match to the one uploaded to the cloud.
+        """
+
+        # Read key. We do it as first thing because we need it either
+        # way, to check the fingerprint of the remote keypair if it
+        # exists already, or to create a new keypair.
+        
+        # Check if a keypair `name` exists on the cloud. 
+        try:
+            keypair = self.client.keypairs.get(name)
+        except NotFound:
+            log.warning(
+                "Keypair `%s` not found on resource `%s`, Creating a new one",
+                name, self._os_auth_url)
+
+            # Create a new keypair
+            with open(os.path.expanduser(public_key_path)) as f:
+                key_material = f.read()
+                try:
+                    self.client.keypairs.create(name, key_material)
+                except Exception, ex:
+                    log.error(
+                        "Could not import key `%s` with name `%s` to `%s`",
+                        name, public_key_path, self._os_auth_url)
+                    raise KeypairError(
+                        "could not create keypair `%s`: %s" % (name, ex))
+        
+        # Getting the fingerprints from the keys in the agent
+        raw_agent_fps=[x.get_fingerprint() for x in Agent().get_keys()]
+        agent_fps=[':'.join((part.encode('hex') for part in x)) for x in raw_agent_fps]
+        
+        #If the fingerprints from the agent matches the ones in the cloud, we exit?
+        # TODO: Check if this is OK to do like that
+        for fp in agent_fps:
+            if fp==keypair.fingerprint:
+                log.warning('Key already added to ssh-agent')
+                return
+        # If not, it continues with the checking
+        pkey = None
+        try:
+            pkey = DSSKey.from_private_key_file(private_key_path)
+        except PasswordRequiredException:
+            # As the key is protected, we check if there is one added to
+            # the ssh-agent with the same fingerprint as the one on the cloud
+            raise KeypairError(
+                "Unable to check key file `%s` because it is encrypted with a "
+                "password. Please, ensure that you added it to the SSH agent "
+                "with `ssh-add %s`", private_key_path, private_key_path)
+        except SSHException:
+            try:
+                pkey = RSAKey.from_private_key_file(private_key_path)
+            except PasswordRequiredException:
+                raise KeypairError(
+                    "Unable to check key file `%s` because it is encrypted with a "
+                    "password. Please, ensure that you added it to the SSH agent "
+                    "with `ssh-add %s`", private_key_path, private_key_path)
+            except SSHException:
+                raise KeypairError('File `%s` is neither a valid DSA key '
+                                   'or RSA key.' % private_key_path)
+
+        # Check if it has the correct keypair, but only if we can read the local key
+        fingerprint=None
+        if pkey:
+            fingerprint = str.join(
+                ':', (i.encode('hex') for i in pkey.get_fingerprint()))
+        else:
+            with open(public_key_path, 'r') as fd:
+                raw_fp=fd.readline().strip()
+            key = base64.b64decode(raw_fp.split()[1].encode('ascii'))
+            fp_plain = hashlib.md5(key).hexdigest()
+            fingerprint = ':'.join(a+b for a,b in zip(fp_plain[::2], fp_plain[1::2]))
+            
+        if not fingerprint:
+            log.warning("Unable to check if the keypair is using the correct key.")
+            
+        elif fingerprint != keypair.fingerprint:
+            raise KeypairError(
+                "Keypair `%s` is present but has "
+                "different fingerprint. Aborting!" % name)
+
+    def _check_keypair_old(self, name, public_key_path, private_key_path):
         """First checks if the keypair is valid, then checks if the keypair
         is registered with on the cloud. If not the keypair is added to the
         users ssh keys.
@@ -242,7 +325,11 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 fingerprint = str.join(
                     ':', (i.encode('hex') for i in pkey.get_fingerprint()))
             else:
-                fingerprint = self._get_fp_from_publickey(public_key_path)
+                with open(public_key_path, 'r') as fd:
+                    raw_fp=fd.readline().strip()
+                key = base64.b64decode(raw_fp.split()[1].encode('ascii'))
+                fp_plain = hashlib.md5(key).hexdigest()
+                fingerprint = ':'.join(a+b for a,b in zip(fp_plain[::2], fp_plain[1::2]))
                 
             
             if not fingerprint:
@@ -269,7 +356,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         name, public_key_path, self._os_auth_url)
                     raise KeypairError(
                         "could not create keypair `%s`: %s" % (name, ex))
-
 
     def _check_security_group(self, name):
         """Checks if the security group exists.
