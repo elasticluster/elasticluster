@@ -26,6 +26,8 @@ __author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
 # System imports
 import os
 import threading
+import base64
+import hashlib
 
 # External modules
 from novaclient import client
@@ -185,6 +187,13 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         return instance.status == 'ACTIVE'
 
     # Protected methods
+    @classmethod
+    def _get_fp_from_publickey(cls, public_key_path):
+        with open(public_key_path, 'r') as fd:
+            raw_fp=fd.readline().strip()
+        key = base64.b64decode(raw_fp.split()[1].encode('ascii'))
+        fp_plain = hashlib.md5(key).hexdigest()
+        return ':'.join(a+b for a,b in zip(fp_plain[::2], fp_plain[1::2]))
 
     def _check_keypair(self, name, public_key_path, private_key_path):
         """First checks if the keypair is valid, then checks if the keypair
@@ -228,15 +237,22 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             keypair = self.client.keypairs.get(name)
 
             # Check if it has the correct keypair, but only if we can read the local key
+            fingerprint=None
             if pkey:
                 fingerprint = str.join(
                     ':', (i.encode('hex') for i in pkey.get_fingerprint()))
-                if fingerprint != keypair.fingerprint:
-                    raise KeypairError(
-                        "Keypair `%s` is present but has "
-                        "different fingerprint. Aborting!" % name)
             else:
+                fingerprint = self._get_fp_from_publickey(public_key_path)
+                
+            
+            if not fingerprint:
                 log.warning("Unable to check if the keypair is using the correct key.")
+                
+            elif fingerprint != keypair.fingerprint:
+                raise KeypairError(
+                    "Keypair `%s` is present but has "
+                    "different fingerprint. Aborting!" % name)
+                
         except NotFound:
             log.warning(
                 "Keypair `%s` not found on resource `%s`, Creating a new one",
