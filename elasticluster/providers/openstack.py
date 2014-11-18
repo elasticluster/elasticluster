@@ -242,17 +242,17 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         except PasswordRequiredException:
             # As the key is protected, we check if there is one added to
             # the ssh-agent with the same fingerprint as the one on the cloud
-            message = str("Unable to check key file `%s` because it is encrypted with a "
+            message = str("Unable to check key file `"+private_key_path+"` because it is encrypted with a "
                           "password. Please, ensure that you added it to the SSH agent "
-                          "with `ssh-add %s`") % private_key_path, private_key_path
+                          "with `ssh-add "+private_key_path+"`") 
             raise KeypairError(message)
         except SSHException:
             try:
                 pkey = RSAKey.from_private_key_file(private_key_path)
             except PasswordRequiredException:
-                message = str("Unable to check key file `%s` because it is encrypted with a "
+                message = str("Unable to check key file `"+private_key_path+"` because it is encrypted with a "
                               "password. Please, ensure that you added it to the SSH agent "
-                              "with `ssh-add %s`") % private_key_path, private_key_path
+                              "with `ssh-add "+private_key_path+"`") 
                 raise KeypairError(message)
             except SSHException:
                 raise KeypairError('File `%s` is neither a valid DSA key '
