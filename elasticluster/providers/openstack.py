@@ -228,7 +228,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # exists already, or to create a new keypair.
         
         # Check if a keypair `name` exists on the cloud.
-        lock = threading.RLock()
+        lock = threading.Lock()
         lock.acquire()
         try:
             keypair = self.client.keypairs.get(name)
@@ -249,7 +249,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         name, public_key_path, self._os_auth_url)
                     raise KeypairError(
                         "could not create keypair `%s`: %s" % (name, ex))
-        print "lock2: another rlock"
+        print "lock2: another lock"
         self._add_key_to_sshagent(private_key_path)
         lock.release()
         """
