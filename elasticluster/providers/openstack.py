@@ -65,7 +65,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     
     """
     __node_start_lock = threading.Lock()  # lock used for node startup
-    __node_start_rlock = threading.RLock()
     
     def __init__(self, username, password, project_name, auth_url,
                  region_name=None, storage_path=None,
@@ -250,7 +249,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                             name, public_key_path, self._os_auth_url)
                         raise KeypairError(
                             "could not create keypair `%s`: %s" % (name, ex))
-        with OpenStackCloudProvider.__node_start_rlock.acquire(2):
+        with OpenStackCloudProvider.__node_start_lock:
             print "checking second lock"
             self._add_key_to_sshagent(private_key_path)
         """
