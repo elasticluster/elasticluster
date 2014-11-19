@@ -188,6 +188,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         instance = self._load_instance(instance_id, force_reload=True)
         return instance.status == 'ACTIVE'
     
+    '''
     @classmethod
     def _check_keypair_from_ssh_agent(cls, ref_fingerprint):
         """Function to check if a certain keypair is included in the ssh-agent
@@ -205,11 +206,121 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         :param str private_key_path: path to the ssh private key file
         """
         res=raw_input('Please, write the password for your PEMfile')
-        return res
-
-
+        return res'''
 
     def _check_keypair(self, name, public_key_path, private_key_path):
+        """First checks if the keypair is valid, then checks if the keypair
+        is registered with on the cloud. If not the keypair is added to the
+        users ssh keys.
+
+        :param str name: name of the ssh key
+        :param str public_key_path: path to the ssh public key file
+        :param str private_key_path: path to the ssh private key file
+
+        :raises: `KeypairError` if key is not a valid RSA or DSA key,
+                 the key could not be uploaded, the fingerprint does not
+                 match to the one uploaded to the cloud or the key is neither 
+                 accessible nor included in the ssh-agent
+        """
+
+        # Read key. We do it as first thing because we need it either
+        # way, to check the fingerprint of the remote keypair if it
+        # exists already, or to create a new keypair.
+        
+        # Check if a keypair `name` exists on the cloud. 
+        try:
+            keypair = self.client.keypairs.get(name)
+        except NotFound:
+            log.warning(
+                "Keypair `%s` not found on resource `%s`, Creating a new one",
+                name, self._os_auth_url)
+
+            # Create a new keypair
+            with open(os.path.expanduser(public_key_path)) as f:
+                key_material = f.read()
+                try:
+                    self.client.keypairs.create(name, key_material)
+                except Exception, ex:
+                    log.error(
+                        "Could not import key `%s` with name `%s` to `%s`",
+                        name, public_key_path, self._os_auth_url)
+                    raise KeypairError(
+                        "could not create keypair `%s`: %s" % (name, ex))
+        #self._add_key_to_sshagent(private_key_path)
+        """
+        if 'SSH_AUTH_SOCK' in os.environ.keys():
+            try:
+                self._check_keypair_from_ssh_agent()
+            except KeyNotFound:
+                # this can raise an error
+                self._add_key_to_sshagent()
+                self._check_keypair_from_ssh_agent()
+        else:
+            # the following function will try to load the private key, if it failse, it will lo a waring
+            # note: if we cannot use the private key, we cannot setup the cluster.
+            # we need to ensure that this type of connection problem is known, and we should exit after starting the VMs saying that we cannot continue.
+            # or we have to check if paramiko is able to ask for a passphrase to unlock the key.
+            self._check_keypair_from_file()
+        """
+        # Getting the fingerprints from the keys in the agent
+        raw_agent_fps=[x.get_fingerprint() for x in Agent().get_keys()]
+        agent_fps=[':'.join((part.encode('hex') for part in x)) for x in raw_agent_fps]
+        
+        #If the fingerprints from the agent matches the ones in the cloud, we exit?
+        # TODO: Check if this is OK to do like that
+        for fp in agent_fps:
+            if fp==keypair.fingerprint:
+                log.warning('Using key already added to ssh-agent')
+                return
+        # If not, it continues with the checking
+        pkey = None
+        try:
+            pkey = DSSKey.from_private_key_file(private_key_path)
+        except PasswordRequiredException:
+            # As the key is protected, we check if there is one added to
+            # the ssh-agent with the same fingerprint as the one on the cloud
+            # TODO: see if there is a way to ask ssh-agent to load the key, and then check again the fingerprint.
+            message = str("Unable to check key file `"+private_key_path+"` because it is encrypted with a "
+                          "password. Please, ensure that you added it to the SSH agent "
+                          "with `ssh-add "+private_key_path+"`") 
+            raise KeypairError(message)
+        except SSHException:
+            try:
+                pkey = RSAKey.from_private_key_file(private_key_path)
+            except PasswordRequiredException:
+                # TODO: see if there is a way to ask ssh-agent to load the key, and then check again the fingerprint.
+                # if we can load the key, we should call again this function and skip the rest of the body.
+                # COuld make sense to split the body of this function in two: check_keypair_from_ssh_agent and check_keypair_from_file
+                message = str("Unable to check key file `"+private_key_path+"` because it is encrypted with a "
+                              "password. Please, ensure that you added it to the SSH agent "
+                              "with `ssh-add "+private_key_path+"`") 
+                raise KeypairError(message)
+            except SSHException:
+                raise KeypairError('File `%s` is neither a valid DSA key '
+                                   'or RSA key.' % private_key_path)
+
+        # Check if it has the correct keypair, but only if we can read the local key
+        fingerprint=None
+        if pkey:
+            fingerprint = str.join(
+                ':', (i.encode('hex') for i in pkey.get_fingerprint()))
+        else:
+            # this code is probably not needed, because either we already checked with ssh-agent, or we checked loading the private key using paramiko and pkey is defined.
+            with open(public_key_path, 'r') as fd:
+                raw_fp=fd.readline().strip()
+            key = base64.b64decode(raw_fp.split()[1].encode('ascii'))
+            fp_plain = hashlib.md5(key).hexdigest()
+            fingerprint = ':'.join(a+b for a,b in zip(fp_plain[::2], fp_plain[1::2]))
+            
+        if not fingerprint:
+            log.warning("Unable to check if the keypair is using the correct key.")
+            
+        elif fingerprint != keypair.fingerprint:
+            raise KeypairError(
+                "Keypair `%s` is present but has "
+                "different fingerprint. Aborting!" % name)
+
+    def _check_keypair_old(self, name, public_key_path, private_key_path):
         """First checks if the keypair is valid, then checks if the keypair
         is registered with on the cloud. If not the keypair is added to the
         users ssh keys.
