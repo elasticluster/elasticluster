@@ -231,8 +231,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         
         with OpenStackCloudProvider.__node_start_lock as fd:
             try:
-                with threading.Lock() as f:
-                    keypair = self.client.keypairs.get(name)
+                condition = threading.Condition(fd)
+                keypair = self.client.keypairs.get(name)
                 print "Right after unlocking"
             except NotFound:
                 log.warning(
@@ -252,7 +252,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                             "could not create keypair `%s`: %s" % (name, ex))
             print "lock2: another lock2inaa"
             self._add_key_to_sshagent(private_key_path)
-            fd.release()
+            condition.release()
         """
         if 'SSH_AUTH_SOCK' in os.environ.keys():
             try:
