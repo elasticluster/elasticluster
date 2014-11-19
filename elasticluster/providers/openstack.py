@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+from apiclient.mimeparse import best_match
 
 __docformat__ = 'reStructuredText'
 __author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
@@ -28,6 +29,7 @@ import os
 import threading
 import base64
 import hashlib
+import subprocess
 
 # External modules
 from novaclient import client
@@ -40,7 +42,7 @@ from elasticluster import log
 from elasticluster.memoize import memoize
 from elasticluster.providers import AbstractCloudProvider
 from elasticluster.exceptions import SecurityGroupError, KeypairError, \
-    ImageError, InstanceError, ClusterError
+    ImageError, InstanceError, ClusterError, KeyNotFound
 
 DEFAULT_OS_NOVA_API_VERSION = "1.1"
 
@@ -185,7 +187,25 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # Here, it's always better if we update the instance.        
         instance = self._load_instance(instance_id, force_reload=True)
         return instance.status == 'ACTIVE'
-
+    
+    @classmethod
+    def _check_keypair_from_ssh_agent(cls, ref_fingerprint):
+        """Function to check if a certain keypair is included in the ssh-agent
+        :param str ref_fingerprint: fingerprint of the specified key
+        :raises: `KeyNotFound` if the key is not included in the ssh-agent
+        """
+        raw_agent_fps=[x.get_fingerprint() for x in Agent().get_keys()]
+        agent_fps=[':'.join((part.encode('hex') for part in x)) for x in raw_agent_fps]
+        if not ref_fingerprint in agent_fps:
+            raise KeyNotFound
+        
+    @classmethod
+    def _add_key_to_sshagent(cls, private_key_path):
+        """Function to add a private key to the ssh-agent
+        :param str private_key_path: path to the ssh private key file
+        """
+        res=raw_input('Please, write the password for your PEMfile')
+        return res
 
     def _check_keypair(self, name, public_key_path, private_key_path):
         """First checks if the keypair is valid, then checks if the keypair
@@ -197,8 +217,9 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         :param str private_key_path: path to the ssh private key file
 
         :raises: `KeypairError` if key is not a valid RSA or DSA key,
-                 the key could not be uploaded or the fingerprint does not
-                 match to the one uploaded to the cloud.
+                 the key could not be uploaded, the fingerprint does not
+                 match to the one uploaded to the cloud or the key is neither 
+                 accessible nor included in the ssh-agent
         """
 
         # Read key. We do it as first thing because we need it either
@@ -224,7 +245,22 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         name, public_key_path, self._os_auth_url)
                     raise KeypairError(
                         "could not create keypair `%s`: %s" % (name, ex))
-        
+        self._add_key_to_sshagent('b')
+        """
+        if 'SSH_AUTH_SOCK' in os.environ.keys():
+            try:
+                self._check_keypair_from_ssh_agent()
+            except KeyNotFound:
+                # this can raise an error
+                self._add_key_to_sshagent()
+                self._check_keypair_from_ssh_agent()
+        else:
+            # the following function will try to load the private key, if it failse, it will lo a waring
+            # note: if we cannot use the private key, we cannot setup the cluster.
+            # we need to ensure that this type of connection problem is known, and we should exit after starting the VMs saying that we cannot continue.
+            # or we have to check if paramiko is able to ask for a passphrase to unlock the key.
+            self._check_keypair_from_file()
+        """
         # Getting the fingerprints from the keys in the agent
         raw_agent_fps=[x.get_fingerprint() for x in Agent().get_keys()]
         agent_fps=[':'.join((part.encode('hex') for part in x)) for x in raw_agent_fps]
@@ -233,7 +269,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # TODO: Check if this is OK to do like that
         for fp in agent_fps:
             if fp==keypair.fingerprint:
-                log.warning('Key already added to ssh-agent')
+                log.warning('Using key already added to ssh-agent')
                 return
         # If not, it continues with the checking
         pkey = None
@@ -242,6 +278,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         except PasswordRequiredException:
             # As the key is protected, we check if there is one added to
             # the ssh-agent with the same fingerprint as the one on the cloud
+            # TODO: see if there is a way to ask ssh-agent to load the key, and then check again the fingerprint.
             message = str("Unable to check key file `"+private_key_path+"` because it is encrypted with a "
                           "password. Please, ensure that you added it to the SSH agent "
                           "with `ssh-add "+private_key_path+"`") 
@@ -250,6 +287,9 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             try:
                 pkey = RSAKey.from_private_key_file(private_key_path)
             except PasswordRequiredException:
+                # TODO: see if there is a way to ask ssh-agent to load the key, and then check again the fingerprint.
+                # if we can load the key, we should call again this function and skip the rest of the body.
+                # COuld make sense to split the body of this function in two: check_keypair_from_ssh_agent and check_keypair_from_file
                 message = str("Unable to check key file `"+private_key_path+"` because it is encrypted with a "
                               "password. Please, ensure that you added it to the SSH agent "
                               "with `ssh-add "+private_key_path+"`") 
@@ -264,6 +304,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             fingerprint = str.join(
                 ':', (i.encode('hex') for i in pkey.get_fingerprint()))
         else:
+            # this code is probably not needed, because either we already checked with ssh-agent, or we checked loading the private key using paramiko and pkey is defined.
             with open(public_key_path, 'r') as fd:
                 raw_fp=fd.readline().strip()
             key = base64.b64decode(raw_fp.split()[1].encode('ascii'))

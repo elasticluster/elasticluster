@@ -37,6 +37,8 @@ class SubnetError(Exception):
 class KeypairError(Exception):
     pass
 
+class KeyNotFound(Exception):
+    pass
 
 class InstanceError(Exception):
     pass
