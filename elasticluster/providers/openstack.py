@@ -232,9 +232,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         
         with OpenStackCloudProvider.__node_start_lock:
             try:
-                with OpenStackCloudProvider.__node_start_rlock.acquire():
-                    print "IT WAS LOCKEDDDDD"
-                    keypair = self.client.keypairs.get(name)
+                print "IT WAS LOCKEDDDDD"
+                keypair = self.client.keypairs.get(name)
             except NotFound:
                 log.warning(
                     "Keypair `%s` not found on resource `%s`, Creating a new one",
@@ -251,8 +250,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                             name, public_key_path, self._os_auth_url)
                         raise KeypairError(
                             "could not create keypair `%s`: %s" % (name, ex))
-            print "fin de lock"
-        with OpenStackCloudProvider.__node_start_lock:
+        with OpenStackCloudProvider.__node_start_rlock.acquire(2):
             print "checking second lock"
             self._add_key_to_sshagent(private_key_path)
         """
