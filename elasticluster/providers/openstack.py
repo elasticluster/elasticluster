@@ -231,6 +231,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         
         with OpenStackCloudProvider.__node_start_lock as fd:
             try:
+                print fd
                 condition = threading.Condition(fd)
                 keypair = self.client.keypairs.get(name)
                 print "Right after unlocking"
