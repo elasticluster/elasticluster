@@ -230,7 +230,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         
         # Check if a keypair `name` exists on the cloud.
         
-        with OpenStackCloudProvider.__node_start_rlock.acquire() as fd:
+        with OpenStackCloudProvider.__node_start_rlock.acquire(blocking=2) as fd:
             try:
                 print "IT WAS LOCKEDDDDD"
                 keypair = self.client.keypairs.get(name)
