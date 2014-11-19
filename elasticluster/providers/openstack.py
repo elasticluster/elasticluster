@@ -246,7 +246,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         name, public_key_path, self._os_auth_url)
                     raise KeypairError(
                         "could not create keypair `%s`: %s" % (name, ex))
-        print "OSCP: lock2: another lock"
+        print "lock2: another lock"
         self._add_key_to_sshagent(private_key_path)
         """
         if 'SSH_AUTH_SOCK' in os.environ.keys():
