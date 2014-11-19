@@ -111,8 +111,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         """
 
         log.debug("Checking keypair `%s`.", key_name)
-        #with OpenStackCloudProvider.__node_start_lock:
-        self._check_keypair(key_name, public_key_path, private_key_path)
+        with OpenStackCloudProvider.__node_start_lock:
+            self._check_keypair(key_name, public_key_path, private_key_path)
 
         log.debug("Checking security group `%s`.", security_group)
         self._check_security_group(security_group)
@@ -228,32 +228,27 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # exists already, or to create a new keypair.
         
         # Check if a keypair `name` exists on the cloud.
-        
-        with OpenStackCloudProvider.__node_start_lock as fd:
-            try:
-                print "prelock"
-                keypair = self.client.keypairs.get(name)
-                print "Right after unlocking"
-            except NotFound:
-                log.warning(
-                    "Keypair `%s` not found on resource `%s`, Creating a new one",
-                    name, self._os_auth_url)
-    
-                # Create a new keypair
-                with open(os.path.expanduser(public_key_path)) as f:
-                    key_material = f.read()
-                    try:
-                        self.client.keypairs.create(name, key_material)
-                    except Exception, ex:
-                        log.error(
-                            "Could not import key `%s` with name `%s` to `%s`",
-                            name, public_key_path, self._os_auth_url)
-                        raise KeypairError(
-                            "could not create keypair `%s`: %s" % (name, ex))
-        with OpenStackCloudProvider.__node_start_lock as fd:
-            print "lock2: another lock2inaa"
-            self._add_key_to_sshagent(private_key_path)
+        try:
             keypair = self.client.keypairs.get(name)
+        except NotFound:
+            log.warning(
+                "Keypair `%s` not found on resource `%s`, Creating a new one",
+                name, self._os_auth_url)
+
+            # Create a new keypair
+            with open(os.path.expanduser(public_key_path)) as f:
+                key_material = f.read()
+                try:
+                    self.client.keypairs.create(name, key_material)
+                except Exception, ex:
+                    log.error(
+                        "Could not import key `%s` with name `%s` to `%s`",
+                        name, public_key_path, self._os_auth_url)
+                    raise KeypairError(
+                        "could not create keypair `%s`: %s" % (name, ex))
+        finally:
+            print "OSCP: slock2: another lock"
+            self._add_key_to_sshagent(private_key_path)
         """
         if 'SSH_AUTH_SOCK' in os.environ.keys():
             try:
