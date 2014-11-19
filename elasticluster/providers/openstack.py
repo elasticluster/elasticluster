@@ -228,6 +228,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # exists already, or to create a new keypair.
         
         # Check if a keypair `name` exists on the cloud.
+        lock = threading.RLock()
+        lock.acquire()
         try:
             keypair = self.client.keypairs.get(name)
             print "Right after unlocking"
@@ -249,6 +251,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         "could not create keypair `%s`: %s" % (name, ex))
         print "lock2: another lock"
         self._add_key_to_sshagent(private_key_path)
+        lock.release()
         """
         if 'SSH_AUTH_SOCK' in os.environ.keys():
             try:
