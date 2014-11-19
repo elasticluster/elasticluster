@@ -231,7 +231,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         
         with OpenStackCloudProvider.__node_start_lock as fd:
             try:
-                with OpenStackCloudProvider.__node_start_lock as f:
+                with threading.Lock() as f:
                     keypair = self.client.keypairs.get(name)
                 print "Right after unlocking"
             except NotFound:
