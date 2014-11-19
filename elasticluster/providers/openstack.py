@@ -247,7 +247,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                     raise KeypairError(
                         "could not create keypair `%s`: %s" % (name, ex))
         with OpenStackCloudProvider.__node_start_lock:
-            print "lock2: another lock"
+            print "OSCP: lock2: another lock"
             self._add_key_to_sshagent(private_key_path)
         """
         if 'SSH_AUTH_SOCK' in os.environ.keys():
