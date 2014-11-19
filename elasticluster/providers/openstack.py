@@ -207,7 +207,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         res=raw_input('Please, write the password for your PEMfile')
         return res
 
-    def _check_keypair(self, name, public_key_path, private_key_path):
+    def _check_keypair_bad(self, name, public_key_path, private_key_path):
         """First checks if the keypair is valid, then checks if the keypair
         is registered with on the cloud. If not the keypair is added to the
         users ssh keys.
@@ -319,7 +319,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 "Keypair `%s` is present but has "
                 "different fingerprint. Aborting!" % name)
 
-    def _check_keypair_old(self, name, public_key_path, private_key_path):
+    def _check_keypair(self, name, public_key_path, private_key_path):
         """First checks if the keypair is valid, then checks if the keypair
         is registered with on the cloud. If not the keypair is added to the
         users ssh keys.
