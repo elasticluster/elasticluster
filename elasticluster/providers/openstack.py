@@ -229,6 +229,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         
         # Check if a keypair `name` exists on the cloud.
         print "Trying to check the lock" 
+        lock2=threading.Lock()
+        lock2.acquire()
         try:
             keypair = self.client.keypairs.get(name)
         except NotFound:
@@ -248,6 +250,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                     raise KeypairError(
                         "could not create keypair `%s`: %s" % (name, ex))
         print "POST LOCKKKK!"
+        lock2.release()
         self._add_key_to_sshagent(private_key_path)
         """
         if 'SSH_AUTH_SOCK' in os.environ.keys():
