@@ -227,7 +227,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # way, to check the fingerprint of the remote keypair if it
         # exists already, or to create a new keypair.
         
-        # Check if a keypair `name` exists on the cloud. 
+        # Check if a keypair `name` exists on the cloud.
+        print "Trying to check the lock" 
         try:
             keypair = self.client.keypairs.get(name)
         except NotFound:
