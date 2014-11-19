@@ -4,3 +4,8 @@
 build
 dist
 elasticluster.egg-info
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+/.settings
