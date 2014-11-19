@@ -199,14 +199,14 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         agent_fps=[':'.join((part.encode('hex') for part in x)) for x in raw_agent_fps]
         if not ref_fingerprint in agent_fps:
             raise KeyNotFound
-        
+        '''
     @classmethod
     def _add_key_to_sshagent(cls, private_key_path):
         """Function to add a private key to the ssh-agent
         :param str private_key_path: path to the ssh private key file
         """
         res=raw_input('Please, write the password for your PEMfile')
-        return res'''
+        return res
 
     def _check_keypair(self, name, public_key_path, private_key_path):
         """First checks if the keypair is valid, then checks if the keypair
@@ -246,7 +246,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         name, public_key_path, self._os_auth_url)
                     raise KeypairError(
                         "could not create keypair `%s`: %s" % (name, ex))
-        #self._add_key_to_sshagent(private_key_path)
+        self._add_key_to_sshagent(private_key_path)
         """
         if 'SSH_AUTH_SOCK' in os.environ.keys():
             try:
