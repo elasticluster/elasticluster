@@ -65,7 +65,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     
     """
     __node_start_lock = threading.Lock()  # lock used for node startup
-    
+
     def __init__(self, username, password, project_name, auth_url,
                  region_name=None, storage_path=None,
                  request_floating_ip=False,
@@ -229,10 +229,11 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         
         # Check if a keypair `name` exists on the cloud.
         
-        with OpenStackCloudProvider.__node_start_lock:
+        with OpenStackCloudProvider.__node_start_lock as fd:
             try:
-                print "IT WAS LOCKEDDDDD"
+                print "prelock"
                 keypair = self.client.keypairs.get(name)
+                print "Right after unlocking"
             except NotFound:
                 log.warning(
                     "Keypair `%s` not found on resource `%s`, Creating a new one",
@@ -249,8 +250,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                             name, public_key_path, self._os_auth_url)
                         raise KeypairError(
                             "could not create keypair `%s`: %s" % (name, ex))
-        with OpenStackCloudProvider.__node_start_lock:
-            print "checking second lock"
+            print "lock2: another lock2inaa"
             self._add_key_to_sshagent(private_key_path)
         """
         if 'SSH_AUTH_SOCK' in os.environ.keys():
