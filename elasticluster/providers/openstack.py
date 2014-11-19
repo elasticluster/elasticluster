@@ -65,7 +65,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     
     """
     __node_start_lock = threading.Lock()  # lock used for node startup
-    __node_start_rlock = threading.RLock(blocking=2)
+    __node_start_rlock = threading.RLock()
     
     def __init__(self, username, password, project_name, auth_url,
                  region_name=None, storage_path=None,
@@ -230,7 +230,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         
         # Check if a keypair `name` exists on the cloud.
         
-        with OpenStackCloudProvider.__node_start_rlock as fd:
+        with OpenStackCloudProvider.__node_start_rlock.acquire() as fd:
             try:
                 print "IT WAS LOCKEDDDDD"
                 keypair = self.client.keypairs.get(name)
