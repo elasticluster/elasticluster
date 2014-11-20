@@ -40,6 +40,9 @@ class KeypairError(Exception):
 class KeyNotFound(Exception):
     pass
 
+class KeyNotAccessible(Exception):
+    pass
+
 class InstanceError(Exception):
     pass
 
