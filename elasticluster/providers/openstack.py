@@ -228,26 +228,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # exists already, or to create a new keypair.
         
         # Check if a keypair `name` exists on the cloud.
-        try:
-            keypair = self.client.keypairs.get(name)
-        except NotFound:
-            log.warning(
-                "Keypair `%s` not found on resource `%s`, Creating a new one",
-                name, self._os_auth_url)
 
-            # Create a new keypair
-            with open(os.path.expanduser(public_key_path)) as f:
-                key_material = f.read()
-                try:
-                    self.client.keypairs.create(name, key_material)
-                except Exception, ex:
-                    log.error(
-                        "Could not import key `%s` with name `%s` to `%s`",
-                        name, public_key_path, self._os_auth_url)
-                    raise KeypairError(
-                        "could not create keypair `%s`: %s" % (name, ex))
-        print "OSCP: slock2: another lock"
-        self._add_key_to_sshagent(private_key_path)
         """
         if 'SSH_AUTH_SOCK' in os.environ.keys():
             try:
@@ -299,6 +280,27 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             except SSHException:
                 raise KeypairError('File `%s` is neither a valid DSA key '
                                    'or RSA key.' % private_key_path)
+        try:
+            keypair = self.client.keypairs.get(name)
+        except NotFound:
+            log.warning(
+                "Keypair `%s` not found on resource `%s`, Creating a new one",
+                name, self._os_auth_url)
+
+            # Create a new keypair
+            with open(os.path.expanduser(public_key_path)) as f:
+                key_material = f.read()
+                try:
+                    self.client.keypairs.create(name, key_material)
+                except Exception, ex:
+                    log.error(
+                        "Could not import key `%s` with name `%s` to `%s`",
+                        name, public_key_path, self._os_auth_url)
+                    raise KeypairError(
+                        "could not create keypair `%s`: %s" % (name, ex))
+        print "OSCP: slock2: another lock"
+        self._add_key_to_sshagent(private_key_path)
+
 
         # Check if it has the correct keypair, but only if we can read the local key
         fingerprint=None
