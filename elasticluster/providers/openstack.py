@@ -363,15 +363,18 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             try: # It checks the key from the private key file
                 self._check_keypair_from_file(keypair.fingerprint, private_key_path)
             except KeyNotAccessible: # If it is not accessible it checks the public one (computes fp)
-                log.warning('Keypair not accessible. Checking fingerprint from public key')
+                log.warning('Keypair not accessible. Checking fingerprint from public key.')
                 self._check_fingerprint_from_public_key_file(keypair.fingerprint, public_key_path)
+                log.warning('Matching fingerprints. Cluster will start but will not be accessed')
+
         except KeyNotFound: # If the hey is not found among the keys in the ssh-agent
             try: # It tries to add it
                 self._add_key_to_sshagent(private_key_path)
                 self._check_keypair_from_ssh_agent(keypair.fingerprint)
             except KeyNotAccessible: # If it is not possible to add it, it checks it from the public one
-                log.warning('Keypair not accessible. Checking fingerprint from public key')
+                log.warning('Keypair not accessible. Checking fingerprint from public key.')
                 self._check_fingerprint_from_public_key_file(keypair.fingerprint, public_key_path)
+                log.warning('Matching fingerprints. Cluster will start but will not be accessed')
 
 
     def _check_keypair_old(self, name, public_key_path, private_key_path):
