@@ -33,6 +33,8 @@ class SecurityGroupError(Exception):
 class SubnetError(Exception):
     pass
 
+class SSHAgentError(Exception):
+    pass
 
 class KeypairError(Exception):
     pass

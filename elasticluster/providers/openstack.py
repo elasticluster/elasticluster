@@ -26,6 +26,7 @@ __author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
 
 # System imports
 import os
+import re
 import threading
 import base64
 import hashlib
@@ -43,7 +44,8 @@ from elasticluster import log
 from elasticluster.memoize import memoize
 from elasticluster.providers import AbstractCloudProvider
 from elasticluster.exceptions import SecurityGroupError, KeypairError, \
-    ImageError, InstanceError, ClusterError, KeyNotFound, KeyNotAccessible
+    ImageError, InstanceError, ClusterError, KeyNotFound, KeyNotAccessible,\
+    SSHAgentError
 
 DEFAULT_OS_NOVA_API_VERSION = "1.1"
 
@@ -115,6 +117,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         log.debug("Checking keypair `%s`.", key_name)
         with OpenStackCloudProvider.__node_start_lock:
+            # CAtch the exception and continue or avoid raising the exception
             self._check_keypair(key_name, public_key_path, private_key_path)
 
         log.debug("Checking security group `%s`.", security_group)
@@ -215,12 +218,12 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         
         pkey=None
         
+        # This block avoid repetition of checks after it is done for the first instance
         if self._SSH_KEY_CHECKED==True:
             if self._SSH_KEY_ACCESS_ERROR==True: # This avoid user entering the code right the second time
                 raise KeypairError("Unable to access key file `"+private_key_path+": Invalid password")  
             else:
                 return
-        
         try:
             pkey=DSSKey.from_private_key_file(private_key_path)
         except PasswordRequiredException:
@@ -231,7 +234,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 self._SSH_KEY_CHECKED=True
                 self._SSH_KEY_ACCESS_ERROR=True # This avoid user entering the code right the second time
                 raise KeypairError("Unable to access key file `"+private_key_path+": Invalid password")      
-
         except SSHException:
             try:
                 pkey=RSAKey.from_private_key_file(private_key_path)
@@ -261,6 +263,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         :raises KeypairError: If the password provided is empty (in other cases the ssh-add
                 asks for the password again)
         """
+        # This block avoid repetition of checks after it is done for the first instance
         if self._SSH_KEY_ACCESS_ERROR==True:
             raise KeypairError("Unable to access key file `"+private_key_path+": Invalid password")      
         return_code=subprocess.call(['ssh-add', private_key_path])
@@ -268,8 +271,30 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             log.info("Key %s suscessfully added to ssh-agent" % private_key_path)
         else: # This only happens if the password is empty
             self._SSH_KEY_ACCESS_ERROR=True # This avoid user entering the code right the second time
-            raise KeypairError("Unable to access key file `"+private_key_path+": Invalid password")    
-    
+            raise KeypairError("Unable to access key file `"+private_key_path+": Invalid password") 
+        
+    @classmethod
+    def _ensure_sshagent(cls):
+        """Function to start a ssh-agent if it is not running
+        :raises SSHAgentError if the process does not succed
+        """   
+        if 'SSH_AUTH_SOCK' in os.environ.keys():
+            print 'SSH-agent running!'
+            return
+        else:
+            try:
+                output=subprocess.check_output(['ssh-agent',])
+                for output_line in output.split('\n'):
+                    match=re.match('(^.*)\=([^\;]*)\;.*$',output_line)
+                    if match:
+                        var_name, var_value =match.group(1,2)
+                        if var_name=='SSH_AUTH_SOCK' or var_name=='SSH_AGENT_PID':
+                            os.environ[str(var_name)]=str(var_value)                 
+                log.info('ssh-agent started')
+                return
+            except subprocess.CalledProcessError:
+                raise SSHAgentError
+            
     def _check_keypair(self, name, public_key_path, private_key_path):
         """First checks if the keypair is valid, then checks if the keypair
         is registered with on the cloud. If not the keypair is added to the
@@ -308,16 +333,14 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         name, public_key_path, self._os_auth_url)
                     raise KeypairError(
                         "could not create keypair `%s`: %s" % (name, ex))
-        # If the ssh-agent is on:
-        if 'SSH_AUTH_SOCK' in os.environ.keys():
-            try:
-                # First if checks if the fingerprints there matches the from the cloud
-                self._check_keypair_from_ssh_agent(keypair.fingerprint)
-            except KeyNotFound:
-                self._add_key_to_sshagent(private_key_path)
-                self._check_keypair_from_ssh_agent(keypair.fingerprint)
-        else:
+        try:
+            self._ensure_sshagent()
+            self._check_keypair_from_ssh_agent(keypair.fingerprint)
+        except SSHAgentError:
             self._check_keypair_from_file(keypair.fingerprint, private_key_path)
+        except KeyNotFound:
+            self._add_key_to_sshagent(private_key_path)
+            self._check_keypair_from_ssh_agent(keypair.fingerprint)
 
 
 
