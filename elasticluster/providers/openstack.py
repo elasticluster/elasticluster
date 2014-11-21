@@ -313,7 +313,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         var_name, var_value =match.group(1,2)
                         if var_name=='SSH_AUTH_SOCK' or var_name=='SSH_AGENT_PID':
                             os.environ[str(var_name)]=str(var_value)                 
-                log.info('ssh-agent started')
+                log.warning('ssh-agent started')
                 return
             except subprocess.CalledProcessError:
                 raise SSHAgentError
