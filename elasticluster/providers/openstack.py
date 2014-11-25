@@ -116,9 +116,11 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         """
 
         log.debug("Checking keypair `%s`.", key_name)
+        
         with OpenStackCloudProvider.__node_start_lock:
             # CAtch the exception and continue or avoid raising the exception
             self._check_keypair(key_name, public_key_path, private_key_path)
+
 
         log.debug("Checking security group `%s`.", security_group)
         self._check_security_group(security_group)
@@ -366,6 +368,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 log.warning('Keypair not accessible. Checking fingerprint from public key.')
                 self._check_fingerprint_from_public_key_file(keypair.fingerprint, public_key_path)
                 log.warning('Matching fingerprints. Cluster will start but will not be accessed')
+            except KeypairError:
+                raise
 
         except KeyNotFound: # If the hey is not found among the keys in the ssh-agent
             try: # It tries to add it
@@ -375,6 +379,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 log.warning('Keypair not accessible. Checking fingerprint from public key.')
                 self._check_fingerprint_from_public_key_file(keypair.fingerprint, public_key_path)
                 log.warning('Matching fingerprints. Cluster will start but will not be accessed')
+            except KeypairError:
+                raise
 
 
     def _check_keypair_old(self, name, public_key_path, private_key_path):

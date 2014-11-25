@@ -315,6 +315,8 @@ class ResizeCluster(AbstractCommand):
 
         try:
             cluster = configurator.load_cluster(cluster_name)
+            if hasattr(cluster,'ssh_environment_variables'):
+                os.environ.update(cluster.ssh_environment_variables)
             cluster.update()
         except (ClusterNotFound, ConfigurationError), ex:
             log.error("Listing nodes from cluster %s: %s\n" %
