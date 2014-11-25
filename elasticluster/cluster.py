@@ -432,7 +432,6 @@ class Cluster(object):
             
         try:
             while pending_nodes:
-                print "---------TRYING TO CONNECT"
                 for node in pending_nodes[:]:
                     ssh = node.connect(keyfile=self.known_hosts_file)
                     if ssh:
