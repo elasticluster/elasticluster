@@ -45,7 +45,7 @@ from elasticluster.repository import PickleRepository
 class Configurator(object):
     """The `Configurator` class is responsible for
 
-    1) keeping track of the configuration and 
+    1) keeping track of the configuration and
 
     2) offer factory methods to create all kind of objects that need
     information from the configuration.
@@ -417,6 +417,7 @@ class ConfigValidator(object):
                             "gce_client_id": All(str, Length(min=1)),
                             "gce_client_secret": All(str, Length(min=1)),
                             "gce_project_id": All(str, Length(min=1)),
+                            Optional("noauth_local_webserver"): Boolean(str),
                             Optional("zone"): All(str, Length(min=1)),
         }
 
@@ -463,7 +464,7 @@ class ConfigValidator(object):
                     self.config[cluster]['cloud'] = openstack_validator(cloud_props)
             except MultipleInvalid as ex:
                 raise Invalid("Invalid configuration for cloud section `cloud/%s`: %s" % (properties['cluster']['cloud'], str.join(", ", [str(i) for i in ex.errors])))
-                                
+
 
             if 'nodes' not in properties or len(properties['nodes']) == 0:
                 raise Invalid(
@@ -587,7 +588,7 @@ class ConfigReader(object):
         errors = MultipleInvalid()
         # FIXME: to be refactored:
         # we should check independently each one of the sections, and raise errors accordingly.
-        
+
         for cluster in clusters:
             # Get the name of the cluster
             name = re.search(ConfigReader.cluster_section + "/(.*)",
