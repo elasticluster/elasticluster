@@ -38,7 +38,8 @@ from apiclient.discovery import build
 from apiclient.errors import HttpError
 from oauth2client.file import Storage
 from oauth2client.client import OAuth2WebServerFlow
-from oauth2client.tools import run
+from oauth2client.tools import run_flow
+from oauth2client.tools import argparser
 
 # Elasticluster imports
 from elasticluster import log
@@ -70,6 +71,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
 
     :param str gce_project_id: Project name to log in to GCE.
 
+    :param noauth_local_webserver: do not pop up a webserver for auth
+
     :param str zone: gce zone, default is `us-central1-a`
 
     :param str network: network to use, default is  `default`
@@ -82,9 +85,15 @@ class GoogleCloudProvider(AbstractCloudProvider):
     """
     __gce_lock = threading.Lock()
 
-    def __init__(self, gce_client_id, gce_client_secret, gce_project_id,
-                 zone=GCE_DEFAULT_ZONE, network='default',
-                 email=GCE_DEFAULT_SERVICE_EMAIL, storage_path=None):
+    def __init__(self,
+                 gce_client_id,
+                 gce_client_secret,
+                 gce_project_id,
+                 noauth_local_webserver=False,
+                 zone=GCE_DEFAULT_ZONE,
+                 network='default',
+                 email=GCE_DEFAULT_SERVICE_EMAIL,
+                 storage_path=None):
         self._client_id = gce_client_id
         self._client_secret = gce_client_secret
         self._project_id = gce_project_id
@@ -92,6 +101,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         self._network = network
         self._email = email
         self._storage_path = storage_path
+        self._noauth_local_webserver = noauth_local_webserver
 
         # will be initialized upon first connect
         self._gce = None
@@ -128,10 +138,17 @@ class GoogleCloudProvider(AbstractCloudProvider):
 
             credentials = storage.get()
             if credentials is None or credentials.invalid:
+                args = argparser.parse_args([])
+                args.noauth_local_webserver = self._noauth_local_webserver
                 # try to start a browser to have the user authenticate with Google
                 # TODO: what kind of exception is raised if the browser
                 #       cannot be started?
-                credentials = run(flow, storage)
+                try:
+                    credentials = run_flow(flow, storage, flags=args)
+                except:
+                    import sys
+                    print "Unexpected error:", sys.exc_info()[0]
+                    raise
 
             http = httplib2.Http()
             self._auth_http = credentials.authorize(http)
@@ -218,10 +235,13 @@ class GoogleCloudProvider(AbstractCloudProvider):
         machine_type_url = '%s/zones/%s/machineTypes/%s' \
                            % (project_url, self._zone, flavor)
         network_url = '%s/global/networks/%s' % (project_url, self._network)
-        os = image_id.split("-")[0]
-        os_cloud = "%s-cloud" % os
-        image_url = '%s%s/global/images/%s' % (
-            GCE_URL, os_cloud, image_id)
+        if image_id.startswith('http://') or image_id.startswith('https://'):
+            image_url = image_id
+        else:
+            os = image_id.split("-")[0]
+            os_cloud = "%s-cloud" % os
+            image_url = '%s%s/global/images/%s' % (
+                GCE_URL, os_cloud, image_id)
 
         # construct the request body
         if instance_name is None:
