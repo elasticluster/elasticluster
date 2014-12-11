@@ -148,7 +148,7 @@ class BotoCloudProvider(AbstractCloudProvider):
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
                        username=None, node_name=None, network_ids=None,
-                       **kwargs):
+                       placement_group=None, **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
 
@@ -168,6 +168,8 @@ class BotoCloudProvider(AbstractCloudProvider):
         :param str image_id: image type (os) to use for the instance
         :param str image_userdata: command to execute after startup
         :param str username: username for the given ssh key, default None
+        :param str placement_group: Enable low-latency networking between
+                                    compute nodes.
 
         :return: str - instance id of the started instance
         """
@@ -204,7 +206,8 @@ class BotoCloudProvider(AbstractCloudProvider):
             reservation = connection.run_instances(
                 image_id, key_name=key_name, security_groups=security_groups,
                 instance_type=flavor, user_data=image_userdata,
-                network_interfaces=interfaces)
+                network_interfaces=interfaces,
+                placement_group=placement_group)
         except Exception, ex:
             log.error("Error starting instance: %s", ex)
             if "TooManyInstances" in ex:
