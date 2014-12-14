@@ -20,6 +20,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.mes
 import os
 import urllib
 import threading
+import time
 
 # External modules
 import boto
@@ -213,7 +214,15 @@ class BotoCloudProvider(AbstractCloudProvider):
                 raise InstanceError(ex)
 
         vm = reservation.instances[-1]
-        vm.add_tag("Name", node_name)
+        # wait for instance to come up and tag with name
+        status = vm.update()
+        while status == 'pending':
+            time.sleep(5)
+            status = vm.update()
+        if status == "running":
+            vm.add_tag("Name", node_name)
+        else:
+            raise ValueError("Unexpected instance status %s for %s" % (status, node_name))
 
         # cache instance object locally for faster access later on
         self._instances[vm.id] = vm
