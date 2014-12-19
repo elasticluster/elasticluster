@@ -25,6 +25,7 @@ import time
 # External modules
 import boto
 from boto import ec2
+from boto.exception import EC2ResponseError
 from paramiko import DSSKey, RSAKey, PasswordRequiredException
 from paramiko.ssh_exception import SSHException
 
@@ -215,10 +216,10 @@ class BotoCloudProvider(AbstractCloudProvider):
 
         vm = reservation.instances[-1]
         # wait for instance to come up and tag with name
-        status = vm.update()
+        status = self._vm_status(vm)
         while status == 'pending':
             time.sleep(5)
-            status = vm.update()
+            status = self._vm_status(vm)
         if status == "running":
             vm.add_tag("Name", node_name)
         else:
@@ -228,6 +229,15 @@ class BotoCloudProvider(AbstractCloudProvider):
         self._instances[vm.id] = vm
 
         return vm.id
+
+    def _vm_status(self, vm):
+        """Get status, handling issues where instance not yet up.
+        """
+        try:
+            status = vm.update()
+        except EC2ResponseError:
+            status = "pending"
+        return status
 
     def stop_instance(self, instance_id):
         """Stops the instance gracefully.
