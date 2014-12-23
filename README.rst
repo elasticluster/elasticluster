@@ -1,6 +1,8 @@
 ========================================================================
-    Elasticluster
+    Elasticluster |trevis-ci-status|
 ========================================================================
+
+.. |trevis-ci-status| image:: https://travis-ci.org/gc3-uzh-ch/elasticluster.svg?branch=master
 
 .. This file follows reStructuredText markup syntax; see
    http://docutils.sf.net/rst.html for more information
