@@ -96,6 +96,9 @@ class BotoCloudProvider(AbstractCloudProvider):
         if self._ec2_connection:
             return self._ec2_connection
 
+        if not self._vpc:
+            vpc_connection = None
+
         try:
             log.debug("Connecting to ec2 host %s", self._ec2host)
             region = ec2.regioninfo.RegionInfo(name=self._region_name,
