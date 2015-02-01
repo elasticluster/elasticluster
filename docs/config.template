@@ -468,6 +468,9 @@ worker_groups=ipython_engine
 #          configured anyway, otherwise creation of the cluster will
 #          fail.
 #
+# placement_group: Placement group to enable low-latency networking
+#                  between compute nodes.
+#
 # Some (working) examples:
 
 [cluster/slurm]

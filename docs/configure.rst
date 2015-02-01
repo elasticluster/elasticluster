@@ -580,6 +580,12 @@ Optional configuration keys
     The maximum number of process to be created when virtual machines
     are started. Default is 10.
 
+``placement_group``
+
+    `Placement group
+    <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html>`_
+    to enable low-latency networking between compute nodes.
+
 Examples
 --------
 
