@@ -37,11 +37,6 @@ from elasticluster.exceptions import TimeoutError, NodeNotFound, \
     InstanceError, ClusterError
 from elasticluster.repository import MemRepository
 
-class IgnorePolicy(paramiko.MissingHostKeyPolicy):
-    def missing_host_key(self, client, hostname, key):
-        log.info('Ignoring unknown %s host key for %s: %s' %
-                 (key.get_name(), hostname, hexlify(key.get_fingerprint())))
-
 
 class Cluster(object):
     """This is the heart of elasticluster and handles all cluster relevant
@@ -81,7 +76,7 @@ class Cluster(object):
     :ivar nodes: dict [node_type] = [:py:class:`Node`] that represents all
                  nodes in this cluster
    """
-    startup_timeout = 60 * 10  #: timeout in seconds to start all nodes
+    startup_timeout = 60 * 15  #: timeout in seconds to start all nodes
 
     def __init__(self, name, cloud_provider, setup_provider,
                  user_key_name, user_key_public,
@@ -111,6 +106,8 @@ class Cluster(object):
         self._user_key_public = os.path.expanduser(self._user_key_public)
         self._user_key_public = os.path.expandvars(self._user_key_public)
 
+        self.ssh_hostkeys_from_console_output = extra.get(
+            'ssh_hostkeys_from_console_output')
 
     def __getstate__(self):
         result = self.__dict__.copy()
@@ -412,7 +409,11 @@ class Cluster(object):
         try:
             while pending_nodes:
                 for node in pending_nodes[:]:
-                    ssh = node.connect(keyfile=self.known_hosts_file)
+                    if self.ssh_hostkeys_from_console_output:
+                        self._get_ssh_key_from_console_output(
+                            keys, node.instance_id, node.ips)
+
+                    ssh = node.connect(known_hosts_file=self.known_hosts_file)
                     if ssh:
                         log.info("Connection to node %s (%s) successful.",
                                  node.name, node.connection_ip())
@@ -640,6 +641,20 @@ class Cluster(object):
                           node, str(ex))
         self.repository.save_or_update(self)
 
+    def _get_ssh_key_from_console_output(self, known_hosts, instance_id, names):
+        console_output = self._cloud_provider.get_console_output(instance_id)
+        hostkeys = re.sub(
+            r'^.*-+BEGIN SSH HOST KEY KEYS-+\s*(.*)[\r\n]-+END SSH HOST KEY KEYS-+.*',
+            r'\1', console_output, flags=re.DOTALL).strip()
+        hostkeys = re.split(r'[\r\n]+', hostkeys)
+
+        for key in hostkeys:
+            for name in names:
+                type, value = key.split()[0:2]
+                entry = paramiko.hostkeys.HostKeyEntry.from_line(
+                    '{} {} {}'.format(name, type, value))
+                known_hosts.add(name, type, entry.key)
+
 
 class Node(object):
     """The node represents an instance in a cluster. It holds all
@@ -764,16 +779,17 @@ class Node(object):
         """
         return self.preferred_ip
 
-    def connect(self, keyfile=None):
+    def connect(self, known_hosts_file=None):
         """Connect to the node via ssh using the paramiko library.
 
+        :param known_hosts_file: str - pathname of the known_hosts file
         :return: :py:class:`paramiko.SSHClient` - ssh connection or None on
                  failure
         """
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        if keyfile and os.path.exists(keyfile):
-            ssh.load_host_keys(keyfile)
+        if known_hosts_file and os.path.exists(known_hosts_file):
+            ssh.load_host_keys(known_hosts_file)
 
         # Try connecting using the `preferred_ip`, if
         # present. Otherwise, try all of them and set `preferred_ip`

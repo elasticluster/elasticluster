@@ -580,6 +580,13 @@ Optional configuration keys
     The maximum number of process to be created when virtual machines
     are started. Default is 10.
 
+``ssh_hostkeys_from_console_output``
+
+    whether to retrieve SSH host keys from instances' console output,
+    instead of accepting the host keys without verification when connecting
+    via SSH for the first time. Only supported when the cloud provider is
+    `ec2_boto`
+
 Examples
 --------
 
