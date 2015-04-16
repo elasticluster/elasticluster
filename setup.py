@@ -28,7 +28,9 @@ import shutil
 
 from setuptools.command import sdist
 
-del sdist.finders[:]
+# Newer versions of setuptools do not have `finders` attribute.
+if hasattr(sdist, 'finders'):
+    del sdist.finders[:]
 
 ANSIBLE_PB_DIR = 'elasticluster/providers/ansible-playbooks'
 
