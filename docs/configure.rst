@@ -164,11 +164,11 @@ Valid configuration keys for `google`
 
 ``gce_client_id``
 
-    The API client id generated in the Google API Console
+    The API client id generated in the Google Developers Console
 
 ``gce_client_secret``
 
-    The API client secret generated in the Google API Console
+    The API client secret generated in the Google Developers Console
 
 ``gce_project_id``
 
@@ -276,17 +276,24 @@ configuration file:
 Google Compute Engine users
 +++++++++++++++++++++++++++
 To generate a client_id and client_secret to access the Google Compute
-Engine visit the following page: https://code.google.com/apis/console/
+Engine visit the following page:
 
-1. Select the project defined as gce_project_id
-2. Navigate to `API Access`
-3. Click create another client id
-4. Select `Installed Application` -> `Other`
-5. After clicking the `Create` button you'll see your client_id and
-   secret_key in the list of available client ids
+  https://console.developers.google.com/project/_/apiui/credential
 
-**Please note**: you have to set your google username in the login section  below as image_user to be able to use Google Compute Engine
-
+1. Select the project to be used for your cluster
+2. If a "Client ID for native application" is listed on this page,
+   skip to step 8
+3. Under the OAuth section, click "Create new Client ID"
+4. Select "Installed Application"
+5. If prompted, click "Configure consent screen" and follow the
+   instructions to set a "product name" to identify your Cloud
+   project in the consent screen
+6. In the Create Client ID dialog, be sure the following are selected:
+     *Application type*: Installed application
+     *Installed application type*: Other
+7. Click the "Create Client ID" button
+8. You'll see your Client ID and Client secret listed under
+   "Client ID for native application"
 
 Login Section
 ===============
