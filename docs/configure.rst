@@ -288,9 +288,11 @@ Engine visit the following page:
 5. If prompted, click "Configure consent screen" and follow the
    instructions to set a "product name" to identify your Cloud
    project in the consent screen
-6. In the Create Client ID dialog, be sure the following are selected:
-     => Application type: Installed application
-     => Installed application type: Other
+6. In the Create Client ID dialog, be sure the following are selected::
+
+    Application type: Installed application
+    Installed application type: Other
+  
 7. Click the "Create Client ID" button
 8. You'll see your Client ID and Client secret listed under
    "Client ID for native application"
