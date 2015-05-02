@@ -587,6 +587,18 @@ Optional configuration keys
     The maximum number of process to be created when virtual machines
     are started. Default is 10.
 
+``boot_disk_type``
+    Define the type of boot disk to use.
+    Only supported when the cloud provider is `google`.
+    Supported values are `pd-standard` and `pd-ssd`.
+    Default value is `pd-standard`.
+
+``boot_disk_size``
+    Define the size of boot disk to use.
+    Only supported when the cloud provider is `google`.
+    Values are specified in gigabytes.
+    Default value is 10.
+
 Examples
 --------
 

@@ -212,7 +212,10 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        username=None,
                        # these params are specific to the
                        # GoogleCloudProvider
-                       instance_name=None, **kwargs):
+                       instance_name=None,
+                       boot_disk_type='pd-standard',
+                       boot_disk_size=10,
+                       **kwargs):
         """Starts a new instance with the given properties and returns
         the instance id.
 
@@ -234,6 +237,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
         project_url = '%s%s' % (GCE_URL, self._project_id)
         machine_type_url = '%s/zones/%s/machineTypes/%s' \
                            % (project_url, self._zone, flavor)
+        boot_disk_type_url = '%s/zones/%s/diskTypes/%s' \
+                           % (project_url, self._zone, boot_disk_type)
+        boot_disk_size_gb = boot_disk_size
         network_url = '%s/global/networks/%s' % (project_url, self._network)
         if image_id.startswith('http://') or image_id.startswith('https://'):
             image_url = image_id
@@ -258,6 +264,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
                 'type': 'PERSISTENT',
                 'initializeParams' : {
                     'diskName': "%s-disk" % instance_name,
+                    'diskType': boot_disk_type_url,
+                    'diskSizeGb': boot_disk_size_gb,
                     'sourceImage': image_url
                     }
                 }],
