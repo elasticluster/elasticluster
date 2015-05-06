@@ -208,7 +208,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                 image_id, key_name=key_name, security_groups=security_groups,
                 instance_type=flavor, user_data=image_userdata,
                 network_interfaces=interfaces)
-        except Exception, ex:
+        except Exception as ex:
             log.error("Error starting instance: %s", ex)
             if "TooManyInstances" in ex:
                 raise ClusterError(ex)
@@ -290,7 +290,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         if not free_addresses:
             try:
                 address = connection.allocate_address()
-            except Exception, ex:
+            except Exception as ex:
                 log.error("Unable to allocate a public IP address to instance `%s`",
                           instance.id)
                 return None
@@ -299,7 +299,7 @@ class BotoCloudProvider(AbstractCloudProvider):
             address = free_addresses.pop()
             instance.use_ip(address)
             return address.public_ip
-        except Exception, ex:
+        except Exception as ex:
             log.error("Unable to associate IP address %s to instance `%s`",
                       address, instance.id)
             return None
@@ -395,7 +395,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                             "Please specify a valid RSA key.")
 
                     connection.import_key_pair(name, key_material)
-                except Exception, ex:
+                except Exception as ex:
                     log.error(
                         "Could not import key `%s` with name `%s` to `%s`",
                         name, public_key_path, self._url)

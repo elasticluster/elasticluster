@@ -247,7 +247,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 key_material = f.read()
                 try:
                     self.client.keypairs.create(name, key_material)
-                except Exception, ex:
+                except Exception as ex:
                     log.error(
                         "Could not import key `%s` with name `%s` to `%s`",
                         name, public_key_path, self._os_auth_url)
