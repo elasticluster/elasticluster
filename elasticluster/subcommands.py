@@ -20,6 +20,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.messi
 # stdlib imports
 from abc import ABCMeta, abstractmethod
 from fnmatch import fnmatch
+from voluptuous import Invalid
 import os
 import sys
 
@@ -495,7 +496,7 @@ class ListNodes(AbstractCommand):
         """
         Lists all nodes within the specified cluster with certain
         information like id and ip.
-        """        
+        """
         configurator = Configurator.fromConfig(
             self.params.config, storage_path=self.params.storage,
             include_config_dirs=True)
@@ -568,6 +569,10 @@ class SshFrontend(AbstractCommand):
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
+        parser.add_argument('-n', '--node', metavar='HOSTNAME', dest='ssh_to',
+                            help="Name of node you want to ssh to. By "
+                            "default, the first node of the `ssh_to` option "
+                            "group is used.")
         parser.add_argument('ssh_args', metavar='args', nargs='*',
                             help="Execute the following command on the remote "
                             "machine instead of opening an interactive shell.")
@@ -585,7 +590,15 @@ class SshFrontend(AbstractCommand):
                       (cluster_name, ex))
             return
 
-        frontend = cluster.get_frontend_node()
+        if self.params.ssh_to:
+            try:
+                nodes = dict((n.name,n) for n in cluster.get_all_nodes())
+                frontend = nodes[self.params.ssh_to]
+            except KeyError:
+                raise Invalid(
+                    "Hostname %s not found in cluster %s" % (self.params.ssh_to, cluster_name))
+        else:
+            frontend = cluster.get_frontend_node()
         try:
             # ensure we can connect to the host
             if not frontend.preferred_ip:
@@ -625,6 +638,10 @@ class SftpFrontend(AbstractCommand):
             description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
+        parser.add_argument('-n', '--node', metavar='HOSTNAME', dest='ssh_to',
+                            help="Name of node you want to ssh to. By "
+                            "default, the first node of the `ssh_to` option "
+                            "group is used.")
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
         parser.add_argument('sftp_args', metavar='args', nargs='*',
@@ -644,12 +661,15 @@ class SftpFrontend(AbstractCommand):
                       (cluster_name, ex))
             return
 
-        try:
-            cluster.ssh_to = configurator.cluster_conf[cluster.extra['template']]['cluster'].get('ssh_to', cluster.ssh_to)
+        if self.params.ssh_to:
+            try:
+                nodes = dict((n.name,n) for n in cluster.get_all_nodes())
+                frontend = nodes[self.params.ssh_to]
+            except KeyError:
+                raise Invalid(
+                    "Hostname %s not found in cluster %s" % (self.params.ssh_to, cluster_name))
+        else:
             frontend = cluster.get_frontend_node()
-        except NodeNotFound, ex:
-            log.error("Unable to connect to the frontend node: %s" % str(ex))
-            sys.exit(1)
         host = frontend.connection_ip()
         username = frontend.image_user
         knownhostsfile = cluster.known_hosts_file if cluster.known_hosts_file \
@@ -676,7 +696,8 @@ class GC3PieConfig(AbstractCommand):
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
-        parser.add_argument('-a', '--append', metavar='FILE', help='append configuration to file FILE')
+        parser.add_argument('-a', '--append', metavar='FILE',
+                            help='append configuration to file FILE')
 
     def execute(self):
         """
