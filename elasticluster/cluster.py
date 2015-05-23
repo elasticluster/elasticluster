@@ -25,6 +25,7 @@ import signal
 import socket
 import sys
 import time
+import datetime
 from multiprocessing.dummy import Pool
 
 # External modules
@@ -34,7 +35,7 @@ from binascii import hexlify
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.exceptions import TimeoutError, NodeNotFound, \
-    InstanceError, ClusterError
+    InstanceError, ClusterError, KeypairError
 from elasticluster.repository import MemRepository
 
 class IgnorePolicy(paramiko.MissingHostKeyPolicy):
@@ -278,20 +279,25 @@ class Cluster(object):
                 node.start()
                 log.info("_start_node: node has been started")
                 return True
+            except KeypairError as e:
+                return e
             except Exception as e:
                 log.error("could not start node `%s` for reason "
                           "`%s`" % (node.name, e))
                 return None
 
-    def start(self, min_nodes=None):
+    def start(self, min_nodes=None, strict_ssh_check=False):
         """Starts up all the instances in the cloud. To speed things up all
         instances are started in a seperate thread. To make sure
         elasticluster is not stopped during creation of an instance, it will
         overwrite the sigint handler. As soon as the last started instance
         is returned and saved to the repository, sigint is executed as usual.
         An instance is up and running as soon as a ssh connection can be
-        established. If the startup timeout is reached before all instances
-        are started, the cluster will stop and destroy all instances.
+        established. 
+        If the startup timeout is reached before all instances
+        are started, the cluster will stop and destroy all instances 
+        (unless the strict_ssh_check is set to true, in which case, if it can not
+        connect the instances it will not destroy them but warn the user)
 
         This method is blocking and might take some time depending on the
         amount of instances to start.
@@ -299,6 +305,8 @@ class Cluster(object):
         :param min_nodes: minimum number of nodes to start in case the quota
                           is reached before all instances are up
         :type min_nodes: dict [node_kind] = number
+        :param bool strict_ssh_check: If set to false, if it cannot connect the instances
+                                    it does not destroy them.
         """
 
         # To not mess up the cluster management we start the nodes in a
@@ -317,11 +325,14 @@ class Cluster(object):
 
         nodes = self.get_all_nodes()
 
+
         if log.DO_NOT_FORK:
             # Start the nodes sequentially without forking, in order
             # to ease the debugging
+            start_results=[] # For recovering the output from the _start_node process
             for node in nodes:
-                self._start_node(node)
+                r=self._start_node(node)
+                start_results.append(r)
                 self.repository.save_or_update(self)
         else:
             # Create one thread for each node to start
@@ -333,7 +344,7 @@ class Cluster(object):
 
             # This is blocking
             result = thread_pool.map_async(self._start_node, nodes)
-
+            
             while not result.ready():
                 result.wait(1)
                 if not self.keep_running:
@@ -346,6 +357,14 @@ class Cluster(object):
                     thread_pool.join()
                     self.repository.save_or_update(self)
                     sys.exit(1)
+            
+            start_results=result.get() # recording the results
+            
+        for r in result.get():
+            if isinstance(r, KeypairError): # This may be needed to extend to other types of exceptions
+                log.error(r)
+                sys.exit(1)
+                
 
         # dump the cluster here, so we don't loose any knowledge
         self.repository.save_or_update(self)
@@ -408,7 +427,9 @@ class Cluster(object):
                             self.known_hosts_file, err)
                 self.known_hosts_file = None
         keys = paramiko.hostkeys.HostKeys(self.known_hosts_file)
+        
 
+            
         try:
             while pending_nodes:
                 for node in pending_nodes[:]:
@@ -418,22 +439,34 @@ class Cluster(object):
                                  node.name, node.connection_ip())
                         # Add host keys to the keys object.
                         for host, key in ssh.get_host_keys().items():
+                            
                             for ktype, keydata in key.items():
                                 keys.add(host, ktype, keydata)
                         pending_nodes.remove(node)
                 if pending_nodes:
                     time.sleep(5)
-
+            # Here we assign the ssh-agent related variables to the cluster 
+            # so they are stored when the cluster is saved. Otherwise if the ssh-agent was spawned when
+            # starting the cluster, the variables are only available for the children processes
+            self.ssh_environment_variables={}
+            if 'SSH_AUTH_SOCK' in os.environ.keys():
+                self.ssh_environment_variables['SSH_AUTH_SOCK']=os.environ['SSH_AUTH_SOCK']
+            if 'SSH_AGENT_PID' in os.environ.keys():
+                self.ssh_environment_variables['SSH_AGENT_PID']=os.environ['SSH_AGENT_PID']
         except TimeoutError:
             # remove the pending nodes from the cluster
-            log.error("Could not connect to all the nodes of the "
+            not_connection_mssg=str("Could not connect to all the nodes of the "
                       "cluster within the given timeout `%s`."
                       % Cluster.startup_timeout)
-            for node in pending_nodes:
-                log.error("Stopping node `%s`, since we could not connect to"
-                          " it within the timeout." % node.name)
-                node.stop()
-                self.remove_node(node)
+            if strict_ssh_check==True:
+                log.error(not_connection_mssg)
+                for node in pending_nodes:
+                    log.error("Stopping node `%s`, since we could not connect to"
+                              " it within the timeout." % node.name)
+                    node.stop()
+                    self.remove_node(node)
+            else:
+                log.warning(not_connection_mssg)
 
         signal.alarm(0)
 
@@ -441,7 +474,6 @@ class Cluster(object):
         # the `preferred_ip` attribute, so, let's save the cluster
         # again.
         self.repository.save_or_update(self)
-
         # Save host keys
         if self.known_hosts_file:
             keys.save(self.known_hosts_file)
@@ -568,8 +600,8 @@ class Cluster(object):
         # Remove also ssh known hosts
         if self.known_hosts_file and os.path.exists(self.known_hosts_file):
             os.remove(self.known_hosts_file)
-
-
+            
+                
     def get_frontend_node(self):
         """Returns the first node of the class specified in the
         configuration file as `ssh_to`, or the first node of
