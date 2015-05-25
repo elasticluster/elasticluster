@@ -225,10 +225,10 @@ class Cluster(Struct):
     def keys(self):
         """Only expose some of the attributes when using as a dictionary"""
         keys = Struct.keys(self)
-        keys.remove('_setup_provider')
-        keys.remove('_cloud_provider')
-        keys.remove('repository')
-        keys.remove('known_hosts_file')
+        for key in ('_setup_provider', '_cloud_provider',
+                    'repository', 'known_hosts_file'):
+            if key in keys:
+                keys.remove(key)
         return keys
 
     def update_config(self, cluster_config, login_config):
