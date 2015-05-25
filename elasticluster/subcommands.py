@@ -34,7 +34,7 @@ from elasticluster.exceptions import ClusterNotFound, ConfigurationError, \
     ImageError, SecurityGroupError, NodeNotFound, ClusterError
 
 def ask_confirmation(msg):
-    """Ask for confirmation. Returns True or False accordingly"""    
+    """Ask for confirmation. Returns True or False accordingly"""
     yesno = raw_input(msg + " [yN] ")
     if yesno.lower() not in ['yes', 'y']:
         print("Aborting as per user request.")
@@ -920,10 +920,10 @@ Are yousure you still want to copy them?"""):
                 log.error("Fatal error: cannot add file %s to zip archive: %s."
                           % (ex.filename, ex))
                 sys.exit(1)
-                    
+
         print("Cluster '%s' correctly exported into %s" %
               (cluster.name, self.params.zipfile))
-        
+
 
 class ImportCluster(AbstractCommand):
     """Import a cluster definition from FILE into local storage.
@@ -999,7 +999,7 @@ class ImportCluster(AbstractCommand):
                 for attr in ('user_key_public', 'user_key_private'):
                     keyfile = getattr(cluster, attr)
                     keybase = os.path.basename(keyfile)
-                    srcfile = os.path.join(tmpdir, keybase) 
+                    srcfile = os.path.join(tmpdir, keybase)
                     if os.path.isfile(srcfile):
                         log.info("Importing key file %s" % keybase)
                         destfile = os.path.join(dest, keybase)
@@ -1028,7 +1028,8 @@ class ImportCluster(AbstractCommand):
                                                    nodekeybase)
                             destfile = os.path.join(destdir, nodekeybase)
                             shutil.copy(srcfile, destfile)
-                            setattr(node, attr, destfile)
+                        # Always save the correct destfile
+                        setattr(node, attr, destfile)
 
                 repo.save_or_update(cluster)
                 if not cluster:
