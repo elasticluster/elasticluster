@@ -500,7 +500,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         else:
             raise ImageError(
                 "Could not find given image id `%s`" % image_id)
-    
+
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['_ec2_connection']
@@ -511,4 +511,3 @@ class BotoCloudProvider(AbstractCloudProvider):
         self.__dict__ = state
         self._ec2_connection = None
         self._vpc_connection = None
-        

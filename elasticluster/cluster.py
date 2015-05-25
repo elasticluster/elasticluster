@@ -194,7 +194,7 @@ class Cluster(Struct):
     def known_hosts_file(self):
         return os.path.join(self.repository.storage_path,
                             "%s.known_hosts" % self.name)
-    
+
     @property
     def cloud_provider(self):
         return self._cloud_provider
@@ -815,7 +815,7 @@ class Node(Struct):
         self.extra = {}
         self.extra.update(extra.pop('extra', {}))
         self.extra.update(extra)
-        
+
 
     def __setstate__(self, state):
         self.__dict__ = state

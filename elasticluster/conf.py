@@ -81,7 +81,7 @@ class Configurator(object):
     """
 
     setup_providers_map = {"ansible": AnsibleSetupProvider, }
-    
+
     default_storage_path = os.path.expanduser(
         "~/.elasticluster/storage")
     default_storage_type = 'yaml'
@@ -137,7 +137,7 @@ class Configurator(object):
                         configfiles.append(fullpath)
         config_reader = ConfigReader(configfiles)
         (conf, storage_conf) = config_reader.read_config()
-        
+
         return Configurator(conf, **storage_conf)
 
     def create_cloud_provider(self, cluster_template):

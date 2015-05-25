@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-# 
+# -*- coding: utf-8 -*-#
 # @(#)openstack.py
-# 
-# 
+#
+#
 # Copyright (C) 2013, GC3, University of Zurich. All rights reserved.
-# 
-# 
+#
+#
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
 # Free Software Foundation; either version 2 of the License, or (at your
@@ -58,7 +58,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     :param bool request_floating_ip: Whether ip are assigned automatically
                                     `True` or floating ips have to be
                                     assigned manually `False`
-    
+
     """
     __node_start_lock = threading.Lock()  # lock used for node startup
 
@@ -79,7 +79,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self.client = client.Client(self.nova_api_version,
                                     self._os_username, self._os_password, self._os_tenant_name,
                                     self._os_auth_url, region_name=self._os_region_name)
- 
+
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
                        username=None, node_name=None, **kwargs):
@@ -138,7 +138,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             nics=nics)
 
         self._instances[vm.id] = vm
-        
+
         return vm.id
 
     def stop_instance(self, instance_id):
@@ -180,7 +180,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         :return: bool - True if running, False otherwise
         """
 
-        # Here, it's always better if we update the instance.        
+        # Here, it's always better if we update the instance.
         instance = self._load_instance(instance_id, force_reload=True)
         return instance.status == 'ACTIVE'
 
@@ -310,7 +310,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         self._cached_instances.remove(i)
                         self._cached_instances.append(vm)
                         break
-                    
+
             except NotFound:
                 raise InstanceError("the given instance `%s` was not found "
                                     "on the coud" % instance_id)
@@ -378,7 +378,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         # This is Disabled as we don't want to reload the
         # instances also for "list" command
-        
+
         # for vm in self.client.servers.list():
         #     if vm.id in state['instance_ids']:
         #         self._instances[vm.id] = vm
@@ -386,5 +386,3 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # for missing_vm in set(state['instance_ids']).difference(self._instances.keys()):
         #     log.warning("VM with id %s not found in cloud "
         #                 "%s" % (missing_vm, self._os_auth_url))
-
-        

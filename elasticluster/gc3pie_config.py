@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-# 
+# -*- coding: utf-8 -*-#
 # @(#)gc3pie_config.py
-# 
-# 
+#
+#
 # Copyright (C) 2013-2014, GC3, University of Zurich. All rights reserved.
-# 
-# 
+#
+#
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
 # Free Software Foundation; either version 2 of the License, or (at your
@@ -73,7 +73,7 @@ def inspect_slurm_cluster(ssh, node_information):
         maxtime = match.group('MaxTime')
         if maxtime != 'UNLIMITED':
             node_information['max_walltime'] = maxtime
-    
+
     return node_information
 
 
@@ -231,9 +231,8 @@ def create_gc3pie_config_snippet(cluster):
     cfg.set(resource_section, 'max_cores_per_job', cluster_info.get('max_cores_per_job', 1))
     cfg.set(resource_section, 'max_memory_per_core', cluster_info.get('max_memory_per_core', '2GB'))
     cfg.set(resource_section, 'max_walltime', cluster_info.get('max_walltime', '672hours'))
-    
+
     cfgstring = StringIO()
     cfg.write(cfgstring)
 
     return cfgstring.getvalue()
-    
