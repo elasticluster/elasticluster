@@ -344,7 +344,7 @@ class ResizeCluster(AbstractCommand):
                 sample_node = cluster.nodes[grp][0]
                 for i in range(self.params.nodes_to_add[grp]):
                     cluster.add_node(grp,
-                                     sample_node.image,
+                                     sample_node.image_id,
                                      sample_node.image_user,
                                      sample_node.flavor,
                                      sample_node.security_group,
