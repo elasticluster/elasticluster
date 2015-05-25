@@ -294,11 +294,9 @@ class YamlRepository(DiskRepository):
 
     @staticmethod
     def dump(cluster, fp):
-        state = dict(cluster)
-        for key in ['repository', '_setup_provider', '_cloud_provider']:
-            if key in state:
-                del state[key]
-        yaml.dump(state, fp, default_flow_style=False, indent=4)
+        # To only save stuff we need, it's actually easier to serialize with json first :)
+        state = json.loads(json.dumps(dict(cluster), default=dict))
+        yaml.safe_dump(state, fp, default_flow_style=False, indent=4)
 
 
 class MultiDiskRepository(AbstractClusterRepository):
