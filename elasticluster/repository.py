@@ -212,10 +212,11 @@ class PickleRepository(DiskRepository):
         DiskRepository.__init__(self, storage_path)
         self.repository_types = [PickleRepository]
 
-    @staticmethod
-    def load(fp):
+    def load(self, fp):
         """Load cluster from file descriptor fp"""
-        return pickle.load(fp)
+        cluster = pickle.load(fp)
+        cluster.repository = self
+        return cluster
 
     @staticmethod
     def dump(cluster, fp):
