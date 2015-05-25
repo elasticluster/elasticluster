@@ -20,6 +20,8 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.mes
 import os
 import pickle
 from abc import ABCMeta, abstractmethod
+import glob
+import json
 
 # Elasticluster imports
 from elasticluster import log
@@ -71,6 +73,7 @@ class AbstractClusterRepository:
         pass
 
 
+
 class MemRepository(AbstractClusterRepository):
     """
     This implementation of :py:class:`AbstractClusterRepository` stores
@@ -117,16 +120,11 @@ class MemRepository(AbstractClusterRepository):
         del self.clusters[cluster.name]
 
 
-class PickleRepository(AbstractClusterRepository):
-    """This implementation of :py:class:`AbstractClusterRepository` stores the
-    cluster on the local disc using pickle. Therefore the cluster object and
-    all its dependencies will be saved in a pickle (binary) file.
-
-    :param str storage_path: path to the folder to store the cluster
-                             information
+class DiskRepository(AbstractClusterRepository):
+    """This is a generic repository class that assumes each cluster is
+saved on a file on disk. It only defines a few methods, to avoid
+duplication of code.
     """
-
-    file_ending = 'pickle'
 
     def __init__(self, storage_path):
         storage_path = os.path.expanduser(storage_path)
@@ -138,25 +136,21 @@ class PickleRepository(AbstractClusterRepository):
 
         :return: list of :py:class:`elasticluster.cluster.Cluster`
         """
-        file_ending = PickleRepository.file_ending
-        allfiles = os.listdir(self.storage_path)
-        cluster_files = []
-        for fname in allfiles:
-            fpath = os.path.join(self.storage_path, fname)
-            if fname.endswith('.%s' % file_ending) and os.path.isfile(fpath):
-                cluster_files.append(fname[:-len(file_ending)-1])
-            else:
-                log.info("Ignoring invalid storage file %s", fpath)
 
-        clusters = list()
-        for cluster_file in cluster_files:
+        clusters = []
+        cluster_files = glob.glob("%s/*.%s" % (self.storage_path, self.file_ending))
+        for fname in cluster_files:
             try:
-                cluster = self.get(cluster_file)
-                clusters.append(cluster)
+                name = fname[:-len(self.file_ending)-1]
+                clusters.append(self.get(name))
             except (ImportError, AttributeError) as ex:
                 log.error("Unable to load cluster %s: `%s`", cluster_file, ex)
                 log.error("If cluster %s was created with a previous version of elasticluster, you may need to run `elasticluster migrate %s %s` to update it.", cluster_file, self.storage_path, cluster_file)
         return clusters
+
+    def _get_cluster_storage_path(self, name):
+        cluster_file = '%s.%s' % (name, self.file_ending)
+        return os.path.join(self.storage_path, cluster_file)
 
     def get(self, name):
         """Retrieves the cluster with the given name.
@@ -165,28 +159,19 @@ class PickleRepository(AbstractClusterRepository):
         :return: :py:class:`elasticluster.cluster.Cluster`
         """
         path = self._get_cluster_storage_path(name)
-        if not os.path.exists(path):
-            raise ClusterNotFound("Storage file %s not found" % path)
 
-        with open(path, 'r') as storage:
-            cluster = pickle.load(storage)
-            # Compatibility with previous version of Node
-            for node in sum(cluster.nodes.values(), []):
-                if not hasattr(node, 'ips'):
-                    log.debug("Monkey patching old version of `Node` class: %s", node.name)
-                    node.ips = [node.ip_public, node.ip_private]
-                    node.preferred_ip = None
-            return cluster
-
-    def delete(self, cluster):
-        """Deletes the cluster from persistent state.
-
-        :param cluster: cluster to delete from persistent state
-        :type cluster: :py:class:`elasticluster.cluster.Cluster`
-        """
-        path = self._get_cluster_storage_path(cluster.name)
-        if os.path.exists(path):
-            os.unlink(path)
+        try:
+            with open(path, 'r') as storage:
+                cluster = self.load(storage)
+                # Compatibility with previous version of Node
+                for node in sum(cluster.nodes.values(), []):
+                    if not hasattr(node, 'ips'):
+                        log.debug("Monkey patching old version of `Node` class: %s", node.name)
+                        node.ips = [node.ip_public, node.ip_private]
+                        node.preferred_ip = None
+                return cluster
+        except IOError as ex:
+            raise ClusterNotFound("Error accessing storage file %s: %s" % (path, ex))
 
     def save_or_update(self, cluster):
         """Save or update the cluster to persistent state.
@@ -199,9 +184,127 @@ class PickleRepository(AbstractClusterRepository):
 
         path = self._get_cluster_storage_path(cluster.name)
         with open(path, 'wb') as storage:
-            pickle.dump(cluster, storage, pickle.HIGHEST_PROTOCOL)
+            self.dump(cluster, storage)
 
-    def _get_cluster_storage_path(self, name):
-        cluster_file = '%s.%s' % (name, PickleRepository.file_ending)
-        return os.path.join(self.storage_path, cluster_file)
+    def delete(self, cluster):
+        """Deletes the cluster from persistent state.
 
+        :param cluster: cluster to delete from persistent state
+        :type cluster: :py:class:`elasticluster.cluster.Cluster`
+        """
+        path = self._get_cluster_storage_path(cluster.name)
+        if os.path.exists(path):
+            os.unlink(path)
+
+
+class PickleRepository(DiskRepository):
+    """This implementation of :py:class:`AbstractClusterRepository` stores the
+    cluster on the local disc using pickle. Therefore the cluster object and
+    all its dependencies will be saved in a pickle (binary) file.
+
+    :param str storage_path: path to the folder to store the cluster
+                             information
+    """
+
+    file_ending = 'pickle'
+    def __init__(self, storage_path):
+        DiskRepository.__init__(self, storage_path)
+        self.repository_types = [PickleRepository]
+
+    @staticmethod
+    def load(fp):
+        """Load cluster from file descriptor fp"""
+        return pickle.load(fp)
+
+    @staticmethod
+    def dump(cluster, fp):
+        pickle.dump(cluster, fp, pickle.HIGHEST_PROTOCOL)
+
+
+class JsonRepository(DiskRepository):
+    """This implementation of :py:class:`AbstractClusterRepository` stores the
+    cluster on a file in json format.
+
+    :param str storage_path: path to the folder to store the cluster
+                             information
+    """
+    file_ending = 'json'
+
+    def load(self, fp):
+        dcluster = json.load(fp)
+        # Backward compatibility fix
+        for key in ['user_key_name', 'user_key_public']:
+            if '_'+key in dcluster:
+                dcluster[key] = dcluster['_'+key]
+        from elasticluster import Cluster
+        cluster = Cluster(**dcluster)
+
+        cluster.repository = self
+        return cluster
+
+    @staticmethod
+    def dump(cluster, fp):
+        state = dict(cluster)
+        for key in ['repository', '_setup_provider', '_cloud_provider']:
+            if key in state:
+                del state[key]
+        json.dump(state, fp, default=dict, indent=4)
+
+
+class MultiDiskRepository(AbstractClusterRepository):
+    """
+    This class is able to deal with multiple type of storage types.
+    """
+    storage_types = [PickleRepository, JsonRepository]
+
+    def __init__(self, storage_path):
+        storage_path = os.path.expanduser(storage_path)
+        storage_path = os.path.expandvars(storage_path)
+        self.storage_path = storage_path
+
+    def get_all(self):
+        clusters = []
+        for cls in self.storage_types:
+            cluster_files = glob.glob(
+                '%s/*.%s' % (self.storage_path, cls.file_ending))
+
+            for fname in cluster_files:
+                try:
+                    store = cls(self.storage_path)
+                    name = fname[:-len(store.file_ending)-1]
+                    clusters.append(store.get(name))
+                except (ImportError, AttributeError) as ex:
+                    log.error("Unable to load cluster %s: `%s`", cluster_file, ex)
+                    log.error("If cluster %s was created with a previous version of elasticluster, you may need to run `elasticluster migrate %s %s` to update it.", cluster_file, self.storage_path, cluster_file)
+        return clusters
+
+    def _get_store_by_name(self, name):
+        """Return an instance of the correct DiskRepository based on the *first* file that matches the standard syntax for repository files"""
+        for cls in self.storage_types:
+            cluster_files = glob.glob(
+                '%s/%s.%s' % (self.storage_path, name, cls.file_ending))
+            if cluster_files:
+                try:
+                    return cls(self.storage_path)
+                except:
+                    continue
+        raise ClusterNotFound("No cluster %s was found" % name)
+
+
+    def get(self, name):
+        store = self._get_store_by_name(name)
+        return store.get(name)
+
+    def save_or_update(self, cluster):
+        if cluster.repository is self:
+            # That's a pity, we have to find out the best class
+            try:
+                store = self._get_store_by_name(cluster.name)
+            except ClusterNotFound:
+                # Use one of the substores
+                store = JsonRepository(self.storage_path)
+            store.save_or_update(cluster)
+
+    def delete(self, cluster):
+        store = self._get_store_by_name(name)
+        store.delete(cluster)

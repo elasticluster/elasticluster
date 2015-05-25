@@ -39,7 +39,7 @@ from elasticluster import log
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.cluster import Cluster
-from elasticluster.repository import PickleRepository
+from elasticluster.repository import MultiDiskRepository
 
 
 class Configurator(object):
@@ -81,11 +81,11 @@ class Configurator(object):
     """
 
     setup_providers_map = {"ansible": AnsibleSetupProvider, }
-
+    
     default_storage_dir = os.path.expanduser(
         "~/.elasticluster/storage")
 
-    def __init__(self, cluster_conf, storage_path=None):
+    def __init__(self, cluster_conf, storage_path=None, storage_type=None):
         self.general_conf = dict()
         self.cluster_conf = cluster_conf
         if storage_path:
@@ -94,7 +94,7 @@ class Configurator(object):
             self.general_conf['storage'] = storage_path
         else:
             self.general_conf['storage'] = Configurator.default_storage_dir
-
+        
         validator = ConfigValidator(self.cluster_conf)
         validator.validate()
 
@@ -110,7 +110,7 @@ class Configurator(object):
 
         :param str storage_path: path to the storage directory. If
                                  defined, a
-                                 :py:class:`repository.PickleRepository`
+                                 :py:class:`repository.DiskRepository`
                                  class will be instantiated.
 
         :param str include_config_dirs: Default is False. If True, for
@@ -133,6 +133,7 @@ class Configurator(object):
                         configfiles.append(fullpath)
         config_reader = ConfigReader(configfiles)
         conf = config_reader.read_config()
+        
         return Configurator(conf, storage_path=storage_path)
 
     def create_cloud_provider(self, cluster_template):
@@ -298,7 +299,7 @@ class Configurator(object):
 
     def create_repository(self):
         storage_path = self.general_conf['storage']
-        repository = PickleRepository(storage_path)
+        repository = MultiDiskRepository(storage_path)
         return repository
 
 
@@ -559,7 +560,8 @@ class ConfigReader(object):
             "cluster": Schema(
                 {"cloud": All(str, Length(min=1)),
                  "setup_provider": All(str, Length(min=1)),
-                 "login": All(str, Length(min=1))}, required=True, extra=True),
+                 "login": All(str, Length(min=1)),
+                 Optional("storage_type"): Any('json', 'pickle')}, required=True, extra=True),
             "setup": Schema(
                 {"provider": All(str, Length(min=1)),
                     }, required=True, extra=True),
