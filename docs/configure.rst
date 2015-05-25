@@ -79,6 +79,9 @@ Section names are in the form ``[type/name]`` wher `type` must be one of:
 ``cluster/<clustername>``
   override configuration for specific group of nodes within a cluster
 
+``storage``
+  usually not needed, allow to specify a custom path for the storage
+  directory and the default storage type.
 
 You must define at least one for each section types in order to have
 a valid configuration file.
@@ -667,3 +670,43 @@ compute nodes. Your configuration will thus look like::
 
 .. _`template configuration file`: https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template
 
+Storage section
+===============
+
+This section is used to customize the way elasticluster saves the
+state of your clusters on disk.
+
+By default, all persistent data is saved in
+``~/.elasticluster/storage``. This include two main files for each cluster:
+
+* ``<cluster>.yaml``: a file containing information about your cluster
+* ``<cluster>.known_hosts``: a file containing the ssh host keys of
+  the nodes of your cluster.
+
+These files are very important, since if they are broken or missing,
+elasticluster will **not** be able to recover any information about
+your cluster.
+
+In addition to these two files, the setup provider and the cloud
+provider might create other files in the storage directory, but these
+are not critical, as they are re-genereted if needed.
+
+To change the default path to the storage directory you can create a
+new `storage` section and set the ``storage_path`` value::
+
+    [storage]
+    storage_path = /foo/bar
+
+
+By default the status of the cluster is saved in YAML_ format, but
+also Pickle_ and Json_ formats are available. To save the cluster in a
+different fromat, add the option ``storage_type``::
+
+    [storage]
+    storage_type = json
+
+Please note that only newly created storage will honour this option!
+
+.. _YAML: http://yaml.org/
+.. _Pickle: http://en.wikipedia.org/wiki/Pickle_(Python)
+.. _Json: http://json.org/
