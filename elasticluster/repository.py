@@ -22,6 +22,7 @@ import pickle
 from abc import ABCMeta, abstractmethod
 import glob
 import json
+import yaml
 
 # Elasticluster imports
 from elasticluster import log
@@ -250,12 +251,41 @@ class JsonRepository(DiskRepository):
                 del state[key]
         json.dump(state, fp, default=dict, indent=4)
 
+class YamlRepository(DiskRepository):
+    """This implementation of :py:class:`AbstractClusterRepository` stores the
+    cluster on a file in yaml format.
+
+    :param str storage_path: path to the folder to store the cluster
+                             information
+    """
+    file_ending = 'yaml'
+
+    def load(self, fp):
+        dcluster = yaml.load(fp)
+        # Backward compatibility fix
+        for key in ['user_key_name', 'user_key_public']:
+            if '_'+key in dcluster:
+                dcluster[key] = dcluster['_'+key]
+        from elasticluster import Cluster
+        cluster = Cluster(**dcluster)
+
+        cluster.repository = self
+        return cluster
+
+    @staticmethod
+    def dump(cluster, fp):
+        state = dict(cluster)
+        for key in ['repository', '_setup_provider', '_cloud_provider']:
+            if key in state:
+                del state[key]
+        yaml.dump(state, fp, default=dict, indent=4)
+
 
 class MultiDiskRepository(AbstractClusterRepository):
     """
     This class is able to deal with multiple type of storage types.
     """
-    storage_types = [PickleRepository, JsonRepository]
+    storage_types = [PickleRepository, JsonRepository, YamlRepository]
 
     def __init__(self, storage_path):
         storage_path = os.path.expanduser(storage_path)

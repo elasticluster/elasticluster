@@ -808,7 +808,10 @@ class Node(Struct):
         for key in extra.keys():
             if hasattr(self, key):
                 del extra[key]
-        self.extra_args = extra
+        self.extra = {}
+        self.extra.update(extra.pop('extra', {}))
+        self.extra.update(extra)
+        
 
     def __setstate__(self, state):
         self.__dict__ = state
@@ -827,7 +830,7 @@ class Node(Struct):
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
             self.flavor, self.image_id, self.image_userdata,
-            username=self.image_user, node_name="%s-%s" % (self.cluster_name, self.name), **self.extra_args)
+            username=self.image_user, node_name="%s-%s" % (self.cluster_name, self.name), **self.extra)
         log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
 
     def stop(self):
