@@ -56,10 +56,13 @@ class TestCluster(unittest.TestCase):
         conf_login = configurator.cluster_conf['mycluster']['login']
         repository = PickleRepository(self.storage_path)
 
-        cluster = Cluster("mycluster", cloud_provider,
-                          setup, repository, conf_login['user_key_name'],
-                          conf_login['user_key_public'],
-                          conf_login['user_key_private'],
+        cluster = Cluster(name="mycluster",
+                          cloud_provider=cloud_provider,
+                          setup_provider=setup,
+                          repository=repository,
+                          user_key_name=conf_login['user_key_name'],
+                          user_key_public=conf_login['user_key_public'],
+                          user_key_private=conf_login['user_key_private'],
                           )
 
         if not nodes:
@@ -261,10 +264,10 @@ class TestNode(unittest.TestCase):
 
     def get_node(self):
         cloud_provider = MagicMock()
-        node = Node(self.name, self.cluster_name, self.node_kind, 
-                    cloud_provider, self.user_key_public, 
-                    self.user_key_private, self.user_key_name, 
-                    self.image_user, self.security_group, 
+        node = Node(self.name, self.cluster_name, self.node_kind,
+                    cloud_provider, self.user_key_public,
+                    self.user_key_private, self.user_key_name,
+                    self.image_user, self.security_group,
                     self.image, self.flavor,
                     self.image_userdata)
 

@@ -197,12 +197,12 @@ class Configurator(object):
         extra.pop('setup_provider')
         extra['template'] = template
 
-        cluster = Cluster(name,
-                          self.create_cloud_provider(template),
-                          self.create_setup_provider(template, name=name),
-                          conf_login['user_key_name'],
-                          conf_login['user_key_public'],
-                          conf_login["user_key_private"],
+        cluster = Cluster(name=name,
+                          cloud_provider=self.create_cloud_provider(template),
+                          setup_provider=self.create_setup_provider(template, name=name),
+                          user_key_name=conf_login['user_key_name'],
+                          user_key_public=conf_login['user_key_public'],
+                          user_key_private=conf_login["user_key_private"],
                           repository=self.create_repository(),
                           **extra)
 
@@ -238,8 +238,8 @@ class Configurator(object):
         cluster = repository.get(cluster_name)
         if not cluster._setup_provider:
             cluster._setup_provider = self.create_setup_provider(cluster.template)
-        if not cluster._cloud_provider:
-            cluster._cloud_provider = self.create_cloud_provider(cluster.template)
+        if not cluster.cloud_provider:
+            cluster.cloud_provider = self.create_cloud_provider(cluster.template)
         cluster.update_config(
             self.cluster_conf[cluster.template]['cluster'],
             self.cluster_conf[cluster.template]['login']

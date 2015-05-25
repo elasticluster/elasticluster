@@ -77,7 +77,7 @@ class Struct(object, UserDict.DictMixin):
       3
     """
 
-    def __init__(self, initializer=None, **extra_args):
+    def __init__(self, initializer=None, **extra):
         if initializer is not None:
             try:
                 # initializer is `dict`-like?
@@ -87,7 +87,7 @@ class Struct(object, UserDict.DictMixin):
                 # initializer is a sequence of (name,value) pairs?
                 for name, value in initializer:
                     self[name] = value
-        for name, value in extra_args.items():
+        for name, value in extra.items():
             self[name] = value
 
     def copy(self):
@@ -146,34 +146,63 @@ class Cluster(Struct):
    """
     startup_timeout = 60 * 10  #: timeout in seconds to start all nodes
 
-    def __init__(self, name, cloud_provider, setup_provider,
-                 user_key_name, user_key_public,
-                 user_key_private, repository=None, thread_pool_max_size=10,
+
+    def __init__(self, name, user_key_name='elasticluster-key',
+                 user_key_public='~/.ssh/id_rsa.pub',
+                 user_key_private='~/.ssh/id_rsa',
+                 cloud_provider=None, setup_provider=None,
+                 repository=None, thread_pool_max_size=10,
                  **extra):
         self.name = name
-        self.template = extra.get('template', None)
+        self.template = extra.pop('template', None)
         self.thread_pool_max_size = thread_pool_max_size
         self._cloud_provider = cloud_provider
         self._setup_provider = setup_provider
-        self._user_key_name = user_key_name
-        self._user_key_public = user_key_public
-        self.user_key_private = user_key_private
+        self.user_key_name = user_key_name
         self.repository = repository if repository else MemRepository()
-        self.known_hosts_file = None
-        if hasattr(self.repository, 'storage_path'):
+        self.known_hosts_file = extra.pop('known_hosts_file', None)
+        if not self.known_hosts_file and hasattr(self.repository, 'storage_path'):
             self.known_hosts_file = os.path.join(self.repository.storage_path,
                                        "%s.known_hosts" % self.name)
 
-        self.ssh_to = extra.get('ssh_to')
-        self.extra = extra.copy()
+        self.ssh_to = extra.pop('ssh_to', None)
+
+        self.user_key_private = os.path.expandvars(user_key_private)
+        self.user_key_private = os.path.expanduser(user_key_private)
+
+        self.user_key_public = os.path.expanduser(user_key_public)
+        self.user_key_public = os.path.expandvars(user_key_public)
+
         self.nodes = dict()
+        if 'nodes' in extra:
+            # Build the internal nodes. This is mostly useful when loading
+            # the cluster from json files.
+            for kind, nodes in extra['nodes'].items():
+                for node in nodes:
+                    self.add_node(**node)
 
-        self.user_key_private = os.path.expandvars(self.user_key_private)
-        self.user_key_private = os.path.expanduser(self.user_key_private)
+        self.extra = {}
+        # FIXME: ugly fix needed when saving and loading the same
+        # cluster using json. The `extra` keywords will become a
+        # single, dictionary-valued, `extra` option when calling again
+        # the constructor.
+        self.extra.update(extra.pop('extra',{}))
 
-        self._user_key_public = os.path.expanduser(self._user_key_public)
-        self._user_key_public = os.path.expandvars(self._user_key_public)
+        # Remove extra arguments, if defined
+        for key in extra.keys():
+            if hasattr(self, key):
+                del extra[key]
+        self.extra.update(extra)
 
+    @property
+    def cloud_provider(self):
+        return self._cloud_provider
+
+    @cloud_provider.setter
+    def cloud_provider(self, provider):
+        self._cloud_provider = provider
+        for node in self.get_all_nodes():
+            node._cloud_provider = provider
 
     def __getstate__(self):
         result = self.__dict__.copy()
@@ -214,13 +243,6 @@ class Cluster(Struct):
         oldvalue = self.__update_option(cluster_config, 'ssh_to', 'ssh_to')
         if oldvalue:
             log.debug("Attribute 'ssh_to' updated: %s -> %s", oldvalue, self.ssh_to)
-
-        for key, attr in [('user_key_private', 'user_key_private'),
-                          ('user_key_public', '_user_key_public'),
-                          ]:
-            oldvalue = self.__update_option(login_config, key, attr)
-            if oldvalue:
-                log.debug("Attribute %s updated: %s -> %s", attr, oldvalue, getattr(self, attr))
 
     def add_node(self, kind, image_id, image_user, flavor,
                  security_group, image_userdata='', name=None, **extra):
@@ -279,10 +301,21 @@ class Cluster(Struct):
         if not name:
             log.error("while adding a new node of type `%s`, I was unable to find a good name for it.", kind)
             return None
-        node = Node(name, self.name, kind, self._cloud_provider,
-                    self._user_key_public, self.user_key_private,
-                    self._user_key_name, image_user, security_group,
-                    image_id, flavor, image_userdata=image_userdata, **extra)
+        # To ease json dump/load, use `extra` dictionary to
+        # instantiate Node class
+        extra.update({'name': name,
+                      'cluster_name' : self.name,
+                      'kind': kind,
+                      'cloud_provider': self._cloud_provider,
+                      'user_key_public': self.user_key_public,
+                      'user_key_private': self.user_key_private,
+                      'user_key_name': self.user_key_name,
+                      'image_user': image_user,
+                      'security_group': security_group,
+                      'image_id': image_id,
+                      'flavor': flavor,
+                      'image_userdata':image_userdata})
+        node = Node(**extra)
 
         self.nodes[kind].append(node)
         return node
@@ -445,7 +478,7 @@ class Cluster(Struct):
                     time.sleep(10)
         except TimeoutError as timeout:
             # FIXME: this is wrong: the reason why `node.is_alive()` fails could be caused by a network error, and we shouldn't just delete the nodes.
-            
+
             log.error("Not all nodes were started correctly within the given"
                       " timeout `%s`" % Cluster.startup_timeout)
             log.error("Please check if image, keypair, and network configuration is correct and try again.")
@@ -754,7 +787,7 @@ class Node(Struct):
 
     def __init__(self, name, cluster_name, kind, cloud_provider, user_key_public,
                  user_key_private, user_key_name, image_user, security_group,
-                 image, flavor, image_userdata=None, **extra):
+                 image_id, flavor, image_userdata=None, **extra):
         self.name = name
         self.cluster_name = cluster_name
         self.kind = kind
@@ -764,14 +797,23 @@ class Node(Struct):
         self.user_key_name = user_key_name
         self.image_user = image_user
         self.security_group = security_group
-        self.image = image
+        self.image_id = image_id
         self.image_userdata = image_userdata
         self.flavor = flavor
 
-        self.instance_id = None
-        self.preferred_ip = None
-        self.ips = []
+        self.instance_id = extra.pop('instance_id', None)
+        self.preferred_ip = extra.pop('preferred_ip', None)
+        self.ips = extra.pop('ips', [])
+        # Remove extra arguments, if defined
+        for key in extra.keys():
+            if hasattr(self, key):
+                del extra[key]
         self.extra_args = extra
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        if 'image_id' not in state and 'image' in state:
+            state['image_id'] = state['image']
 
     def start(self):
         """Starts the node on the cloud using the given
@@ -784,7 +826,7 @@ class Node(Struct):
         self.instance_id = self._cloud_provider.start_instance(
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
-            self.flavor, self.image, self.image_userdata,
+            self.flavor, self.image_id, self.image_userdata,
             username=self.image_user, node_name="%s-%s" % (self.cluster_name, self.name), **self.extra_args)
         log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
 

@@ -77,7 +77,7 @@ class MemRepositoryTests(unittest.TestCase):
 
         self.storage.delete(cluster)
         nt.assert_false(cluster.name in self.storage.clusters)
-    
+
 
 class PickleRepositoryTests(MemRepositoryTests):
     def setUp(self):
