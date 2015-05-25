@@ -391,6 +391,69 @@ class ResizeCluster(AbstractCommand):
         print(cluster_summary(cluster))
 
 
+class RemoveNode(AbstractCommand):
+    """
+    Remove a specific node from the cluster
+    """
+    def setup(self, subparsers):
+        parser = subparsers.add_parser(
+            "remove-node", help="Remove a specific node from the cluster",
+            description=self.__doc__)
+        parser.set_defaults(func=self)
+        parser.add_argument('cluster',
+                            help='Cluster from which the node must be removed')
+        parser.add_argument('node', help='Name of node to be removed')
+        parser.add_argument('-v', '--verbose', action='count', default=0,
+                            help="Increase verbosity.")
+        parser.add_argument('--no-setup', action="store_true", default=False,
+                            help="Do not re-configure the cluster after "
+                            "removing the node.")
+        parser.add_argument('--yes', action="store_true", default=False,
+                            help="Assume `yes` to all queries and "
+                                 "do not prompt.")
+    def execute(self):
+        configurator = Configurator.fromConfig(
+            self.params.config, storage_path=self.params.storage,
+            include_config_dirs=True)
+
+        # Get current cluster configuration
+        cluster_name = self.params.cluster
+
+        try:
+            cluster = configurator.load_cluster(cluster_name)
+            cluster.update()
+        except (ClusterNotFound, ConfigurationError), ex:
+            log.error("Error loading cluster %s: %s\n" %
+                      (cluster_name, ex))
+            return
+
+        # Find the node to remove.
+        try:
+            node = cluster.get_node_by_name(self.params.node)
+        except NodeNotFound:
+            log.error("Node %s not found in cluster %s" % (
+                self.params.node, self.params.cluster))
+            sys.exit(1)
+
+        # Run
+        if not self.params.yes:
+            # Ask for confirmation.
+            yesno = raw_input(
+                "Do you really want to remove node %s? [yN] " % node.name)
+            if yesno.lower() not in ['yes', 'y']:
+                print("Aborting as per user request.")
+                sys.exit(0)
+
+        cluster.remove_node(node, stop=True)
+        print("Node %s removed" % node.name)
+
+        if self.params.no_setup:
+            print("NOT reconfiguring the cluster as requested.")
+        else:
+            print("Reconfiguring the cluster.")
+            cluster.setup()
+
+
 class ListClusters(AbstractCommand):
     """
     Print a list of all clusters that have been started.

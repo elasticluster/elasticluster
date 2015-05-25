@@ -346,20 +346,32 @@ class Cluster(Struct):
             self.add_node(kind, image_id, image_user, flavor,
                           security_group, image_userdata=image_userdata, **extra)
 
-    def remove_node(self, node):
-        """Removes a node from the cluster, but does not stop it. Use this
-        method with caution.
+    def remove_node(self, node, stop=False):
+        """Removes a node from the cluster.
+
+        By default, it doesn't also stop the node, just remove from
+        the known hosts of this cluster.
 
         :param node: node to remove
         :type node: :py:class:`Node`
+
+        :param stop: Stop the node
+        :type stop: bool
+
         """
         if node.kind not in self.nodes:
-            log.error("Unable to remove node %s: invalid node type `%s`.",
+            raise NodeNotFound("Unable to remove node %s: invalid node type `%s`.",
                       node.name, node.kind)
         else:
-            index = self.nodes[node.kind].index(node)
-            if self.nodes[node.kind][index]:
-                del self.nodes[node.kind][index]
+            try:
+                index = self.nodes[node.kind].index(node)
+                if self.nodes[node.kind][index]:
+                    del self.nodes[node.kind][index]
+                if stop:
+                    node.stop()
+                self.repository.save_or_update(self)
+            except ValueError:
+                raise NodeNotFound("Node %s not found in cluster" % node.name)
 
     @staticmethod
     def _start_node(node):
@@ -539,8 +551,7 @@ class Cluster(Struct):
             for node in pending_nodes:
                 log.error("Stopping node `%s`, since we could not connect to"
                           " it within the timeout." % node.name)
-                node.stop()
-                self.remove_node(node)
+                self.remove_node(node, stop=True)
 
         signal.alarm(0)
 
@@ -636,6 +647,18 @@ class Cluster(Struct):
             return reduce(operator.add, nodes, list())
         else:
             return []
+
+    def get_node_by_name(self, nodename):
+        """Return the node corresponding with name `nodename`
+
+        :params nodename: Name of the node
+        :type nodename: str
+        """
+        nodes = dict((n.name, n) for n in self.get_all_nodes())
+        try:
+            return nodes[nodename]
+        except KeyError:
+            raise NodeNotFound("Node %s not found" % nodename)
 
     def stop(self, force=False):
         """Destroys all instances of this cluster and calls delete on the
