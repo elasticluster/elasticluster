@@ -145,8 +145,8 @@ duplication of code.
                 name = fname[:-len(self.file_ending)-1]
                 clusters.append(self.get(name))
             except (ImportError, AttributeError) as ex:
-                log.error("Unable to load cluster %s: `%s`", cluster_file, ex)
-                log.error("If cluster %s was created with a previous version of elasticluster, you may need to run `elasticluster migrate %s %s` to update it.", cluster_file, self.storage_path, cluster_file)
+                log.error("Unable to load cluster %s: `%s`", fname, ex)
+                log.error("If cluster %s was created with a previous version of elasticluster, you may need to run `elasticluster migrate %s %s` to update it.", cluster_file, self.storage_path, fname)
         return clusters
 
     def _get_cluster_storage_path(self, name):
@@ -313,8 +313,8 @@ class MultiDiskRepository(AbstractClusterRepository):
                     name = fname[:-len(store.file_ending)-1]
                     clusters.append(store.get(name))
                 except (ImportError, AttributeError) as ex:
-                    log.error("Unable to load cluster %s: `%s`", cluster_file, ex)
-                    log.error("If cluster %s was created with a previous version of elasticluster, you may need to run `elasticluster migrate %s %s` to update it.", cluster_file, self.storage_path, cluster_file)
+                    log.error("Unable to load cluster %s: `%s`", fname, ex)
+                    log.error("If cluster %s was created with a previous version of elasticluster, you may need to run `elasticluster migrate %s %s` to update it.", fname, self.storage_path, fname)
         return clusters
 
     def _get_store_by_name(self, name):
