@@ -278,7 +278,7 @@ class YamlRepository(DiskRepository):
         for key in ['repository', '_setup_provider', '_cloud_provider']:
             if key in state:
                 del state[key]
-        yaml.dump(state, fp, default=dict, indent=4)
+        yaml.dump(state, fp, default_flow_style=False, indent=4)
 
 
 class MultiDiskRepository(AbstractClusterRepository):
@@ -332,7 +332,7 @@ class MultiDiskRepository(AbstractClusterRepository):
                 store = self._get_store_by_name(cluster.name)
             except ClusterNotFound:
                 # Use one of the substores
-                store = JsonRepository(self.storage_path)
+                store = YamlRepository(self.storage_path)
             store.save_or_update(cluster)
 
     def delete(self, cluster):
