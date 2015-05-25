@@ -121,6 +121,7 @@ class TestCluster(unittest.TestCase):
 
         cluster = self.get_cluster(cloud_provider=cloud_provider)
         cluster.repository = MagicMock()
+        cluster.repository.storage_path = '/foo/bar'
 
         ssh_mock = MagicMock()
         with patch('paramiko.SSHClient') as ssh_mock:
@@ -174,6 +175,7 @@ class TestCluster(unittest.TestCase):
             node.instance_id = u'test-id'
 
         cluster.repository = MagicMock()
+        cluster.repository.storage_path = '/foo/bar'
 
         cluster.stop()
 

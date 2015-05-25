@@ -160,10 +160,6 @@ class Cluster(Struct):
         self._setup_provider = setup_provider
         self.user_key_name = user_key_name
         self.repository = repository if repository else MemRepository()
-        self.known_hosts_file = extra.pop('known_hosts_file', None)
-        if not self.known_hosts_file and hasattr(self.repository, 'storage_path'):
-            self.known_hosts_file = os.path.join(self.repository.storage_path,
-                                       "%s.known_hosts" % self.name)
 
         self.ssh_to = extra.pop('ssh_to', None)
 
@@ -195,6 +191,11 @@ class Cluster(Struct):
         self.extra.update(extra)
 
     @property
+    def known_hosts_file(self):
+        return os.path.join(self.repository.storage_path,
+                            "%s.known_hosts" % self.name)
+    
+    @property
     def cloud_provider(self):
         return self._cloud_provider
 
@@ -213,8 +214,6 @@ class Cluster(Struct):
     def __setstate__(self, state):
         self.__dict__ = state
         # New attribute added to Cluster class, need to ensure it is defined.
-        if 'known_hosts_file' not in state:
-            self.known_hosts_file = None
 
     def __update_option(self, cfg, key, attr):
         oldvalue = getattr(self, attr)
@@ -500,7 +499,7 @@ class Cluster(Struct):
         signal.alarm(Cluster.startup_timeout)
         pending_nodes = self.get_all_nodes()[:]
 
-        if self.known_hosts_file and not os.path.exists(self.known_hosts_file):
+        if not os.path.exists(self.known_hosts_file):
             # Create the file if it's not present, otherwise the
             # following lines will raise an error
             try:
@@ -510,8 +509,11 @@ class Cluster(Struct):
                 log.warning("Error while opening known_hosts file `%s`: `%s`"
                             " NOT using known_hosts_file.",
                             self.known_hosts_file, err)
-                self.known_hosts_file = None
-        keys = paramiko.hostkeys.HostKeys(self.known_hosts_file)
+        try:
+            keys = paramiko.hostkeys.HostKeys(self.known_hosts_file)
+        except IOError:
+            keys = paramiko.hostkeys.HostKeys()
+            log.warning("Ignoring error while opening known_hosts file %s" % self.known_hosts_file)
 
         try:
             while pending_nodes:
@@ -547,8 +549,10 @@ class Cluster(Struct):
         self.repository.save_or_update(self)
 
         # Save host keys
-        if self.known_hosts_file:
+        try:
             keys.save(self.known_hosts_file)
+        except IOError:
+            log.warning("Ignoring error while saving known_hosts file %s" % self.known_hosts_file)
 
         # A lot of things could go wrong when starting the cluster. To
         # ensure a stable cluster fitting the needs of the user in terms of
@@ -670,7 +674,7 @@ class Cluster(Struct):
             self.repository.delete(self)
 
         # Remove also ssh known hosts
-        if self.known_hosts_file and os.path.exists(self.known_hosts_file):
+        if os.path.exists(self.known_hosts_file):
             os.remove(self.known_hosts_file)
 
 
