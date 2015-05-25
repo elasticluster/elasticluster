@@ -359,6 +359,23 @@ Extra variables can be set, by editing the `setup/` section:
 | ``gluster_replicas`` | no replica | set replica value for default volume    |
 +----------------------+------------+-----------------------------------------+
 
+A *snippet* of a typical configuration for a Gluster cluster is::
+
+    [cluster/gluster]
+    gluster-frontend_nodes=1
+    gluster-data_nodes=8
+    setup_provider=ansible_gluster
+    ssh_to=gluster-frontend
+    ...
+    
+    [setup/ansible_gluster]
+    gluster-frontend_groups=gluster_client
+    gluster-data_groups=gluster_data,gluster_client
+    gluster-data_var_gluster_replicas=2
+    gluster-data_var_gluster_stripes=1
+    ...
+    
+
 OrangeFS/PVFS2
 ==============
 
