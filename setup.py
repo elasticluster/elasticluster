@@ -53,7 +53,7 @@ required_packages = [
     'PyCLI',
     'paramiko',
     'ansible',
-    'voluptuous',
+    'voluptuous>=0.8.2',
     'configobj',
     # EC2 clouds
     'boto',
