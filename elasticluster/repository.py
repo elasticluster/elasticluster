@@ -28,6 +28,25 @@ import yaml
 from elasticluster import log
 from elasticluster.exceptions import ClusterNotFound
 
+def migrate_cluster(cluster):
+    """Called when loading a cluster when it comes from an older version
+    of elasticluster"""
+
+    for old, new in [('_user_key_public', 'user_key_public'),
+                     ('_user_key_private', 'user_key_private'),
+                     ('_user_key_name', 'user_key_name'),]:
+        if hasattr(cluster, old):
+            setattr(cluster, new, getattr(cluster, old))
+            delattr(cluster, old)
+    for kind, nodes in cluster.nodes.items():
+        for node in nodes:
+            if hasattr(node, 'image'):
+                image_id = getattr(node, 'image_id', None) or node.image
+                setattr(node, 'image_id', image_id)
+                delattr(node, 'image')
+
+    return cluster
+
 
 class AbstractClusterRepository:
     """Defines the contract for a cluster repository to store clusters in a
@@ -311,7 +330,9 @@ class MultiDiskRepository(AbstractClusterRepository):
                 try:
                     store = cls(self.storage_path)
                     name = fname[:-len(store.file_ending)-1]
-                    clusters.append(store.get(name))
+                    cluster = store.get(name)
+                    cluster = migrate_cluster(cluster)
+                    clusters.append(cluster)
                 except (ImportError, AttributeError) as ex:
                     log.error("Unable to load cluster %s: `%s`", fname, ex)
                     log.error("If cluster %s was created with a previous version of elasticluster, you may need to run `elasticluster migrate %s %s` to update it.", fname, self.storage_path, fname)
