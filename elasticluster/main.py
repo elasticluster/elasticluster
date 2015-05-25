@@ -80,8 +80,8 @@ class ElastiCluster(cli.app.CommandLineApp):
                        "sequentially instead of doing it in parallel.")
         self.add_param('-s', '--storage', metavar="PATH",
                        help="Path to the storage folder. Default: `%s`" %
-                            Configurator.default_storage_dir,
-                       default=Configurator.default_storage_dir)
+                            Configurator.default_storage_path,
+                       default=Configurator.default_storage_path)
         self.add_param('-c', '--config', metavar='PATH',
                        help="Path to the configuration file. Default: `%s`. "
                        "If directory PATH.d, also all files like "

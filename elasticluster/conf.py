@@ -28,11 +28,11 @@ from ConfigParser import RawConfigParser
 try:
     # Voluptuous version >= 0.8.1
     from voluptuous import message, MultipleInvalid, Invalid, Schema
-    from voluptuous import All, Length, Any, Url, Boolean, Optional
+    from voluptuous import All, Length, Any, Url, Boolean, Optional, Required
 except ImportError:
     # Voluptuous version <= 0.7.2
     from voluptuous.voluptuous import message, MultipleInvalid, Invalid
-    from voluptuous import Schema, All, Length, Any, Url, Boolean, Optional
+    from voluptuous import Schema, All, Length, Any, Url, Boolean, Optional, Required
 
 # Elasticluster imports
 from elasticluster import log
@@ -82,19 +82,23 @@ class Configurator(object):
 
     setup_providers_map = {"ansible": AnsibleSetupProvider, }
     
-    default_storage_dir = os.path.expanduser(
+    default_storage_path = os.path.expanduser(
         "~/.elasticluster/storage")
+    default_storage_type = 'yaml'
 
     def __init__(self, cluster_conf, storage_path=None, storage_type=None):
         self.general_conf = dict()
         self.cluster_conf = cluster_conf
+
         if storage_path:
             storage_path = os.path.expanduser(storage_path)
             storage_path = os.path.expandvars(storage_path)
-            self.general_conf['storage'] = storage_path
+            self.general_conf['storage_path'] = storage_path
         else:
-            self.general_conf['storage'] = Configurator.default_storage_dir
-        
+            self.general_conf['storage_path'] = Configurator.default_storage_path
+
+        self.general_conf['storage_type'] = storage_type or Configurator.default_storage_type
+
         validator = ConfigValidator(self.cluster_conf)
         validator.validate()
 
@@ -132,9 +136,9 @@ class Configurator(object):
                     if fname.endswith('.conf') and fullpath not in configfiles:
                         configfiles.append(fullpath)
         config_reader = ConfigReader(configfiles)
-        conf = config_reader.read_config()
+        (conf, storage_conf) = config_reader.read_config()
         
-        return Configurator(conf, storage_path=storage_path)
+        return Configurator(conf, **storage_conf)
 
     def create_cloud_provider(self, cluster_template):
         """Creates a cloud provider by inspecting the configuration properties
@@ -164,7 +168,7 @@ class Configurator(object):
 
         providerconf = conf.copy()
         providerconf.pop('provider')
-        providerconf['storage_path'] = self.general_conf['storage']
+        providerconf['storage_path'] = self.general_conf['storage_path']
 
         return provider(**providerconf)
 
@@ -265,7 +269,7 @@ class Configurator(object):
                 "Invalid value `%s` for `setup_provider` in configuration "
                 "file." % provider_name)
 
-        storage_path = self.general_conf['storage']
+        storage_path = self.general_conf['storage_path']
         if 'playbook_path' in conf:
             playbook_path = conf['playbook_path']
             del conf['playbook_path']
@@ -298,9 +302,10 @@ class Configurator(object):
                         sudo=conf_login['image_sudo'], **conf)
 
     def create_repository(self):
-        storage_path = self.general_conf['storage']
-        repository = MultiDiskRepository(storage_path)
-        return repository
+        storage_path = self.general_conf['storage_path']
+        storage_type = self.general_conf['storage_type']
+        return MultiDiskRepository(storage_path, storage_type)
+
 
 
 class ConfigValidator(object):
@@ -542,6 +547,10 @@ class ConfigReader(object):
                     "Invalid option for `nova_api_version`: %s" % ex)
 
         self.schemas = {
+            "storage": Schema(
+                {Optional("storage_path"): All(str),
+                 Optional("storage_type"): Any('yaml', 'json', 'pickle'),
+             }),
             "cloud": Schema(
                 {"provider": Any('ec2_boto', 'google', 'openstack'),
                  "ec2_url": Url(str),
@@ -561,7 +570,7 @@ class ConfigReader(object):
                 {"cloud": All(str, Length(min=1)),
                  "setup_provider": All(str, Length(min=1)),
                  "login": All(str, Length(min=1)),
-                 Optional("storage_type"): Any('json', 'pickle')}, required=True, extra=True),
+             }, required=True, extra=True),
             "setup": Schema(
                 {"provider": All(str, Length(min=1)),
                     }, required=True, extra=True),
@@ -578,11 +587,18 @@ class ConfigReader(object):
         """Reads the configuration properties from the ini file and links the
         section to comply with the cluster config dictionary format.
 
-        :return: dictionary containing all configuration properties from the
-         ini file in compliance to the cluster config format
+        :return: tuple of dictionaries (clusters, storage) containing
+         all configuration properties from the ini file in compliance
+         to the cluster config format, and global configuration options for the storage.
+
         :raises: :py:class:`voluptuous.MultipleInvalid` if not all sections
                  present or broken links between secitons
+
         """
+        storage_section = self.conf.get('storage', {
+            'storage_path': Configurator.default_storage_path,
+            'storage_type': Configurator.default_storage_type})
+
         clusters = dict((key, value) for key, value in self.conf.iteritems() if
                         re.search(ConfigReader.cluster_section + "/(.*)", key)
                         and key.count("/") == 1)
@@ -686,4 +702,4 @@ class ConfigReader(object):
         # configuration values _and_ a list of errors
         if errors.errors:
             raise errors
-        return conf_values
+        return (conf_values, storage_section)

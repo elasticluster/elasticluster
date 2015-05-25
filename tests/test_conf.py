@@ -25,7 +25,7 @@ import tempfile
 import unittest
 import sys
 
-import nose.tools
+import nose.tools as nt
 from voluptuous import Invalid, MultipleInvalid
 
 from elasticluster.conf import ConfigReader, ConfigValidator, Configurator
@@ -289,7 +289,7 @@ class TestConfigurator(unittest.TestCase):
                                      'share/elasticluster/providers/ansible-playbooks', 'site.yml')
         self.assertEqual(playbook_path, provider._playbook_path)
 
-        storage_path = configurator.general_conf['storage']
+        storage_path = configurator.general_conf['storage_path']
         self.assertEqual(provider._storage_path, storage_path)
 
         usr_sudo = self.config['mycluster']['login']['image_user_sudo']
@@ -315,6 +315,9 @@ class TestConfigurator(unittest.TestCase):
                 del os.environ['OS_USERNAME']
             raise
 
+    def test_storage_type(self):
+        configurator = Configurator(self.config)
+        repo = configurator.create_repository()
 
 class TestConfigValidator(unittest.TestCase):
 
@@ -644,7 +647,7 @@ ssh_to=frontend
     def test_missing_options(self):
         cfg = minimal_configuration(self.path)
 
-        @nose.tools.raises(Invalid, MultipleInvalid)
+        @nt.raises(Invalid, MultipleInvalid)
         def missing_option(section, option):
             tmpcfg = minimal_configuration()
             _, cfgfile = tempfile.mkstemp()
@@ -698,6 +701,31 @@ class TestConfigurationFile(unittest.TestCase):
         setup = config.create_setup_provider('c1')
         self.assertEqual(setup.groups['misc'], ['misc_master', 'misc_client'])
 
+    def test_default_storage_options(self):
+        cfg = minimal_configuration(self.cfgfile)
+        
+        with open(self.cfgfile, 'w') as fd:
+            cfg.write(fd)
+        config = Configurator.fromConfig(self.cfgfile)
+        repo = config.create_repository()
+        self.assertEqual(repo.storage_path, Configurator.default_storage_path)
+        self.assertEqual(repo.default_store.file_ending, Configurator.default_storage_type)
+
+
+    def test_custom_storage_options(self):
+        cfg = minimal_configuration(self.cfgfile)
+        cfg.add_section('storage')
+        cfg.set('storage', 'storage_path', '/foo/bar')
+        cfg.set('storage', 'storage_type', 'json')
+        
+        with open(self.cfgfile, 'w') as fd:
+            cfg.write(fd)
+        config = Configurator.fromConfig(self.cfgfile)
+        repo = config.create_repository()
+        self.assertEqual(repo.storage_path, '/foo/bar')
+        self.assertEqual(repo.default_store.file_ending, 'json')
+
+        
 if __name__ == "__main__":
     import nose
     nose.runmodule()
