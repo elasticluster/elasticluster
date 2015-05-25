@@ -228,6 +228,7 @@ class Cluster(Struct):
         keys.remove('_setup_provider')
         keys.remove('_cloud_provider')
         keys.remove('repository')
+        keys.remove('known_hosts_file')
         return keys
 
     def update_config(self, cluster_config, login_config):
