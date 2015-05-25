@@ -33,7 +33,8 @@ import nose.tools as nt
 
 from elasticluster import Cluster
 from elasticluster.cluster import Struct
-from elasticluster.repository import PickleRepository, MemRepository, JsonRepository, YamlRepository
+from elasticluster.repository import PickleRepository, MemRepository, \
+    JsonRepository, YamlRepository, MultiDiskRepository
 
 class FakeCluster(Struct):
     """Fake class used for the storage cluster class.  The only thing the
@@ -179,7 +180,7 @@ class JsonRepositoryTests(unittest.TestCase):
         nt.assert_true(cluster.nodes['foo'], 1)
         nt.assert_true(cluster.nodes['foo'][0].name, 'foo123')
 
-        
+
 class YamlRepositoryTests(unittest.TestCase):
     def setUp(self):
         self.path = tempfile.mkdtemp()
@@ -254,6 +255,40 @@ class YamlRepositoryTests(unittest.TestCase):
         nt.assert_true('foo' in cluster.nodes)
         nt.assert_true(cluster.nodes['foo'], 1)
         nt.assert_true(cluster.nodes['foo'][0].name, 'foo123')
+
+
+# Note: do not subclass from unittest.TestCase if you want to use test
+# generators.
+class TestMultiDiskRepository(object):
+    def setUp(self):
+        self.path = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.path, ignore_errors=True)
+        if hasattr(self, 'storage'):
+            del self.storage
+
+    @nt.raises(ValueError)
+    def test_invalid_storage_type(self):
+        MultiDiskRepository('/tmp/foo', 'foo')
+
+    def store_is_of_type(self, store_type):
+        """Check store type %s""" % store_type
+        storage = MultiDiskRepository(self.path, default_store=store_type)
+        cluster = Cluster(name='test1',
+                          cloud_provider=None,
+                          setup_provider=None,
+                          user_key_name='key',
+                          repository=storage)
+        storage.save_or_update(cluster)
+
+        nt.assert_true(
+            os.path.exists(
+                os.path.join(self.path, cluster.name + '.' + store_type)))
+
+    def test_repository_default_type(self):
+        for store_type in ['yaml', 'json', 'pickle']:
+            yield self.store_is_of_type, store_type
 
 if __name__ == "__main__":
     import nose

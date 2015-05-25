@@ -285,16 +285,24 @@ class MultiDiskRepository(AbstractClusterRepository):
     """
     This class is able to deal with multiple type of storage types.
     """
-    storage_types = [PickleRepository, JsonRepository, YamlRepository]
+    storage_type_map = {'pickle': PickleRepository,
+                        'json': JsonRepository,
+                        'yaml': YamlRepository}
 
-    def __init__(self, storage_path):
+    def __init__(self, storage_path, default_store='yaml'):
         storage_path = os.path.expanduser(storage_path)
         storage_path = os.path.expandvars(storage_path)
         self.storage_path = storage_path
+        try:
+            self.default_store = self.storage_type_map[default_store]
+        except KeyError:
+            raise ValueError(
+                "Invalid storage type %s. Allowed values: %s" % (
+                    default_store, str.join(', ', self.storage_type_map)))
 
     def get_all(self):
         clusters = []
-        for cls in self.storage_types:
+        for cls in self.storage_type_map.values():
             cluster_files = glob.glob(
                 '%s/*.%s' % (self.storage_path, cls.file_ending))
 
@@ -310,7 +318,7 @@ class MultiDiskRepository(AbstractClusterRepository):
 
     def _get_store_by_name(self, name):
         """Return an instance of the correct DiskRepository based on the *first* file that matches the standard syntax for repository files"""
-        for cls in self.storage_types:
+        for cls in self.storage_type_map.values():
             cluster_files = glob.glob(
                 '%s/%s.%s' % (self.storage_path, name, cls.file_ending))
             if cluster_files:
@@ -332,7 +340,7 @@ class MultiDiskRepository(AbstractClusterRepository):
                 store = self._get_store_by_name(cluster.name)
             except ClusterNotFound:
                 # Use one of the substores
-                store = YamlRepository(self.storage_path)
+                store = self.default_store(self.storage_path)
             store.save_or_update(cluster)
 
     def delete(self, cluster):
