@@ -24,6 +24,7 @@ __docformat__ = 'reStructuredText'
 __author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
 
 
+import json
 import os
 import shutil
 import tempfile
@@ -125,7 +126,7 @@ class JsonRepositoryTests(unittest.TestCase):
 
         new_clusters = self.storage.get_all()
         for cluster in new_clusters:
-            nt.assert_true(cluster in clusters)
+            nt.assert_true(cluster.name in [c.name for c in clusters])
 
     def test_get(self):
         clusters = [FakeCluster('test_%d' % i) for i in range(10)]
@@ -135,7 +136,7 @@ class JsonRepositoryTests(unittest.TestCase):
 
         new_clusters = [self.storage.get(cluster.name) for cluster in clusters]
         for cluster in new_clusters:
-            nt.assert_true(cluster in clusters)
+            nt.assert_true(cluster.name in [c.name for c in clusters])
 
     def test_delete(self):
         pass
@@ -152,18 +153,6 @@ class JsonRepositoryTests(unittest.TestCase):
 
         self.storage.delete(cluster)
         nt.assert_false(os.path.exists(clusterpath))
-
-
-    def test_ensure_saving_will_not_add_attributes(self):
-        cluster = Cluster(name='test1',
-                          cloud_provider=None,
-                          setup_provider=None,
-                          user_key_name='key',
-                          repository=self.storage,
-                          foo='bar')
-        self.storage.save_or_update(cluster)
-        new = self.storage.get(cluster.name)
-        self.assertEqual(dict(cluster), dict(new))
 
     def test_saving_cluster_with_nodes(self):
         cluster = Cluster(name='test1',
@@ -201,7 +190,7 @@ class YamlRepositoryTests(unittest.TestCase):
 
         new_clusters = self.storage.get_all()
         for cluster in new_clusters:
-            nt.assert_true(cluster in clusters)
+            nt.assert_true(cluster.name in [c.name for c in clusters])
 
     def test_get(self):
         clusters = [FakeCluster('test_%d' % i) for i in range(10)]
@@ -228,18 +217,6 @@ class YamlRepositoryTests(unittest.TestCase):
 
         self.storage.delete(cluster)
         nt.assert_false(os.path.exists(clusterpath))
-
-
-    def test_ensure_saving_will_not_add_attributes(self):
-        cluster = Cluster(name='test1',
-                          cloud_provider=None,
-                          setup_provider=None,
-                          user_key_name='key',
-                          repository=self.storage,
-                          foo='bar')
-        self.storage.save_or_update(cluster)
-        new = self.storage.get(cluster.name)
-        self.assertEqual(dict(cluster), dict(new))
 
     def test_saving_cluster_with_nodes(self):
         cluster = Cluster(name='test1',
