@@ -128,6 +128,8 @@ class Configurator(object):
         # FIXME: This is not python3 compatible!
         if isinstance(configfiles, basestring):
             configfiles = [configfiles]
+        # Also, expand any possible user variable
+        configfiles = [os.path.expanduser(cfg) for cfg in configfiles]
         for cfgfile in configfiles[:]:
             cfgdir = cfgfile + '.d'
             if os.path.isfile(cfgfile) and os.path.isdir(cfgdir):
@@ -138,6 +140,9 @@ class Configurator(object):
         config_reader = ConfigReader(configfiles)
         (conf, storage_conf) = config_reader.read_config()
 
+        # FIXME: We shouldn't need this ugly fix
+        if storage_path:
+            storage_conf['storage_path'] = storage_path
         return Configurator(conf, **storage_conf)
 
     def create_cloud_provider(self, cluster_template):

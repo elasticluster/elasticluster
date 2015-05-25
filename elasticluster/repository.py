@@ -258,10 +258,6 @@ class JsonRepository(DiskRepository):
 
     def load(self, fp):
         dcluster = json.load(fp)
-        # Backward compatibility fix
-        for key in ['user_key_name', 'user_key_public']:
-            if '_'+key in dcluster:
-                dcluster[key] = dcluster['_'+key]
         from elasticluster import Cluster
         cluster = Cluster(**dcluster)
 
@@ -287,10 +283,6 @@ class YamlRepository(DiskRepository):
 
     def load(self, fp):
         dcluster = yaml.load(fp)
-        # Backward compatibility fix
-        for key in ['user_key_name', 'user_key_public']:
-            if '_'+key in dcluster:
-                dcluster[key] = dcluster['_'+key]
         from elasticluster import Cluster
         cluster = Cluster(**dcluster)
 
@@ -299,7 +291,8 @@ class YamlRepository(DiskRepository):
 
     @staticmethod
     def dump(cluster, fp):
-        # To only save stuff we need, it's actually easier to serialize with json first :)
+        # To only save stuff we need, it's actually easier to
+        # serialize with json first :)
         state = json.loads(json.dumps(dict(cluster), default=dict))
         yaml.safe_dump(state, fp, default_flow_style=False, indent=4)
 

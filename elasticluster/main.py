@@ -45,6 +45,8 @@ from elasticluster.subcommands import SshFrontend
 from elasticluster.subcommands import SftpFrontend
 from elasticluster.subcommands import GC3PieConfig
 from elasticluster.subcommands import RemoveNode
+from elasticluster.subcommands import ExportCluster
+from elasticluster.subcommands import ImportCluster
 from elasticluster.conf import Configurator
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.migration_tools import MigrationCommand
@@ -73,6 +75,8 @@ class ElastiCluster(cli.app.CommandLineApp):
                     GC3PieConfig(self.params),
                     MigrationCommand(self.params),
                     RemoveNode(self.params),
+                    ExportCluster(self.params),
+                    ImportCluster(self.params),
                     ]
 
         # global parameters

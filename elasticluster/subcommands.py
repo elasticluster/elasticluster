@@ -21,16 +21,26 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.messi
 from abc import ABCMeta, abstractmethod
 from fnmatch import fnmatch
 from voluptuous import Invalid
-import os
-import sys
+from zipfile import ZipFile
 import json
+import os
+import shutil
+import sys
+import tempfile
 
 # Elasticluster imports
-from elasticluster.conf import Configurator
-from elasticluster import log
+from elasticluster import get_configurator, log
 from elasticluster.exceptions import ClusterNotFound, ConfigurationError, \
     ImageError, SecurityGroupError, NodeNotFound, ClusterError
 
+def ask_confirmation(msg):
+    """Ask for confirmation. Returns True or False accordingly"""    
+    yesno = raw_input(msg + " [yN] ")
+    if yesno.lower() not in ['yes', 'y']:
+        print("Aborting as per user request.")
+        return False
+    else:
+        return True
 
 class AbstractCommand():
     """
@@ -158,9 +168,9 @@ class Start(AbstractCommand):
         else:
             cluster_name = self.params.cluster
 
-        configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage,
-            include_config_dirs=True)
+        configurator = get_configurator(self.params.config,
+                                        storage_path=self.params.storage,
+                                        include_config_dirs=True)
 
         # overwrite configuration
         for option, value in self.params.extra_conf.iteritems():
@@ -233,9 +243,9 @@ class Stop(AbstractCommand):
         Stops the cluster if it's running.
         """
         cluster_name = self.params.cluster
-        configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage,
-            include_config_dirs=True)
+        configurator = get_configurator(self.params.config,
+                                        storage_path=self.params.storage,
+                                        include_config_dirs=True)
         try:
             cluster = configurator.load_cluster(cluster_name)
         except (ClusterNotFound, ConfigurationError), ex:
@@ -307,9 +317,9 @@ class ResizeCluster(AbstractCommand):
                 "Invalid syntax for argument: %s" % ex)
 
     def execute(self):
-        configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage,
-            include_config_dirs=True)
+        configurator = get_configurator(self.params.config,
+                                        storage_path=self.params.storage,
+                                        include_config_dirs=True)
 
         # Get current cluster configuration
         cluster_name = self.params.cluster
@@ -412,9 +422,9 @@ class RemoveNode(AbstractCommand):
                             help="Assume `yes` to all queries and "
                                  "do not prompt.")
     def execute(self):
-        configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage,
-            include_config_dirs=True)
+        configurator = get_configurator(self.params.config,
+                                        storage_path=self.params.storage,
+                                        include_config_dirs=True)
 
         # Get current cluster configuration
         cluster_name = self.params.cluster
@@ -468,9 +478,9 @@ class ListClusters(AbstractCommand):
                             help="Increase verbosity.")
 
     def execute(self):
-        configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage,
-            include_config_dirs=True)
+        configurator = get_configurator(self.params.config,
+                                        storage_path=self.params.storage,
+                                        include_config_dirs=True)
         repository = configurator.create_repository()
         clusters = repository.get_all()
 
@@ -510,9 +520,9 @@ class ListTemplates(AbstractCommand):
 
     def execute(self):
 
-        configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage,
-            include_config_dirs=True)
+        configurator = get_configurator(self.params.config,
+                                        storage_path=self.params.storage,
+                                        include_config_dirs=True)
         config = configurator.cluster_conf
 
         print("""%d cluster templates found in configuration file.""" % len(config))
@@ -566,9 +576,9 @@ class ListNodes(AbstractCommand):
         Lists all nodes within the specified cluster with certain
         information like id and ip.
         """
-        configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage,
-            include_config_dirs=True)
+        configurator = get_configurator(self.params.config,
+                                        storage_path=self.params.storage,
+                                        include_config_dirs=True)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -609,9 +619,9 @@ class SetupCluster(AbstractCommand):
                             help="Increase verbosity.")
 
     def execute(self):
-        configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage,
-            include_config_dirs=True)
+        configurator = get_configurator(self.params.config,
+                                        storage_path=self.params.storage,
+                                        include_config_dirs=True)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -652,9 +662,9 @@ class SshFrontend(AbstractCommand):
                             "machine instead of opening an interactive shell.")
 
     def execute(self):
-        configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage,
-            include_config_dirs=True)
+        configurator = get_configurator(self.params.config,
+                                        storage_path=self.params.storage,
+                                        include_config_dirs=True)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -723,9 +733,9 @@ class SftpFrontend(AbstractCommand):
                                  "opening an interactive shell.")
 
     def execute(self):
-        configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage,
-            include_config_dirs=True)
+        configurator = get_configurator(self.params.config,
+                                        storage_path=self.params.storage,
+                                        include_config_dirs=True)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -777,9 +787,9 @@ class GC3PieConfig(AbstractCommand):
         """
         Load the cluster and build a GC3Pie configuration snippet.
         """
-        configurator = Configurator.fromConfig(
-            self.params.config, storage_path=self.params.storage,
-            include_config_dirs=True)
+        configurator = get_configurator(self.params.config,
+                                        storage_path=self.params.storage,
+                                        include_config_dirs=True)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -801,3 +811,243 @@ class GC3PieConfig(AbstractCommand):
                           path, ex)
         else:
             print(create_gc3pie_config_snippet(cluster))
+
+class ExportCluster(AbstractCommand):
+    """Save cluster definition in the given file.  A `.zip` extension is
+    appended if it's not already there.  By default, the output file is
+    named like the cluster.
+    """
+
+    def setup(self, subparsers):
+        parser = subparsers.add_parser(
+            "export", help="Export a cluster as zip file",
+            description=self.__doc__)
+        parser.set_defaults(func=self)
+        parser.add_argument('--overwrite', action='store_true',
+                            help='Overwritep ZIP file if it exists.')
+        parser.add_argument('--save-keys', action='store_true',
+                            help="Also store public and *private* ssh keys. "
+                            "WARNING: this will copy sensible data. Use with "
+                            "caution!")
+        parser.add_argument(
+            '-o', '--output-file', metavar='FILE', dest='zipfile',
+            help="Output file to be used. By default the cluster is exported "
+            "into a <cluster>.zip file where <cluster> is the cluster name.")
+        parser.add_argument('cluster', help='Name of the cluster to export.')
+
+    def pre_run(self):
+        # find proper path to zip file
+        if not self.params.zipfile:
+            self.params.zipfile = self.params.cluster + '.zip'
+
+        if not self.params.zipfile.endswith('.zip'):
+            self.params.zipfile += '.zip'
+
+    def execute(self):
+        configurator = get_configurator(self.params.config,
+                                        storage_path=self.params.storage,
+                                        include_config_dirs=True)
+
+        try:
+            cluster = configurator.load_cluster(self.params.cluster)
+        except ClusterNotFound:
+            log.error("Cluster `%s` not found in storage dir %s."
+                      % (self.params.cluster, self.params.storage))
+            sys.exit(1)
+
+        if os.path.exists(self.params.zipfile) and not self.params.overwrite:
+            log.error("ZIP file `%s` already exists." % self.params.zipfile)
+            sys.exit(1)
+
+        with ZipFile(self.params.zipfile, 'w') as zipfile:
+            # The root of the zip file will contain:
+            # * the storage file
+            # * the known_hosts file
+            # * ssh public and prived keys, if --save-keys is used
+            #
+            # it will NOT contain the ansible inventory file, as this
+            # is automatically created when needed.
+            #
+            # Also, if --save-keys is used and there is an host with a
+            # different ssh private/public key than the default, they
+            # will be saved in:
+            #
+            #   ./<cluster>/<group>/<nodename>/
+            #
+            def verbose_add(fname, basedir='', comment=None):
+                zipname = basedir + os.path.basename(fname)
+                log.info("Adding '%s' as '%s'" % (fname, zipname))
+                zipfile.write(fname, zipname)
+                if comment:
+                    info = zipfile.getinfo(zipname)
+                    info.comment = comment
+
+            try:
+                verbose_add(cluster.storage_file, comment='cluster-file')
+                verbose_add(cluster.known_hosts_file, comment='known_hosts')
+                if self.params.save_keys:
+                    # that's sensible stuff, let's ask permission.
+                    if ask_confirmation("""
+WARNING! WARNING! WARNING!
+==========================
+You are about to add your ssh *private* key to the
+ZIP archive. These are sensible data: anyone with
+access to the ZIP file will have access to any host
+where this private key has been deployed.
+
+Are yousure you still want to copy them?"""):
+                        # Also save all the public and private keys we can find.
+
+                        # Cluster keys
+                        verbose_add(cluster.user_key_public)
+                        verbose_add(cluster.user_key_private)
+
+                        # Node keys, if found
+                        for node in cluster.get_all_nodes():
+                            if node.user_key_public != cluster.user_key_public:
+                                verbose_add(node.user_key_public,
+                                            "%s/%s/%s/" % (cluster.name,
+                                                           node.kind,
+                                                           node.name))
+                        for node in cluster.get_all_nodes():
+                            if node.user_key_private != cluster.user_key_private:
+                                verbose_add(node.user_key_private,
+                                            "%s/%s/%s/" % (cluster.name,
+                                                           node.kind,
+                                                           node.name))
+            except OSError as ex:
+                # A file is probably missing!
+                log.error("Fatal error: cannot add file %s to zip archive: %s."
+                          % (ex.filename, ex))
+                sys.exit(1)
+                    
+        print("Cluster '%s' correctly exported into %s" %
+              (cluster.name, self.params.zipfile))
+        
+
+class ImportCluster(AbstractCommand):
+    """Import a cluster definition from FILE into local storage.
+    After running this command, it will be possible to operate
+    on the imported cluster as if it had been created locally.
+
+    The FILE to be imported must have been created with
+    `elasticluster export`.
+
+    If a cluster already exists with the same name of the one
+    being imported, the import operation is aborted and
+    `elasticluster` exists with an error.
+    """
+
+    def setup(self, subparsers):
+        parser = subparsers.add_parser(
+            "import", help="Import a cluster from a zip file",
+            description=self.__doc__)
+        parser.set_defaults(func=self)
+        parser.add_argument('-v', '--verbose', action='count', default=0,
+                            help="Increase verbosity.")
+        parser.add_argument('--rename', metavar='NAME',
+                            help="Rename the cluster during import.")
+        parser.add_argument("file", help="Path to ZIP file produced by "
+                            "`elasticluster export`.")
+    def execute(self):
+        configurator = get_configurator(self.params.config,
+                                        storage_path=self.params.storage,
+                                        include_config_dirs=True)
+        repo = configurator.create_repository()
+        tmpdir = tempfile.mkdtemp()
+        log.debug("Using temporary directory %s" % tmpdir)
+        tmpconf = get_configurator(self.params.config,
+                                   storage_path=tmpdir,
+                                   include_config_dirs=True)
+        tmprepo =tmpconf.create_repository()
+
+        rc=0
+        # Read the zip file.
+        try:
+            with ZipFile(self.params.file, 'r') as zipfile:
+                # Find main cluster file
+                # create cluster object from it
+                log.debug("ZIP file %s opened" % self.params.file)
+                cluster = None
+                zipfile.extractall(tmpdir)
+                newclusters = tmprepo.get_all()
+                cluster = newclusters[0]
+                cur_clusternames = [c.name for c in repo.get_all()]
+                oldname = cluster.name
+                newname = self.params.rename
+                if self.params.rename:
+                    cluster.name = self.params.rename
+                    for node in cluster.get_all_nodes():
+                        node.cluster_name = cluster.name
+                if cluster.name in cur_clusternames:
+                    raise Exception(
+                        "A cluster with name %s already exists. Use "
+                        "option --rename to rename the cluster to be "
+                        "imported." % cluster.name)
+
+                        # Save the cluster in the new position
+                cluster.repository = repo
+                repo.save_or_update(cluster)
+                dest = cluster.repository.storage_path
+
+                # Copy the known hosts
+                srcfile = os.path.join(tmpdir, oldname+'.known_hosts')
+                destfile = os.path.join(dest, cluster.name+'.known_hosts')
+                shutil.copy(srcfile, destfile)
+
+                # Copy the ssh keys, if present
+                for attr in ('user_key_public', 'user_key_private'):
+                    keyfile = getattr(cluster, attr)
+                    keybase = os.path.basename(keyfile)
+                    srcfile = os.path.join(tmpdir, keybase) 
+                    if os.path.isfile(srcfile):
+                        log.info("Importing key file %s" % keybase)
+                        destfile = os.path.join(dest, keybase)
+                        shutil.copy(srcfile, destfile)
+                        setattr(cluster, attr, destfile)
+
+                    for node in cluster.get_all_nodes():
+                        nodekeyfile = getattr(node, attr)
+                        # Check if it's different from the main key
+                        if nodekeyfile != keyfile \
+                           and os.path.isfile(nodekeyfile):
+                            destdir = os.path.join(dest,
+                                                   cluster.name,
+                                                   node.kind,
+                                                   node.name)
+                            nodekeybase = os.path.basename(nodekeyfile)
+                            log.info("Importing key file %s for node %s" %
+                                     (nodekeybase, node.name))
+                            if not os.path.isdir(destdir):
+                                os.makedirs(destdir)
+                            # Path to key in zip file
+                            srcfile = os.path.join(tmpdir,
+                                                   oldname,
+                                                   node.kind,
+                                                   node.name,
+                                                   nodekeybase)
+                            destfile = os.path.join(destdir, nodekeybase)
+                            shutil.copy(srcfile, destfile)
+                            setattr(node, attr, destfile)
+
+                repo.save_or_update(cluster)
+                if not cluster:
+                    log.error("ZIP file %s does not contain a valid cluster."
+                              % self.params.file)
+                    rc = 2
+
+                # Check if a cluster already exists.
+                # if not, unzip the needed files, and update ssh key path if needed.
+        except Exception as ex:
+            log.error("Unable to import from zipfile %s: %s"
+                      % (self.params.file, ex))
+            rc=1
+        finally:
+            if os.path.isdir(tmpdir):
+                shutil.rmtree(tmpdir)
+            log.info("Cleaning up directory %s" % tmpdir)
+
+        if rc == 0:
+            print("Successfully imported cluster from ZIP %s to %s"
+                  % (self.params.file, repo.storage_path))
+        sys.exit(rc)

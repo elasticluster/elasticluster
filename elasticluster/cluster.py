@@ -307,14 +307,16 @@ class Cluster(Struct):
                       'cluster_name' : self.name,
                       'kind': kind,
                       'cloud_provider': self._cloud_provider,
-                      'user_key_public': self.user_key_public,
-                      'user_key_private': self.user_key_private,
-                      'user_key_name': self.user_key_name,
                       'image_user': image_user,
                       'security_group': security_group,
                       'image_id': image_id,
                       'flavor': flavor,
                       'image_userdata':image_userdata})
+        for attr in ('user_key_public', 'user_key_private', 'user_key_name',
+                     'security_group', 'image_user', 'image_id', 'flavor',
+                     'image_userdata'):
+            if attr not in extra:
+                extra[attr] = getattr(self, attr)
         node = Node(**extra)
 
         self.nodes[kind].append(node)
