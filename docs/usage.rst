@@ -73,6 +73,13 @@ inspect your clusters. The available subcommands are:
 **sftp**
     Open an SFTP session to the cluster frontend host.
 
+**export**
+    Export a cluster as a ZIP file.
+
+**import**
+    Import a cluster from a ZIP file created with `elasticluster
+    export`.
+
 An help message explaining the available options and subcommand of
 `elasticluster` is available by running::
 
@@ -559,3 +566,80 @@ options are passed to `sftp` command line:
 ``-o StrictHostKeyChecking=yes``
     Enable check of the host key of the remote machine.
 
+The ``epxort`` command
+----------------------
+
+The ``export`` command is useful when you need to copy a cluster you
+already created on a different computer.
+
+The usage of `export` command is as follow::
+
+    elasticluster export [-h] [--overwrite] [--save-keys] [-o FILE] cluster
+
+The following options are available:
+
+``--overwrite``
+
+    Overwritep ZIP file if it exists.
+
+``--save-keys``
+
+    Also store public and *private* ssh keys. WARNING: this will copy
+    sensible data. Use with caution!
+
+``-o FILE, --output-file FILE``
+
+     Output file to be used. By default the cluster is exported into a
+     `<cluster>.zip` file where `<cluster>` is the cluster name.
+
+When exporting a cluster, a zip file will be created, containing all
+the necessary information for elasticluster. By default elasticluster
+will not export also the ssh keys; if you want to export them as well,
+run with option ``--save-keys``
+
+One word of advice though: ssh keys are *sensible data*: they allow to
+connect to a rempote host without knowing the remote password. Owning
+a private ssh key means having access to any machine where the
+corresponding public key was deployed.
+
+If you use a different set of keys for each cluster, and you don't use
+the same key also for other hosts, you are safe using
+``--save-keys``. Otherwise, be sure to share the ZIP file *only* with
+people that are supposed to have access to **all** hosts that give
+access to those ssh keys.
+
+
+The ``import`` command
+----------------------
+
+The ``import`` command is used to import a cluster exported with the
+``export`` command. This will copy the relevant data in the storage
+directory and if needed will also update the cluster (for instance,
+the path to the known_hosts file, or the cluster name, if changed)
+
+Basic usage of the command is::
+
+    elasticluster import [-h] [-v] [--rename NAME] file
+
+where ``file`` is the zip file produced by `elasticluster export`.
+
+The following option is available:
+
+``--rename NAME``
+
+    Rename the cluster during import.
+
+Elasticluster will refuse to import a cluster if in the current
+storage directory is already present a cluster with the same name. You
+can however import it using a different name, by passing an argument
+to the ``--rename`` option.
+
+The ``import`` command can also import any ssh key included in the ZIP
+file, if the export was performed with ``--save-keys``. In this case,
+elasticluster will also update the corresponding attributes of both
+cluster and nodes.
+
+Please note that if the cluster was *not* exported with
+``--save-keys``, elasticluster cannot know where the correct ssh key
+files are, therefore you will probably need to *manually* update these
+values in the storage file.
