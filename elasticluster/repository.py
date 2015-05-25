@@ -192,6 +192,7 @@ duplication of code.
                         log.debug("Monkey patching old version of `Node` class: %s", node.name)
                         node.ips = [node.ip_public, node.ip_private]
                         node.preferred_ip = None
+                cluster.storage_file = path
                 return cluster
         except IOError as ex:
             raise ClusterNotFound("Error accessing storage file %s: %s" % (path, ex))
@@ -206,6 +207,7 @@ duplication of code.
             os.makedirs(self.storage_path)
 
         path = self._get_cluster_storage_path(cluster.name)
+        cluster.storage_file = path
         with open(path, 'wb') as storage:
             self.dump(cluster, storage)
 
