@@ -23,6 +23,7 @@ from fnmatch import fnmatch
 from voluptuous import Invalid
 import os
 import sys
+import json
 
 # Elasticluster imports
 from elasticluster.conf import Configurator
@@ -486,6 +487,11 @@ class ListNodes(AbstractCommand):
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
+        parser.add_argument('--json', action='store_true',
+                            help="Produce JSON output")
+        parser.add_argument('--pretty-json', action='store_true',
+                            help="Produce *indented* JSON output "
+                            "(more human readable than --json)")
         parser.add_argument(
             '-u', '--update', action='store_true', default=False,
             help="By default `elasticluster list-nodes` will not contact the "
@@ -510,14 +516,19 @@ class ListNodes(AbstractCommand):
                       (cluster_name, ex))
             return
 
-        print(cluster_summary(cluster))
-        for cls in cluster.nodes:
-            print("%s nodes:" % cls)
-            print("")
-            for node in cluster.nodes[cls]:
-                txt = ["    " + i for i in node.pprint().splitlines()]
-                print('  - ' + str.join("\n", txt)[4:])
+        if self.params.pretty_json:
+            print(json.dumps(cluster, default=dict, indent=4))
+        elif self.params.json:
+            print(json.dumps(cluster, default=dict))
+        else:
+            print(cluster_summary(cluster))
+            for cls in cluster.nodes:
+                print("%s nodes:" % cls)
                 print("")
+                for node in cluster.nodes[cls]:
+                    txt = ["    " + i for i in node.pprint().splitlines()]
+                    print('  - ' + str.join("\n", txt)[4:])
+                    print("")
 
 
 class SetupCluster(AbstractCommand):

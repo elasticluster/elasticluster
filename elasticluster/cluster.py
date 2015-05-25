@@ -26,6 +26,7 @@ import socket
 import sys
 import time
 from multiprocessing.dummy import Pool
+import UserDict
 
 # External modules
 import paramiko
@@ -43,7 +44,69 @@ class IgnorePolicy(paramiko.MissingHostKeyPolicy):
                  (key.get_name(), hostname, hexlify(key.get_fingerprint())))
 
 
-class Cluster(object):
+class Struct(object, UserDict.DictMixin):
+    """
+    This class is a clone of gc3libs.utils.Struct class from GC3Pie project: https://code.google.com/p/gc3pie/
+
+    A `dict`-like object, whose keys can be accessed with the usual
+    '[...]' lookup syntax, or with the '.' get attribute syntax.
+
+    Examples::
+      >>> a = Struct()
+      >>> a['x'] = 1
+      >>> a.x
+      1
+      >>> a.y = 2
+      >>> a['y']
+      2
+
+    Values can also be initially set by specifying them as keyword
+    arguments to the constructor::
+
+      >>> a = Struct(z=3)
+      >>> a['z']
+      3
+      >>> a.z
+      3
+
+    Like `dict` instances, `Struct`s have a `copy` method to get a
+    shallow copy of the instance:
+
+      >>> b = a.copy()
+      >>> b.z
+      3
+    """
+
+    def __init__(self, initializer=None, **extra_args):
+        if initializer is not None:
+            try:
+                # initializer is `dict`-like?
+                for name, value in initializer.items():
+                    self[name] = value
+            except AttributeError:
+                # initializer is a sequence of (name,value) pairs?
+                for name, value in initializer:
+                    self[name] = value
+        for name, value in extra_args.items():
+            self[name] = value
+
+    def copy(self):
+        """Return a (shallow) copy of this `Struct` instance."""
+        return Struct(self)
+
+    # the `DictMixin` class defines all std `dict` methods, provided
+    # that `__getitem__`, `__setitem__` and `keys` are defined.
+    def __setitem__(self, name, val):
+        self.__dict__[name] = val
+
+    def __getitem__(self, name):
+        return self.__dict__[name]
+
+    def keys(self):
+        return self.__dict__.keys()
+
+
+class Cluster(Struct):
     """This is the heart of elasticluster and handles all cluster relevant
     behavior. You can basically start, setup and stop a cluster. Also it
     provides factory methods to add nodes to the cluster.
@@ -130,6 +193,14 @@ class Cluster(object):
             setattr(self, attr, cfg[key])
             return oldvalue
         return False
+
+    def keys(self):
+        """Only expose some of the attributes when using as a dictionary"""
+        keys = Struct.keys(self)
+        keys.remove('_setup_provider')
+        keys.remove('_cloud_provider')
+        keys.remove('repository')
+        return keys
 
     def update_config(self, cluster_config, login_config):
         """Update current configuration.
@@ -641,7 +712,7 @@ class Cluster(object):
         self.repository.save_or_update(self)
 
 
-class Node(object):
+class Node(Struct):
     """The node represents an instance in a cluster. It holds all
     information to connect to the nodes also manages the cloud instance. It
     provides the basic functionality to interact with the cloud instance,
@@ -840,3 +911,9 @@ instance id:   %s
 instance flavor: %s""" % (self.name, self.preferred_ip, str.join(', ', self.ips),
                           self.instance_id, self.flavor)
 
+
+    def keys(self):
+        """Only expose some of the attributes when using as a dictionary"""
+        keys = Struct.keys(self)
+        keys.remove('_cloud_provider')
+        return keys

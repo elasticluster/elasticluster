@@ -220,6 +220,24 @@ class TestCluster(unittest.TestCase):
             self.assertEqual(node.ips[0], ip)
 
 
+    def test_dict_mixin(self):
+        """Check that the node class can be seen as dictionary"""
+        config = Configuration().get_config(self.path)
+        ssh_to = "frontend"
+        config["mycluster"]["cluster"]["ssh_to"] = ssh_to
+
+        cluster = self.get_cluster(config=config)
+        cluster.ssh_to = ssh_to
+        frontend = cluster.get_frontend_node()
+
+
+        dcluster = dict(cluster)
+        self.assertEqual(dcluster['ssh_to'], ssh_to)
+        self.assertEqual(dcluster['nodes'].keys(), cluster.nodes.keys())
+
+        self.failUnlessRaises(KeyError, lambda x: x['_cloud_provider'], dcluster)
+        self.assertEqual(cluster['_cloud_provider'], cluster._cloud_provider)
+
 class TestNode(unittest.TestCase):
 
     def setUp(self):
@@ -339,6 +357,25 @@ class TestNode(unittest.TestCase):
 
         self.assertEqual(node.ips, ips)
         provider.get_ips.assert_called_once_with(instance_id)
+
+    def test_dict_mixin(self):
+        """Check that the node class can be seen as dictionary"""
+        node = self.get_node()
+
+        # Setup node with dummy values
+        instance_id = "test-id"
+        node.instance_id = instance_id
+        ips = ['127.0.0.1', '127.0.0.2']
+        node.ips = ips
+
+
+        dnode = dict(node)
+
+        self.assertEqual(node['instance_id'], instance_id)
+        self.assertEqual(node['ips'], ips)
+
+        self.failUnlessRaises(KeyError, lambda x: x['_cloud_provider'], dnode)
+        self.assertEqual(node['_cloud_provider'], node._cloud_provider)
 
 if __name__ == "__main__":
     import nose
