@@ -45,6 +45,9 @@ def migrate_cluster(cluster):
                 setattr(node, 'image_id', image_id)
                 delattr(node, 'image')
 
+    # Possibly related to issue #129
+    if not hasattr(cluster, 'thread_pool_max_size'):
+        cluster.thread_pool_max_size = 10
     return cluster
 
 
