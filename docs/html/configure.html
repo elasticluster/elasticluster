@@ -180,10 +180,10 @@ instance doesn&#8217;t get one automatically.</div></blockquote>
 <h3>Valid configuration keys for <cite>google</cite><a class="headerlink" href="#valid-configuration-keys-for-google" title="Permalink to this headline">¶</a></h3>
 <p><tt class="docutils literal"><span class="pre">gce_client_id</span></tt></p>
 <blockquote>
-<div>The API client id generated in the Google API Console</div></blockquote>
+<div>The API client id generated in the Google Developers Console</div></blockquote>
 <p><tt class="docutils literal"><span class="pre">gce_client_secret</span></tt></p>
 <blockquote>
-<div>The API client secret generated in the Google API Console</div></blockquote>
+<div>The API client secret generated in the Google Developers Console</div></blockquote>
 <p><tt class="docutils literal"><span class="pre">gce_project_id</span></tt></p>
 <blockquote>
 <div>The project id of your Google Compute Engine project</div></blockquote>
@@ -283,16 +283,19 @@ configuration file:</p>
 <div class="section" id="google-compute-engine-users">
 <h4>Google Compute Engine users<a class="headerlink" href="#google-compute-engine-users" title="Permalink to this headline">¶</a></h4>
 <p>To generate a client_id and client_secret to access the Google Compute
-Engine visit the following page: <a class="reference external" href="https://code.google.com/apis/console/">https://code.google.com/apis/console/</a></p>
+Engine visit the following page: <a class="reference external" href="https://console.developers.google.com/project/_/apiui/credential" target=_blank>https://console.developers.google.com/project/_/apiui/credential</a></p>
 <ol class="arabic simple">
-<li>Select the project defined as gce_project_id</li>
-<li>Navigate to <cite>API Access</cite></li>
-<li>Click create another client id</li>
-<li>Select <cite>Installed Application</cite> -&gt; <cite>Other</cite></li>
-<li>After clicking the <cite>Create</cite> button you&#8217;ll see your client_id and
-secret_key in the list of available client ids</li>
+<li>Select the project to be used for your cluster</li>
+<li>If a "Client ID for native application" is listed on this page, skip to step 8</li>
+<li>Under the OAuth section, click "Create new Client ID"</li>
+<li>Select "Installed Application"</li>
+<li>If prompted, click "Configure consent screen" and follow the instructions to set a "product name" to identify your Cloud project in the consent screen</li>
+<li>In the Create Client ID dialog, be sure the following are selected:<br>
+&nbsp;&nbsp;<b>Application type</b>: Installed application<br>
+&nbsp;&nbsp;<b>Installed application type</b>: Other</li>
+<li>Click the "Create Client ID" button</li>
+<li>You'll see your Client ID and Client secret listed under "Client ID for native application"</li>
 </ol>
-<p><strong>Please note</strong>: you have to set your google username in the login section  below as image_user to be able to use Google Compute Engine</p>
 </div>
 </div>
 </div>
@@ -548,6 +551,19 @@ up&amp;running to configure the cluster. When starting a cluster,
 creation of some instances may fail. If at least min_nodes are
 started correctly (i.e. are not in error state), the cluster is
 configured anyway, otherwise creation of the cluster will fail.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">boot_disk_type</span></tt></p>
+<blockquote>
+<div>Define the type of boot disk to use.
+Only supported when the cloud provider is <cite>google</cite>.
+Supported values are <em>pd-standard</em> and <em>pd-ssd</em>. 
+Default value is <em>pd-standard</em>.
+</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">boot_disk_size</span></tt></p>
+<blockquote>
+<div>Define the size of boot disk to use.
+Only supported when the cloud provider is <cite>google</cite>.
+Value is specified in gigabytes.  Default value is 10.
+</div></blockquote>
 </div>
 <div class="section" id="id5">
 <h3>Examples<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
