@@ -304,7 +304,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                     if self._storage_path_tmp:
                         if len(os.listdir(self._storage_path)) == 0:
                             shutil.rmtree(self._storage_path)
-                except OSError, ex:
+                except OSError as ex:
                     log.warning(
                         "AnsibileProvider: Ignoring error while deleting "
                         "inventory file %s: %s", inventory_path, ex)

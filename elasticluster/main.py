@@ -129,7 +129,7 @@ class ElastiCluster(cli.app.CommandLineApp):
             # directory if we can.
             try:
                 os.makedirs(self.params.storage)
-            except OSError, ex:
+            except OSError as ex:
                 sys.stderr.write("Unable to create storage directory: "
                                  "%s\n" % (str(ex)))
                 sys.exit(1)

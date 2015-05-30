@@ -746,7 +746,7 @@ class Cluster(Struct):
         try:
             # setup the cluster using the setup provider
             ret = self._setup_provider.setup_cluster(self)
-        except Exception, e:
+        except Exception as e:
             log.error(
                 "the setup provider was not able to setup the cluster, "
                 "but the cluster is running by now. Setup provider error "
@@ -769,7 +769,7 @@ class Cluster(Struct):
         for node in self.get_all_nodes():
             try:
                 node.update_ips()
-            except InstanceError, ex:
+            except InstanceError as ex:
                 log.warning("Ignoring error updating information on node %s: %s",
                           node, str(ex))
         self.repository.save_or_update(self)
@@ -890,7 +890,7 @@ class Node(Struct):
                       self.instance_id)
             running = self._cloud_provider.is_instance_running(
                 self.instance_id)
-        except Exception, ex:
+        except Exception as ex:
             log.debug("Ignoring error while looking for vm id %s: %s",
                       self.instance_id, str(ex))
         if running:
@@ -951,10 +951,10 @@ class Node(Struct):
                     cluster_changed = True
                 # Connection successful.
                 return ssh
-            except socket.error, ex:
+            except socket.error as ex:
                 log.debug("Host %s (%s) not reachable: %s.",
                           self.name, ip, ex)
-            except paramiko.SSHException, ex:
+            except paramiko.SSHException as ex:
                 log.debug("Ignoring error %s connecting to %s",
                           str(ex), self.name)
 

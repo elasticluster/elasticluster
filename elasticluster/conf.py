@@ -168,7 +168,7 @@ class Configurator(object):
                 provider = GoogleCloudProvider
             else:
                 raise Invalid("Invalid provider '%s' for cluster '%s'"% (conf['provider'], cluster_template))
-        except ImportError, ex:
+        except ImportError as ex:
             raise Invalid("Unable to load provider '%s': %s" % (conf['provider'], ex))
 
         providerconf = conf.copy()
@@ -643,33 +643,33 @@ class ConfigReader(object):
             try:
                 values['setup'] = dict(self.conf[setup_name])
                 self.schemas['setup'](values['setup'])
-            except KeyError, ex:
+            except KeyError as ex:
                 errors.add(
                     "cluster `%s` setup section `%s` does not exists" % (
                         cluster, setup_name))
-            except MultipleInvalid, ex:
+            except MultipleInvalid as ex:
                 for error in ex.errors:
                     errors.add(error)
 
             try:
                 values['login'] = dict(self.conf[login_name])
                 self.schemas['login'](values['login'])
-            except KeyError, ex:
+            except KeyError as ex:
                 errors.add(
                     "cluster `%s` login section `%s` does not exists" % (
                         cluster, login_name))
-            except MultipleInvalid, ex:
+            except MultipleInvalid as ex:
                 errors.add(Invalid("Error in login section `%s`: %s" % (
                     login_name, str.join(', ', [str(e) for e in ex.errors]))))
 
             try:
                 values['cloud'] = dict(self.conf[cloud_name])
                 self.schemas['cloud'](values['cloud'])
-            except KeyError, ex:
+            except KeyError as ex:
                 errors.add(
                     "cluster `%s` cloud section `%s` does not exists" % (
                         cluster, cloud_name))
-            except MultipleInvalid, ex:
+            except MultipleInvalid as ex:
                 for error in ex.errors:
                     errors.add(Invalid("section %s: %s" % (cloud_name, error)))
 
@@ -698,7 +698,7 @@ class ConfigReader(object):
                         name, str.join(", ", [str(e) for e in errors.errors])))
                 else:
                     conf_values[name] = values
-            except KeyError, ex:
+            except KeyError as ex:
                 errors.add("Error in section `%s`" % cluster)
 
         # FIXME: do we really need to raise an exception if we cannot

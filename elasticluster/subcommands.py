@@ -92,7 +92,7 @@ class AbstractCommand():
 def cluster_summary(cluster):
     try:
         frontend = cluster.get_frontend_node().name
-    except NodeNotFound, ex:
+    except NodeNotFound as ex:
         frontend = 'unknown'
         log.error("Unable to get information on the frontend node: "
                   "%s", str(ex))
@@ -185,7 +185,7 @@ class Start(AbstractCommand):
             try:
                 cluster = configurator.create_cluster(
                     cluster_template, cluster_name)
-            except ConfigurationError, e:
+            except ConfigurationError as e:
                 log.error("Starting cluster %s: %s\n" % (cluster_template, e))
                 return
 
@@ -248,7 +248,7 @@ class Stop(AbstractCommand):
                                         include_config_dirs=True)
         try:
             cluster = configurator.load_cluster(cluster_name)
-        except (ClusterNotFound, ConfigurationError), ex:
+        except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Stopping cluster %s: %s\n" %
                       (cluster_name, ex))
             return
@@ -328,7 +328,7 @@ class ResizeCluster(AbstractCommand):
         try:
             cluster = configurator.load_cluster(cluster_name)
             cluster.update()
-        except (ClusterNotFound, ConfigurationError), ex:
+        except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Listing nodes from cluster %s: %s\n" %
                       (cluster_name, ex))
             return
@@ -432,7 +432,7 @@ class RemoveNode(AbstractCommand):
         try:
             cluster = configurator.load_cluster(cluster_name)
             cluster.update()
-        except (ClusterNotFound, ConfigurationError), ex:
+        except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Error loading cluster %s: %s\n" %
                       (cluster_name, ex))
             return
@@ -542,7 +542,7 @@ name:     %s""" % template)
                     print("%s nodes: %d" % (
                         nodekind,
                         len(cluster.nodes[nodekind])))
-            except ConfigurationError, ex:
+            except ConfigurationError as ex:
                 log.error("unable to load cluster `%s`: %s", template, ex)
 
 
@@ -584,7 +584,7 @@ class ListNodes(AbstractCommand):
             cluster = configurator.load_cluster(cluster_name)
             if self.params.update:
                 cluster.update()
-        except (ClusterNotFound, ConfigurationError), ex:
+        except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Listing nodes from cluster %s: %s\n" %
                       (cluster_name, ex))
             return
@@ -626,7 +626,7 @@ class SetupCluster(AbstractCommand):
         try:
             cluster = configurator.load_cluster(cluster_name)
             cluster.update()
-        except (ClusterNotFound, ConfigurationError), ex:
+        except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Setting up cluster %s: %s\n" %
                       (cluster_name, ex))
             return
@@ -669,7 +669,7 @@ class SshFrontend(AbstractCommand):
         try:
             cluster = configurator.load_cluster(cluster_name)
             cluster.update()
-        except (ClusterNotFound, ConfigurationError), ex:
+        except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Setting up cluster %s: %s\n" %
                       (cluster_name, ex))
             return
@@ -693,7 +693,7 @@ class SshFrontend(AbstractCommand):
                     ssh.close()
                 cluster.repository.save_or_update(cluster)
 
-        except NodeNotFound, ex:
+        except NodeNotFound as ex:
             log.error("Unable to connect to the frontend node: %s" % str(ex))
             sys.exit(1)
         host = frontend.connection_ip()
@@ -740,7 +740,7 @@ class SftpFrontend(AbstractCommand):
         try:
             cluster = configurator.load_cluster(cluster_name)
             cluster.update()
-        except (ClusterNotFound, ConfigurationError), ex:
+        except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Setting up cluster %s: %s\n" %
                       (cluster_name, ex))
             return
@@ -793,7 +793,7 @@ class GC3PieConfig(AbstractCommand):
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
-        except (ClusterNotFound, ConfigurationError), ex:
+        except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Listing nodes from cluster %s: %s\n" %
                       (cluster_name, ex))
             return
