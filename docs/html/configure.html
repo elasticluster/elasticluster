@@ -551,6 +551,19 @@ up&amp;running to configure the cluster. When starting a cluster,
 creation of some instances may fail. If at least min_nodes are
 started correctly (i.e. are not in error state), the cluster is
 configured anyway, otherwise creation of the cluster will fail.</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">boot_disk_type</span></tt></p>
+<blockquote>
+<div>Define the type of boot disk to use.
+Only supported when the cloud provider is <cite>google</cite>.
+Supported values are <em>pd-standard</em> and <em>pd-ssd</em>. 
+Default value is <em>pd-standard</em>.
+</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">boot_disk_size</span></tt></p>
+<blockquote>
+<div>Define the size of boot disk to use.
+Only supported when the cloud provider is <cite>google</cite>.
+Value is specified in gigabytes.  Default value is 10.
+</div></blockquote>
 </div>
 <div class="section" id="id5">
 <h3>Examples<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
