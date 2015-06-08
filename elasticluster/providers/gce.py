@@ -238,8 +238,28 @@ class GoogleCloudProvider(AbstractCloudProvider):
         if image_id.startswith('http://') or image_id.startswith('https://'):
             image_url = image_id
         else:
-            os = image_id.split("-")[0]
-            os_cloud = "%s-cloud" % os
+            # The image names and full resource URLs for several Google-
+            # provided images (debian, centos, etc.) follow a consistent
+            # pattern, and so elasticluster supports a short-hand of just
+            # an image name, such as
+            #   "debian-7-wheezy-v20150526".
+            # The cloud project in this case is then "debian-cloud".
+            #
+            # Several images do not follow this convention, and so are
+            # special-cased here:
+            #   backports-debian -> debian-cloud
+            #   ubuntu           -> ubuntu-os-cloud
+            #   containter-vm    -> google-containers
+            if image_id.startswith('container-vm-'):
+              os_cloud = 'google-containers'
+            elif image_id.startswith('backports-debian-'):
+              os_cloud = 'debian-cloud'
+            elif image_id.startswith('ubuntu-'):
+              os_cloud = 'ubuntu-os-cloud'
+            else:
+              os = image_id.split("-")[0]
+              os_cloud = "%s-cloud" % os
+
             image_url = '%s%s/global/images/%s' % (
                 GCE_URL, os_cloud, image_id)
 
