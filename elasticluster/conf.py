@@ -161,6 +161,9 @@ class Configurator(object):
             elif conf['provider'] == 'google':
                 from elasticluster.providers.gce import GoogleCloudProvider
                 provider = GoogleCloudProvider
+            elif conf['provider'] == 'azure':
+                from elasticluster.providers.azure_provider import AzureCloudProvider
+                provider = AzureCloudProvider
             else:
                 raise Invalid("Invalid provider '%s' for cluster '%s'"% (conf['provider'], cluster_template))
         except ImportError as ex:
@@ -395,7 +398,7 @@ class ConfigValidator(object):
         * reading environment variables
         * interpolating configuration options
         """
-        # read cloud provider environment variables (ec2_boto or google, openstack)
+        # read cloud provider environment variables (ec2_boto, google, openstack, or azure)
         for cluster, props in self.config.iteritems():
             if "cloud" in props and "provider" in props['cloud']:
 
@@ -495,7 +498,10 @@ class ConfigValidator(object):
                                   Optional("region_name"): All(str, Length(min=1)),
                                   Optional("nova_api_version"): nova_api_version(),
         }
-
+        cloud_schema_azure = {"provider": 'azure',
+                              "subscription_id": All(str, Length(min=1)),
+                              "certificate": All(str, Length(min=1)),
+        }
         node_schema = {
             "flavor": All(str, Length(min=1)),
             "image_id": All(str, Length(min=1)),
@@ -509,6 +515,7 @@ class ConfigValidator(object):
         ec2_validator = Schema(cloud_schema_ec2, required=True, extra=False)
         gce_validator = Schema(cloud_schema_gce, required=True, extra=False)
         openstack_validator = Schema(cloud_schema_openstack, required=True, extra=False)
+        azure_validator = Schema(cloud_schema_azure, required=True, extra=False)
 
         if not self.config:
             raise Invalid("No clusters found in configuration.")
@@ -527,6 +534,8 @@ class ConfigValidator(object):
                     self.config[cluster]['cloud'] = gce_validator(cloud_props)
                 elif properties['cloud']['provider'] == "openstack":
                     self.config[cluster]['cloud'] = openstack_validator(cloud_props)
+                elif properties['cloud']['provider'] == "azure":
+                    self.config[cluster]['cloud'] = azure_validator(cloud_props)
             except MultipleInvalid as ex:
                 raise Invalid("Invalid configuration for cloud section `cloud/%s`: %s" % (properties['cluster']['cloud'], str.join(", ", [str(i) for i in ex.errors])))
 
@@ -593,7 +602,7 @@ class ConfigReader(object):
                  Optional("storage_type"): Any('yaml', 'json', 'pickle'),
              }),
             "cloud": Schema(
-                {"provider": Any('ec2_boto', 'google', 'openstack'),
+                {"provider": Any('ec2_boto', 'google', 'openstack', 'azure'),
                  "ec2_url": Url(str),
                  Optional("ec2_access_key"): All(str, Length(min=1)),
                  Optional("ec2_secret_key"): All(str, Length(min=1)),
@@ -607,6 +616,8 @@ class ConfigReader(object):
                  "gce_client_id": All(str, Length(min=1)),
                  "gce_client_secret": All(str, Length(min=1)),
                  "nova_client_api": nova_api_version()}, extra=True),
+                 "subscription_id": All(str, Length(min=1)),
+                 "certificate": All(str, Length(min=1)),
             "cluster": Schema(
                 {"cloud": All(str, Length(min=1)),
                  "setup_provider": All(str, Length(min=1)),

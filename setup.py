@@ -171,6 +171,8 @@ setup(
         'python-gflags',
         'simplejson>=2.5.0', # needed by `uritemplate` but somehow not picked up
         'pytz',   ## required by `positional` but somehow not picked up
+        # Azure cloud
+        'azure',
         # OpenStack clouds
         'netifaces',
         #'python-novaclient' ## this needs special treatment depending on Python version, see below

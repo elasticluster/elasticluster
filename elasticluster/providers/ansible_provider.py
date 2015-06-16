@@ -23,11 +23,13 @@ __author__ = str.join(', ', [
 # stdlib imports
 import logging
 import os
+import re
 import tempfile
 import shlex
 import shutil
 from subprocess import call
 import sys
+import re
 from warnings import warn
 
 
@@ -41,6 +43,7 @@ from elasticluster import log
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers import AbstractSetupProvider
 
+IPV6_RE = re.compile('\[([a-f:A-F0-9]*[%[0-z]+]?)\](?::(\d+))?')
 
 class AnsibleSetupProvider(AbstractSetupProvider):
     """This implementation uses ansible to configure and manage the cluster
@@ -262,6 +265,16 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         for node in cluster.get_all_nodes():
             if node.kind in self.groups:
                 extra_vars = ['ansible_ssh_user=%s' % node.image_user]
+                # check for nonstandard port, either IPv4 or IPv6
+                if node.preferred_ip and ':' in node.preferred_ip:
+                    match = IPV6_RE.match(node.preferred_ip)
+                    if match:
+                        host_port = match.groups()[1]
+                    else:
+                        _, _, host_port = node.preferred_ip.partition(':')
+                    if host_port:
+                        extra_vars.append('ansible_ssh_port=%s' % host_port)
+
                 if node.kind in self.environment:
                     extra_vars.extend('%s=%s' % (k, v) for k, v in
                                       self.environment[node.kind].items())
@@ -289,6 +302,14 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 inventory_fd.write("\n[" + section + "]\n")
                 if hosts:
                     for host in hosts:
+                        # don't want port, makes it look like ipv6
+                        if ':' in host[1]:
+                            match = IPV6_RE.match(node.preferred_ip)
+                            if match:
+                                host = (host[0], match.groups()[0], host[2])
+                            else:
+                                host = (host[0], host[1].partition(':')[0],
+                                        host[2])
                         hostline = "%s ansible_ssh_host=%s %s\n" \
                                    % host
                         inventory_fd.write(hostline)

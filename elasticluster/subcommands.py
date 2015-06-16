@@ -31,6 +31,7 @@ import os
 import shutil
 import sys
 import tempfile
+import re
 
 
 # Elasticluster imports
@@ -38,6 +39,10 @@ from elasticluster import get_configurator, log
 from elasticluster.exceptions import ClusterNotFound, ConfigurationError, \
     ImageError, SecurityGroupError, NodeNotFound, ClusterError
 from elasticluster.utils import confirm_or_abort
+
+
+SSH_PORT = 22
+IPV6_RE = re.compile('\[([a-f:A-F0-9]*[%[0-z]+]?)\](?::(\d+))?')
 
 
 class AbstractCommand():
@@ -673,6 +678,18 @@ class SshFrontend(AbstractCommand):
             log.error("Unable to connect to the frontend node: %s" % str(ex))
             sys.exit(1)
         host = frontend.connection_ip()
+
+        # check for nonstandard port, either IPv4 or IPv6
+        addr = host
+        port = str(SSH_PORT)
+        if ':' in host:
+            match = IPV6_RE.match(host)
+            if match:
+                addr = match.groups()[0]
+                port = match.groups()[1]
+            else:
+                addr, _, port = host.partition(':')
+
         username = frontend.image_user
         knownhostsfile = cluster.known_hosts_file if cluster.known_hosts_file \
                          else '/dev/null'
@@ -680,7 +697,8 @@ class SshFrontend(AbstractCommand):
                        "-i", frontend.user_key_private,
                        "-o", "UserKnownHostsFile=%s" % knownhostsfile,
                        "-o", "StrictHostKeyChecking=yes",
-                       '%s@%s' % (username, host)]
+                       "-p", port,
+                       '%s@%s' % (username, addr)]
         ssh_cmdline.extend(self.params.ssh_args)
         log.debug("Running command `%s`" % str.join(' ', ssh_cmdline))
         os.execlp("ssh", *ssh_cmdline)
