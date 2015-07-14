@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013, 2016 S3IT, University of Zurich
+# Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -215,8 +215,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        node_name=None,
                        boot_disk_type='pd-standard',
                        boot_disk_size=10,
-                       scheduling=None,
                        tags=None,
+                       scheduling=None,
                        **kwargs):
         """Starts a new instance with the given properties and returns
         the instance id.
@@ -231,8 +231,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str image_userdata: command to execute after startup
         :param str username: username for the given ssh key, default None
         :param str node_name: name of the instance
-        :param str scheduling: scheduling option to use for the instance ("preemptible")
         :param str tags: comma-separated list of "tags" to label the instance
+        :param str scheduling: scheduling option to use for the instance ("preemptible")
 
         :return: str - instance id of the started instance
         """
@@ -279,6 +279,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
               'preemptible': True
             }
           else:
+            log.error("Unknown scheduling option: '%s'" % scheduling)
             raise InstanceError("Unknown scheduling option: '%s'" % scheduling)
 
         # construct the request body
@@ -296,6 +297,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
             'tags': {
               'items': tags.split(',') if tags else None
             },
+            'scheduling': scheduling_option,
             'disks': [{
                 'autoDelete': 'true',
                 'boot': 'true',
