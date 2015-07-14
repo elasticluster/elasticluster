@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013 S3IT, University of Zurich
+# Copyright (C) 2013, 2015 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -216,6 +216,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        boot_disk_type='pd-standard',
                        boot_disk_size=10,
                        tags=None,
+                       scheduling=None,
                        **kwargs):
         """Starts a new instance with the given properties and returns
         the instance id.
@@ -232,6 +233,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
 
         :param str instance_name: name of the instance
         :param str tags: comma-separated list of "tags" to label the instance
+
+        :param str scheduling: scheduling option to use for the instance ("preemptible")
 
         :return: str - instance id of the started instance
         """
@@ -271,6 +274,16 @@ class GoogleCloudProvider(AbstractCloudProvider):
             image_url = '%s%s/global/images/%s' % (
                 GCE_URL, os_cloud, image_id)
 
+        scheduling_option = {}
+        if scheduling:
+          if scheduling == 'preemptible':
+            scheduling_option = {
+              'preemptible': True
+            }
+          else:
+            log.error("Unknown scheduling option: '%s'" % scheduling)
+            raise InstanceError("Unknown scheduling option: '%s'" % scheduling)
+
         # construct the request body
         if instance_name is None:
             instance_name = 'elasticluster-%s' % uuid.uuid4()
@@ -283,6 +296,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
             'tags': {
               'items': tags.split(',') if tags else None
             },
+            'scheduling': scheduling_option,
             'disks': [{
                 'autoDelete': 'true',
                 'boot': 'true',
