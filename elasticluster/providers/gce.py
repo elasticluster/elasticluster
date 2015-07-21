@@ -383,6 +383,14 @@ class GoogleCloudProvider(AbstractCloudProvider):
                                     project=self._project_id, zone=self._zone)
             response = self._execute_request(request)
             ip_public = None
+
+            # If the instance is in status TERMINATED, then there will be
+            # no IP addresses.
+            if response and response['status'] == 'TERMINATED':
+              log.info("node '%s' state is '%s'; no IP address(es)" %
+                       (instance_id, "TERMINATED"))
+              return [None, None]
+
             if response and "networkInterfaces" in response:
                 interfaces = response['networkInterfaces']
                 if interfaces:
