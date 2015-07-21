@@ -982,11 +982,12 @@ class Node(Struct):
 
         :return: str - representaion of a node in pretty print
         """
+        ips = ', '.join(ip for ip in self.ips if ip)
         return """%s
 connection IP: %s
 IPs:    %s
 instance id:   %s
-instance flavor: %s""" % (self.name, self.preferred_ip, str.join(', ', self.ips),
+instance flavor: %s""" % (self.name, self.preferred_ip, ips,
                           self.instance_id, self.flavor)
 
 
