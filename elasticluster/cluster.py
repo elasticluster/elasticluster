@@ -394,7 +394,7 @@ class Cluster(Struct):
         else:
             try:
                 node.start()
-                log.info("_start_node: node '%s' has been started" % node.name)
+                log.info("_start_node: node '%s' has been started", node.name)
                 return True
             except Exception as e:
                 log.error("could not start node `%s` for reason "
