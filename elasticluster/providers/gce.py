@@ -332,6 +332,10 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str instance_id: instance identifier
         :raises: `InstanceError` if instance can not be stopped
         """
+        if not instance_id:
+          log.info("Instance to stop has no instance id")
+          return
+
         gce = self._connect()
 
         try:
@@ -373,6 +377,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :return: list (ips)
         :raises: InstanceError if the ip could not be retrieved.
         """
+        if not instance_id:
+          raise InstanceError("could not retrieve the ip address for node: "
+                              "no associated instance id")
         gce = self._connect()
         instances = gce.instances()
         try:
