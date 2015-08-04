@@ -59,7 +59,7 @@ required_packages = [
     'boto',
     # OpenStack clouds
     'python-novaclient',
-    'pbr==0.11.0',
+    'pbr<2.0,>=1.3',
     # GCE cloud
     'google-api-python-client',
     'python-gflags',
