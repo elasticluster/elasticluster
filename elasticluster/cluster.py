@@ -394,7 +394,7 @@ class Cluster(Struct):
         else:
             try:
                 node.start()
-                log.info("_start_node: node has been started")
+                log.info("_start_node: node '%s' has been started" % node.name)
                 return True
             except Exception as e:
                 log.error("could not start node `%s` for reason "
@@ -954,6 +954,9 @@ class Node(Struct):
             except socket.error as ex:
                 log.debug("Host %s (%s) not reachable: %s.",
                           self.name, ip, ex)
+            except paramiko.BadHostKeyException as ex:
+                log.error("Invalid host key: host %s (%s); check keyfile: %s",
+                          self.name, ip, keyfile)
             except paramiko.SSHException as ex:
                 log.debug("Ignoring error %s connecting to %s",
                           str(ex), self.name)
