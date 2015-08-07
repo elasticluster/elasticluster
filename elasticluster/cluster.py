@@ -955,8 +955,8 @@ class Node(Struct):
                 log.debug("Host %s (%s) not reachable: %s.",
                           self.name, ip, ex)
             except paramiko.BadHostKeyException as ex:
-                print "Invalid host key: host %s (%s); check keyfile: %s" % (
-                      self.name, ip, keyfile)
+                log.error("Invalid host key: host %s (%s); check keyfile: %s",
+                          self.name, ip, keyfile)
             except paramiko.SSHException as ex:
                 log.debug("Ignoring error %s connecting to %s",
                           str(ex), self.name)
