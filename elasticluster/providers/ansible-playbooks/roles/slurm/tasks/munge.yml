@@ -5,6 +5,10 @@
   tags:
     - munge
 
+- name: Configure required munge users (Amazon AMIs)
+  user: name=munge shell=/bin/bash
+  when: is_amazon
+  
 - name: configure munge
   action: copy src=slurm/files/etc/munge/munge.key dest=/etc/munge/munge.key owner=munge group=munge mode=0400
   notify: restart munge

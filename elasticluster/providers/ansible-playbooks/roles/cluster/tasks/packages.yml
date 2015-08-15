@@ -5,7 +5,7 @@
     - gcc-c++
     - make
     - openmpi-devel
-    - hdf5-openmpi
+    # - hdf5-openmpi  # Broken dependency, requires libmpi_usempi.so.1 and libmpi_mpifh.so.2
     - hdf5
     - netcdf-devel
     - blas-devel
