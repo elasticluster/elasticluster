@@ -3,7 +3,7 @@
 # @(#)setup.py
 #
 #
-# Copyright (C) 2013, 2015, GC3, University of Zurich. All rights reserved.
+# Copyright (C) 2013, 2015 S3IT, University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
