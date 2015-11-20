@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013 GC3, University of Zurich
+# Copyright (C) 2013, 2015 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -170,7 +170,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         # check paths
         if not inventory_path:
             # No inventory file has been created, maybe an
-            # invalid calss has been specified in config file? Or none?
+            # invalid class has been specified in config file? Or none?
             # assume it is fine.
             elasticluster.log.info("No setup required for this cluster.")
             return True

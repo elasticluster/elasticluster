@@ -3,7 +3,7 @@
 # @(#)setup.py
 #
 #
-# Copyright (C) 2013, GC3, University of Zurich. All rights reserved.
+# Copyright (C) 2013, 2015 S3IT, University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -25,6 +25,12 @@ __docformat__ = 'reStructuredText'
 import os
 import sys
 import shutil
+
+# fix Python issue 15881 (on Python <2.7.5)
+try:
+    import multiprocessing
+except ImportError:
+    pass
 
 from setuptools.command import sdist
 
@@ -65,18 +71,18 @@ required_packages = [
 ]
 
 if sys.version_info[:2] == (2, 6):
-    # Python 2.6. 
+    # Python 2.6.
     # Google api python client *requires* argparse
     # cfr. http://code.google.com/p/google-api-python-client/issues/detail?id=299
     required_packages.append('argparse')
 
 setup(
     name="elasticluster",
-    version="1.3-dev",
+    version="1.3.dev",
     description="A command line tool to create, manage and setup computing clusters hosted on a public or private cloud infrastructure.",
     long_description=open('README.rst').read(),
-    author="Grid Computing Competence Centre, University of Zurich",
-    author_email="info@gc3.lists.uzh.ch",
+    author="Services and Support for Science IT, University of Zurich",
+    author_email="team@s3it.lists.uzh.ch",
     license="LGPL",
     keywords="cloud openstack amazon ec2 ssh hpc gridengine torque slurm batch job elastic",
     url="https://github.com/gc3-uzh-ch/elasticluster",
