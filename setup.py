@@ -78,7 +78,7 @@ if sys.version_info[:2] == (2, 6):
 
 setup(
     name="elasticluster",
-    version="1.3-dev",
+    version="1.3.dev",
     description="A command line tool to create, manage and setup computing clusters hosted on a public or private cloud infrastructure.",
     long_description=open('README.rst').read(),
     author="Grid Computing Competence Centre, University of Zurich",
