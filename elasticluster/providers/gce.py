@@ -364,7 +364,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
             return list()
 
     def get_ips(self, instance_id):
-        """Retrieves the ip addresses (private and public) from the cloud
+        """Retrieves the ip addresses (public) from the cloud
         provider by the given instance id.
 
         :param str instance_id: id of the instance
@@ -377,18 +377,15 @@ class GoogleCloudProvider(AbstractCloudProvider):
             request = instances.get(instance=instance_id,
                                     project=self._project_id, zone=self._zone)
             response = self._execute_request(request)
-            ip_private = None
             ip_public = None
             if response and "networkInterfaces" in response:
                 interfaces = response['networkInterfaces']
                 if interfaces:
-                    ip_private = interfaces[0]['networkIP']
-
                     if "accessConfigs" in interfaces[0]:
                         ip_public = interfaces[0]['accessConfigs'][0]['natIP']
 
-            if ip_private and ip_public:
-                return [ip_private, ip_public]
+            if ip_public:
+                return [ip_public]
             else:
                 raise InstanceError("could not retrieve the ip address for "
                                     "node `%s`, please check the node "
