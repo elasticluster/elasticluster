@@ -281,7 +281,6 @@ class GoogleCloudProvider(AbstractCloudProvider):
               'preemptible': True
             }
           else:
-            log.error("Unknown scheduling option: '%s'" % scheduling)
             raise InstanceError("Unknown scheduling option: '%s'" % scheduling)
 
         # construct the request body
