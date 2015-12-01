@@ -483,6 +483,11 @@ worker_groups=ipython_engine
 #                 Only supported when the cloud provider is google.
 #                 Values are specified in gigabytes.
 #                 Default value is 10.
+#
+# tags: Comma-separated list of instance tags.
+#                 Only supported when the cloud provider is google.
+#
+
 
 # Some (working) examples:
 
