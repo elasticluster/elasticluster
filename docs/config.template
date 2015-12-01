@@ -485,7 +485,7 @@ worker_groups=ipython_engine
 #                 Default value is 10.
 #
 # tags: Comma-separated list of instance tags.
-#                 Only supported when the cloud provider is google.
+#       Only supported when the cloud provider is google.
 #
 
 
