@@ -609,6 +609,11 @@ Optional configuration keys
     Values are specified in gigabytes.
     Default value is 10.
 
+``scheduling``
+    Define the type of instance scheduling.
+    Only supported when the cloud provider is `google`.
+    Only supported value is `preemptible`.
+
 Examples
 --------
 

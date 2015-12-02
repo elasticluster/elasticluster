@@ -489,7 +489,9 @@ worker_groups=ipython_engine
 # tags: Comma-separated list of instance tags.
 #       Only supported when the cloud provider is google.
 #
-
+# scheduling: Define the type of instance scheduling.
+#             Only supported when the cloud provider is google.
+#             Only supported value is preemptible.
 
 # Some (working) examples:
 
