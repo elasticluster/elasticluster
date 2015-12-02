@@ -6,12 +6,12 @@
 .. include:: global.inc
 
 =================
-  Configuration  
+  Configuration
 =================
 
 All the information about how to access a cloud provider and how to
 setup a cluster is stored in a configuration file. The default
-configuration file is stored in your home directory: 
+configuration file is stored in your home directory:
 ``~/.elasticluster/config`` but you can specify a different location
 from the command line with the `-c` option.
 
@@ -54,7 +54,7 @@ Basic syntax of the configuration file
 ======================================
 
 The file is parsed by ConfigParser module and has a syntax similar
-to Microsoft Windows INI files. 
+to Microsoft Windows INI files.
 
 It consists of `sections` led by a ``[sectiontype/name]`` header and
 followed by lines in the form::
@@ -122,7 +122,7 @@ section:
 Valid configuration keys for `boto`
 -----------------------------------
 
-``ec2_url`` 
+``ec2_url``
 
     the url of the EC2 endpoint. For Amazon is probably
     something like::
@@ -212,7 +212,7 @@ Valid configuration keys for *openstack*
 
 ``region_name``
 
-    OpenStack region (optional) 
+    OpenStack region (optional)
 
 ``request_floating_ip``
 
@@ -245,7 +245,7 @@ For Amazon instead (region us-east-1) you can use::
     [cloud/amazon-us-east-1]
     provider=ec2_boto
     ec2_url=https://ec2.us-east-1.amazonaws.com
-    ec2_access_key=****REPLACE WITH YOUR ACCESS ID**** 
+    ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
     ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
     ec2_region=us-east-1
     vpc=vpc-one
@@ -265,8 +265,8 @@ From the horizon web interface you can download a file containing your
 EC2 credentials by logging into your provider web interface and
 clicking on:
 
-"*settings*" 
-  => "*EC2 Credentials*" 
+"*settings*"
+  => "*EC2 Credentials*"
     => "*Download EC2 Credentials*"
 
 The ``ec2rc.sh`` file will contain some values. Update the
@@ -295,7 +295,7 @@ Engine visit the following page:
 
     Application type: Installed application
     Installed application type: Other
-  
+
 7. Click the "Create Client ID" button
 8. You'll see your Client ID and Client secret listed under
    "Client ID for native application"
@@ -420,7 +420,7 @@ The following configuration keys are only valid if `provider` is
 
     ``slurm_clients``
         compute nodes of a slurm cluster
-      
+
     ``ganglia_master``
         configure as ganglia web frontend.  On the
         master, you probably want to define `ganglia monitor` as well
@@ -624,10 +624,15 @@ Optional configuration keys
     Values are specified in gigabytes.
     Default value is 10.
 
+``tags``
+    Comma-separated list of instance tags.
+    Only supported when the cloud provider is `google`.
+
 ``scheduling``
     Define the type of instance scheduling.
     Only supported when the cloud provider is `google`.
     Only supported value is `preemptible`.
+
 
 Examples
 --------
