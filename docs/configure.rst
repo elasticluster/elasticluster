@@ -604,6 +604,10 @@ Optional configuration keys
     Values are specified in gigabytes.
     Default value is 10.
 
+``tags``
+    Comma-separated list of instance tags.
+    Only supported when the cloud provider is `google`.
+
 Examples
 --------
 
