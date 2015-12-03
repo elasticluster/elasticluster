@@ -3,7 +3,7 @@
 # @(#)openstack.py
 #
 #
-# Copyright (C) 2013 S3IT, University of Zurich. All rights reserved.
+# Copyright (C) 2013, 2015 S3IT, University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -37,8 +37,14 @@ from paramiko.ssh_exception import SSHException
 from elasticluster import log
 from elasticluster.memoize import memoize
 from elasticluster.providers import AbstractCloudProvider
-from elasticluster.exceptions import SecurityGroupError, KeypairError, \
-    ImageError, InstanceError, ClusterError
+from elasticluster.exceptions import (
+    ClusterError,
+    FlavorError,
+    ImageError,
+    InstanceError,
+    KeypairError,
+    SecurityGroupError,
+)
 
 DEFAULT_OS_NOVA_API_VERSION = "1.1"
 
