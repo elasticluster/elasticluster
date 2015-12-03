@@ -14,23 +14,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
+__author__ = '''
+Nicolas Baer <nicolas.baer@uzh.ch>,
+Antonio Messina <antonio.s.messina@gmail.com>,
+Riccardo Murri <riccardo.murri@gmail.com>
+'''
 
-# system imports
+# stdlib imports
+from copy import copy
 import logging
 import os
+import re
 import tempfile
 import shutil
+from subprocess import call
 import sys
 
-# external imports
-
-# ansible.utils needs to be imported *before* ansible.callbacks!
-import ansible.utils
-import ansible.callbacks as anscb
-import ansible.constants as ansible_constants
+# 3rd party imports
 from ansible.errors import AnsibleError
-from ansible.playbook import PlayBook
 
 # Elasticluster imports
 import elasticluster
@@ -38,42 +39,7 @@ from elasticluster import log
 from elasticluster.providers import AbstractSetupProvider
 
 
-class ElasticlusterPbCallbacks(anscb.PlaybookCallbacks):
-    def on_no_hosts_matched(self):
-        anscb.call_callback_module('playbook_on_no_hosts_matched')
-
-    def on_no_hosts_remaining(self):
-        anscb.call_callback_module('playbook_on_no_hosts_remaining')
-
-    def on_task_start(self, name, is_conditional):
-        if hasattr(self, 'step') and self.step:
-            resp = raw_input('Perform task: %s (y/n/c): ' % name)
-            if resp.lower() in ['y', 'yes']:
-                self.skip_task = False
-            elif resp.lower() in ['c', 'continue']:
-                self.skip_task = False
-                self.step = False
-            else:
-                self.skip_task = True
-
-        anscb.call_callback_module('playbook_on_task_start', name, is_conditional)
-
-    def on_setup(self):
-        anscb.call_callback_module('playbook_on_setup')
-
-    def on_import_for_host(self, host, imported_file):
-        anscb.call_callback_module('playbook_on_import_for_host',
-                             host, imported_file)
-
-    def on_not_import_for_host(self, host, missing_file):
-        anscb.call_callback_module('playbook_on_not_import_for_host',
-                             host, missing_file)
-
-    def on_play_start(self, pattern):
-        anscb.call_callback_module('playbook_on_play_start', pattern)
-
-    def on_stats(self, stats):
-        anscb.call_callback_module('playbook_on_stats', stats)
+_PATH_SPLIT_RE = re.compile(r'\s* [,:] \s*', re.X)
 
 
 class AnsibleSetupProvider(AbstractSetupProvider):
@@ -102,7 +68,8 @@ class AnsibleSetupProvider(AbstractSetupProvider):
 
     :param str sudo_user: user with root permission
 
-    :param str ansible_module_dir: path to addition ansible modules
+    :param str ansible_module_dir: comma- or colon-separated
+                                   path to additional ansible modules
     :param extra_conf: tbd.
 
     :ivar groups: node kind and ansible group mapping dictionary
@@ -123,8 +90,11 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         self.extra_conf = extra_conf
 
         if not self._playbook_path:
-            self._playbook_path = os.path.join(sys.prefix,
-                                               'share/elasticluster/providers/ansible-playbooks', 'site.yml')
+            self._playbook_path = os.path.join(
+                sys.prefix,
+                'share/elasticluster/providers/ansible-playbooks',
+                'site.yml'
+            )
         else:
             self._playbook_path = os.path.expanduser(self._playbook_path)
             self._playbook_path = os.path.expandvars(self._playbook_path)
@@ -135,14 +105,15 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             self._storage_path_tmp = False
             if not os.path.exists(self._storage_path):
                 os.makedirs(self._storage_path)
-
         else:
             self._storage_path = tempfile.mkdtemp()
             self._storage_path_tmp = True
 
         if ansible_module_dir:
-            for mdir in ansible_module_dir.split(','):
-                ansible.utils.module_finder.add_directory(mdir.strip())
+            self._ansible_module_dir = [
+                pth.strip() for pth in _PATH_SPLIT_RE.split(ansible_module_dir)]
+        else:
+            self._ansible_module_dir = []
 
     def setup_cluster(self, cluster):
         """Configures the cluster according to the node_kind to ansible
@@ -161,11 +132,28 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         inventory_path = self._build_inventory(cluster)
         private_key_file = cluster.user_key_private
 
-        # update ansible constants
-        ansible_constants.HOST_KEY_CHECKING = False
-        ansible_constants.DEFAULT_PRIVATE_KEY_FILE = private_key_file
-        ansible_constants.DEFAULT_SUDO_USER = self._sudo_user
-        ansible_constants.ANSIBLE_SSH_PIPELINING = self.ssh_pipelining
+        # use env vars to configure Ansible
+        #
+        # Ansible does not merge keys in configuration files: rather
+        # it uses the first configuration file found.  However,
+        # environment variables can be used to selectively override
+        # parts of the config; according to [1]: "they are mostly
+        # considered to be a legacy system as compared to the config
+        # file, but are equally valid."
+        #
+        # [1]: http://docs.ansible.com/ansible/intro_configuration.html#environmental-configuration
+        ansible_env = copy(os.environ)
+        # see all values in https://github.com/ansible/ansible/blob/devel/lib/ansible/constants.py
+        ansible_env['ANSIBLE_FORKS'] = '10'  # FIXME: make configurable!
+        ansible_env['ANSIBLE_HOST_KEY_CHECKING'] = 'no'
+        ansible_env['ANSIBLE_PRIVATE_KEY_FILE'] = private_key_file
+        ansible_env['ANSIBLE_SSH_PIPELINING'] = 'yes'
+        ansible_env['ANSIBLE_TIMEOUT'] = '120'  # FIXME: make configurable!
+        if __debug__:
+            elasticluster.log.debug(
+                "Calling `ansible-playbook` with the following environment:")
+            for var, value in sorted(ansible_env.items()):
+                elasticluster.log.debug("- %s=%r", var, value)
 
         # check paths
         if not inventory_path:
@@ -176,68 +164,59 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             return True
         if not os.path.exists(inventory_path):
             raise AnsibleError(
-                "inventory file `%s` could not be found" % inventory_path)
+                "inventory file `{inventory_path}` could not be found"
+                .format(inventory_path=inventory_path))
         # ANTONIO: These should probably be configuration error
         # instead, and should probably checked inside __init__().
         if not os.path.exists(self._playbook_path):
             raise AnsibleError(
-                "playbook `%s` could not be found" % self._playbook_path)
+                "playbook `{playbook_path}` could not be found"
+                .format(playbook_path=self._playbook_path))
         if not os.path.isfile(self._playbook_path):
             raise AnsibleError(
-                "the playbook `%s` is not a file" % self._playbook_path)
+                "playbook `{playbook_path}` is not a file"
+                .format(playbook_path=self._playbook_path))
 
         elasticluster.log.debug("Using playbook file %s.", self._playbook_path)
 
-        stats = anscb.AggregateStats()
-        playbook_cb = ElasticlusterPbCallbacks(verbose=0)
-        runner_cb = anscb.DefaultRunnerCallbacks()
+        # build `ansible-playbook` command-line
+        cmd = [
+            'ansible-playbook',
+            os.path.realpath(self._playbook_path),
+            ('--inventory=' + inventory_path),
+        ]
 
-        if elasticluster.log.level <= logging.INFO:
-            playbook_cb = anscb.PlaybookCallbacks()
-            runner_cb = anscb.PlaybookRunnerCallbacks(stats)
+        if self._sudo:
+            cmd.extend([
+                # force all plays to use `sudo` (even if not marked as such)
+                '--sudo',
+                # desired sudo-to user
+                ('--sudo-user=' + self._sudo_user),
+            ])
 
-        pb = PlayBook(
-            playbook=self._playbook_path,
-            host_list=inventory_path,
-            callbacks=playbook_cb,
-            runner_callbacks=runner_cb,
-            forks=10,
-            stats=stats,
-            become=self._sudo,
-            become_user=self._sudo_user,
-            private_key_file=private_key_file,
-        )
+        # determine Ansible verbosity as a function of ElastiCluster's
+        # log level (since we lack access to
+        # `ElastiCluster().params.verbose` here, but we can still
+        # access the log configuration since it's global).
+        verbosity = min(3, (logging.WARNING - elasticluster.log.level) / 10)
+        if verbosity > 0:
+            cmd.append('-' + ('v' * verbosity))  # e.g., `-vv`
 
-        try:
-            status = pb.run()
-        except AnsibleError as e:
-            elasticluster.log.error(
-                "could not execute ansible playbooks. message=`%s`", str(e))
-            return False
-
-
-        # Check ansible status.
-        cluster_failures = False
-        for host, hoststatus in status.items():
-            if hoststatus['unreachable']:
-                elasticluster.log.error(
-                    "Host `%s` is unreachable, "
-                    "please re-run elasticluster setup", host)
-                cluster_failures = True
-            if hoststatus['failures']:
-                elasticluster.log.error(
-                    "Host `%s` had %d failures: please re-run elasticluster "
-                    "setup or check the Ansible playbook `%s`" % (
-                        host, hoststatus['failures'], self._playbook_path))
-                cluster_failures = True
-
-        if not cluster_failures:
+        elasticluster.log.debug(
+            "Running Ansible command `%s` ...", (' '.join(cmd)))
+        rc = call(cmd, env=ansible_env, bufsize=1, close_fds=True)
+        if rc == 0:
             elasticluster.log.info("Cluster correctly configured.")
-            # ANTONIO: TODO: We should return an object to identify if
-            # the cluster was correctly configured, if we had
-            # temporary errors or permanent errors.
             return True
-        return False
+        else:
+            elasticluster.log.error(
+                "Command `ansible-playbook` failed with exit code %d.", rc)
+            elasticluster.log.error(
+                "Check the output lines above for additional information on this error.")
+            elasticluster.log.error(
+                "The cluster has likely *not* been configured correctly."
+                " You may need to re-run `elasticluster setup` or fix the playbooks.")
+            return False
 
     def _build_inventory(self, cluster):
         """Builds the inventory for the given cluster and returns its path
