@@ -80,12 +80,12 @@ class AnsibleSetupProvider(AbstractSetupProvider):
     #: file ending of the generated inventory file
     inventory_file_ending = 'ansible-inventory'
 
-    def __init__(self, groups, playbook_path=None, environment_vars=dict(),
+    def __init__(self, groups, playbook_path=None, environment_vars=None,
                  storage_path=None, sudo=True, sudo_user='root',
                  ansible_module_dir=None, ssh_pipelining=True, **extra_conf):
         self.groups = groups
         self._playbook_path = playbook_path
-        self.environment = environment_vars
+        self.environment = environment_vars or {}
         self._storage_path = storage_path
         self._sudo_user = sudo_user
         self._sudo = sudo
