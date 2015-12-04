@@ -23,7 +23,6 @@ Riccardo Murri <riccardo.murri@gmail.com>
 # stdlib imports
 import logging
 import os
-import re
 import tempfile
 import shutil
 from subprocess import call
@@ -36,9 +35,6 @@ import elasticluster
 from elasticluster import log
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers import AbstractSetupProvider
-
-
-_PATH_SPLIT_RE = re.compile(r'\s* [,:] \s*', re.X)
 
 
 class AnsibleSetupProvider(AbstractSetupProvider):
@@ -83,7 +79,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
 
     def __init__(self, groups, playbook_path=None, environment_vars=None,
                  storage_path=None, sudo=True, sudo_user='root',
-                 ansible_module_dir=None, **extra_conf):
+                 **extra_conf):
         self.groups = groups
         self._playbook_path = playbook_path
         self.environment = environment_vars or {}
@@ -96,6 +92,14 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             warn(
                 "Setup configuration option `ssh_pipelining`"
                 " has been renamed to `ansible_ssh_pipelining`."
+                " Please fix the configuration file(s), as support"
+                " for the old spelling will be removed in a future release.",
+                DeprecationWarning)
+        if 'ansible_module_dir' in extra_conf:
+            extra_conf['ansible_library'] = extra_conf.pop('ansible_module_dir')
+            warn(
+                "Setup configuration option `ansible_module_dir`"
+                " has been renamed to `ansible_library`."
                 " Please fix the configuration file(s), as support"
                 " for the old spelling will be removed in a future release.",
                 DeprecationWarning)
@@ -130,11 +134,6 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             self._storage_path = tempfile.mkdtemp()
             self._storage_path_tmp = True
 
-        if ansible_module_dir:
-            self._ansible_module_dir = [
-                pth.strip() for pth in _PATH_SPLIT_RE.split(ansible_module_dir)]
-        else:
-            self._ansible_module_dir = []
 
     def setup_cluster(self, cluster):
         """Configures the cluster according to the node_kind to ansible
