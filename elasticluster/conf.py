@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013, 2014 S3IT, University of Zurich
+# Copyright (C) 2013, 2014, 2015 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -303,8 +303,9 @@ class Configurator(object):
         return provider(groups, playbook_path=playbook_path,
                         environment_vars=environment,
                         storage_path=storage_path,
+                        sudo=conf_login['image_sudo'],
                         sudo_user=conf_login['image_user_sudo'],
-                        sudo=conf_login['image_sudo'], **conf)
+                        **conf)
 
     def create_repository(self):
         storage_path = self.general_conf['storage_path']
