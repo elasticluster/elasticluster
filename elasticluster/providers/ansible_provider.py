@@ -148,7 +148,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             'ANSIBLE_FORKS':             '10',
             'ANSIBLE_HOST_KEY_CHECKING': 'no',
             'ANSIBLE_PRIVATE_KEY_FILE':  private_key_file,
-            'ANSIBLE_SSH_PIPELINING':    'yes',
+            'ANSIBLE_SSH_PIPELINING':    ('yes' if self.ssh_pipelining else 'no'),
             'ANSIBLE_TIMEOUT':           '120',
         }
         # ...but still let users set other values in the environment
