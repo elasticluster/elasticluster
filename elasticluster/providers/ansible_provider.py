@@ -21,7 +21,6 @@ Riccardo Murri <riccardo.murri@gmail.com>
 '''
 
 # stdlib imports
-from copy import copy
 import logging
 import os
 import re
@@ -132,7 +131,8 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         inventory_path = self._build_inventory(cluster)
         private_key_file = cluster.user_key_private
 
-        # use env vars to configure Ansible
+        # Use env vars to configure Ansible;
+        # see all values in https://github.com/ansible/ansible/blob/devel/lib/ansible/constants.py
         #
         # Ansible does not merge keys in configuration files: rather
         # it uses the first configuration file found.  However,
@@ -142,13 +142,17 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         # file, but are equally valid."
         #
         # [1]: http://docs.ansible.com/ansible/intro_configuration.html#environmental-configuration
-        ansible_env = copy(os.environ)
-        # see all values in https://github.com/ansible/ansible/blob/devel/lib/ansible/constants.py
-        ansible_env['ANSIBLE_FORKS'] = '10'  # FIXME: make configurable!
-        ansible_env['ANSIBLE_HOST_KEY_CHECKING'] = 'no'
-        ansible_env['ANSIBLE_PRIVATE_KEY_FILE'] = private_key_file
-        ansible_env['ANSIBLE_SSH_PIPELINING'] = 'yes'
-        ansible_env['ANSIBLE_TIMEOUT'] = '120'  # FIXME: make configurable!
+        #
+        # Provide default values for important configuration variables...
+        ansible_env = {
+            'ANSIBLE_FORKS':             '10',
+            'ANSIBLE_HOST_KEY_CHECKING': 'no',
+            'ANSIBLE_PRIVATE_KEY_FILE':  private_key_file,
+            'ANSIBLE_SSH_PIPELINING':    'yes',
+            'ANSIBLE_TIMEOUT':           '120',
+        }
+        # ...but still let users set other values in the environment
+        ansible_env.update(os.environ)
         if __debug__:
             elasticluster.log.debug(
                 "Calling `ansible-playbook` with the following environment:")
