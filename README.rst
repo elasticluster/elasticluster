@@ -17,7 +17,11 @@ commands; a `YouTube video`_ demoes the basic features of
 elasticluster.
 
 Documentation for ElastiCluster is available on the `Read The Docs
-<http://elasticluster.readthedocs.org/>`_ website.
+<http://elasticluster.readthedocs.org/>`_ website.  General discussion
+over ElastiCluster's usage, features, and bugs takes also place on the
+`elasticluster@googlegroups.com
+<https://groups.google.com/forum/#!forum/elasticluster>`_ mailing-list
+(only subscribers can post).
 
 This project is an effort of the `Services and Support for Science
 IT`_ (S3IT) unit at the `University of Zurich`_, licensed under the
