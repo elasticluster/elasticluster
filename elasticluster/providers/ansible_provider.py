@@ -28,6 +28,7 @@ import tempfile
 import shutil
 from subprocess import call
 import sys
+from warnings import warn
 
 
 # Elasticluster imports
@@ -82,14 +83,22 @@ class AnsibleSetupProvider(AbstractSetupProvider):
 
     def __init__(self, groups, playbook_path=None, environment_vars=None,
                  storage_path=None, sudo=True, sudo_user='root',
-                 ansible_module_dir=None, ssh_pipelining=True, **extra_conf):
+                 ansible_module_dir=None, **extra_conf):
         self.groups = groups
         self._playbook_path = playbook_path
         self.environment = environment_vars or {}
         self._storage_path = storage_path
         self._sudo_user = sudo_user
         self._sudo = sudo
-        self.ssh_pipelining = ssh_pipelining
+
+        if 'ssh_pipelining' in extra_conf:
+            extra_conf['ansible_ssh_pipelining'] = extra_conf.pop('ssh_pipelining')
+            warn(
+                "Setup configuration option `ssh_pipelining`"
+                " has been renamed to `ansible_ssh_pipelining`."
+                " Please fix the configuration file(s), as support"
+                " for the old spelling will be removed in a future release.",
+                DeprecationWarning)
         self.extra_conf = extra_conf
 
         if not self._playbook_path:
@@ -169,10 +178,14 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             'ANSIBLE_FORKS':             '10',
             'ANSIBLE_HOST_KEY_CHECKING': 'no',
             'ANSIBLE_PRIVATE_KEY_FILE':  cluster.user_key_private,
-            'ANSIBLE_SSH_PIPELINING':    ('yes' if self.ssh_pipelining else 'no'),
+            'ANSIBLE_SSH_PIPELINING':    'yes',
             'ANSIBLE_TIMEOUT':           '120',
         }
-        # ...but still let users set other values in the environment
+        # ...override them with key/values set in the config file(s)
+        for k, v in self.extra_conf.items():
+            if k.startswith('ansible_'):
+                ansible_env[k.upper()] = str(v)
+        # ...finally allow the environment have the final word
         ansible_env.update(os.environ)
         if __debug__:
             elasticluster.log.debug(
