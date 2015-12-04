@@ -29,12 +29,11 @@ import shutil
 from subprocess import call
 import sys
 
-# 3rd party imports
-from ansible.errors import AnsibleError
 
 # Elasticluster imports
 import elasticluster
 from elasticluster import log
+from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers import AbstractSetupProvider
 
 
@@ -102,6 +101,15 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         else:
             self._playbook_path = os.path.expanduser(self._playbook_path)
             self._playbook_path = os.path.expandvars(self._playbook_path)
+        # sanity check
+        if not os.path.exists(self._playbook_path):
+            raise ConfigurationError(
+                "playbook `{playbook_path}` could not be found"
+                .format(playbook_path=self._playbook_path))
+        if not os.path.isfile(self._playbook_path):
+            raise ConfigurationError(
+                "playbook `{playbook_path}` is not a file"
+                .format(playbook_path=self._playbook_path))
 
         if self._storage_path:
             self._storage_path = os.path.expanduser(self._storage_path)
@@ -127,14 +135,22 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         :param cluster: cluster to configure
         :type cluster: :py:class:`elasticluster.cluster.Cluster`
 
-        :return: True on success, False otherwise. Please note, if nothing
-                 has to be configures True is returned
+        :return: ``True`` on success, ``False`` otherwise. Please note, if nothing
+                 has to be configured, then ``True`` is returned.
 
-        :raises: `AnsibleError` if the playbook can not be found or playbook
-                 is corrupt
+        :raises: `ConfigurationError` if the playbook can not be found
+                 or is corrupt.
         """
         inventory_path = self._build_inventory(cluster)
-        private_key_file = cluster.user_key_private
+        if inventory_path is None:
+            # No inventory file has been created, maybe an
+            # invalid class has been specified in config file? Or none?
+            # assume it is fine.
+            elasticluster.log.info("No setup required for this cluster.")
+            return True
+        assert os.path.exists(inventory_path), (
+                "inventory file `{inventory_path}` does not exist"
+                .format(inventory_path=inventory_path))
 
         # Use env vars to configure Ansible;
         # see all values in https://github.com/ansible/ansible/blob/devel/lib/ansible/constants.py
@@ -152,7 +168,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         ansible_env = {
             'ANSIBLE_FORKS':             '10',
             'ANSIBLE_HOST_KEY_CHECKING': 'no',
-            'ANSIBLE_PRIVATE_KEY_FILE':  private_key_file,
+            'ANSIBLE_PRIVATE_KEY_FILE':  cluster.user_key_private,
             'ANSIBLE_SSH_PIPELINING':    ('yes' if self.ssh_pipelining else 'no'),
             'ANSIBLE_TIMEOUT':           '120',
         }
@@ -163,28 +179,6 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 "Calling `ansible-playbook` with the following environment:")
             for var, value in sorted(ansible_env.items()):
                 elasticluster.log.debug("- %s=%r", var, value)
-
-        # check paths
-        if not inventory_path:
-            # No inventory file has been created, maybe an
-            # invalid class has been specified in config file? Or none?
-            # assume it is fine.
-            elasticluster.log.info("No setup required for this cluster.")
-            return True
-        if not os.path.exists(inventory_path):
-            raise AnsibleError(
-                "inventory file `{inventory_path}` could not be found"
-                .format(inventory_path=inventory_path))
-        # ANTONIO: These should probably be configuration error
-        # instead, and should probably checked inside __init__().
-        if not os.path.exists(self._playbook_path):
-            raise AnsibleError(
-                "playbook `{playbook_path}` could not be found"
-                .format(playbook_path=self._playbook_path))
-        if not os.path.isfile(self._playbook_path):
-            raise AnsibleError(
-                "playbook `{playbook_path}` is not a file"
-                .format(playbook_path=self._playbook_path))
 
         elasticluster.log.debug("Using playbook file %s.", self._playbook_path)
 
