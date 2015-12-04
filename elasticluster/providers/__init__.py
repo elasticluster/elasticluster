@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013 S3IT, University of Zurich
+# Copyright (C) 2013, 2015 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -94,6 +94,9 @@ class AbstractSetupProvider:
     TODO: define...
     """
     __metaclass__ = ABCMeta
+
+    #: to identify this provider type in messages; override in subclasses
+    HUMAN_READABLE_NAME = 'setup provider'
 
     @abstractmethod
     def setup_cluster(self, cluster):

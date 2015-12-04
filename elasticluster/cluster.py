@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013 S3IT, University of Zurich
+# Copyright (C) 2013, 2015 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -746,11 +746,11 @@ class Cluster(Struct):
         try:
             # setup the cluster using the setup provider
             ret = self._setup_provider.setup_cluster(self)
-        except Exception as e:
+        except Exception as err:
             log.error(
-                "the setup provider was not able to setup the cluster, "
-                "but the cluster is running by now. Setup provider error "
-                "message: `%s`", str(e))
+                "The cluster hosts are up and running,"
+                " but %s failed to set the cluster up: %s",
+                self._setup_provider.HUMAN_READABLE_NAME, err)
             ret = False
 
         if not ret:

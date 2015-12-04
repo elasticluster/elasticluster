@@ -74,6 +74,11 @@ class AnsibleSetupProvider(AbstractSetupProvider):
     :ivar groups: node kind and ansible group mapping dictionary
     :ivar environment: additional environment variables
     """
+
+    #: to identify this provider type in messages
+    HUMAN_READABLE_NAME = 'Ansible'
+
+    #: file ending of the generated inventory file
     inventory_file_ending = 'ansible-inventory'
 
     def __init__(self, groups, playbook_path=None, environment_vars=dict(),
