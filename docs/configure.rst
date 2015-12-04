@@ -462,6 +462,26 @@ The following configuration keys are only valid if `provider` is
     elasticluster. The default value points to the playbooks
     distributed with elasticluster.
 
+``ansible_<option>``
+    Any configuration key starting with the string ``ansible_`` is
+    used to set the corresponding (uppercased) environmental
+    variable and thus override Ansible configuration.
+
+    For example, the following settings raise the number of concurrent
+    Ansible connections to 20 and allow a maximum waiting time of 300
+    seconds for a single task to finish::
+
+      [setup/ansible]
+      # ...
+      ansible_forks=20
+      ansible_timeout=300
+
+    The full list of environment variables used by Ansible is available
+    from the `Ansible configuration`__ section of the Ansible online documentation.
+
+    .. __: http://docs.ansible.com/ansible/intro_configuration.html#environmental-configuration
+
+
 Examples
 --------
 
