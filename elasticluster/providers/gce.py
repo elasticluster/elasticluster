@@ -215,6 +215,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        instance_name=None,
                        boot_disk_type='pd-standard',
                        boot_disk_size=10,
+                       tags=None,
                        **kwargs):
         """Starts a new instance with the given properties and returns
         the instance id.
@@ -230,6 +231,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str username: username for the given ssh key, default None
 
         :param str instance_name: name of the instance
+        :param str tags: comma-separated list of "tags" to label the instance
 
         :return: str - instance id of the started instance
         """
@@ -278,6 +280,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
         instance = {
             'name': instance_name,
             'machineType': machine_type_url,
+            'tags': {
+              'items': tags.split(',') if tags else None
+            },
             'disks': [{
                 'autoDelete': 'true',
                 'boot': 'true',
