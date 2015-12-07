@@ -70,11 +70,13 @@ required_packages = [
     'python-gflags',
 ]
 
-if sys.version_info[:2] == (2, 6):
-    # Python 2.6.
-    # Google api python client *requires* argparse
-    # cfr. http://code.google.com/p/google-api-python-client/issues/detail?id=299
+if sys.version_info < (2, 7):
+    # Additional dependencies for Python 2.6:
+    # - Google api python client *requires* argparse,
+    #   cfr. http://code.google.com/p/google-api-python-client/issues/detail?id=299
     required_packages.append('argparse')
+    # - OpenStack's "keystoneclient" requires `importlib`
+    required_packages.append('importlib')
 
 setup(
     name="elasticluster",
