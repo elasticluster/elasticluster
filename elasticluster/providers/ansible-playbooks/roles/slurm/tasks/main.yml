@@ -32,18 +32,18 @@
 - name: Install SLURM packages (CentOS)
   yum: name={{item}} state=present
   with_items:
-    - /root/rpmbuild/RPMS/x86_64/slurm*
-    - /root/rpmbuild/RPMS/x86_64/slurm-devel
-    - /root/rpmbuild/RPMS/x86_64/slurm-munge
-    - /root/rpmbuild/RPMS/x86_64/slurm-pam_slurm
-    - /root/rpmbuild/RPMS/x86_64/slurm-perlapi
-    - /root/rpmbuild/RPMS/x86_64/slurm-plugins
-    - /root/rpmbuild/RPMS/x86_64/slurm-sjobexit
-    - /root/rpmbuild/RPMS/x86_64/slurm-sjstat
-    - /root/rpmbuild/RPMS/x86_64/slurm-slurmdbd
-    - /root/rpmbuild/RPMS/x86_64/slurm-slurmdbd-direct
-    - /root/rpmbuild/RPMS/x86_64/slurm-sql
-    - /root/rpmbuild/RPMS/x86_64/slurm-torque
+    - /root/rpmbuild/RPMS/x86_64/slurm-15.08.4-1.el7.centos.x86_64.rpm
+    - /root/rpmbuild/RPMS/x86_64/slurm-devel-15.08.4-1.el7.centos.x86_64.rpm
+    - /root/rpmbuild/RPMS/x86_64/slurm-munge-15.08.4-1.el7.centos.x86_64.rpm
+    - /root/rpmbuild/RPMS/x86_64/slurm-pam_slurm-15.08.4-1.el7.centos.x86_64.rpm
+    - /root/rpmbuild/RPMS/x86_64/slurm-perlapi-15.08.4-1.el7.centos.x86_64.rpm
+    - /root/rpmbuild/RPMS/x86_64/slurm-plugins-15.08.4-1.el7.centos.x86_64.rpm
+    - /root/rpmbuild/RPMS/x86_64/slurm-sjobexit-15.08.4-1.el7.centos.x86_64.rpm
+    - /root/rpmbuild/RPMS/x86_64/slurm-sjstat-15.08.4-1.el7.centos.x86_64.rpm
+    - /root/rpmbuild/RPMS/x86_64/slurm-slurmdbd-15.08.4-1.el7.centos.x86_64.rpm
+    - /root/rpmbuild/RPMS/x86_64/slurm-slurmdbd-direct-15.08.4-1.el7.centos.x86_64.rpm
+    - /root/rpmbuild/RPMS/x86_64/slurm-sql-15.08.4-1.el7.centos.x86_64.rpm
+    - /root/rpmbuild/RPMS/x86_64/slurm-torque-15.08.4-1.el7.centos.x86_64.rpm
   when: is_centos
 
 - name: Create slurm user (CentOS)
