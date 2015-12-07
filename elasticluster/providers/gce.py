@@ -274,13 +274,14 @@ class GoogleCloudProvider(AbstractCloudProvider):
             image_url = '%s%s/global/images/%s' % (
                 GCE_URL, os_cloud, image_id)
 
-        scheduling_option = {}
-        if scheduling:
-          if scheduling == 'preemptible':
+        if scheduling is None:
+            # use GCE's default
+            scheduling_option = {}
+        elif scheduling == 'preemptible':
             scheduling_option = {
               'preemptible': True
             }
-          else:
+        else:
             raise InstanceError("Unknown scheduling option: '%s'" % scheduling)
 
         # construct the request body

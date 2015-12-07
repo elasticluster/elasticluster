@@ -974,9 +974,10 @@ class Node(Struct):
 
     def __str__(self):
         ips = ', '.join(ip for ip in self.ips if ip)
-        return "name=`%s`, id=`%s`, ips=%s, "\
-            "connection_ip=`%s`" % (self.name, self.instance_id, ips,
-                                    self.preferred_ip)
+        return ("name=`{name}`, id=`{id}`,"
+                " ips=[{ips}], connection_ip=`{preferred_ip}`"
+                .format(name=self.name, id=self.instance_id,
+                        ips=ips, preferred_id=self.preferred_ip))
 
     def pprint(self):
         """Pretty print information about the node.

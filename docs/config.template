@@ -475,12 +475,12 @@ worker_groups=ipython_engine
 #          fail.
 #
 # boot_disk_type: Define the type of boot disk to use.
-#                 Only supported when the cloud provider is google.
-#                 Supported values are pd-standard and pd-ssd.
-#                 Default value is pd-standard.
+#                 Only supported when the cloud provider is `google`.
+#                 Supported values are `pd-standard and `pd-ssd`.
+#                 Default value is `pd-standard`.
 #
 # boot_disk_size: Define the size of boot disk to use.
-#                 Only supported when the cloud provider is google.
+#                 Only supported when the cloud provider is `google`.
 #                 Values are specified in gigabytes.
 #                 Default value is 10.
 #
