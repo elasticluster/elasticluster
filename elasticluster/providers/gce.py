@@ -308,7 +308,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
             'name': instance_name,
             'machineType': machine_type_url,
             'tags': {
-              'items': tags.split(',') if tags else None
+              'items': tags,
             },
             'scheduling': scheduling_option,
             'disks': [{
