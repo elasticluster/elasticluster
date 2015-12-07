@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013 S3IT, University of Zurich
+#   Copyright (C) 2013, 2015 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ class KeypairError(Exception):
 class InstanceError(Exception):
     pass
 
+
 class FlavorError(Exception):
     pass
 
@@ -64,5 +65,13 @@ class NodeNotFound(Exception):
 class ImageError(Exception):
     pass
 
+
 class CloudProviderError(Exception):
+    pass
+
+
+class SetupProviderError(Exception):
+    """
+    Generic error happening during the setup phase.
+    """
     pass
