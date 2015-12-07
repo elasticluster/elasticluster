@@ -944,7 +944,7 @@ class Node(Struct):
                             allow_agent=True,
                             key_filename=self.user_key_private,
                             timeout=Node.connection_timeout)
-                log.debug("Connection to %s succeded!", ip)
+                log.debug("Connection to %s succeeded!", ip)
                 if ip != self.preferred_ip:
                     log.debug("Setting `preferred_ip` to %s", ip)
                     self.preferred_ip = ip
