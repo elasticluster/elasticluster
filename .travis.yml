@@ -6,3 +6,4 @@ install:
   - "pip install nose mock"
   - "pip install ."
 script: nosetests
+sudo: false
