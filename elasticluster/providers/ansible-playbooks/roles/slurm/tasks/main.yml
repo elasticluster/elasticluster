@@ -1,5 +1,5 @@
 ---
-- name: Install required SLURM packages (Debain/Ubuntu)
+- name: Install required SLURM packages (Debian/Ubuntu)
   action: apt pkg={{item}} update_cache=yes force=yes state=latest
   with_items:
     - slurm-llnl
@@ -25,7 +25,7 @@
   get_url: url={{slurm_src_baseurl}}/{{slurm_src_filename}} dest=/tmp/{{slurm_src_filename}}
   when: is_centos
 
-- name: Recomiple SLURM source package (CentOS)
+- name: Recompile SLURM source package (CentOS)
   shell: rpmbuild -ta /tmp/{{slurm_src_filename}} creates=/root/rpmbuild/RPMS/x86_64/{{slurm_pkg_name}}
   when: is_centos
 
