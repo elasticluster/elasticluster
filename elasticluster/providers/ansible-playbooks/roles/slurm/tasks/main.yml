@@ -32,18 +32,18 @@
 - name: Install SLURM packages (CentOS)
   yum: name={{item}} state=present
   with_items:
-    - slurm
-    - slurm-devel
-    - slurm-munge
-    - slurm-pam_slurm
-    - slurm-perlapi
-    - slurm-plugins
-    - slurm-sjobexit
-    - slurm-sjstat
-    - slurm-slurmdbd
-    - slurm-slurmdbd-direct
-    - slurm-sql
-    - slurm-torque
+    - /root/rpmbuild/RPMS/x86_64/slurm*
+    - /root/rpmbuild/RPMS/x86_64/slurm-devel
+    - /root/rpmbuild/RPMS/x86_64/slurm-munge
+    - /root/rpmbuild/RPMS/x86_64/slurm-pam_slurm
+    - /root/rpmbuild/RPMS/x86_64/slurm-perlapi
+    - /root/rpmbuild/RPMS/x86_64/slurm-plugins
+    - /root/rpmbuild/RPMS/x86_64/slurm-sjobexit
+    - /root/rpmbuild/RPMS/x86_64/slurm-sjstat
+    - /root/rpmbuild/RPMS/x86_64/slurm-slurmdbd
+    - /root/rpmbuild/RPMS/x86_64/slurm-slurmdbd-direct
+    - /root/rpmbuild/RPMS/x86_64/slurm-sql
+    - /root/rpmbuild/RPMS/x86_64/slurm-torque
   when: is_centos
 
 - name: Create slurm user (CentOS)
