@@ -5,12 +5,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
+
     <title>Configuration &mdash; elasticluster 1.0 documentation</title>
-    
+
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
+
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="elasticluster 1.0 documentation" href="index.html" />
     <link rel="next" title="Usage" href="usage.html" />
-    <link rel="prev" title="Installation" href="install.html" /> 
+    <link rel="prev" title="Installation" href="install.html" />
   </head>
   <body>
     <div class="related">
@@ -43,15 +43,15 @@
         <li class="right" >
           <a href="install.html" title="Installation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">elasticluster 1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">elasticluster 1.0 documentation</a> &raquo;</li>
       </ul>
-    </div>  
+    </div>
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
-            
+
   <div class="section" id="configuration">
 <h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
 <p>All the information about how to access a cloud provider and how to
@@ -555,7 +555,7 @@ configured anyway, otherwise creation of the cluster will fail.</div></blockquot
 <blockquote>
 <div>Define the type of boot disk to use.
 Only supported when the cloud provider is <cite>google</cite>.
-Supported values are <em>pd-standard</em> and <em>pd-ssd</em>. 
+Supported values are <em>pd-standard</em> and <em>pd-ssd</em>.
 Default value is <em>pd-standard</em>.
 </div></blockquote>
 <p><tt class="docutils literal"><span class="pre">boot_disk_size</span></tt></p>
@@ -564,6 +564,10 @@ Default value is <em>pd-standard</em>.
 Only supported when the cloud provider is <cite>google</cite>.
 Value is specified in gigabytes.  Default value is 10.
 </div></blockquote>
+<p><tt class="docutils literal"><span class="pre">tags</span></tt></p>
+<blockquote>
+<div>Comma-separated list of instance tags.
+Only supported when the cloud provider is <cite>google</cite>.
 <p><tt class="docutils literal"><span class="pre">scheduling</span></tt></p>
 <blockquote>
 <div>Define the type of instance scheduling.
@@ -741,7 +745,7 @@ flavor=bigdisk
         <li class="right" >
           <a href="install.html" title="Installation"
              >previous</a> |</li>
-        <li><a href="index.html">elasticluster 1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">elasticluster 1.0 documentation</a> &raquo;</li>
       </ul>
     </div>
     <div class="footer">

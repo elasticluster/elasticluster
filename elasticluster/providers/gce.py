@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013 S3IT, University of Zurich
+# Copyright (C) 2013, 2015 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -215,6 +215,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        instance_name=None,
                        boot_disk_type='pd-standard',
                        boot_disk_size=10,
+                       tags=None,
                        scheduling=None,
                        **kwargs):
         """Starts a new instance with the given properties and returns
@@ -231,6 +232,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str username: username for the given ssh key, default None
 
         :param str instance_name: name of the instance
+        :param str tags: comma-separated list of "tags" to label the instance
+
+        :param str scheduling: scheduling option to use for the instance ("preemptible")
 
         :param str scheduling: scheduling option to use for the instance ("preemptible")
 
@@ -290,6 +294,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
         instance = {
             'name': instance_name,
             'machineType': machine_type_url,
+            'tags': {
+              'items': tags.split(',') if tags else None
+            },
             'scheduling': scheduling_option,
             'disks': [{
                 'autoDelete': 'true',
