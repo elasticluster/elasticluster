@@ -2,7 +2,7 @@
 - name: Slurm common Playbook
   hosts: slurm_master:slurm_clients
   vars:
-    slurm_src_baseurl: "{{slurm_source_baseurl|default('http://www.schedmd.com/download/archive/')}}"
+    slurm_src_baseurl: "{{slurm_source_baseurl|default('http://www.schedmd.com/download/latest/')}}"
     slurm_src_filename: "{{slurm_source_filename|default('slurm-15.08.4.tar.bz2')}}"
     slurm_pkg_name: "{{slurm_package_name|default('slurm-15.08.4-1.el6.x86_64.rpm')}}"
   vars_files:
