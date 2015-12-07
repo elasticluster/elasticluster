@@ -215,6 +215,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        instance_name=None,
                        boot_disk_type='pd-standard',
                        boot_disk_size=10,
+                       scheduling=None,
                        **kwargs):
         """Starts a new instance with the given properties and returns
         the instance id.
@@ -230,6 +231,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str username: username for the given ssh key, default None
 
         :param str instance_name: name of the instance
+
+        :param str scheduling: scheduling option to use for the instance ("preemptible")
 
         :return: str - instance id of the started instance
         """
@@ -269,6 +272,15 @@ class GoogleCloudProvider(AbstractCloudProvider):
             image_url = '%s%s/global/images/%s' % (
                 GCE_URL, os_cloud, image_id)
 
+        scheduling_option = {}
+        if scheduling:
+          if scheduling == 'preemptible':
+            scheduling_option = {
+              'preemptible': True
+            }
+          else:
+            raise InstanceError("Unknown scheduling option: '%s'" % scheduling)
+
         # construct the request body
         if instance_name is None:
             instance_name = 'elasticluster-%s' % uuid.uuid4()
@@ -278,6 +290,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         instance = {
             'name': instance_name,
             'machineType': machine_type_url,
+            'scheduling': scheduling_option,
             'disks': [{
                 'autoDelete': 'true',
                 'boot': 'true',
@@ -330,6 +343,10 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str instance_id: instance identifier
         :raises: `InstanceError` if instance can not be stopped
         """
+        if not instance_id:
+          log.info("Instance to stop has no instance id")
+          return
+
         gce = self._connect()
 
         try:
@@ -371,6 +388,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :return: list (ips)
         :raises: InstanceError if the ip could not be retrieved.
         """
+        if not instance_id:
+          raise InstanceError("could not retrieve the ip address for node: "
+                              "no associated instance id")
         gce = self._connect()
         instances = gce.instances()
         try:
@@ -378,6 +398,14 @@ class GoogleCloudProvider(AbstractCloudProvider):
                                     project=self._project_id, zone=self._zone)
             response = self._execute_request(request)
             ip_public = None
+
+            # If the instance is in status TERMINATED, then there will be
+            # no IP addresses.
+            if response and response['status'] == 'TERMINATED':
+              log.info("node '%s' state is '%s'; no IP address(es)" %
+                       (instance_id, "TERMINATED"))
+              return [None]
+
             if response and "networkInterfaces" in response:
                 interfaces = response['networkInterfaces']
                 if interfaces:

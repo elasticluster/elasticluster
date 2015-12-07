@@ -973,8 +973,9 @@ class Node(Struct):
         return self.ips[:]
 
     def __str__(self):
+        ips = ', '.join(ip for ip in self.ips if ip)
         return "name=`%s`, id=`%s`, ips=%s, "\
-            "connection_ip=`%s`" % (self.name, self.instance_id, str.join(', ', self.ips),
+            "connection_ip=`%s`" % (self.name, self.instance_id, ips,
                                     self.preferred_ip)
 
     def pprint(self):
@@ -982,11 +983,12 @@ class Node(Struct):
 
         :return: str - representaion of a node in pretty print
         """
+        ips = ', '.join(ip for ip in self.ips if ip)
         return """%s
 connection IP: %s
 IPs:    %s
 instance id:   %s
-instance flavor: %s""" % (self.name, self.preferred_ip, str.join(', ', self.ips),
+instance flavor: %s""" % (self.name, self.preferred_ip, ips,
                           self.instance_id, self.flavor)
 
 
