@@ -30,7 +30,20 @@
   when: is_centos
 
 - name: Install SLURM packages (CentOS)
-  shell: rpm -i /root/rpmbuild/RPMS/x86_64/slurm-*rpm creates=/etc/slurm/slurm.conf.example
+  yum: name={{item}} state=present
+  with_items:
+    - slurm
+    - slurm-devel
+    - slurm-munge
+    - slurm-pam_slurm
+    - slurm-perlapi
+    - slurm-plugins
+    - slurm-sjobexit
+    - slurm-sjstat
+    - slurm-slurmdbd
+    - slurm-slurmdbd-direct
+    - slurm-sql
+    - slurm-torque
   when: is_centos
 
 - name: Create slurm user (CentOS)
