@@ -431,6 +431,7 @@ class ConfigValidator(object):
                             "gce_project_id": All(str, Length(min=1)),
                             Optional("noauth_local_webserver"): Boolean(str),
                             Optional("zone"): All(str, Length(min=1)),
+                            Optional("network"): All(str, Length(min=1)),
         }
 
         cloud_schema_openstack = {"provider": 'openstack',

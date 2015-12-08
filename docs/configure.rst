@@ -181,6 +181,11 @@ Valid configuration keys for `google`
 
     The GCE zone to be used. Default is `us-central1-a`.
 
+``network``
+
+    The GCE network to be used. Default is `default`.
+    
+
 Valid configuration keys for *openstack*
 ----------------------------------------
 

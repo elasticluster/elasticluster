@@ -104,6 +104,8 @@
 #
 # zone:              The GCE zone to be used. Default is `us-central1-a`.
 #
+# network:           The GCE network to be used. Default is `default`.
+#
 #
 # Valid configuration keys for *openstack*
 # ----------------------------------------
@@ -485,11 +487,11 @@ worker_groups=ipython_engine
 #                 Default value is 10.
 #
 # tags: Comma-separated list of instance tags.
-#       Only supported when the cloud provider is google.
+#       Only supported when the cloud provider is `google`.
 #
 # scheduling: Define the type of instance scheduling.
-#             Only supported when the cloud provider is google.
-#             Only supported value is preemptible.
+#             Only supported when the cloud provider is `google`.
+#             Only supported value is `preemptible`.
 
 # Some (working) examples:
 

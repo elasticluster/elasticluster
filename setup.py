@@ -64,6 +64,7 @@ required_packages = [
     # EC2 clouds
     'boto',
     # OpenStack clouds
+    'netifaces',
     'python-novaclient',
     'pbr',
     # GCE cloud

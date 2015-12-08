@@ -234,6 +234,11 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str username: username for the given ssh key, default None
 
         :param str instance_name: name of the instance
+        :param str tags: comma-separated list of "tags" to label the instance
+
+        :param str scheduling: scheduling option to use for the instance ("preemptible")
+
+        :param str scheduling: scheduling option to use for the instance ("preemptible")
 
         :param str|Sequence tags: "Tags" to label the instance.
         Can be either a single string (individual tags are comma-separated),
