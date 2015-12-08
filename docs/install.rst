@@ -5,13 +5,13 @@
 
 .. include:: global.inc
 
+
 ================
-  Installation  
+  Installation
 ================
 
-
-`elasticluster` is a `Python`_ program; Python version 2.6 is required
-to run it.
+`elasticluster` is a `Python`_ program; Python version 2.6 or 2.7 is
+required to run it.
 
 The easiest way to install elasticluster is using `pip`_, this will
 install the latest **stable** release from the `PyPI`_ website. The
@@ -25,6 +25,7 @@ In both cases, it's strongly suggested to install `elasticluster` in a
 `python virtualenv`_, so that you can easily uninstall or upgrade
 `elasticluster`.
 
+
 Installing from PyPI
 --------------------
 
@@ -35,15 +36,13 @@ need to install `elasticluster` on your system::
     pip install elasticluster
 
 If you want to run `elasticluster` from source you have to **install**
-`Ansible`_ **first:**
-
-::
+`Ansible`_ **first**::
 
     pip install ansible
     python setup.py install
 
 
-Installing from github
+Installing from GitHub
 ----------------------
 
 The source code of elasticluster is `github`_, if you want to test the
@@ -52,7 +51,7 @@ latest development version you can clone the `github elasticluster repository`_.
 You need the ``git`` command in order to be able to clone it, and we
 suggest you to use `python virtualenv`_ in order to create a
 controlled environment in which you can install elasticluster as
-normal user. 
+normal user.
 
 Assuming you already have ``virtualenv`` installed on your machine,
 you first need to create a virtualenv and install `ansible`, which is
@@ -61,7 +60,7 @@ needed by elasticluster::
     virtualenv elasticluster
     . elasticluster/bin/activate
     pip install ansible
-    
+
 Then you have to download the software. We suggest you to download it
 *within* the created virtualenv::
 
@@ -72,6 +71,27 @@ Then you have to download the software. We suggest you to download it
 
 Now the ``elasticluster`` should be available in your current
 environment.
+
+
+Building documentation files
+++++++++++++++++++++++++++++
+
+ElastiCluster documentation is available in the `docs/` directory, in
+reStructuredText-formatted plain text files.
+
+You can additionally build HTML or PDF documentation; in the directory
+in the ElastiCluster virtualenv, type::
+
+  cd docs
+  make html
+
+To build PDF documentation, use `make latexpdf` instead.
+
+Note that building documentation files requires that the Python module
+Sphinx_ (click on the link for install instructions) is available in
+the same virtual environment where ElastiCluster is installed.
+
+.. _sphinx: http://sphinx-doc.org/latest/install.html
 
 
 Notes on MacOSX installation
@@ -96,7 +116,7 @@ In these cases, you need to find the package that is failing and
 install it manually using `pip`.
 
 For instance, if during the installation you get something like::
-	
+
     Running requests-2.4.3/setup.py -q bdist_egg --dist-dir /var/folders/tZ/tZ2B3RaeGVq7+ptdJIbdj++++TI/-Tmp-/easy_install-CrTFFL/requests-2.4.3/egg-dist-tmp-JZ2MOD
     Adding requests 2.4.3 to easy-install.pth file
     Traceback (most recent call last):
@@ -111,13 +131,13 @@ For instance, if during the installation you get something like::
       File "/Users/michela/elasticluster/build/setuptools/setuptools/command/install.py", line 65, in run
       File "/Users/michela/elasticluster/build/setuptools/setuptools/command/install.py", line 115, in do_egg_install
       File "/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py", line 360, in run
-       
+
       File "/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py", line 576, in easy_install
-       
+
       File "/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py", line 627, in install_item
-       
+
       File "/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py", line 682, in process_distribution
-       
+
       File "/Users/michela/elasticluster/build/setuptools/pkg_resources.py", line 631, in resolve
         dist = best[req.key] = env.best_match(req, ws, installer)
       File "/Users/michela/elasticluster/build/setuptools/pkg_resources.py", line 871, in best_match
@@ -125,15 +145,15 @@ For instance, if during the installation you get something like::
       File "/Users/michela/elasticluster/build/setuptools/pkg_resources.py", line 883, in obtain
         return installer(requirement)
       File "/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py", line 595, in easy_install
-       
+
       File "/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py", line 627, in install_item
-       
+
       File "/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py", line 659, in process_distribution
-       
+
       File "/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py", line 532, in install_egg_scripts
-       
+
       File "/Users/michela/elasticluster/build/setuptools/setuptools/command/easy_install.py", line 734, in install_wrapper_scripts
-       
+
       File "/private/var/folders/tZ/tZ2B3RaeGVq7+ptdJIbdj++++TI/-Tmp-/easy_install-qch0dG/python-keystoneclient-0.11.1/pbr-0.10.0-py2.6.egg/pbr/packaging.py", line 512, in override_get_script_args
     AttributeError: 'NoneType' object has no attribute 'get_script_header'
 
@@ -143,8 +163,6 @@ you probably need to install `pbr` manually using::
 
 In some MacOSX version, even if the installation *seems* to succeed,
 you may get the following error the first time you run `elasticluster`::
-
-	
 
     Traceback (most recent call last):
       File "/Users/michela/el2/bin/elasticluster", line 9, in <module>
@@ -163,11 +181,10 @@ you may get the following error the first time you run `elasticluster`::
 
 In this case, the issue is caused by `google-api-python-client`, and
 you should:
+
 1) uninstall it using `pip uninstall`
 2) reinstall it using `pip install`
-3) re-run elasticluster installation
-
-::
+3) re-run elasticluster installation::
 
     pip uninstall google-api-python-client
     [...]
@@ -179,4 +196,3 @@ you should:
 .. _`github elasticluster repository`: https://github.com/gc3-uzh-ch/elasticluster
 .. _`Xcode`: https://developer.apple.com/xcode/
 .. _`AppStore`: http://www.apple.com/osx/apps/app-store/
-

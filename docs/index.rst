@@ -16,7 +16,7 @@
 =============================================
 
 --------------
- Introduction 
+ Introduction
 --------------
 
 `elasticluster` aims to provide a user-friendly command line tool to
@@ -26,13 +26,16 @@ Compute Engine`_ or an `OpenStack`_ cloud). Its main goal is to get
 your own private cluster up and running with just a few commands; a
 `YouTube video`_ demoes the basic features of elasticluster.
 
-This project is an effort of the
-`Grid Computing Competence Center`_ at the
-`University of Zurich`_, licensed under the
-`GNU General Public License version 3`_.
+Documentation for all versions of ElastiCluster is available online on
+the `Read The Docs <http://elasticluster.readthedocs.org/>`_ website.
+General discussion over ElastiCluster's usage, features, and bugs
+takes place on the `elasticluster@googlegroups.com
+<https://groups.google.com/forum/#!forum/elasticluster>`_ mailing-list
+(only subscribers can post).
+
 
 ----------
- Features 
+ Features
 ----------
 
 `elasticluster` is in active development, but the following features at the current state:
@@ -52,7 +55,7 @@ This project is an effort of the
 GitHub issue tracker to `file enhancement requests and ideas`_
 
 --------------
- Architecture 
+ Architecture
 --------------
 
 The architecture of elasticluster is quite simple: the configuration
@@ -60,11 +63,11 @@ file in ``~/.elasticluster/config`` defines a set of *cluster
 configurations* and information on how to access a specific cloud
 webservice (including access id and secret keys).
 
-Using the command line (or, very soon, a simple API), you can start a
-cluster and override some of the default values, like the number of
-nodes you want to fire up. Elasticluster will use the `boto library`_
-to connect to the desired cloud, start the virtual machines and wait
-until they are accessible via ssh.
+Using the command line or a simple API, you can start a cluster and
+override some of the default values, like the number of nodes you want
+to fire up. Elasticluster will use the `boto library`_ to connect to
+the desired cloud, start the virtual machines and wait until they are
+accessible via ssh.
 
 After all the virtual machines are up and running, elasticluster will
 use `ansible`_ to configure them.
@@ -76,7 +79,7 @@ properly add the new hosts to the cluster.
 
 
 -------------------
- Table of Contents 
+ Table of Contents
 -------------------
 
 .. toctree::  :maxdepth: 2
@@ -88,7 +91,7 @@ properly add the new hosts to the cluster.
   api/index
 
 --------------------
- Indices and tables 
+ Indices and tables
 --------------------
 
 * :ref:`genindex`
