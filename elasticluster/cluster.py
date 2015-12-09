@@ -769,6 +769,14 @@ class Cluster(Struct):
         for node in self.get_all_nodes():
             try:
                 node.update_ips()
+
+                # If we previously did not have a preferred_ip or the
+                # preferred_ip is not in the current list, then try to connect
+                # to one of the node ips and update the preferred_ip.
+                if node.ips and \
+                   not (node.preferred_ip and \
+                        node.preferred_ip in node.ips):
+                  node.connect()
             except InstanceError as ex:
                 log.warning("Ignoring error updating information on node %s: %s",
                           node, str(ex))
