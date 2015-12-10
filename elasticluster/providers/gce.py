@@ -212,7 +212,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        username=None,
                        # these params are specific to the
                        # GoogleCloudProvider
-                       instance_name=None,
+                       node_name=None,
                        boot_disk_type='pd-standard',
                        boot_disk_size=10,
                        **kwargs):
@@ -229,7 +229,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str image_userdata: command to execute after startup
         :param str username: username for the given ssh key, default None
 
-        :param str instance_name: name of the instance
+        :param str node_name: name of the instance
 
         :return: str - instance id of the started instance
         """
@@ -270,20 +270,22 @@ class GoogleCloudProvider(AbstractCloudProvider):
                 GCE_URL, os_cloud, image_id)
 
         # construct the request body
-        if instance_name is None:
-            instance_name = 'elasticluster-%s' % uuid.uuid4()
+        if node_name:
+            instance_id = node_name.lower().replace('_', '-')  # GCE doesn't allow "_"
+        else:
+            instance_id = 'elasticluster-%s' % uuid.uuid4()
 
         public_key_content = file(public_key_path).read()
 
         instance = {
-            'name': instance_name,
+            'name': instance_id,
             'machineType': machine_type_url,
             'disks': [{
                 'autoDelete': 'true',
                 'boot': 'true',
                 'type': 'PERSISTENT',
                 'initializeParams' : {
-                    'diskName': "%s-disk" % instance_name,
+                    'diskName': "%s-disk" % instance_id,
                     'diskType': boot_disk_type_url,
                     'diskSizeGb': boot_disk_size_gb,
                     'sourceImage': image_url
@@ -319,7 +321,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
             response = self._execute_request(request)
             response = self._wait_until_done(response)
             self._check_response(response)
-            return instance_name
+            return instance_id
         except (HttpError, CloudProviderError) as e:
             log.error("Error creating instance `%s`" % e)
             raise InstanceError("Error creating instance `%s`" % e)
