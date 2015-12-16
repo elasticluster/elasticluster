@@ -360,7 +360,15 @@ class GoogleCloudProvider(AbstractCloudProvider):
                                         instance=instance_id, zone=self._zone)
             response = self._execute_request(request)
             self._check_response(response)
-        except (HttpError, CloudProviderError) as e:
+        except HttpError as e:
+            # If the instance does not exist, we can a 404 - just log it, and
+            # return without exception so the caller can remove the reference.
+            if e.resp.status == 404:
+              log.warning("Instance to stop `%s` was not found" % instance_id)
+            else:
+              raise InstanceError("Could not stop instance `%s`: `%s`"
+                                  % (instance_id, e))
+        except CloudProviderError as e:
             raise InstanceError("Could not stop instance `%s`: `%s`"
                                 % (instance_id, e))
 
