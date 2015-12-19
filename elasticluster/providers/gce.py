@@ -415,9 +415,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
 
             # If the instance is in status TERMINATED, then there will be
             # no IP addresses.
-            if response and response['status'] == 'TERMINATED':
+            if response and response['status'] in ('STOPPING', 'TERMINATED'):
               log.info("node '%s' state is '%s'; no IP address(es)" %
-                       (instance_id, "TERMINATED"))
+                       (instance_id, response['status']))
               return [None]
 
             if response and "networkInterfaces" in response:
