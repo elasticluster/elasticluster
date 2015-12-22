@@ -81,7 +81,19 @@ if sys.version_info < (2, 7):
     required_packages.append('importlib')
     # - support for Python 2.6 was removed from `novaclient` in commit
     #   81f8fa655ccecd409fe6dcda0d3763592c053e57 which is contained in
-    #   releases 3.0.0 and above
+    #   releases 3.0.0 and above; however, we also need to pin down
+    #   the version of `oslo.config` and all the dependencies thereof,
+    #   otherwise `pip` will happily download the latest and
+    #   incompatible version,since `python-novaclient` specifies only
+    #   the *minimal* version of dependencies it is compatible with...
+    required_packages.append('stevedore<1.10.0')
+    required_packages.append('debtcollector<1.0.0')
+    required_packages.append('keystoneauth<2.0.0')
+    required_packages.append('keystoneauth1<2.0.0')  # yes, there's `keystoneauth` and `keystoneauth1` !!
+    required_packages.append('oslo.config<3.0.0')
+    required_packages.append('oslo.i18n<3.1.0')
+    required_packages.append('oslo.serialization<2.1.0')
+    required_packages.append('oslo.utils<3.1.0')
     required_packages.append('python-novaclient<3.0.0')
 else:
     required_packages.append('python-novaclient')
