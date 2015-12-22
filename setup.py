@@ -65,7 +65,7 @@ required_packages = [
     'boto',
     # OpenStack clouds
     'netifaces',
-    'python-novaclient',
+    #'python-novaclient',  # need different vers for Py 2.6 and 2.7, see below
     'pbr',
     # GCE cloud
     'google-api-python-client',
@@ -79,6 +79,13 @@ if sys.version_info < (2, 7):
     required_packages.append('argparse')
     # - OpenStack's "keystoneclient" requires `importlib`
     required_packages.append('importlib')
+    # - support for Python 2.6 was removed from `novaclient` in commit
+    #   81f8fa655ccecd409fe6dcda0d3763592c053e57 which is contained in
+    #   releases 3.0.0 and above
+    required_packages.append('python-novaclient<3.0.0')
+else:
+    required_packages.append('python-novaclient')
+
 
 setup(
     name="elasticluster",
