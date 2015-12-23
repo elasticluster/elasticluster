@@ -176,6 +176,8 @@ class ElastiCluster(cli.app.CommandLineApp):
             return self.params.func()
         except MultipleInvalid as ex:
             print("Multiple errors: %s" % str.join(', ', [str(e) for e in ex.errors]))
+            print("Exiting.")
+            sys.exit(1)
         except Invalid as ex:
             print("Error: %s" % ex)
             print("Exiting.")
