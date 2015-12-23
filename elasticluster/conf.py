@@ -124,15 +124,6 @@ class Configurator(object):
         """
         if isinstance(configfiles, StringTypes):
             configfiles = [configfiles]
-        # Also, expand any possible user variable
-        configfiles = [os.path.expanduser(cfg) for cfg in configfiles]
-        for cfgfile in configfiles[:]:
-            cfgdir = cfgfile + '.d'
-            if os.path.isfile(cfgfile) and os.path.isdir(cfgdir):
-                for fname in os.listdir(cfgdir):
-                    fullpath = os.path.join(cfgdir, fname)
-                    if fname.endswith('.conf') and fullpath not in configfiles:
-                        configfiles.append(fullpath)
         config_reader = ConfigReader(configfiles)
         (conf, storage_conf) = config_reader.read_config()
 
@@ -520,8 +511,8 @@ class ConfigReader(object):
     cloud_section = "cloud"
     node_section = "node"
 
-    def __init__(self, configfiles):
-        self.configfiles = configfiles
+    def __init__(self, paths):
+        self.configfiles = self._list_config_files(paths)
 
         configparser = RawConfigParser()
         config_tmp = configparser.read(self.configfiles)
@@ -585,6 +576,40 @@ class ConfigReader(object):
                  "user_key_private": check_file(),
                  "user_key_public": check_file()}, required=True)
         }
+
+    @staticmethod
+    def _list_config_files(paths, expand_user_dir=True):
+        """
+        Return list of (existing) configuration files.
+
+        The list of configuration file is built in the following way:
+
+        - any path pointing to an existing file is included in the result;
+
+        - for any path ``P``, if directory ``P.d`` exists, any file
+          contained in it and named ``*.conf`` is included in the
+          result;
+
+        - non-existing paths are (silently) ignored and omitted from the
+          returned result.
+
+        If keyword argument `expand_user_dir` is true (default), then
+        each path is expanded with `os.path.expanduser`.
+        """
+        configfiles = set()
+        if expand_user_dir:
+            paths = [os.path.expanduser(cfg) for cfg in paths]
+        for path in paths:
+            if os.path.isfile(path):
+                configfiles.add(path)
+            path_d = path + '.d'
+            if os.path.isdir(path_d):
+                for entry in os.listdir(path_d):
+                    if entry.endswith('.conf'):
+                        cfgfile = os.path.join(path_d, entry)
+                        if cfgfile not in configfiles:
+                            configfiles.add(cfgfile)
+        return list(configfiles)
 
     def read_config(self):
         """Reads the configuration properties from the ini file and links the
