@@ -21,6 +21,11 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.mes
 import os
 import re
 import sys
+try:
+    from types import StringTypes
+except ImportError:
+    # Python 3
+    StringTypes = (str,)
 
 # External modules
 from ConfigParser import RawConfigParser
@@ -125,8 +130,7 @@ class Configurator(object):
         :return: :py:class:`Configurator`
 
         """
-        # FIXME: This is not python3 compatible!
-        if isinstance(configfiles, basestring):
+        if isinstance(configfiles, StringTypes):
             configfiles = [configfiles]
         # Also, expand any possible user variable
         configfiles = [os.path.expanduser(cfg) for cfg in configfiles]
