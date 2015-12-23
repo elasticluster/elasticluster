@@ -279,9 +279,9 @@ class Cluster(Struct):
         """
         if not re.match("^[a-zA-Z0-9-]+$", kind):
             raise ValueError(
-                "Invalid name `%s`. The `kind` argument may only contains "
-                "characters in [a-z0-9-] range, as it is going to be used as "
-                "hostname" % kind
+                "Invalid name `%s`. The `kind` argument may only contain"
+                " alphanumeric characters, as it is going to be used as"
+                " host name" % kind
             )
 
         if kind not in self.nodes:
@@ -299,7 +299,9 @@ class Cluster(Struct):
                     break
 
         if not name:
-            log.error("while adding a new node of type `%s`, I was unable to find a good name for it.", kind)
+            log.error(
+                "I was unable to find a good name"
+                " for a new node of type `%s`.", kind)
             return None
         # To ease json dump/load, use `extra` dictionary to
         # instantiate Node class
