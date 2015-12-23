@@ -108,27 +108,19 @@ class Configurator(object):
         validator.validate()
 
     @classmethod
-    def fromConfig(cls, configfiles, storage_path=None,
-                   include_config_dirs=False):
-        """Helper method to initialize Configurator from an ini file.
+    def fromConfig(cls, configfiles, storage_path=None):
+        """
+        Helper method to initialize Configurator from a `.ini`-format file.
 
-        :param str configfiles: path to the ini file(s). For each file
-                                in `configfiles`, if a directory `*.d`
-                                exists, also reads all the `*.conf`
-                                files in that directory.
+        :param list configfiles: list of paths to the ini file(s).
+            For each path ``P`` in `configfiles`, if a directory named ``P.d``
+            exists, also reads all the `*.conf` files in that directory.
 
-        :param str storage_path: path to the storage directory. If
-                                 defined, a
-                                 :py:class:`repository.DiskRepository`
-                                 class will be instantiated.
-
-        :param str include_config_dirs: Default is False. If True, for
-                               each `file` in `configfiles` also files
-                               in `file.d` ending with `.conf` will be
-                               loaded
+        :param str storage_path:
+            path to the storage directory. If defined, a
+            :py:class:`repository.DiskRepository` class will be instantiated.
 
         :return: :py:class:`Configurator`
-
         """
         if isinstance(configfiles, StringTypes):
             configfiles = [configfiles]
