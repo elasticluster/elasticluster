@@ -154,13 +154,14 @@ class ElastiCluster(cli.app.CommandLineApp):
                         self.params.config)
                     sys.exit(1)
 
+        assert self.params.func, ("No subcommand defined in `ElastiCluster.setup()")
+        try:
+            self.params.func.pre_run()
+        except (RuntimeError, ConfigurationError) as ex:
+            sys.stderr.write(str(ex).strip())
+            sys.stderr.write('\n')
+            sys.exit(1)
 
-        if self.params.func:
-            try:
-                self.params.func.pre_run()
-            except (RuntimeError, ConfigurationError) as ex:
-                sys.stderr.write(str(ex).strip() + '\n')
-                sys.exit(1)
 
     def main(self):
         """
