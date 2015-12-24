@@ -53,6 +53,7 @@ from elasticluster.migration_tools import MigrationCommand
 
 class ElastiCluster(cli.app.CommandLineApp):
     name = "elasticluster"
+    description = "Elasticluster will start, stop, grow, shrink clusters on an EC2 cloud."
 
     default_configuration_file = os.path.expanduser(
         "~/.elasticluster/config")
