@@ -18,6 +18,7 @@
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
 
 # System imports
+import itertools
 import operator
 import os
 import re
@@ -290,7 +291,7 @@ class Cluster(Struct):
         if not name:
             nodenames = [i.name for i in self.nodes[kind]]
             numnodes = len(nodenames)
-            for index in range(numnodes+1, numnodes+50):
+            for index in itertools.count(numnodes + 1):
                 _name = "%s%03d" % (kind, index)
                 if _name in nodenames:
                     continue
