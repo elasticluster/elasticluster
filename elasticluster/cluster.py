@@ -15,9 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
+__author__ = '''
+Nicolas Baer <nicolas.baer@uzh.ch>,
+Antonio Messina <antonio.s.messina@gmail.com>,
+Riccardo Murri <riccardo.murri@uzh.ch>
+'''
 
 # System imports
+from collections import defaultdict
 import operator
 import os
 import re
@@ -169,13 +174,20 @@ class Cluster(Struct):
         self.user_key_public = os.path.expanduser(user_key_public)
         self.user_key_public = os.path.expandvars(user_key_public)
 
-        self.nodes = dict()
+        # this needs to exist before `add_node()` is called
+        self._naming_policy = NodeNamingPolicy()
+
+        self.nodes = {}
         if 'nodes' in extra:
             # Build the internal nodes. This is mostly useful when loading
             # the cluster from json files.
             for kind, nodes in extra['nodes'].items():
                 for node in nodes:
+                    # adding un-named nodes before NodeNamingPolicy has
+                    # been fully populated can lead to duplicate names
+                    assert 'name' in node
                     self.add_node(**node)
+            del extra['nodes']
 
         self.extra = {}
         # FIXME: ugly fix needed when saving and loading the same
@@ -260,9 +272,14 @@ class Cluster(Struct):
         if oldvalue:
             log.debug("Attribute 'ssh_to' updated: %s -> %s", oldvalue, self.ssh_to)
 
+    # a kind must *not* end with a digit, otherwise we'll have a hard
+    # time extracting the node index with the default naming policy
+    _NODE_KIND_RE = re.compile(r'^[a-z0-9-]*[a-z-]+$', re.I)
+
     def add_node(self, kind, image_id, image_user, flavor,
                  security_group, image_userdata='', name=None, **extra):
-        """Adds a new node to the cluster. This factory method provides an
+        """
+        Adds a new node to the cluster. This factory method provides an
         easy way to add a new node to the cluster by specifying all relevant
         parameters. The node does not get started nor setup automatically,
         this has to be done manually afterwards.
@@ -270,8 +287,9 @@ class Cluster(Struct):
         :param str kind: kind of node to start. this refers to the
                          groups defined in the ansible setup provider
                          :py:class:`elasticluster.providers.AnsibleSetupProvider`
-                         Please note that this must match the
-                         `[a-zA-Z0-9-]` regexp, as it is used to build
+                         Please note that this can only contain
+                         alphanumeric characters and hyphens (and must
+                         not end with a digit), as it is used to build
                          a valid hostname
 
         :param str image_id: image id to use for the cloud instance (e.g.
@@ -291,9 +309,8 @@ class Cluster(Struct):
         :raises: ValueError: `kind` argument is an invalid string.
 
         :return: created :py:class:`Node`
-
         """
-        if not re.match("^[a-zA-Z0-9-]+$", kind):
+        if not self._NODE_KIND_RE.match(kind):
             raise ValueError(
                 "Invalid name `%s`. The `kind` argument may only contain"
                 " alphanumeric characters, as it is going to be used as"
@@ -303,39 +320,37 @@ class Cluster(Struct):
         if kind not in self.nodes:
             self.nodes[kind] = []
 
-        if not name:
-            nodenames = [i.name for i in self.nodes[kind]]
-            numnodes = len(nodenames)
-            for index in range(numnodes+1, numnodes+50):
-                _name = "%s%03d" % (kind, index)
-                if _name in nodenames:
-                    continue
-                else:
-                    name = _name
-                    break
-
-        if not name:
-            log.error(
-                "I was unable to find a good name"
-                " for a new node of type `%s`.", kind)
-            return None
         # To ease json dump/load, use `extra` dictionary to
         # instantiate Node class
-        extra.update({'name': name,
-                      'cluster_name' : self.name,
-                      'kind': kind,
-                      'cloud_provider': self._cloud_provider,
-                      'image_user': image_user,
-                      'security_group': security_group,
-                      'image_id': image_id,
-                      'flavor': flavor,
-                      'image_userdata':image_userdata})
-        for attr in ('user_key_public', 'user_key_private', 'user_key_name',
-                     'security_group', 'image_user', 'image_id', 'flavor',
-                     'image_userdata'):
+        extra.update(
+            cloud_provider=self._cloud_provider,
+            cluster_name=self.name,
+            flavor=flavor,
+            image_id=image_id,
+            image_user=image_user,
+            image_userdata=image_userdata,
+            kind=kind,
+            security_group=security_group,
+        )
+        for attr in (
+                'flavor',
+                'image_id',
+                'image_user',
+                'image_userdata',
+                'security_group',
+                'user_key_name',
+                'user_key_private',
+                'user_key_public',
+        ):
             if attr not in extra:
                 extra[attr] = getattr(self, attr)
-        node = Node(**extra)
+
+        if not name:
+            # `extra` contains key `kind` already
+            name = self._naming_policy.new(**extra)
+        else:
+            self._naming_policy.use(kind, name)
+        node = Node(name=name, **extra)
 
         self.nodes[kind].append(node)
         return node
@@ -389,6 +404,7 @@ class Cluster(Struct):
                     del self.nodes[node.kind][index]
                 if stop:
                     node.stop()
+                self._naming_policy.free(node.kind, node.name)
                 self.repository.save_or_update(self)
             except ValueError:
                 raise NodeNotFound("Node %s not found in cluster" % node.name)
@@ -791,6 +807,185 @@ class Cluster(Struct):
                 log.warning("Ignoring error updating information on node %s: %s",
                           node, str(ex))
         self.repository.save_or_update(self)
+
+
+class NodeNamingPolicy(object):
+    """
+    Create names for cluster nodes.
+
+    This class takes care of the book-keeping associated to naming
+    nodes in the cluster: generate new names (see :meth:`new`), record
+    existing ones (see :meth:`use`), and marking unused names as
+    "free" (see :meth:`free`).
+
+    Basic usage is simple: mark any name that is already in use by
+    calling :meth:`use` on it, and request new addresses with
+    :meth:`new`; any name that is no longer used should be
+    unregistered by calling :meth:`free` so that it can be re-used.
+    Calls to either method can be freely intermixed.
+
+    From each node name, a numerical "index" is extracted; methods in
+    this class ensure that no two names are ever emitted with a
+    duplicate index, and that the set of indices in use is as close as
+    possible to an integer range starting at 1.
+
+    When the node names in use form a numerical range, each call to
+    :meth:`new` just increments the top of the range::
+
+      >>> p = NodeNamingPolicy()
+      >>> p.use('foo', 'foo001')
+      >>> p.use('foo', 'foo002')
+      >>> p.use('foo', 'foo003')
+      >>> p.new('foo')
+      'foo004'
+
+    When a hole is pinched in the range, however, unused names
+    *within* the range are used until all "holes" have been filled::
+
+      >>> p.free('foo', 'foo002')
+      >>> p.new('foo')
+      'foo002'
+      >>> p.new('foo')
+      'foo005'
+
+    *Warning:* calling :meth:`use` on a name with a larger sequential
+    index than any name in the currently-used range extends the list
+    of "holes" with all the names from the old top of the range up to
+    the new one::
+
+      >>> p.use('foo', 'foo009')
+      >>> p.new('foo') in ['foo006', 'foo007', 'foo008']
+      True
+
+    The `pattern` constructor argument allows changing the way the
+    node name is built::
+
+      >>> p = NodeNamingPolicy(pattern='node-{kind}-{index}')
+      >>> p.new('foo')
+      'node-foo-1'
+
+    If you change the pattern, however, you must make sure that
+    :meth:`use` and :meth:`free` can parse the name back.  This
+    implementation assumes that a node's numerical index is formed by
+    the last digits in the name; to implement a more general/complex
+    scheme, override methods :meth:`_format` and :meth:`_parse`.
+
+    This class may seem over-engineered for the simple requirement
+    that unique names be generated, but I've actually had to answer
+    support requests of the kind "Hey, our cluster has ``compute001``
+    and ``compute002`` and then ``compute004`` through ``compute010``
+    -- what happened to ``compute003``?", so I'd rather spend a bit
+    more time coding than explaining each time that gaps in the naming
+    scheme are harmless.
+    """
+
+    def __init__(self, pattern=r'{kind}{index:03d}'):
+        self.pattern = pattern
+        # keep a record of unused node names (by kind) and of the
+        # highest-numbered node, in case there are no free ones left.
+        self._free = defaultdict(set)
+        self._top = defaultdict(int)
+
+    @staticmethod
+    def _format(pattern, **args):
+        """
+        Form a node name by interpolating `args` into `pattern`.
+
+        This is actually nothing more than a call to
+        `pattern.format(...)` but is provided as a separate
+        overrideable method as it is logically paired with
+        :meth:`_parse`.
+        """
+        return pattern.format(**args)
+
+    @staticmethod
+    def _parse(name):
+        """
+        Return dict of parts forming `name`.  Raise `ValueError` if string
+        `name` cannot be correctly parsed.
+
+        The default implementation uses
+        `NodeNamingPolicy._NODE_NAME_RE` to parse the name back into
+        constituent parts.
+
+        This is ideally the inverse of :meth:`_format` -- it should be
+        able to parse a node name string into the parameter values
+        that were used to form it.
+        """
+        match = NodeNamingPolicy._NODE_NAME_RE.match(name)
+        if match:
+            return match.groupdict()
+        else:
+            raise ValueError(
+                "Cannot parse node name `{name}`"
+                .format(name=name))
+
+    _NODE_NAME_RE = re.compile(
+        r'(?P<kind>[a-z0-9-]*[a-z-]+) (?P<index>\d+)$',
+        re.I|re.X)
+
+    def new(self, kind, **extra):
+        """
+        Return a host name for a new node of the given kind.
+
+        The new name is formed by interpolating ``{}``-format
+        specifiers in the string given as ``pattern`` argument to the
+        class constructor.  The following names can be used in the
+        ``{}``-format specifiers:
+
+        * ``kind`` -- the `kind` argument
+        * ``index`` -- a positive integer number, garanteed to be unique (per kind)
+        * any other keyword argument used in the call to :meth:`new`
+
+        Example::
+
+          >>> p = NodeNamingPolicy(pattern='node-{kind}-{index}{spec}')
+          >>> p.new('foo', spec='bar')
+          'node-foo-1bar'
+          >>> p.new('foo', spec='quux')
+          'node-foo-2quux'
+        """
+        if self._free[kind]:
+            index = self._free[kind].pop()
+        else:
+            self._top[kind] += 1
+            index = self._top[kind]
+        return self._format(self.pattern, kind=kind, index=index, **extra)
+
+    def use(self, kind, name):
+        """
+        Mark a node name as used.
+        """
+        try:
+            params = self._parse(name)
+            index = int(params['index'], 10)
+            if index in self._free[kind]:
+                self._free[kind].remove(index)
+            top = self._top[kind]
+            if index > top:
+                self._free[kind].update(range(top+1, index))
+                self._top[kind] = index
+        except ValueError:
+            log.warning(
+                "Cannot extract numerical index"
+                " from node name `%s`!", name)
+
+    def free(self, kind, name):
+        """
+        Mark a node name as no longer in use.
+
+        It could thus be recycled to name a new node.
+        """
+        try:
+            params = self._parse(name)
+            index = int(params['index'], 10)
+            self._free[kind].add(index)
+            assert index <= self._top[kind]
+            if index == self._top[kind]:
+                self._top[kind] -= 1
+        except ValueError:
+            # ignore failures in self._parse()
+            pass
 
 
 class Node(Struct):
