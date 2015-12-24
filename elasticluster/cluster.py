@@ -43,6 +43,7 @@ from elasticluster.exceptions import TimeoutError, NodeNotFound, \
     InstanceError, ClusterError
 from elasticluster.repository import MemRepository
 
+
 class IgnorePolicy(paramiko.MissingHostKeyPolicy):
     def missing_host_key(self, client, hostname, key):
         log.info('Ignoring unknown %s host key for %s: %s' %
@@ -148,7 +149,7 @@ class Cluster(Struct):
 
     :ivar nodes: dict [node_type] = [:py:class:`Node`] that represents all
                  nodes in this cluster
-   """
+    """
     startup_timeout = 60 * 10  #: timeout in seconds to start all nodes
 
 
@@ -196,7 +197,8 @@ class Cluster(Struct):
         # the constructor.
         self.extra.update(extra.pop('extra',{}))
 
-        # Remove extra arguments, if defined
+        # attributes that have already been defined trump whatever is
+        # in the `extra` dictionary
         for key in extra.keys():
             if hasattr(self, key):
                 del extra[key]
@@ -355,6 +357,7 @@ class Cluster(Struct):
         self.nodes[kind].append(node)
         return node
 
+
     def add_nodes(self, kind, num, image_id, image_user, flavor,
                   security_group, image_userdata='', **extra):
         """Helper method to add multiple nodes of the same kind to a cluster.
@@ -408,6 +411,7 @@ class Cluster(Struct):
                 self.repository.save_or_update(self)
             except ValueError:
                 raise NodeNotFound("Node %s not found in cluster" % node.name)
+
 
     @staticmethod
     def _start_node(node):
