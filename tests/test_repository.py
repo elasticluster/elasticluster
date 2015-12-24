@@ -123,8 +123,9 @@ class JsonRepositoryTests(unittest.TestCase):
             self.storage.save_or_update(cluster)
 
         new_clusters = [self.storage.get(cluster.name) for cluster in clusters]
+        cluster_names = [c.name for c in clusters]
         for cluster in new_clusters:
-            nt.assert_true(cluster.name in [c.name for c in clusters])
+            nt.assert_true(cluster.name in cluster_names)
 
     def test_delete(self):
         pass
@@ -177,8 +178,9 @@ class YamlRepositoryTests(unittest.TestCase):
             self.storage.save_or_update(cluster)
 
         new_clusters = self.storage.get_all()
+        cluster_names = [c.name for c in clusters]
         for cluster in new_clusters:
-            nt.assert_true(cluster.name in [c.name for c in clusters])
+            nt.assert_true(cluster.name in cluster_names)
 
     def test_get(self):
         clusters = [Cluster('test_%d' % i) for i in range(10)]
