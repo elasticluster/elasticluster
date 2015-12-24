@@ -205,15 +205,26 @@ class Cluster(Struct):
         for node in self.get_all_nodes():
             node._cloud_provider = provider
 
-    def __getstate__(self):
+    def to_dict(self, omit=()):
+        """
+        Return a (shallow) copy of self cast to a dictionary,
+        optionally omitting some key/value pairs.
+        """
         result = self.__dict__.copy()
-        result['_setup_provider'] = None
-        result['_cloud_provider'] = None
+        for key in omit:
+            if key in result:
+                del result[key]
         return result
+
+    def __getstate__(self):
+        return self.to_dict(omit=('_cloud_provider', '_naming_policy',
+                                  '_setup_provider',))
 
     def __setstate__(self, state):
         self.__dict__ = state
-        # New attribute added to Cluster class, need to ensure it is defined.
+        self.__dict__['_setup_provider'] = None
+        self.__dict__['_cloud_provider'] = None
+        self.__dict__['_naming_policy'] = None
 
     def __update_option(self, cfg, key, attr):
         oldvalue = getattr(self, attr)
@@ -225,8 +236,13 @@ class Cluster(Struct):
     def keys(self):
         """Only expose some of the attributes when using as a dictionary"""
         keys = Struct.keys(self)
-        for key in ('_setup_provider', '_cloud_provider',
-                    'repository', 'known_hosts_file'):
+        for key in (
+                '_cloud_provider',
+                '_naming_policy',
+                '_setup_provider',
+                'known_hosts_file',
+                'repository',
+        ):
             if key in keys:
                 keys.remove(key)
         return keys
