@@ -625,6 +625,8 @@ class SetupCluster(AbstractCommand):
         configurator = get_configurator(self.params.config,
                                         storage_path=self.params.storage)
         cluster_name = self.params.cluster
+
+        print("Updating cluster `%s`..." % cluster_name)
         try:
             cluster = configurator.load_cluster(cluster_name)
             cluster.update()

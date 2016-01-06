@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013, 2015 S3IT, University of Zurich
+# Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -214,7 +214,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        username=None,
                        # these params are specific to the
                        # GoogleCloudProvider
-                       instance_name=None,
+                       node_name=None,
                        boot_disk_type='pd-standard',
                        boot_disk_size=10,
                        tags=None,
@@ -232,12 +232,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str image_id: image type (os) to use for the instance
         :param str image_userdata: command to execute after startup
         :param str username: username for the given ssh key, default None
-
-        :param str instance_name: name of the instance
+        :param str node_name: name of the instance
         :param str tags: comma-separated list of "tags" to label the instance
-
-        :param str scheduling: scheduling option to use for the instance ("preemptible")
-
         :param str scheduling: scheduling option to use for the instance ("preemptible")
 
         :param str|Sequence tags: "Tags" to label the instance.
@@ -304,13 +300,15 @@ class GoogleCloudProvider(AbstractCloudProvider):
                 .format(T=type(tags)))
 
         # construct the request body
-        if instance_name is None:
-            instance_name = 'elasticluster-%s' % uuid.uuid4()
+        if node_name:
+            instance_id = node_name.lower().replace('_', '-')  # GCE doesn't allow "_"
+        else:
+            instance_id = 'elasticluster-%s' % uuid.uuid4()
 
         public_key_content = file(public_key_path).read()
 
         instance = {
-            'name': instance_name,
+            'name': instance_id,
             'machineType': machine_type_url,
             'tags': {
               'items': tags,
@@ -321,7 +319,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                 'boot': 'true',
                 'type': 'PERSISTENT',
                 'initializeParams' : {
-                    'diskName': "%s-disk" % instance_name,
+                    'diskName': "%s-disk" % instance_id,
                     'diskType': boot_disk_type_url,
                     'diskSizeGb': boot_disk_size_gb,
                     'sourceImage': image_url
@@ -357,7 +355,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
             response = self._execute_request(request)
             response = self._wait_until_done(response)
             self._check_response(response)
-            return instance_name
+            return instance_id
         except (HttpError, CloudProviderError) as e:
             log.error("Error creating instance `%s`" % e)
             raise InstanceError("Error creating instance `%s`" % e)
@@ -379,7 +377,15 @@ class GoogleCloudProvider(AbstractCloudProvider):
                                         instance=instance_id, zone=self._zone)
             response = self._execute_request(request)
             self._check_response(response)
-        except (HttpError, CloudProviderError) as e:
+        except HttpError as e:
+            # If the instance does not exist, we can a 404 - just log it, and
+            # return without exception so the caller can remove the reference.
+            if e.resp.status == 404:
+              log.warning("Instance to stop `%s` was not found" % instance_id)
+            else:
+              raise InstanceError("Could not stop instance `%s`: `%s`"
+                                  % (instance_id, e))
+        except CloudProviderError as e:
             raise InstanceError("Could not stop instance `%s`: `%s`"
                                 % (instance_id, e))
 
@@ -426,9 +432,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
 
             # If the instance is in status TERMINATED, then there will be
             # no IP addresses.
-            if response and response['status'] == 'TERMINATED':
+            if response and response['status'] in ('STOPPING', 'TERMINATED'):
               log.info("node '%s' state is '%s'; no IP address(es)" %
-                       (instance_id, "TERMINATED"))
+                       (instance_id, response['status']))
               return [None]
 
             if response and "networkInterfaces" in response:

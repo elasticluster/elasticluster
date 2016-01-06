@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013, 2015 S3IT, University of Zurich
+# Copyright (C) 2013-2016 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ Riccardo Murri <riccardo.murri@uzh.ch>
 
 # System imports
 from collections import defaultdict
+import itertools
 import operator
 import os
 import re
@@ -807,6 +808,14 @@ class Cluster(Struct):
         for node in self.get_all_nodes():
             try:
                 node.update_ips()
+
+                # If we previously did not have a preferred_ip or the
+                # preferred_ip is not in the current list, then try to connect
+                # to one of the node ips and update the preferred_ip.
+                if node.ips and \
+                   not (node.preferred_ip and \
+                        node.preferred_ip in node.ips):
+                  node.connect()
             except InstanceError as ex:
                 log.warning("Ignoring error updating information on node %s: %s",
                           node, str(ex))
@@ -1151,8 +1160,9 @@ class Node(Struct):
                 log.debug("IP %s does not seem to belong to %s anymore. Ignoring!", self.preferred_ip, self.name)
                 self.preferred_ip = ips[0]
 
-        for ip in [self.preferred_ip] + ips:
-            if not ip: continue
+        for ip in itertools.chain([self.preferred_ip], ips):
+            if not ip:
+                continue
             try:
                 log.debug("Trying to connect to host %s (%s)",
                           self.name, ip)

@@ -133,7 +133,7 @@ environment.
 .. _`GlusterFS`: http://www.gluster.org/
 .. _`Ceph`: http://ceph.com/
 .. _`OrangeFS`: http://orangefs.org/
-.. _`Ansible`: http://ansible.cc
+.. _`Ansible`: https://github.com/ansible/ansible
 .. _`file enhancement requests and ideas`: https://github.com/gc3-uzh-ch/elasticluster/issues
 
 .. _`Python`: http://www.python.org
