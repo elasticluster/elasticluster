@@ -3,7 +3,7 @@
 # @(#)setup.py
 #
 #
-# Copyright (C) 2013, 2015 S3IT, University of Zurich. All rights reserved.
+# Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -61,6 +61,7 @@ required_packages = [
     'ansible>=1.9.0',
     'voluptuous>=0.8.2',
     'configobj',
+    'coloredlogs',
     # EC2 clouds
     'boto',
     # OpenStack clouds
@@ -101,7 +102,7 @@ else:
 
 setup(
     name="elasticluster",
-    version="1.3.dev",
+    version="1.2.1rc0",
     description="A command line tool to create, manage and setup computing clusters hosted on a public or private cloud infrastructure.",
     long_description=open('README.rst').read(),
     author="Services and Support for Science IT, University of Zurich",

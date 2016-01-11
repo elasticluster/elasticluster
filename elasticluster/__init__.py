@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013, 2015 S3IT, University of Zurich
+#   Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 import logging
 
-logging.basicConfig()
 log = logging.getLogger("gc3.elasticluster")
 log.DO_NOT_FORK = False
 
