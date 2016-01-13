@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013 S3IT, University of Zurich
+#   Copyright (C) 2013, 2016 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -160,7 +160,8 @@ class TestBotoCloudProvider(unittest.TestCase):
 
         ips = provider.get_ips(instance_id)
 
-        self.assertEqual(ips, (ip_private, ip_public))
+        # get_ips() returns list of *unique* IPs
+        self.assertEqual(ips, list(set([ip_private, ip_public])))
 
 
     def test_is_instance_running(self):
@@ -453,11 +454,3 @@ class TestBotoCloudProvider(unittest.TestCase):
         with self.assertRaises(KeypairError):
             self._check_keypair_helper(key_content_prv, key_content_pub,
                         fingerprint, key_exists=False, host="us.amazon.com")
-
-
-
-
-
-
-
-
