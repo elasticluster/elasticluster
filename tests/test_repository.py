@@ -3,7 +3,7 @@
 # @(#)test_repository.py
 #
 #
-# Copyright (C) 2013 S3IT, University of Zurich. All rights reserved.
+# Copyright (C) 2013, 2016 S3IT, University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -20,6 +20,8 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
+from __future__ import absolute_import
+
 __docformat__ = 'reStructuredText'
 __author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
 
@@ -30,12 +32,13 @@ import shutil
 import tempfile
 import unittest
 
-import nose.tools as nt
-
 from elasticluster import Cluster
-from elasticluster.cluster import Struct
+from elasticluster.cluster import Struct, Node
 from elasticluster.repository import PickleRepository, MemRepository, \
     JsonRepository, YamlRepository, MultiDiskRepository
+
+import pytest
+
 
 class FakeCluster(Struct):
     """Fake class used for the storage cluster class.  The only thing the
@@ -62,7 +65,7 @@ class MemRepositoryTests(unittest.TestCase):
 
         new_clusters = self.storage.get_all()
         for cluster in new_clusters:
-            nt.assert_true(cluster in clusters)
+            assert cluster in clusters
 
     def test_get(self):
         clusters = [FakeCluster('test_%d' % i) for i in range(10)]
@@ -72,15 +75,15 @@ class MemRepositoryTests(unittest.TestCase):
 
         new_clusters = [self.storage.get(cluster.name) for cluster in clusters]
         for cluster in new_clusters:
-            nt.assert_true(cluster in clusters)
+            assert cluster in clusters
 
     def test_delete(self):
         cluster = FakeCluster('test1')
         self.storage.save_or_update(cluster)
-        nt.assert_true(cluster.name in self.storage.clusters)
+        assert cluster.name in self.storage.clusters
 
         self.storage.delete(cluster)
-        nt.assert_false(cluster.name in self.storage.clusters)
+        assert cluster.name not in self.storage.clusters
 
 
 class PickleRepositoryTests(MemRepositoryTests):
@@ -100,10 +103,10 @@ class PickleRepositoryTests(MemRepositoryTests):
         self.storage.save_or_update(cluster)
 
         clusterpath = os.path.join(self.path, 'test1.pickle')
-        nt.assert_true(os.path.exists(clusterpath))
+        assert os.path.exists(clusterpath)
 
         self.storage.delete(cluster)
-        nt.assert_false(os.path.exists(clusterpath))
+        assert not os.path.exists(clusterpath)
 
 
 class JsonRepositoryTests(unittest.TestCase):
@@ -120,23 +123,25 @@ class JsonRepositoryTests(unittest.TestCase):
                             cloud_provider=None,
                             setup_provider=None,
                             user_key_name='key') for i in range(10)]
+        cluster_names = [c.name for c in clusters]
 
         for cluster in clusters:
             self.storage.save_or_update(cluster)
 
         new_clusters = self.storage.get_all()
         for cluster in new_clusters:
-            nt.assert_true(cluster.name in [c.name for c in clusters])
+            assert cluster.name in cluster_names
 
     def test_get(self):
         clusters = [FakeCluster('test_%d' % i) for i in range(10)]
+        cluster_names = [c.name for c in clusters]
 
         for cluster in clusters:
             self.storage.save_or_update(cluster)
 
         new_clusters = [self.storage.get(cluster.name) for cluster in clusters]
         for cluster in new_clusters:
-            nt.assert_true(cluster.name in [c.name for c in clusters])
+            assert cluster.name in cluster_names
 
     def test_delete(self):
         pass
@@ -149,10 +154,10 @@ class JsonRepositoryTests(unittest.TestCase):
         self.storage.save_or_update(cluster)
 
         clusterpath = os.path.join(self.path, 'test1.json')
-        nt.assert_true(os.path.exists(clusterpath))
+        assert os.path.exists(clusterpath)
 
         self.storage.delete(cluster)
-        nt.assert_false(os.path.exists(clusterpath))
+        assert not os.path.exists(clusterpath)
 
     def test_saving_cluster_with_nodes(self):
         cluster = Cluster(name='test1',
@@ -165,9 +170,10 @@ class JsonRepositoryTests(unittest.TestCase):
                          security_group='default', name='foo123')
         self.storage.save_or_update(cluster)
         new = self.storage.get(cluster.name)
-        nt.assert_true('foo' in cluster.nodes)
-        nt.assert_true(cluster.nodes['foo'], 1)
-        nt.assert_true(cluster.nodes['foo'][0].name, 'foo123')
+        assert 'foo' in cluster.nodes
+        assert len(cluster.nodes['foo']) > 0
+        assert isinstance(cluster.nodes['foo'][0], Node)
+        assert cluster.nodes['foo'][0].name == 'foo123'
 
 
 class YamlRepositoryTests(unittest.TestCase):
@@ -184,13 +190,14 @@ class YamlRepositoryTests(unittest.TestCase):
                             cloud_provider=None,
                             setup_provider=None,
                             user_key_name='key') for i in range(10)]
+        cluster_names = [c.name for c in clusters]
 
         for cluster in clusters:
             self.storage.save_or_update(cluster)
 
         new_clusters = self.storage.get_all()
         for cluster in new_clusters:
-            nt.assert_true(cluster.name in [c.name for c in clusters])
+            assert cluster.name in cluster_names
 
     def test_get(self):
         clusters = [FakeCluster('test_%d' % i) for i in range(10)]
@@ -200,7 +207,7 @@ class YamlRepositoryTests(unittest.TestCase):
 
         new_clusters = [self.storage.get(cluster.name) for cluster in clusters]
         for cluster in new_clusters:
-            nt.assert_true(cluster in clusters)
+            assert cluster in clusters
 
     def test_delete(self):
         pass
@@ -213,10 +220,10 @@ class YamlRepositoryTests(unittest.TestCase):
         self.storage.save_or_update(cluster)
 
         clusterpath = os.path.join(self.path, 'test1.yaml')
-        nt.assert_true(os.path.exists(clusterpath))
+        assert os.path.exists(clusterpath)
 
         self.storage.delete(cluster)
-        nt.assert_false(os.path.exists(clusterpath))
+        assert not os.path.exists(clusterpath)
 
     def test_saving_cluster_with_nodes(self):
         cluster = Cluster(name='test1',
@@ -229,14 +236,13 @@ class YamlRepositoryTests(unittest.TestCase):
                          security_group='default', name='foo123')
         self.storage.save_or_update(cluster)
         new = self.storage.get(cluster.name)
-        nt.assert_true('foo' in cluster.nodes)
-        nt.assert_true(cluster.nodes['foo'], 1)
-        nt.assert_true(cluster.nodes['foo'][0].name, 'foo123')
+        assert 'foo' in cluster.nodes
+        assert len(cluster.nodes['foo']) > 0
+        assert isinstance(cluster.nodes['foo'][0], Node)
+        assert cluster.nodes['foo'][0].name == 'foo123'
 
 
-# Note: do not subclass from unittest.TestCase if you want to use test
-# generators.
-class TestMultiDiskRepository(object):
+class TestMultiDiskRepository(unittest.TestCase):
     def setUp(self):
         self.path = tempfile.mkdtemp()
 
@@ -245,9 +251,9 @@ class TestMultiDiskRepository(object):
         if hasattr(self, 'storage'):
             del self.storage
 
-    @nt.raises(ValueError)
     def test_invalid_storage_type(self):
-        MultiDiskRepository('/tmp/foo', 'foo')
+        with pytest.raises(ValueError):
+            MultiDiskRepository('/tmp/foo', 'foo')
 
     def store_is_of_type(self, store_type):
         """Check store type %s""" % store_type
@@ -259,14 +265,13 @@ class TestMultiDiskRepository(object):
                           repository=storage)
         storage.save_or_update(cluster)
 
-        nt.assert_true(
-            os.path.exists(
-                os.path.join(self.path, cluster.name + '.' + store_type)))
+        assert os.path.exists(
+            os.path.join(self.path, cluster.name + '.' + store_type))
 
     def test_repository_default_type(self):
         for store_type in ['yaml', 'json', 'pickle']:
             yield self.store_is_of_type, store_type
 
+
 if __name__ == "__main__":
-    import nose
-    nose.runmodule()
+    pytest.main(['-v', __file__])

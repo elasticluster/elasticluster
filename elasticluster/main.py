@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013-2014 S3IT, University of Zurich
+#   Copyright (C) 2013-2014, 2016 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -31,6 +31,8 @@ try:
 except ImportError:
     # Voluptuous version <= 0.7.2
     from voluptuous.voluptuous import MultipleInvalid, Invalid
+
+import coloredlogs
 
 # Elasticluster imports
 from elasticluster import log
@@ -117,7 +119,7 @@ class ElastiCluster(cli.app.CommandLineApp):
         cli.app.CommandLineApp.pre_run(self)
         # Set verbosity level
         loglevel = max(1, logging.WARNING - 10 * max(0, self.params.verbose))
-        log.setLevel(loglevel)
+        coloredlogs.install(logger=log, level=loglevel)
 
         # In debug mode, avoid forking
         if self.params.verbose > 3:

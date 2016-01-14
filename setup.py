@@ -61,6 +61,7 @@ required_packages = [
     'ansible~=1.9.4',
     'voluptuous>=0.8.2',
     'configobj',
+    'coloredlogs',
     # EC2 clouds
     'boto',
     # OpenStack clouds
@@ -99,6 +100,28 @@ else:
     required_packages.append('python-novaclient')
 
 
+## test runner setup
+#
+# See http://tox.readthedocs.org/en/latest/example/basic.html#integration-with-setuptools-distribute-test-commands
+# on how to run tox when python setup.py test is run
+#
+from setuptools.command.test import test as TestCommand
+
+class Tox(TestCommand):
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        # import here, cause outside the eggs aren't loaded
+        import tox
+        errno = tox.cmdline(self.test_args)
+        sys.exit(errno)
+
+
+## real setup description begins here
+#
 setup(
     name="elasticluster",
     version="1.2.1.rc1",
@@ -131,14 +154,16 @@ setup(
     ],
     packages=find_packages(),
     install_requires=required_packages,
-    tests_require=['tox', 'mock', 'nose'],
     data_files=ansible_pb_files(),
     entry_points={
         'console_scripts': [
             'elasticluster = elasticluster.main:main',
         ]
     },
+    tests_require=['tox', 'mock', 'pytest'],  # read right-to-left
+    cmdclass={'test': Tox},
 )
+
 
 if __name__ == "__main__":
     if sys.argv[1] in ['develop', 'install']:
