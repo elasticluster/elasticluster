@@ -132,7 +132,7 @@ setup(
     ],
     packages=find_packages(),
     install_requires=required_packages,
-    tests_require=['tox', 'mock', 'nose'],
+    tests_require=['tox', 'mock', 'pytest'],
     data_files=ansible_pb_files(),
     entry_points={
         'console_scripts': [

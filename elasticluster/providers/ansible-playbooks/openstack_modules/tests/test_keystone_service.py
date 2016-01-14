@@ -1,7 +1,6 @@
 import keystone_service
+
 import mock
-from nose.tools import assert_equal, assert_list_equal, assert_is_none
-from nose import SkipTest
 
 
 def setup():
@@ -68,7 +67,7 @@ def test_dispatch_service_present(mock_ensure_service_present,
                                                          region,
                                                          check_mode)]
 
-    assert_equal(manager.mock_calls, expected_calls)
+    assert manager.mock_calls == expected_calls
 
 
 @mock.patch('keystone_service.ensure_endpoint_absent')
@@ -111,7 +110,7 @@ def test_dispatch_service_absent(mock_ensure_service_present,
         mock.call.ensure_service_absent(keystone, name, check_mode)
     ]
 
-    assert_list_equal(manager.mock_calls, expected_calls)
+    assert manager.mock_calls == expected_calls
 
 
 def test_ensure_service_present_when_present():
@@ -129,7 +128,7 @@ def test_ensure_service_present_when_present():
 
     # Assertions
     assert not changed
-    assert_equal(id, "b6a7ff03f2574cd9b5c7c61186e0d781")
+    assert id == "b6a7ff03f2574cd9b5c7c61186e0d781"
 
 def test_ensure_service_present_when_present_check():
     """ ensure_services_present when the service is present, check mode"""
@@ -146,7 +145,7 @@ def test_ensure_service_present_when_present_check():
 
     # Assertions
     assert not changed
-    assert_equal(id, "b6a7ff03f2574cd9b5c7c61186e0d781")
+    assert id=="b6a7ff03f2574cd9b5c7c61186e0d781"
 
 
 def test_ensure_service_present_when_absent():
@@ -166,7 +165,7 @@ def test_ensure_service_present_when_absent():
 
     # Assertions
     assert changed
-    assert_equal(id, "a7ebed35051147d4abbe2ee049eeb346")
+    assert id=="a7ebed35051147d4abbe2ee049eeb346"
     keystone.services.create.assert_called_with(name=name,
                                                 service_type=service_type,
                                                 description=description)
@@ -189,7 +188,7 @@ def test_ensure_service_present_when_absent_check():
 
     # Assertions
     assert changed
-    assert_equal(id, None)
+    assert id==None
     assert not keystone.services.create.called
 
 
@@ -199,7 +198,7 @@ def test_get_endpoint_present():
 
     endpoint = keystone_service.get_endpoint(keystone, "keystone")
 
-    assert_equal(endpoint.id, "600759628a214eb7b3acde39b1e85180")
+    assert endpoint.id=="600759628a214eb7b3acde39b1e85180"
 
 
 def test_ensure_endpoint_present_when_present():
@@ -220,7 +219,7 @@ def test_ensure_endpoint_present_when_present():
 
     # Assertions
     assert not changed
-    assert_equal(id, "600759628a214eb7b3acde39b1e85180")
+    assert id=="600759628a214eb7b3acde39b1e85180"
 
 
 def test_ensure_endpoint_present_when_present_check():
@@ -240,7 +239,7 @@ def test_ensure_endpoint_present_when_present_check():
 
     # Assertions
     assert not changed
-    assert_equal(id, "600759628a214eb7b3acde39b1e85180")
+    assert id=="600759628a214eb7b3acde39b1e85180"
 
 
 def test_ensure_endpoint_present_when_absent():
@@ -277,7 +276,7 @@ def test_ensure_endpoint_present_when_absent():
 
     # Assertions
     assert changed
-    assert_equal(id, "622386d836b14fd986d9cec7504d208a")
+    assert id=="622386d836b14fd986d9cec7504d208a"
     keystone.endpoints.create.assert_called_with(
         service_id="0ad62de6cfe044c7a77ad3a7f2851b5d",
          publicurl="http://192.168.206.130:8774/v2/%(tenant_id)s",
@@ -311,6 +310,5 @@ def test_ensure_endpoint_present_when_absent_check():
 
     # Assertions
     assert changed
-    assert_is_none(id)
+    assert id is None
     assert not keystone.endpoints.create.called
-
