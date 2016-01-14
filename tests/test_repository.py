@@ -3,7 +3,7 @@
 # @(#)test_repository.py
 #
 #
-# Copyright (C) 2013 S3IT, University of Zurich. All rights reserved.
+# Copyright (C) 2013, 2016 S3IT, University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -234,9 +234,7 @@ class YamlRepositoryTests(unittest.TestCase):
         nt.assert_true(cluster.nodes['foo'][0].name, 'foo123')
 
 
-# Note: do not subclass from unittest.TestCase if you want to use test
-# generators.
-class TestMultiDiskRepository(object):
+class TestMultiDiskRepository(unittest.TestCase):
     def setUp(self):
         self.path = tempfile.mkdtemp()
 
