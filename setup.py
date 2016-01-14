@@ -61,6 +61,7 @@ required_packages = [
     'ansible~=1.9.4',
     'voluptuous>=0.8.2',
     'configobj',
+    'coloredlogs',
     # EC2 clouds
     'boto',
     # OpenStack clouds
