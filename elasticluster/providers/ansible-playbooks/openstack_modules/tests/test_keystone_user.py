@@ -1,6 +1,5 @@
 import keystone_user
 import mock
-from nose.tools import assert_equal, assert_is_none
 
 
 def setup_tenant_user_role():
@@ -57,7 +56,7 @@ def test_ensure_tenant_exists_when_present():
 
     # Assertions
     assert not changed
-    assert_equal(id, "21b505b9cbf84bdfba60dc08cc2a4b8d")
+    assert id=="21b505b9cbf84bdfba60dc08cc2a4b8d"
 
 
 def test_ensure_tenant_exists_when_present_check():
@@ -73,7 +72,7 @@ def test_ensure_tenant_exists_when_present_check():
 
     # Assertions
     assert not changed
-    assert_equal(id, "21b505b9cbf84bdfba60dc08cc2a4b8d")
+    assert id=="21b505b9cbf84bdfba60dc08cc2a4b8d"
 
 
 def test_ensure_tenant_exists_when_absent():
@@ -90,7 +89,7 @@ def test_ensure_tenant_exists_when_absent():
 
     # Assertions
     assert changed
-    assert_equal(id, "7c310f797aa045898e2884a975ab32ab")
+    assert id=="7c310f797aa045898e2884a975ab32ab"
     keystone.tenants.create.assert_called_with(tenant_name="bar",
                                                description="The bar tenant",
                                                enabled=True)
@@ -110,7 +109,7 @@ def test_ensure_tenant_exists_when_absent_check():
 
     # Assertions
     assert changed
-    assert_is_none(id)
+    assert id is None
     assert not keystone.tenants.create.called
 
 
@@ -130,7 +129,7 @@ def test_ensure_user_exists_when_present():
 
     # Assertions
     assert not changed
-    assert_equal(id, "24073d9426ab4bc59527955d7c486179")
+    assert id=="24073d9426ab4bc59527955d7c486179"
 
 
 def test_ensure_user_exists_when_present_check():
@@ -149,7 +148,7 @@ def test_ensure_user_exists_when_present_check():
 
     # Assertions
     assert not changed
-    assert_equal(id, "24073d9426ab4bc59527955d7c486179")
+    assert id=="24073d9426ab4bc59527955d7c486179"
 
 
 def test_ensure_user_exists_when_absent():
@@ -173,7 +172,7 @@ def test_ensure_user_exists_when_absent():
 
     # Assertions
     assert changed
-    assert_equal(id, "5ce4b6ef2e814a4897907cc6db879536")
+    assert id=="5ce4b6ef2e814a4897907cc6db879536"
     keystone.users.create.assert_called_with(
         name='skippyjonjones',
         password='1234567',
@@ -202,7 +201,7 @@ def test_ensure_user_exists_when_absent_check():
 
     # Assertions
     assert changed
-    assert_is_none(id)
+    assert id is None
     assert not keystone.users.create.called
 
 
@@ -225,7 +224,7 @@ def test_ensure_role_exists_when_present():
 
     # Assertions
     assert not changed
-    assert_equal(id, "34a699ab89d04c38894bbf3d998e5229")
+    assert id=="34a699ab89d04c38894bbf3d998e5229"
     assert not keystone.roles.create.called
 
 
@@ -249,7 +248,7 @@ def test_ensure_role_exists_when_present_check():
 
     # Assertions
     assert not changed
-    assert_equal(id, "34a699ab89d04c38894bbf3d998e5229")
+    assert id=="34a699ab89d04c38894bbf3d998e5229"
     assert not keystone.roles.create.called
 
 
@@ -271,7 +270,7 @@ def test_ensure_role_exists_when_role_is_absent():
 
     # Assertions
     assert changed
-    assert_equal(id, "40b14f9c2d114b38b3f6bced49a792b8")
+    assert id=="40b14f9c2d114b38b3f6bced49a792b8"
     keystone.roles.create.assert_called_with("webuser")
 
 
@@ -293,7 +292,7 @@ def test_ensure_role_exists_when_role_is_absent_check():
 
     # Assertions
     assert changed
-    assert_equal(id, None)
+    assert id is None
     assert not keystone.roles.create.called
 
 
@@ -313,7 +312,7 @@ def test_ensure_role_exists_when_role_is_present_but_not_associated():
 
     # Assertions
     assert changed
-    assert_equal(id, "34a699ab89d04c38894bbf3d998e5229")
+    assert id=="34a699ab89d04c38894bbf3d998e5229"
     assert not keystone.roles.create.called
 
 
@@ -334,7 +333,7 @@ def test_ensure_role_exists_when_role_is_present_but_not_associated_check():
 
     # Assertions
     assert changed
-    assert_is_none(id)
+    assert id is None
     assert not keystone.roles.create.called
 
 
@@ -353,8 +352,7 @@ def test_dispatch_tenant_when_present(mock_ensure_tenant_exists):
     # Assertions
     mock_ensure_tenant_exists.assert_called_with(keystone, "bar",
                                                 "This is a bar", False)
-    assert_equal(res,
-        dict(changed=True, id="34469137412242129cd908e384717794"))
+    assert (res == dict(changed=True, id="34469137412242129cd908e384717794"))
 
 
 def test_change_tenant_description():
@@ -368,7 +366,7 @@ def test_change_tenant_description():
 
     # Assertions
     assert changed
-    assert_equal(id, "21b505b9cbf84bdfba60dc08cc2a4b8d")
+    assert id=="21b505b9cbf84bdfba60dc08cc2a4b8d"
 
 
 @mock.patch('keystone_user.ensure_user_exists')
@@ -389,8 +387,7 @@ def test_dispatch_user_when_present(mock_ensure_user_exists):
                                                "12345", "admin@example.com",
                                                "acme", False)
 
-    assert_equal(res,
-        dict(changed=True, id="0a6f3697fc314279b1a22c61d40c0919"))
+    assert (res == dict(changed=True, id="0a6f3697fc314279b1a22c61d40c0919"))
 
 
 @mock.patch('keystone_user.ensure_role_exists')
@@ -407,5 +404,4 @@ def test_dispatch_role_present(mock_ensure_role_exists):
     # Assertions
     mock_ensure_role_exists.assert_called_with(keystone, "root",
                                                "acme", "admin", False)
-    assert_equal(res,
-        dict(changed=True, id="7df22b53d9c4405f92032c802178a31e"))
+    assert (res == dict(changed=True, id="7df22b53d9c4405f92032c802178a31e"))

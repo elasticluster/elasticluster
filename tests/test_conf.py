@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013, 2015 S3IT, University of Zurich
+#   Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -15,10 +15,14 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
+from __future__ import absolute_import
+
 __author__ = '''
 Nicolas Baer <nicolas.baer@uzh.ch>,
 Riccardo Murri <riccardo.murri@uzh.ch>
 '''
+
 
 import copy
 import ConfigParser
@@ -28,7 +32,6 @@ import tempfile
 import unittest
 import sys
 
-import nose.tools as nt
 from voluptuous import Invalid, MultipleInvalid
 
 from elasticluster.conf import ConfigReader, ConfigValidator, Configurator
@@ -36,6 +39,10 @@ from elasticluster.cluster import Node
 from elasticluster.exceptions import ClusterNotFound
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.providers.ec2_boto import BotoCloudProvider
+
+import pytest
+
+from helpers import Configuration
 
 
 def minimal_configuration(valid_path):
@@ -126,101 +133,6 @@ def minimal_configuration(valid_path):
     cfg.set('login/log1', 'user_key_public', valid_path)
 
     return cfg
-
-
-class Configuration(object):
-
-    def get_config(self, path):
-        config = {
-            "mycluster": {
-                "setup": {
-                    "provider": "ansible",
-                    "playbook_path": "%(ansible_pb_dir)s/site.yml",
-                    "frontend_groups": "slurm_master",
-                    "compute_groups": "slurm_clients",
-                    },
-                "cloud": {
-                    "provider": "ec2_boto",
-                    "ec2_url": "http://cloud.gc3.uzh.ch:8773/services/Cloud",
-                    "ec2_access_key": "***fill in your data here***",
-                    "ec2_secret_key": "***fill in your data here***",
-                    "ec2_region": "nova",
-                    },
-                "login": {
-                    "image_user": "gc3-user",
-                    "image_user_sudo": "root",
-                    "image_sudo": "True",
-                    "user_key_name": "***name of SSH keypair on Hobbes***",
-                    "user_key_private": path,
-                    "user_key_public": path,
-                    },
-                "cluster": {
-                    "cloud": "hobbes",
-                    "login": "gc3-user",
-                    "setup_provider": "my-slurm-cluster",
-                    "frontend_nodes": "1",
-                    "compute_nodes": "2",
-                    },
-                "nodes": {
-                    "frontend": {
-                        "security_group": "default",
-                        "flavor": "m1.tiny",
-                        "image_id": "ami-00000048",
-                        },
-                    "compute": {
-                        "security_group": "default",
-                        "flavor": "m1.large",
-                        "image_id": "ami-00000048",
-                        }
-                    }
-                },
-
-            "os-cluster": {
-                "setup": {
-                    "provider": "ansible",
-                    "playbook_path": "%(ansible_pb_dir)s/site.yml",
-                    "frontend_groups": "slurm_master",
-                    "compute_groups": "slurm_clients",
-                    },
-                "cloud": {
-                    "provider": "openstack",
-                    "auth_url": "http://cloud.gc3.uzh.ch:5000/v2.0",
-                    "username": "myusername",
-                    "password": "mypassword",
-                    "project_name": "myproject",
-                    },
-                "login": {
-                    "image_user": "gc3-user",
-                    "image_user_sudo": "root",
-                    "image_sudo": "True",
-                    "user_key_name": "***name of SSH keypair on Hobbes***",
-                    "user_key_private": path,
-                    "user_key_public": path,
-                    },
-                "cluster": {
-                    "cloud": "hobbes",
-                    "login": "gc3-user",
-                    "setup_provider": "my-slurm-cluster",
-                    "frontend_nodes": "1",
-                    "compute_nodes": "2",
-                    },
-                "nodes": {
-                    "frontend": {
-                        "security_group": "default",
-                        "flavor": "m1.tiny",
-                        "image_id": "ami-00000048",
-                        },
-                    "compute": {
-                        "security_group": "default",
-                        "flavor": "m1.large",
-                        "image_id": "ami-00000048",
-                        }
-                    }
-                }
-
-            }
-
-        return config
 
 
 class TestConfigurator(unittest.TestCase):
@@ -650,17 +562,17 @@ ssh_to=frontend
     def test_missing_options(self):
         cfg = minimal_configuration(self.path)
 
-        @nt.raises(Invalid, MultipleInvalid)
         def missing_option(section, option):
-            tmpcfg = minimal_configuration()
-            _, cfgfile = tempfile.mkstemp()
-            tmpcfg.remove_option(section, option)
-            with open(cfgfile, 'w') as fd:
-                tmpcfg.write(fd)
-            try:
-                config = Configurator.fromConfig(cfgfile)
-            finally:
-                os.unlink(cfgfile)
+            with pytest.raises(Invalid, MultipleInvalid):
+                tmpcfg = minimal_configuration()
+                _, cfgfile = tempfile.mkstemp()
+                tmpcfg.remove_option(section, option)
+                with open(cfgfile, 'w') as fd:
+                    tmpcfg.write(fd)
+                try:
+                    config = Configurator.fromConfig(cfgfile)
+                finally:
+                    os.unlink(cfgfile)
 
         for section in cfg.sections():
             for option, value in cfg.items(section):
@@ -854,5 +766,4 @@ class TestConfigurationFile(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import nose
-    nose.runmodule()
+    pytest.main(['-v', __file__])
