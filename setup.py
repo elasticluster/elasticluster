@@ -32,6 +32,27 @@ try:
 except ImportError:
     pass
 
+
+## auxiliary functions
+#
+def read_whole_file(path):
+    """
+    Return file contents as a string.
+    """
+    with open(path, 'r') as stream:
+        return stream.read()
+
+def read_file_lines(path):
+    """
+    Return list of file lines, stripped of leading and trailing
+    whitespace (including newlines), and of comment lines.
+    """
+    with open(path, 'r') as stream:
+        lines = [line.strip() for line in stream.readlines()]
+        return [line for line in lines
+                if line != '' and not line.startswith('#')]
+
+
 from setuptools.command import sdist
 
 # Newer versions of setuptools do not have `finders` attribute.
@@ -124,7 +145,7 @@ class Tox(TestCommand):
 #
 setup(
     name="elasticluster",
-    version="1.2.1.rc1",
+    version=read_whole_file("version.txt"),
     description="A command line tool to create, manage and setup computing clusters hosted on a public or private cloud infrastructure.",
     long_description=open('README.rst').read(),
     author="Services and Support for Science IT, University of Zurich",
