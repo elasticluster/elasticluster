@@ -42,7 +42,7 @@ from elasticluster.providers.ec2_boto import BotoCloudProvider
 
 import pytest
 
-from helpers import Configuration
+from _helpers.config import Configuration
 
 
 def minimal_configuration(valid_path):

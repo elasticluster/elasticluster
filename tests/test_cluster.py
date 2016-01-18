@@ -34,7 +34,7 @@ from elasticluster.exceptions import ClusterError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 from elasticluster.repository import PickleRepository
 
-from helpers import Configuration
+from _helpers.config import Configuration
 
 
 class TestCluster(unittest.TestCase):
