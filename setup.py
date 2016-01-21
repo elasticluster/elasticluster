@@ -131,7 +131,7 @@ class Tox(TestCommand):
 #
 setup(
     name="elasticluster",
-    version="1.2.1.rc1",
+    version="1.2.1rc1",
     description="A command line tool to create, manage and setup computing clusters hosted on a public or private cloud infrastructure.",
     long_description=open('README.rst').read(),
     author="Services and Support for Science IT, University of Zurich",
