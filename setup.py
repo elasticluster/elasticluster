@@ -32,6 +32,13 @@ try:
 except ImportError:
     pass
 
+# ensure we use a recent enough version of setuptools; CentOS7 still
+# ships with 0.9.8!  Setuptools 8.0 is the first release to fully
+# implement PEP 440 version specifiers.
+from ez_setup import use_setuptools
+use_setuptools(version='8.0')
+
+
 from setuptools.command import sdist
 
 # Newer versions of setuptools do not have `finders` attribute.
