@@ -65,7 +65,7 @@ from setuptools import setup, find_packages
 required_packages = [
     'PyCLI',
     'paramiko',
-    'ansible>=1.9.4, <2.0.0',
+    'ansible~=1.9.4',
     'voluptuous>=0.8.2',
     'configobj',
     'coloredlogs',
