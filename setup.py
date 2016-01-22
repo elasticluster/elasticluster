@@ -49,8 +49,6 @@ try:
 except AttributeError:
     pass
 
-from setuptools import setup, find_packages
-
 
 ## auxiliary functions
 #
@@ -84,6 +82,9 @@ def ansible_pb_files():
         ansible_data.append((os.path.join('share', dirname), tmp))
     return ansible_data
 
+
+## state run-time dependencies
+#
 
 required_packages = [
     'PyCLI',
@@ -152,6 +153,8 @@ class Tox(TestCommand):
 
 ## real setup description begins here
 #
+from setuptools import setup, find_packages
+
 setup(
     name="elasticluster",
     version=read_whole_file("version.txt"),
