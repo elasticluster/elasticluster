@@ -32,6 +32,19 @@ try:
 except ImportError:
     pass
 
+# ensure we use a recent enough version of setuptools; CentOS7 still
+# ships with 0.9.8!  Setuptools 8.0 is the first release to fully
+# implement PEP 440 version specifiers.
+from ez_setup import use_setuptools
+use_setuptools(version='8.0')
+
+from setuptools.command import sdist
+# Newer versions of setuptools do not have `finders` attribute.
+if hasattr(sdist, 'finders'):
+    del sdist.finders[:]
+
+from setuptools import setup, find_packages
+
 
 ## auxiliary functions
 #
@@ -52,15 +65,7 @@ def read_file_lines(path):
         return [line for line in lines
                 if line != '' and not line.startswith('#')]
 
-
-from setuptools.command import sdist
-
-# Newer versions of setuptools do not have `finders` attribute.
-if hasattr(sdist, 'finders'):
-    del sdist.finders[:]
-
 ANSIBLE_PB_DIR = 'elasticluster/providers/ansible-playbooks'
-
 
 def ansible_pb_files():
     basedir = os.path.dirname(__file__)
@@ -73,8 +78,6 @@ def ansible_pb_files():
         ansible_data.append((os.path.join('share', dirname), tmp))
     return ansible_data
 
-
-from setuptools import setup, find_packages
 
 required_packages = [
     'PyCLI',
