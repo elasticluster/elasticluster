@@ -2,4 +2,4 @@
 # any local modifications will be overwritten!
 #
 
-/home {{hostvars[inventory_hostname].ansible_default_ipv4.network}}/{{hostvars[inventory_hostname].ansible_default_ipv4.netmask}}(rw,sync,no_subtree_check,no_root_squash)
+/home {{hostvars[inventory_hostname].ansible_default_ipv4.network}}/{{hostvars[inventory_hostname].ansible_default_ipv4.netmask}}(rw,async,no_subtree_check,no_root_squash)
