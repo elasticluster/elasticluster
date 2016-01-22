@@ -38,10 +38,16 @@ except ImportError:
 from ez_setup import use_setuptools
 use_setuptools(version='8.0')
 
-from setuptools.command import sdist
-# Newer versions of setuptools do not have `finders` attribute.
-if hasattr(sdist, 'finders'):
+# Since 10.2.1, `setuptools.command.sdist` does no longer have a
+# `finders` attribute and CVS/SVN support is no longer active by
+# default.  Still, since we only require an older release (see above),
+# we might need to monkeypatch `setuptools.command.sdist` to make it
+# honor plain old `MANIFEST.in`
+try:
+    from setuptools.command import sdist
     del sdist.finders[:]
+except AttributeError:
+    pass
 
 from setuptools import setup, find_packages
 
