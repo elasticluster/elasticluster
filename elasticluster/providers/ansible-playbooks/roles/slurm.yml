@@ -41,7 +41,7 @@
   tasks: 
     - include: common/tasks/nfs.yml
 
-    - nfsexport: path=/home dest=/etc/exports clients="{{groups.slurm_clients}}" options=rw,no_root_squash,sync state=exported
+    - nfsexport: path=/home dest=/etc/exports clients="{{groups.slurm_clients}}" options=rw,no_root_squash,async state=exported
       notify: 
         - ensure nfs service is running
         - reload exports

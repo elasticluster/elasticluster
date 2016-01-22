@@ -6,7 +6,7 @@
 # nfspath:     the remote filesystem to mount from the nfs server
 # nfsmount:    the directory where you want to mount the filesystem.
 # nfsoptions:  options to use when mounting the filesystem. If not
-#              defined, `rw,sync` will be used.
+#              defined, `rw,async` will be used.
 #
 # Please note that the task will check if the {{nfsmount}} directory
 # exists and create it otherwise.
@@ -45,7 +45,7 @@
   tags: 
     - nfs
 
-- shell: if [ -z "$nfsoptions" ]; then  echo rw,sync,nfsvers=3; else echo $nfsoptions; fi
+- shell: if [ -z "$nfsoptions" ]; then  echo rw,async,nfsvers=3; else echo $nfsoptions; fi
   register: _nfsopts
   sudo: false
   connection: local

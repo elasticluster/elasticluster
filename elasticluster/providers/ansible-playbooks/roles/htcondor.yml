@@ -20,7 +20,7 @@
   tasks: 
     - include: common/tasks/nfs.yml
 
-    - nfsexport: path=/home dest=/etc/exports clients="{{groups.condor_workers}}" options=rw,no_root_squash,sync
+    - nfsexport: path=/home dest=/etc/exports clients="{{groups.condor_workers}}" options=rw,no_root_squash,async
       notify: 
         - ensure nfs service is running
         - reload exports
