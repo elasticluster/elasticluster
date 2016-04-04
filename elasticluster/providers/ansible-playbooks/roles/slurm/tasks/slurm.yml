@@ -14,8 +14,8 @@
     - /var/log/{{slurm_name}}
     - /var/run/{{slurm_name}}
 
-- name: Ensure SLURM is running
-  service: name={{slurm_name}} state=started
-  tags: 
-    - slurm
+#- name: Ensure SLURM is running
+#  service: name={{slurm_name}} state=started
+#  tags: 
+#    - slurm
 

@@ -67,6 +67,11 @@
   tags: 
     - slurm
 
+- name: Ensure SLURM is running
+  service: name={{slurm_name}} state=started
+  tags: 
+    - slurm
+
 - name: Create cluster in accounting database
   shell: sacctmgr list cluster -p -n | grep ^gc3cluster || sacctmgr -i -Q add cluster gc3cluster
   tags:
@@ -81,3 +86,4 @@
   shell: sacctmgr list user Account=gc3 -i -p -n | grep '^{{ansible_ssh_user}}|gc3|' || sacctmgr -i -Q add user {{ansible_ssh_user}} DefaultAccount=gc3
   tags:
     - slurm
+
