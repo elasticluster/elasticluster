@@ -62,7 +62,7 @@
     - slurm-sjobexit
     - slurm-sjstat
     - slurm-slurmdbd
-    - slurm-slurmdbd-direct
+    - slurm-slurmdb-direct
     - slurm-sql
     - slurm-torque
   when: is_centos_7
