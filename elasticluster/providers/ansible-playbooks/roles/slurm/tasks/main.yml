@@ -22,7 +22,7 @@
   when: is_centos_6
 
 - name: Install required SLURM packages (CentOS 7)
-  action: copy src=etc/yum.repos.d/copr-slurm.repo dest=/etc/yum.repos.d/copr-slurm.repo owner=root
+  action: copy src=slurm/files/etc/yum.repos.d/copr-slurm.repo dest=/etc/yum.repos.d/copr-slurm.repo owner=root
   when: is_centos_7
 
 - name: Download SLURM source package (CentOS 6)
