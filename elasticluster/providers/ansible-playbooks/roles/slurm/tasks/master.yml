@@ -21,7 +21,7 @@
   with_items:
     - mysql-server
     - MySQL-python
-  when: is_centos
+  when: is_centos_6
   tags:
     - slurm
 
@@ -36,7 +36,7 @@
 
 - name: Ensure MySQL daemon is up (CentOS)
   service: name=mysqld state=started
-  when: is_centos
+  when: is_centos_6
   tags:
     - slurm
 
