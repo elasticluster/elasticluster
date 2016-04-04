@@ -1,0 +1,8 @@
+[verdurin-slurm]
+name=Copr repo for slurm owned by verdurin
+baseurl=https://copr-be.cloud.fedoraproject.org/results/verdurin/slurm/epel-7-$basearch/
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://copr-be.cloud.fedoraproject.org/results/verdurin/slurm/pubkey.gpg
+enabled=1
+enabled_metadata=1

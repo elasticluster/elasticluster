@@ -1,3 +1,7 @@
-- name: configure EPEL repository
+- name: configure EPEL repository (CentOS 6)
   action: copy src=etc/yum.repos.d/epel.repo dest=/etc/yum.repos.d/epel.repo owner=root
-  when: is_centos
+  when: is_centos_6
+
+- name: configure EPEL repository (CentOS 7)
+  yum: name=epel-release state=latest
+  when: is_centos_7

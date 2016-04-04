@@ -25,9 +25,24 @@
   tags:
     - slurm
 
+- name: Install MariaDB, used for accounting
+  yum: name={{item}} state=installed
+  with_items:
+    - mariadb-server
+    - MySQL-python
+  when: is_centos_7
+  tags:
+    - slurm
+
 - name: Ensure MySQL daemon is up (CentOS)
   service: name=mysqld state=started
   when: is_centos
+  tags:
+    - slurm
+
+- name: Ensure MariaDB daemon is up (CentOS)
+  service: name=mariadb state=started
+  when: is_centos_7
   tags:
     - slurm
 
