@@ -68,7 +68,7 @@
     - slurm
 
 - name: Ensure SLURM is running
-  service: name={{slurm_name}} state=started
+  service: name={{slurm_service_master}} state=started
   tags: 
     - slurm
 

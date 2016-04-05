@@ -16,6 +16,8 @@
 
     - set_fact:
         slurm_name: slurm
+        slurm_service_master: slurmctld
+        slurm_service_compute: slurmd
         slurmdbd_name: slurmdbd
       when: is_centos
       tags: slurm
