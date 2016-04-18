@@ -14,8 +14,10 @@
     - htcondor
 
 - name: update package cache
-  action: command apt-get update
-  when: repository_updated.changed
+  apt:
+    update_cache=yes
+    cache_valid_time=0
+  when: is_debian_or_ubuntu and repository_updated.changed
   tags:
     - htcondor
 
@@ -29,7 +31,12 @@
   when: is_debian_or_ubuntu
 
 - name: install HTCondor w/ preconfigured template
-  action: command env DEBCONF_DB_FALLBACK=File{/tmp/htcondor.debconf} apt-get --yes --force-yes install condor
+  apt:
+    name=condor
+    state=present
+    force=yes
+  environment:
+    DEBCONF_DB_FALLBACK: 'File{/tmp/htcondor.debconf}'
   tags: 
     - htcondor
   when: is_debian_or_ubuntu
