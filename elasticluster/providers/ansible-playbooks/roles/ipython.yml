@@ -57,7 +57,7 @@
 
 - name: IPython controller Playbook (standard user operations)
   hosts: ipython_controller:ipython_engine
-  sudo: False
+  become: False
   tasks:
 
     - name: create ipython profile

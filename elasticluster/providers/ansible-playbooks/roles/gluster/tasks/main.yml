@@ -40,7 +40,7 @@
   shell: if [ "{{gluster_stripes|default('x')}}" = "x" ]; then echo ""; else echo "stripe {{gluster_stripes|default('')}}"; fi
   register: gluster_stripes
   connection: local
-  sudo: false
+  become: false
   tags:
     - gluster
 
@@ -48,7 +48,7 @@
   shell: if [ "{{gluster_replicas | default('x')}}" = "x" ]; then echo ""; else echo "replica {{gluster_replicas|default('')}}"; fi
   register: gluster_replicas
   connection: local
-  sudo: false
+  become: false
   tags:
     - gluster
 
@@ -56,7 +56,7 @@
   shell: if [  "{{gluster_transport|default('x')}}" = "x" ]; then echo "transport tcp"; else echo "transport {{gluster_transport|default('')}}"; fi
   register: gluster_transport
   connection: local
-  sudo: false
+  become: false
   tags:
     - gluster
 
@@ -64,7 +64,7 @@
   shell: echo {{groups.gluster_data | join(',')}} | sed "s%,%:{{gluster_brick_dir}} %g; s%$%:{{gluster_brick_dir}}%"
   register: gluster_bricks
   connection: local
-  sudo: false
+  become: false
   tags:
     - gluster
 

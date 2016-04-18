@@ -47,7 +47,7 @@
 
 - shell: if [ -z "$nfsoptions" ]; then  echo rw,async; else echo $nfsoptions; fi
   register: _nfsopts
-  sudo: false
+  become: false
   connection: local
   tags:
     - nfs
