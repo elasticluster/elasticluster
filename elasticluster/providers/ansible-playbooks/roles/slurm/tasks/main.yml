@@ -1,5 +1,5 @@
 ---
-- name: Install required SLURM packages (Debain/Ubuntu)
+- name: Install required SLURM packages (Debian/Ubuntu)
   action: apt pkg={{item}} update_cache=yes force=yes state=latest
   with_items:
     - slurm-llnl
