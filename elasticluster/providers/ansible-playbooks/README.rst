@@ -40,20 +40,11 @@ The structure of the repository follow this schema::
     +-- modules
     |   # This directory contains ansible modules developed by GC3
     |
-    +-- hosts     # GC3 inventory file
-    +-- examples  # directory containing examples and code snippets.
+    +-- examples
+    |   # directory containing examples and code snippets.
+    |
     +-- README.rst
 
-
-GC3-specific configuration
---------------------------
-
-Some playbooks, like ``roles/gc3.yml``, only work for hosts in the
-`gc3` group. You can either assign an host to that group in the
-inventory file, or you can set a variable `gc3group` equals to `gc3`
-(either from the inventory file or from the command line by using the
-`-e` option), and the ``site.yml`` playbook will assign the host to
-the `gc3` group.
 
 Extra modules
 -------------
