@@ -41,7 +41,7 @@
   vars_files:
     - common/vars/main.yml
   tasks: 
-    - include: common/tasks/nfs-clients.yml nfsserver={{groups.pbs_master[0]}} nfspath=/home nfsmount=/home nfsoptions=rw,async,nfsvers=3
+    - include: common/tasks/nfs-clients.yml nfsserver={{groups.pbs_master[0]}} nfspath=/home nfsmount=/home nfsoptions=rw,async
     - include: pbs+maui/tasks/clients.yml
     - include: cluster/tasks/packages.yml
   handlers:
