@@ -2,7 +2,7 @@
 - hosts: gluster_data:gluster_client
   name: Basic setup
   vars_files:
-    - vars/os
+    - common/vars/main.yml
   tasks:
     - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
     - include: common/tasks/iptables.yml trusted_hosts={{groups.all}} default_accept=1
@@ -25,7 +25,7 @@
 - hosts: gluster_data
   name: Gluster configuration
   vars_files:
-    - vars/os
+    - common/vars/main.yml
   vars:
     - gluster_brick_dir: /srv/gluster/brick
     - gluster_volume: default
@@ -35,7 +35,7 @@
 - hosts: gluster_client
   name: Mount gluster filesystem
   vars_files:
-    - vars/os
+    - common/vars/main.yml
   vars:
     - gluster_volume: default
   tasks:

@@ -1,2 +1,6 @@
 ---
-- include: gc3repo.yml
+
+- include: deb.yml
+- include: epel_repo.yml
+- include: hosts.yml hosts={{groups.all}}
+- include: hostname.yml

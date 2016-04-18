@@ -2,7 +2,7 @@
 - name: HTCondor common Playbook
   hosts: condor_master:condor_workers
   vars_files:
-    - vars/os
+    - common/vars/main.yml
   tasks: 
     - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
     - include: common/tasks/iptables.yml trusted_hosts={{groups.all}} default_accept=1
@@ -16,7 +16,7 @@
 - name: HTCondor master Playbook
   hosts: condor_master
   vars_files:
-    - vars/os
+    - common/vars/main.yml
   tasks: 
     - include: common/tasks/nfs.yml
 
@@ -33,7 +33,7 @@
 - name: HTCondor worker nodes Playbook
   hosts: condor_workers
   vars_files:
-    - vars/os
+    - common/vars/main.yml
   tasks: 
     - include: common/tasks/nfs-clients.yml nfsserver={{groups.condor_master[0]}} nfspath=/home nfsmount=/home
   handlers:

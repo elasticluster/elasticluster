@@ -6,7 +6,7 @@
     slurm_src_filename: "{{slurm_source_filename|default('slurm-15.08.4.tar.bz2')}}"
     slurm_pkg_name: "{{slurm_package_name|default('slurm-15.08.4-1.el6.x86_64.rpm')}}"
   vars_files:
-    - vars/os
+    - common/vars/main.yml
   tasks:
     - set_fact:
         slurm_name: slurm-llnl
@@ -37,7 +37,7 @@
     slurmdbd_mysql_user: "{{slurm_mysql_user|default('slurm')}}"
     slurmdbd_mysql_pwd: "{{slurm_mysql_pwd|default('ua7diKee')}}"
   vars_files:
-    - vars/os
+    - common/vars/main.yml
   tasks: 
     - include: common/tasks/nfs.yml
 
@@ -57,7 +57,7 @@
 - name: Slurm worker nodes Playbook
   hosts: slurm_clients
   vars_files:
-    - vars/os
+    - common/vars/main.yml
   tasks: 
     - include: common/tasks/nfs-clients.yml nfsserver={{groups.slurm_master[0]}} nfspath=/home nfsmount=/home
   handlers:

@@ -2,7 +2,7 @@
 - hosts: hadoop_namenode:hadoop_secnamenode:hadoop_datanode:hadoop_jobtracker:hadoop_tasktracker
   name: Prerequisites for Hadoop
   vars_files:
-    - vars/os
+    - common/vars/main.yml
   tasks:
     - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
     - include: common/tasks/iptables.yml trusted_hosts={{groups.all}} default_accept=1
@@ -12,7 +12,7 @@
 - hosts: hadoop_namenode:hadoop_secnamenode:hadoop_datanode:hadoop_jobtracker:hadoop_tasktracker
   name: Install Hadoop
   vars_files:
-    - vars/os
+    - common/vars/main.yml
   vars:
     deburl: "{{hadoop_deb_url|default('http://apache.cs.utah.edu/hadoop/common/hadoop-1.2.1/hadoop_1.2.1-1_x86_64.deb')}}"
     rpmurl: "{{hadoop_rpm_url|default('http://apache.cs.utah.edu/hadoop/common/hadoop-1.2.1/hadoop-1.2.1-1.x86_64.rpm')}}"
