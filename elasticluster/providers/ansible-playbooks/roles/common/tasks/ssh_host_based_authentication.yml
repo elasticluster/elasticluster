@@ -1,33 +1,58 @@
 ---
-# These steps are needed for docker machines
-- name: Overwrite /sbin/initctl
-  shell: dpkg-divert --local --rename --add /sbin/initctl creates=/sbin/initctl.distrib
-  when: is_debian_or_ubuntu and is_docker_container is defined
-  notify: kill-HUP sshd
 
-- name: Link /sbin/initctl to /bin/true
-  file: src=/bin/true dest=/sbin/initctl state=link
+- block:
+    # These steps are needed for docker machines
+    - name: Overwrite /sbin/initctl
+      shell: dpkg-divert --local --rename --add /sbin/initctl creates=/sbin/initctl.distrib
+      notify: kill-HUP sshd
+
+    - name: Link /sbin/initctl to /bin/true
+      file: src=/bin/true dest=/sbin/initctl state=link
+
   when: is_debian_or_ubuntu and is_docker_container is defined
 
+  
 - name: Setup SSH known hosts file
-  action: template dest=/etc/ssh/ssh_known_hosts src=common/templates/etc/ssh/ssh_known_hosts.j2 owner=root group=root mode=0644
+  template:
+    dest=/etc/ssh/ssh_known_hosts
+    src=roles/common/templates/etc/ssh/ssh_known_hosts.j2
+    owner=root
+    group=root
+    mode=0644
 
+    
 - name: Setup /etc/ssh/shosts.equiv file
-  action: template dest=/etc/ssh/shosts.equiv src=common/templates/etc/ssh/shosts.equiv.j2 owner=root group=root
+  template:
+    dest=/etc/ssh/shosts.equiv
+    src=roles/common/templates/etc/ssh/shosts.equiv.j2
+    owner=root
+    group=root
+
 
 - name: Setup /root/.shosts file
-  action: template dest=/root/.shosts src=common/templates/etc/ssh/shosts.equiv.j2 owner=root group=root
+  template:
+    dest=/root/.shosts
+    src=roles/common/templates/etc/ssh/shosts.equiv.j2
+    owner=root
+    group=root
 
-- name: Setup SSH host based authentication (server configuration file; enable `HostbasedAuthentication` option)
-  action: lineinfile dest=/etc/ssh/sshd_config regexp='HostbasedAuthentication.*' line="HostbasedAuthentication yes"
+    
+- name: Setup SSH host based authentication (server configuration file)
+  lineinfile:
+    dest=/etc/ssh/sshd_config
+    regexp='{{item.key}}.*'
+    line="{{item.key}} {{item.value}}"
+  with_items:
+    - { key: "HostbasedAuthentication", value: 'yes' }
+    - { key: "IgnoreRhosts",            value: 'no'  }
   notify: restart sshd
 
-- name: Setup SSH host based authentication (server configuration file; disable `IgnoreRhosts` option)
-  action: lineinfile dest=/etc/ssh/sshd_config regexp='IgnoreRhosts.*' line="IgnoreRhosts no"
-  notify: restart sshd
-
-- name: Setup SSH host based authentication (client configuration file; enable `HostbasedAuthentication` option)
-  action: lineinfile dest=/etc/ssh/ssh_config regexp='HostbasedAuthentication.*' line="HostbasedAuthentication yes"
-
-- name: Setup SSH host based authentication (client configuration file; enable `EnableSSHKeysign` option)
-  action: lineinfile dest=/etc/ssh/ssh_config regexp='EnableSSHKeysign.*' line="EnableSSHKeysign yes"
+  
+- name: Setup SSH host based authentication (server configuration file)
+  lineinfile:
+    dest=/etc/ssh/ssh_config
+    regexp='{{item.key}}.*'
+    line="{{item.key}} {{item.value}}"
+  with_items:
+    - { key: 'HostbasedAuthentication', value: 'yes' }
+    - { key: 'EnableSSHKeysign',        value: 'yes' }

@@ -1,5 +1,4 @@
-{% if hosts %}
-{% for host in hosts %}
+{% for host in groups.all %}
 {% if 'ansible_ssh_host_key_dsa_public' in hostvars[host] %}
 {{ host }},{{ hostvars[host].ansible_default_ipv4.address }} ssh-dsa {{ hostvars[host].ansible_ssh_host_key_dsa_public }}
 {% endif %}
@@ -7,15 +6,3 @@
 {{ host }},{{ hostvars[host].ansible_default_ipv4.address }} ssh-rsa {{ hostvars[host].ansible_ssh_host_key_rsa_public }}
 {% endif %}
 {% endfor %}
-
-{% else %}
-
-{% for host in groups['all'] %}
-{% if 'ansible_ssh_host_key_dsa_public' in hostvars[host] %}
-{{ host }},{{ hostvars[host].ansible_default_ipv4.address }} ssh-dsa {{ hostvars[host].ansible_ssh_host_key_dsa_public }}
-{% endif %}
-{% if 'ansible_ssh_host_key_rsa_public' in hostvars[host] %}
-{{ host }},{{ hostvars[host].ansible_default_ipv4.address }} ssh-rsa {{ hostvars[host].ansible_ssh_host_key_rsa_public }}
-{% endif %}
-{% endfor %}
-{% endif %}
