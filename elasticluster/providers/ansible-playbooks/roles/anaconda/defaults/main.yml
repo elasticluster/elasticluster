@@ -1,0 +1,21 @@
+---
+#
+# Defaults for installing Anaconda Python
+#
+
+# where to download the installer from
+anaconda_mirror : 'http://repo.continuum.io/archive'
+
+# Version of the Anaconda distribution to install
+anaconda_version : '4.0.0'
+
+# Anaconda comes with either a Python2 or a Python3 interpreter
+# -- choose which one you want here.
+anaconda_python_version : '2'
+
+# remove installer file after successful installation?
+anaconda_cleanup : False
+
+# Whether the Python interpreter from Anaconda should be made
+# the first match in users' shell $PATH 
+anaconda_in_path: True
