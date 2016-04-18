@@ -1,0 +1,11 @@
+---
+#
+# Variables for installing Anaconda Python.
+# All the values are derived from the constants defined in `defaults/main.yml`
+# 
+anaconda_name : 'Anaconda{{anaconda_python_version}}-{{anaconda_version}}-{{anaconda_platform}}'
+anaconda_installer_sh : '{{ansible_env.tmpdir|default("/tmp")}}/{{anaconda_name}}.sh'
+anaconda_installer_url : '{{anaconda_mirror}}/{{anaconda_name}}.sh'
+anaconda_platform : 'Linux-{{ansible_architecture}}'
+anaconda_home: '/opt/{{anaconda_name}}'
+#anaconda_home: '/opt/anaconda{{anaconda_python_version}}'
