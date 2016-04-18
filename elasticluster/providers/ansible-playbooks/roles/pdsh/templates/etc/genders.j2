@@ -1,0 +1,15 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+{% if hosts is defined -%}
+  {%- set hostnames = hosts|sort -%}
+{%- else -%}
+  {%- set hostnames = groups['all']|sort -%}
+{%- endif -%}
+
+{%- for host in hostnames -%}
+{% if host != 'localhost' %}
+{{ host }} {{ hostvars[host].group_names|sort|join(',') }}
+{% endif %}
+{%- endfor -%}

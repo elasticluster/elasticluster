@@ -4,6 +4,7 @@
   gather_facts: yes
   roles:
     - common
+    - pdsh
 
 # Run all other playbooks one by one, so they get a chance of doing
 # their setup depending on configured host groups
