@@ -5,7 +5,7 @@
     nfspath: /nfs/matlab/MATLAB
     nfsmount: /usr/local/MATLAB
   vars_files:
-    - vars/os
+    - common/vars/main.yml
   tasks:
     - action: file path=/usr/local/MATLAB state=directory
     - include: common/tasks/nfs-clients.yml

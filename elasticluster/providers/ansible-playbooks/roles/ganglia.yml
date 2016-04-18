@@ -2,7 +2,7 @@
 - name: Ganglia frontend/collector Playbook
   hosts: ganglia_master
   vars_files:
-    - vars/os
+    - common/vars/main.yml
   tasks:
     - include: common/tasks/deb.yml
     - include: ganglia/tasks/server.yml
@@ -14,7 +14,7 @@
 - name: Ganglia monitor Playbook
   hosts: ganglia_monitor
   vars_files:
-    - vars/os
+    - common/vars/main.yml
   tasks:
     - include: common/tasks/deb.yml
     - include: ganglia/tasks/client.yml

@@ -1,12 +1,12 @@
 ---
-- name: Collecting facts
+- name: Common setup for all hosts
   hosts: all
   gather_facts: yes
-  tasks:
-    - group_by: key="$gc3group"
+  roles:
+    - common
 
-- include: roles/gc3.yml
-- include: roles/common.yml
+# Run all other playbooks one by one, so they get a chance of doing
+# their setup depending on configured host groups
 - include: roles/slurm.yml
 - include: roles/jenkins.yml
 - include: roles/ganglia.yml
