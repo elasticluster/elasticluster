@@ -7,10 +7,10 @@ on the `Hobbes` cloud.
 
 The structure of the repository follow this schema::
 
-    |   # Group variables   
+    |   # Group variables
     +-- group_vars
     |   +-- foo  # variables automatically set for group `foo`
-    |   +-- bar  # variables automatically set for group `bar` 
+    |   +-- bar  # variables automatically set for group `bar`
     |
     |   # Host variables
     +-- host_vars
@@ -52,8 +52,9 @@ Extra modules
 Extra modules are defined in the ``modules`` directory. In order to
 use them you need to either run ``ansible-playbook`` with option ``-M
 modules``, **or** edit your ansible configuration file and update the
-`library` option, **or** set the environemnt variable
+`library` option, **or** set the environment variable
 ``ANSIBLE_LIBRARY``.
+
 
 SLURM configuration
 -------------------
@@ -62,7 +63,7 @@ In order to configure a slurm cluster, create an hosts file with::
 
     [slurm_master]
     hostname ansible_ssh_host=A.B.C.D
-    
+
     [slurm_clients]
     node1 ansible_ssh_host=A.B.C.D
     node2 ansible_ssh_host=A.B.C.D
@@ -72,10 +73,11 @@ then run::
 
     ansible-playbook -i <hostfile> site.yml
 
+
 Jenkins
 -------
 
-To configure jenkins, use an hostfile containing::
+To configure jenkins, use a hostfile containing::
 
     [jenkins]
     hostname ansible_ssh_host=A.B.C.D
@@ -87,6 +89,7 @@ then run::
 Please note that by default this will create jobs to test gc3pie. If
 you want to modify it, just check the variable `j_jobs` in
 `group_vars/jenkins``
+
 
 Ganglia
 -------
@@ -103,7 +106,7 @@ Hostfile to configure ganglia::
 
 
 `ganglia_master` group will install the ganglia web frontend and the
-`gmetad` daemon. 
+`gmetad` daemon.
 
 The `ganglia_monitor` group will install `gmond` and will configure it
 in order to send statistics to the `ganglia_master` node.
