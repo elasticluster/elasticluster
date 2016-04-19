@@ -39,6 +39,9 @@ from elasticluster.exceptions import TimeoutError, NodeNotFound, \
     InstanceError, ClusterError
 from elasticluster.repository import MemRepository
 
+SSH_PORT = 22
+IPV6_RE = re.compile('\[([a-f:A-F0-9]*[%[0-z]+]?)\](?::(\d+))?')
+
 class IgnorePolicy(paramiko.MissingHostKeyPolicy):
     def missing_host_key(self, client, hostname, key):
         log.info('Ignoring unknown %s host key for %s: %s' %
@@ -949,11 +952,26 @@ class Node(Struct):
             try:
                 log.debug("Trying to connect to host %s (%s)",
                           self.name, ip)
-                ssh.connect(ip,
+                # check for nonstandard port, either IPv4 or IPv6
+                addr = ip
+                port = SSH_PORT
+                if ':' in ip:
+                    match = IPV6_RE.match(ip)
+                    if match:
+                        addr = match.groups()[0]
+                        port = match.groups()[1]
+                    else:
+                        addr, _, port = ip.partition(':')
+                # if port not specified, will default to SSH_PORT (22)
+                if port:
+                    port = int(port)
+
+                ssh.connect(addr,
                             username=self.image_user,
                             allow_agent=True,
                             key_filename=self.user_key_private,
-                            timeout=Node.connection_timeout)
+                            timeout=Node.connection_timeout,
+                            port=port)
                 log.debug("Connection to %s succeded!", ip)
                 if ip != self.preferred_ip:
                     log.debug("Setting `preferred_ip` to %s", ip)
