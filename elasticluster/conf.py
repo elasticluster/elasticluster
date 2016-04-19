@@ -304,6 +304,41 @@ class Configurator(object):
         return MultiDiskRepository(storage_path, storage_type)
 
 
+## custom validators
+@message("file could not be found")
+def file_exists(v):
+    f = os.path.expanduser(os.path.expandvars(v))
+    if os.access(f, os.F_OK):
+        return f
+    else:
+        raise Invalid("file `{v}` could not be found".format(v=v))
+
+@message("file cannot be read")
+def can_read_file(v):
+    f = os.path.expanduser(os.path.expandvars(v))
+    if os.access(f, os.R_OK):
+        return f
+    else:
+        raise Invalid("cannot read file `{v}`".format(v=v))
+
+@message("cannot execute file")
+def can_execute_file(v):
+    f = os.path.expanduser(os.path.expandvars(v))
+    if os.access(f, os.X_OK):
+        return f
+    else:
+        raise Invalid("cannot execute file `{v}`".format(v=v))
+
+@message("Unsupported nova API version")
+def nova_api_version(version):
+    try:
+        from novaclient import client,exceptions
+        client.get_client_class(version)
+        return version
+    except exceptions.UnsupportedVersion as ex:
+        raise Invalid(
+            "Invalid value for `nova_api_version`: {0}".format(ex))
+
 
 class ConfigValidator(object):
     """Validator for the cluster configuration dictionary.
@@ -374,24 +409,6 @@ class ConfigValidator(object):
                  properties are not compliant
         """
         self._pre_validate()
-        # custom validators
-        @message("file could not be found")
-        def check_file(v):
-            f = os.path.expanduser(os.path.expanduser(v))
-            if os.path.exists(f):
-                return f
-            else:
-                raise Invalid("file could not be found `%s`" % v)
-
-        @message("Unsupported nova API version")
-        def nova_api_version(version):
-            try:
-                from novaclient import client,exceptions
-                client.get_client_class(version)
-                return version
-            except exceptions.UnsupportedVersion as ex:
-                raise Invalid(
-                    "Invalid option for `nova_api_version`: %s" % ex)
 
         # schema to validate all cluster properties
         schema = {"cluster": {"cloud": All(str, Length(min=1)),
@@ -399,15 +416,15 @@ class ConfigValidator(object):
                               "login": All(str, Length(min=1)),
                           },
                   "setup": {"provider": All(str, Length(min=1)),
-                            Optional("playbook_path"): check_file(),
+                            Optional("playbook_path"): can_read_file(),
                             Optional("ssh_pipelining"): Boolean(str),
                         },
                   "login": {"image_user": All(str, Length(min=1)),
                             "image_user_sudo": All(str, Length(min=1)),
                             "image_sudo": Boolean(str),
                             "user_key_name": All(str, Length(min=1)),
-                            "user_key_private": check_file(),
-                            "user_key_public": check_file(),
+                            "user_key_private": can_read_file(),
+                            "user_key_public": can_read_file(),
                         },
         }
 
@@ -529,24 +546,6 @@ class ConfigReader(object):
 
         #self.conf = ConfigObj(self.configfile, interpolation=False)
 
-        @message("file could not be found")
-        def check_file(v):
-            f = os.path.expanduser(os.path.expanduser(v))
-            if os.path.exists(f):
-                return f
-            else:
-                raise Invalid("file could not be found `%s`" % v)
-
-        @message("Unsupported nova API version")
-        def nova_api_version(version):
-            try:
-                from novaclient import client, exceptions
-                client.get_client_class(version)
-                return version
-            except exceptions.UnsupportedVersion as ex:
-                raise Invalid(
-                    "Invalid option for `nova_api_version`: %s" % ex)
-
         self.schemas = {
             "storage": Schema(
                 {Optional("storage_path"): All(str),
@@ -580,8 +579,8 @@ class ConfigReader(object):
                  "image_user_sudo": All(str, Length(min=1)),
                  "image_sudo": Boolean(str),
                  "user_key_name": All(str, Length(min=1)),
-                 "user_key_private": check_file(),
-                 "user_key_public": check_file()}, required=True)
+                 "user_key_private": can_read_file(),
+                 "user_key_public": can_read_file()}, required=True)
         }
 
     @staticmethod
