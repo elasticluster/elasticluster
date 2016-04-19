@@ -24,6 +24,7 @@ Riccardo Murri <riccardo.murri@gmail.com>
 import logging
 import os
 import tempfile
+import shlex
 import shutil
 from subprocess import call
 import sys
@@ -195,8 +196,8 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         elasticluster.log.debug("Using playbook file %s.", self._playbook_path)
 
         # build `ansible-playbook` command-line
-        cmd = [
-            'ansible-playbook',
+        cmd = shlex.split(self.extra_conf.get('ansible_command', 'ansible-playbook'))
+        cmd += [
             os.path.realpath(self._playbook_path),
             ('--inventory=' + inventory_path),
         ]
@@ -216,6 +217,11 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         verbosity = min(3, (logging.WARNING - elasticluster.log.level) / 10)
         if verbosity > 0:
             cmd.append('-' + ('v' * verbosity))  # e.g., `-vv`
+
+        # append any additional arguments provided by users
+        ansible_extra_args = self.extra_conf.get('ansible_extra_args', None)
+        if ansible_extra_args:
+            cmd += shlex.split(ansible_extra_args)
 
         elasticluster.log.debug(
             "Running Ansible command `%s` ...", (' '.join(cmd)))
