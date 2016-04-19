@@ -417,6 +417,8 @@ class ConfigValidator(object):
                           },
                   "setup": {"provider": All(str, Length(min=1)),
                             Optional("playbook_path"): can_read_file(),
+                            Optional("ansible_command"): All(can_read_file(), can_execute_file()),
+                            Optional("ansible_extra_args"): All(str, Length(min=1)),
                             Optional("ssh_pipelining"): Boolean(str),
                         },
                   "login": {"image_user": All(str, Length(min=1)),

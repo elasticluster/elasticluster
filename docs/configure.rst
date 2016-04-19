@@ -184,7 +184,7 @@ Valid configuration keys for `google`
 ``network``
 
     The GCE network to be used. Default is `default`.
-    
+
 
 Valid configuration keys for *openstack*
 ----------------------------------------
@@ -466,6 +466,33 @@ The following configuration keys are only valid if `provider` is
     default value printed here points to the playbook distributed with
     elasticluster. The default value points to the playbooks
     distributed with elasticluster.
+
+``ansible_command``
+
+    Path name of the ``ansible-playbook`` command; defaults to
+    ``ansible-playbook``, i.e., search for the command named
+    ``ansible-playbook`` in the shell search path.  Can also include
+    arguments that will be *prepended* to other arguments that
+    ElastiCluster adds to build the "setup" command invocation.
+
+``ansible_extra_args``
+
+    Arguments to *append* to the "setup" command invocation; can be used
+    to override specific parameters or to further influence the
+    behavior of the ``ansible-playbook`` command (e.g., skip certain tags).
+
+    The string is split according to POSIX shell parsing rules, so
+    quotes can be used to protect arguments with embedded spaces.
+
+    Examples::
+
+      [setup/ansible]
+      # do not run any setup action tagged as 'users'
+      ansible_extra_args = --skip-tags users
+
+      [setup/ansible]
+      # ask for confirmation at each step
+      ansible_extra_args = --step
 
 ``ansible_<option>``
     Any configuration key starting with the string ``ansible_`` is
