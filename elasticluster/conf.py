@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
+__author__ = str.join(', ', [
+    'Nicolas Baer <nicolas.baer@uzh.ch>',
+    'Antonio Messina <antonio.s.messina@gmail.com>',
+    'Riccardo Murri <riccardo.murri@gmail.com>',
+])
 
 # System imports
 import os
@@ -311,10 +315,10 @@ class ConfigValidator(object):
         self.config = config
 
     def _pre_validate(self):
-        """Handles all pre validation phase functionality, such as:
+        """Handles all pre-validation tasks, such as:
 
         * reading environment variables
-        * interpolating configuraiton options
+        * interpolating configuration options
         """
         # read cloud provider environment variables (ec2_boto or google, openstack)
         for cluster, props in self.config.iteritems():
@@ -325,8 +329,8 @@ class ConfigValidator(object):
                     if not value and PARAM in os.environ:
                         props['cloud'][param] = os.environ[PARAM]
 
-        # interpolate ansible path manual, since configobj does not offer
-        # an easy way to handle this
+        # manually interpolate ansible path; configobj does not offer
+        # an easy way to do it
         ansible_pb_dir = os.path.join(
             sys.prefix,
             'share/elasticluster/providers/ansible-playbooks')
@@ -340,9 +344,9 @@ class ConfigValidator(object):
                     self.config[cluster]['setup']['playbook_path'] = pbpath
 
     def _post_validate(self):
-        """Handles all post validation phase functionality, such as:
+        """Handles all post-validation tasks, such as:
 
-        * expanding file paths
+        * expand file paths
         """
         # expand all paths
         for cluster, values in self.config.iteritems():
@@ -358,13 +362,16 @@ class ConfigValidator(object):
             conf['login']['user_key_public'] = pubkey
 
     def validate(self):
-        """Validates the given configuration :py:attr:`self.config` to comply
-        with elasticluster. As well all types are converted to the expected
-        format if possible.
+        """
+        Validate the given configuration,
+        converting properties to native Python types.
 
+        The configuration to check must have been given to the
+        constructor and stored in :py:attr:`self.config`.
+
+        :raises: :py:class:`voluptuous.Invalid` if one property is invalid
         :raises: :py:class:`voluptuous.MultipleInvalid` if multiple
                  properties are not compliant
-        :raises: :py:class:`voluptuous.Invalid` if one property is invalid
         """
         self._pre_validate()
         # custom validators
