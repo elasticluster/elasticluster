@@ -398,8 +398,8 @@ class Cluster(Struct):
                 log.info("_start_node: node '%s' has been started" % node.name)
                 return True
             except Exception as e:
-                log.error("could not start node `%s` for reason "
-                          "`%s`" % (node.name, e))
+                log.exception("could not start node `%s` for reason "
+                              "`%s`" % (node.name, e))
                 return None
 
     def start(self, min_nodes=None):

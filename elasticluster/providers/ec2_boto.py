@@ -20,10 +20,12 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.mes
 import os
 import urllib
 import threading
+import time
 
 # External modules
 import boto
 from boto import ec2
+from boto.exception import EC2ResponseError
 from paramiko import DSSKey, RSAKey, PasswordRequiredException
 from paramiko.ssh_exception import SSHException
 
@@ -216,12 +218,29 @@ class BotoCloudProvider(AbstractCloudProvider):
                 raise InstanceError(ex)
 
         vm = reservation.instances[-1]
-        vm.add_tag("Name", node_name)
+        # wait for instance to come up and tag with name
+        status = self._vm_status(vm)
+        while status == 'pending':
+            time.sleep(5)
+            status = self._vm_status(vm)
+        if status == "running":
+            vm.add_tag("Name", node_name)
+        else:
+            raise ValueError("Unexpected instance status %s for %s" % (status, node_name))
 
         # cache instance object locally for faster access later on
         self._instances[vm.id] = vm
 
         return vm.id
+
+    def _vm_status(self, vm):
+        """Get status, handling issues where instance not yet up.
+        """
+        try:
+            status = vm.update()
+        except EC2ResponseError:
+            status = "pending"
+        return status
 
     def stop_instance(self, instance_id):
         """Stops the instance gracefully.
