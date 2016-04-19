@@ -432,8 +432,8 @@ class ConfigValidator(object):
 
         cloud_schema_ec2 = {"provider": 'ec2_boto',
                             "ec2_url": Url(str),
-                            "ec2_access_key": All(str, Length(min=1)),
-                            "ec2_secret_key": All(str, Length(min=1)),
+                            Optional("ec2_access_key"): All(str, Length(min=1)),
+                            Optional("ec2_secret_key"): All(str, Length(min=1)),
                             "ec2_region": All(str, Length(min=1)),
                             Optional("request_floating_ip"): Boolean(str),
                             Optional("vpc"): All(str, Length(min=1)),
@@ -556,8 +556,8 @@ class ConfigReader(object):
             "cloud": Schema(
                 {"provider": Any('ec2_boto', 'google', 'openstack'),
                  "ec2_url": Url(str),
-                 "ec2_access_key": All(str, Length(min=1)),
-                 "ec2_secret_key": All(str, Length(min=1)),
+                 Optional("ec2_access_key"): All(str, Length(min=1)),
+                 Optional("ec2_secret_key"): All(str, Length(min=1)),
                  "ec2_region": All(str, Length(min=1)),
                  "auth_url": All(str, Length(min=1)),
                  "username": All(str, Length(min=1)),
