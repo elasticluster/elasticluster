@@ -53,8 +53,9 @@ class BotoCloudProvider(AbstractCloudProvider):
     """
     __node_start_lock = threading.Lock()  # lock used for node startup
 
-    def __init__(self, ec2_url, ec2_region, ec2_access_key, ec2_secret_key,
-                 vpc=None, storage_path=None, request_floating_ip=False):
+    def __init__(self, ec2_url, ec2_region, ec2_access_key=None,
+                 ec2_secret_key=None, vpc=None, storage_path=None,
+                 request_floating_ip=False):
         self._url = ec2_url
         self._region_name = ec2_region
         self._access_key = ec2_access_key
