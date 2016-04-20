@@ -1,0 +1,10 @@
+---
+
+# Policy to apply to incoming packets in the INPUT queue, if they are
+# not matched by an earlier rule.  Applies to both IPv4 and IPv6 rules.
+default_input_policy: DROP
+
+# Policy to apply to incoming packets in the FORWARD queue, if they are
+# not matched by an earlier rule.  Applies to both IPv4 and IPv6 rules.
+# Only relevant for gateway hosts.
+default_forward_policy: DROP

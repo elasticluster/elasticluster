@@ -3,9 +3,9 @@
   hosts: condor_master:condor_workers
   vars_files:
     - common/vars/main.yml
+  roles:
+    - { role: iptables, default_input_policy: 'ACCEPT' }
   tasks: 
-    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
-    - include: common/tasks/iptables.yml trusted_hosts={{groups.all}} default_accept=1
     - include: cluster/tasks/packages.yml
     - include: htcondor/tasks/common.yml
 

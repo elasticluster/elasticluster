@@ -3,11 +3,8 @@
   hosts: pbs_master:pbs_clients:maui_master
   vars_files:
     - common/vars/main.yml
-  tasks:
-    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
-    - include: common/tasks/iptables.yml trusted_hosts={{groups.all}}
-  handlers:
-    - include: common/handlers/main.yml
+  roles:
+    - { role: iptables, default_input_policy: 'ACCEPT' }
 
 - name: PBS masternode Playbook
   hosts: pbs_master

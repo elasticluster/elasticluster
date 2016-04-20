@@ -3,11 +3,8 @@
   name: Prerequisites for Hadoop
   vars_files:
     - common/vars/main.yml
-  tasks:
-    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
-    - include: common/tasks/iptables.yml trusted_hosts={{groups.all}} default_accept=1
-  handlers:
-    - include: common/handlers/main.yml
+  roles:
+    - { role: iptables, default_input_policy: 'ACCEPT' }
 
 - hosts: hadoop_namenode:hadoop_secnamenode:hadoop_datanode:hadoop_jobtracker:hadoop_tasktracker
   name: Install Hadoop

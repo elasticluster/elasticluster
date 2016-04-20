@@ -5,11 +5,9 @@
     - common/vars/main.yml
   handlers:
     - include: common/handlers/main.yml
-
+  roles:
+    - { role: iptables, default_input_policy: 'ACCEPT' }
   tasks:
-    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
-    - include: common/tasks/iptables.yml trusted_hosts={{groups.all}}
-
     - name: Install PIP (Ubuntu)
       action: apt name={{item}}
       when: is_debian_or_ubuntu

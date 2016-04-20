@@ -1,0 +1,57 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+# This files defines iptable netfilter rules, 
+# to be loaded with `iptables6-restore < $this_file`
+
+*filter
+
+## create queues and set policy
+:INPUT {{default_input_policy}} [0:0]
+:OUTPUT ACCEPT [0:0]
+:FORWARD {{default_forward_policy}} [0:0]
+
+
+## OUTPUT queue -- outbound traffic
+
+# allow all outbound traffic by default policy, no rules to add
+
+
+## FORWARD queue -- only relevant if this host is a gateway
+
+# only apply default policy, no rules to add
+
+
+## INPUT queue -- inbound traffic
+
+# accept all inbound packets related to existing connections
+# (this rule comes first as it's likely the one that is hit most times)
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# allow all loopback (lo0) traffic
+-A INPUT -i lo -j ACCEPT
+
+# ICMPv6 is so crucial in IPv6 that we *need* to accept it
+-A INPUT -p icmpv6 --icmpv6-type echo-request -j ACCEPT --match limit --limit 30/minute
+-A INPUT -p icmpv6 -j ACCEPT
+
+# Allow all incoming connections from ``trusted_hosts``
+{% for host in trusted_hosts|default(groups.all)  %}
+{%   if 'address' in hostvars[host].ansible_default_ipv6 %}
+-A INPUT -s {{ hostvars[host].ansible_default_ipv6.address }} -j ACCEPT
+{%   endif %}
+{% endfor %}
+
+# Allow all incoming ssh connections
+-A INPUT -p tcp --dport 22 -j ACCEPT
+
+{% if default_input_policy != 'ACCEPT' %}
+# reject all other inbound traffic, but limit the number of rejections to
+# avoid becoming a DDoS amplifier
+-A INPUT -m limit --limit 6/min -j REJECT --reject-with icmp6-adm-prohibited
+{% endif %}
+
+## all done, enable rules!
+COMMIT
