@@ -1,0 +1,97 @@
+---
+# This task is used to set very simple firewall rules, allowing
+# everything from a set of hosts and denying everything but ssh
+# connections from any other host.
+#
+# Mandatory variables:
+#
+#
+# Optional variables:
+#
+# trusted_hosts:  list of ip addresses. By default, all the hosts in
+#                 the group `all`.
+#
+# default_accept: if equal to `1` or `true`, all connection *from
+#                 internet* are accepted (but not from the internal
+#
+
+- name: Temporarily disable SELinux (RHEL-family)
+  when: is_centos
+  selinux:
+    policy=targeted
+    state=permissive
+
+- name: Install iptables packages (Debian/Ubuntu)
+  tags: iptables
+  when: is_debian_or_ubuntu
+  apt:
+    name={{item}}
+    state=present
+  with_items:
+    - iptables
+    - iptables-persistent
+
+- name: Install iptables package (RHEL-family)
+  tags: iptables
+  when: is_centos
+  yum:
+    name={{item}}
+    state=present
+  with_items:
+    - iptables
+    - iptables-services
+
+- name: Deploy iptables rules
+  tags: iptables
+  template:
+    dest="{{configfile['/etc/iptables/rules.v4'][ansible_os_family]}}"
+    src="etc/iptables/rules.v4.j2"
+    owner=root
+    group=root
+    mode=0444
+  when: is_docker_container is not defined
+  notify: reload iptables
+
+- name: Deploy ip6tables rules
+  tags: iptables
+  template:
+    dest="{{configfile['/etc/iptables/rules.v6'][ansible_os_family]}}"
+    src="etc/iptables/rules.v6.j2"
+    owner=root
+    group=root
+    mode=0444
+  when: is_docker_container is not defined
+  notify: reload iptables
+
+- name: Ensure iptables rules are loaded at boot
+  tags: iptables
+  service:
+    name='{{service["iptables"][ansible_os_family]}}'
+    enabled=yes
+    state=started
+  become: yes
+  become_user: root
+  # FIXME: At the moment, enabling `iptables` fails on CentOS7 for
+  # reasons I cannot understand... just ignore the error and keep
+  # running.
+  #ignore_errors: yes
+
+- name: Ensure ip6tables rules are loaded at boot
+  tags: iptables
+  service:
+    name='{{service["ip6tables"][ansible_os_family]}}'
+    enabled=yes
+    state=started
+  become: yes
+  become_user: root
+  # FIXME: At the moment, enabling `iptables` fails on CentOS7 for
+  # reasons I cannot understand... just ignore the error and keep
+  # running.
+  #ignore_errors: yes
+
+
+- name: Enable SELinux (RHEL-family)
+  when: is_centos
+  selinux:
+    policy=targeted
+    state=enforcing
