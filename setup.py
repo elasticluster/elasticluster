@@ -71,6 +71,7 @@ required_packages = [
     # GCE cloud
     'google-api-python-client',
     'python-gflags',
+	'azure',
 ]
 
 if sys.version_info < (2, 7):
