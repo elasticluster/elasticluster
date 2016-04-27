@@ -383,6 +383,7 @@ instead::
     user_key_private=~/.ssh/id_rsa
     user_key_public=~/.ssh/id_rsa.pub
 
+
 Setup Section
 =============
 
@@ -540,6 +541,7 @@ Some (working) examples::
     provider=ansible
     frontend_groups=mdce_master,mdce_worker,ganglia_monitor,ganglia_master
     worker_groups=mdce_worker,ganglia_monitor
+
 
 Cluster Section
 ===============

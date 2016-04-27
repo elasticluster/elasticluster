@@ -776,15 +776,23 @@ class Cluster(Struct):
         raise NodeNotFound("Unable to find a valid frontend: "
                            "cluster has no nodes!")
 
-    def setup(self):
-        """Configure the cluster nodes with the specified  This
-        is delegated to the provided :py:class:`elasticluster.providers.AbstractSetupProvider`
+    def setup(self, extra_args=tuple()):
+        """
+        Configure the cluster nodes.
+
+        Actual action is delegated to the
+        :py:class:`elasticluster.providers.AbstractSetupProvider` that
+        was provided at construction time.
+
+        :param list extra_args:
+          List of additional command-line arguments
+          that are appended to each invocation of the setup program.
 
         :return: bool - True on success, False otherwise
         """
         try:
             # setup the cluster using the setup provider
-            ret = self._setup_provider.setup_cluster(self)
+            ret = self._setup_provider.setup_cluster(self, extra_args)
         except Exception as err:
             log.error(
                 "The cluster hosts are up and running,"

@@ -99,15 +99,19 @@ class AbstractSetupProvider:
     HUMAN_READABLE_NAME = 'setup provider'
 
     @abstractmethod
-    def setup_cluster(self, cluster):
-        """Configures all nodes of a cluster to function in respect to the
-        given configuration.
+    def setup_cluster(self, cluster, extra_args=tuple()):
+        """
+        Configure all nodes of a cluster.
 
         This method *must* be idempotent, i.e. it should always be
-        safe calling it multiple times..
+        safe to call multiple times over.
 
         :param cluster: cluster to configure
         :type cluster: :py:class:`elasticluster.cluster.Cluster`
+
+        :param list extra_args:
+          List of additional command-line arguments
+          that are appended to each invocation of the setup program.
 
         :return: `True` if the cluster is correctly configured, even
                   if the method didn't actually do anything. `False` if the

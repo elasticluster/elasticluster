@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.messina@s3it.uzh.ch>'
+__author__ = str.join(', ', [
+    'Nicolas Baer <nicolas.baer@uzh.ch>'
+    'Antonio Messina <antonio.messina@s3it.uzh.ch>'
+    'Riccardo Murri <riccardo.murri@gmail.com>'
+])
 
 # stdlib imports
 from abc import ABCMeta, abstractmethod
@@ -620,6 +624,10 @@ class SetupCluster(AbstractCommand):
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
+        parser.add_argument(
+            'extra', nargs='*', default=[],
+            help=("Extra arguments will be appended (unchanged)"
+                  " to the setup provider command-line invocation."))
 
     def execute(self):
         configurator = get_configurator(self.params.config,
@@ -636,7 +644,7 @@ class SetupCluster(AbstractCommand):
             return
 
         print("Configuring cluster `%s`..." % cluster_name)
-        ret = cluster.setup()
+        ret = cluster.setup(self.params.extra)
         if ret:
             print("Your cluster is ready!")
         else:

@@ -6,7 +6,7 @@
 .. include:: global.inc
 
 =========
-  Usage  
+  Usage
 =========
 
 The syntax of the elasticluster command is::
@@ -57,17 +57,17 @@ inspect your clusters. The available subcommands are:
 **list-nodes**
     Show information about the nodes in a specific started cluster.
 
-**list-templates** 
+**list-templates**
     Show the available cluster configurations, as defined in the
     configuration file.
 
 **setup**
-    Run ansible to configure the cluster.
+    Run Ansible to configure the cluster.
 
 **resize**
     Resize a cluster by adding or removing nodes.
 
-**ssh** 
+**ssh**
     Connect to the frontend of the cluster using the `ssh` command.
 
 **sftp**
@@ -197,20 +197,21 @@ The remaining lines describe how to connect to the cluster either
 by opening an interactive shell to run commands on it, or an sftp
 session to upload and download files.
 
+
 The ``stop`` command
 --------------------
 
-The **stop** command will terminate all the instances running and
-delete all information related to the cluster saved on the local disk.
+The **stop** command terminates all the running VM instances and
+deletes all information related to the cluster saved on the local disk.
 
 **WARNING**: elasticluster doesn't do any kind of test to check if the
-cluster is *used*!
+cluster is *being used*!
 
 Basic usage of the command is::
 
     usage: elasticluster stop [-h] [-v] [--force] [--yes] cluster
 
-Like the **start** command, ``cluster`` is the name of a `cluster`
+Like for the **start** command, ``cluster`` is the name of a `cluster`
 section in the configuration file.
 
 The following options are available:
@@ -247,27 +248,27 @@ the cloud used and the number of nodes started for each node type::
     The following clusters have been started.
     Please note that there's no guarantee that they are fully configured:
 
-    centossge 
+    centossge
     ---------
       name:           centossge
       template:       centossge
-      cloud:          hobbes 
+      cloud:          hobbes
       - frontend nodes: 1
       - compute nodes: 2
 
-    slurm 
+    slurm
     -----
       name:           slurm
       template:       slurm
-      cloud:          hobbes 
+      cloud:          hobbes
       - frontend nodes: 1
       - compute nodes: 2
 
-    slurm13.04 
+    slurm13.04
     ----------
       name:           slurm13.04
       template:       slurm13.04
-      cloud:          hobbes 
+      cloud:          hobbes
       - frontend nodes: 1
       - compute nodes: 2
 
@@ -382,24 +383,51 @@ the following::
 The ``setup`` command
 ---------------------
 
-The **setup** command will run `ansible` on the desired cluster once
+The **setup** command will run Ansible_ on the desired cluster once
 again. It is usually needed only when you customize and update your
 playbooks, in order to re-configure the cluster, since the **start**
 command already run `ansible` when all the machines are started.
 
+.. _ansible: http://www.ansible.com/
+
 Basic usage of the command is::
 
-    usage: elasticluster setup [-h] [-v] cluster
+    usage: elasticluster setup [-h] [-v] cluster [-- extra ...]
 
-``cluster`` is the name of a cluster that has been *started* previously.
+First argument ``cluster`` is the name of a cluster; it must have been
+*started* previously.
 
-The following options are available:
+Following arguments (if any) are appended verbatim to the
+`ansible-playbook` command-line invocation that is used to actually
+carry out the configuration task.  This allows overriding some
+defaults set by ElastiCluster or, more interestingly, add other
+playbook files or variables or change the behavior of
+`ansible-playbook` altogether, as the following examples show:
+
+* Only execute setup actions marked with a specific tag::
+
+    elasticluster setup mycluster -- --tags hdfs
+
+* Read and define additional variables from file :file:``vars.yml``::
+
+    elasticluster setup mycluster -- -e @vars.yml
+
+* Execute an additional playbook after ElastiCluster's main one::
+
+    elasticluster setup mycluster -- /path/to/play.yml
+
+* Do not run setup at all, just show what nodes are to run what play::
+
+    elasticluster setup mycluster -- --list-hosts
+
+The following options are additionally available:
 
 ``-h, --help``
     Show an help message and exits.
 
 ``-v, --verbose``
     Adding one or more `-v` will increase the verbosity accordingly.
+    The verbosity setting is propagated to the `ansible-playbook` command.
 
 
 The ``resize`` command
@@ -566,7 +594,8 @@ options are passed to `sftp` command line:
 ``-o StrictHostKeyChecking=yes``
     Enable check of the host key of the remote machine.
 
-The ``epxort`` command
+
+The ``export`` command
 ----------------------
 
 The ``export`` command is useful when you need to copy a cluster you

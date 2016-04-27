@@ -14,11 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = '''
-Nicolas Baer <nicolas.baer@uzh.ch>,
-Antonio Messina <antonio.s.messina@gmail.com>,
-Riccardo Murri <riccardo.murri@gmail.com>
-'''
+__author__ = str.join(', ', [
+    'Nicolas Baer <nicolas.baer@uzh.ch>',
+    'Antonio Messina <antonio.s.messina@gmail.com>',
+    'Riccardo Murri <riccardo.murri@gmail.com>',
+])
 
 # stdlib imports
 import logging
@@ -136,13 +136,20 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             self._storage_path_tmp = True
 
 
-    def setup_cluster(self, cluster):
-        """Configures the cluster according to the node_kind to ansible
-        group matching. This method is idempotent and therefore can be
-        called multiple times without corrupting the cluster configuration.
+    def setup_cluster(self, cluster, extra_args=tuple()):
+        """
+        Configure the cluster by running an Ansible playbook.
+
+        The ElastiCluster configuration attribute `<kind>_groups`
+        determines, for each node kind, what Ansible groups nodes of
+        that kind are assigned to.
 
         :param cluster: cluster to configure
         :type cluster: :py:class:`elasticluster.cluster.Cluster`
+
+        :param list extra_args:
+          List of additional command-line arguments
+          that are appended to each invocation of the setup program.
 
         :return: ``True`` on success, ``False`` otherwise. Please note, if nothing
                  has to be configured, then ``True`` is returned.
@@ -200,7 +207,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         cmd += [
             os.path.realpath(self._playbook_path),
             ('--inventory=' + inventory_path),
-        ]
+        ] + list(extra_args)
 
         if self._sudo:
             cmd.extend([
