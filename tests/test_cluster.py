@@ -212,7 +212,7 @@ class TestCluster(unittest.TestCase):
 
         cluster.setup()
 
-        setup_provider.setup_cluster.assert_called_once_with(cluster)
+        setup_provider.setup_cluster.assert_called_once_with(cluster, tuple())
 
     def test_update(self):
         storage = MagicMock()
