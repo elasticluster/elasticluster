@@ -1,8 +1,6 @@
 ---
 - name: IPython cluster Playbook
   hosts: ipython_controller:ipython_engine
-  vars_files:
-    - common/vars/main.yml
   handlers:
     - include: common/handlers/main.yml
   roles:

@@ -1,8 +1,6 @@
 ---
 - hosts: gluster_data:gluster_client
   name: Basic setup
-  vars_files:
-    - common/vars/main.yml
   roles:
     - { role: iptables, default_input_policy: 'ACCEPT' }
   tasks:
@@ -23,8 +21,6 @@
 
 - hosts: gluster_data
   name: Gluster configuration
-  vars_files:
-    - common/vars/main.yml
   vars:
     - gluster_brick_dir: /srv/gluster/brick
     - gluster_volume: default
@@ -33,8 +29,6 @@
 
 - hosts: gluster_client
   name: Mount gluster filesystem
-  vars_files:
-    - common/vars/main.yml
   vars:
     - gluster_volume: default
   tasks:

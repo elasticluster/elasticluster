@@ -1,8 +1,6 @@
 ---
 - name: HTCondor common Playbook
   hosts: condor_master:condor_workers
-  vars_files:
-    - common/vars/main.yml
   roles:
     - { role: iptables, default_input_policy: 'ACCEPT' }
   tasks: 
@@ -15,8 +13,6 @@
 
 - name: HTCondor master Playbook
   hosts: condor_master
-  vars_files:
-    - common/vars/main.yml
   tasks: 
     - include: common/tasks/nfs.yml
 
@@ -32,8 +28,6 @@
 
 - name: HTCondor worker nodes Playbook
   hosts: condor_workers
-  vars_files:
-    - common/vars/main.yml
   tasks: 
     - include: common/tasks/nfs-clients.yml nfsserver={{groups.condor_master[0]}} nfspath=/home nfsmount=/home
   handlers:

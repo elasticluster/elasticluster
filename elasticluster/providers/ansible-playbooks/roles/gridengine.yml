@@ -1,8 +1,6 @@
 ---
 - name: Common configuration
   hosts: gridengine_master:gridengine_clients
-  vars_files:
-    - common/vars/main.yml
   roles:
     - { role: iptables, default_input_policy: 'ACCEPT' }
   tasks:
@@ -12,8 +10,6 @@
 
 - name: GridEngine masternode Playbook
   hosts: gridengine_master
-  vars_files:
-    - common/vars/main.yml
   tasks: 
     - include: common/tasks/nfs.yml
     - include: gridengine/tasks/master.yml
@@ -28,8 +24,6 @@
 
 - name: GridEngine worker nodes Playbook
   hosts: gridengine_clients
-  vars_files:
-    - common/vars/main.yml
   tasks: 
     - include: common/tasks/nfs-clients.yml nfsserver={{groups.gridengine_master[0]}} nfspath=/home nfsmount=/home
     - include: common/tasks/nfs-clients.yml nfsserver={{groups.gridengine_master[0]}} nfspath=/usr/share/gridengine/default/common nfsmount=/usr/share/gridengine/default/common

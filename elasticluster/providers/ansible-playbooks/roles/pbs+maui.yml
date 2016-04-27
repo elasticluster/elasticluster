@@ -1,15 +1,11 @@
 ---
 - name: Common configuration
   hosts: pbs_master:pbs_clients:maui_master
-  vars_files:
-    - common/vars/main.yml
   roles:
     - { role: iptables, default_input_policy: 'ACCEPT' }
 
 - name: PBS masternode Playbook
   hosts: pbs_master
-  vars_files:
-    - common/vars/main.yml
   tasks: 
     - include: common/tasks/nfs.yml
     - nfsexport: path=/home dest=/etc/exports clients="{{groups.pbs_clients}}" options=rw,no_root_squash,async
@@ -26,8 +22,6 @@
 
 - name: MAUI masternode Playbook
   hosts: maui_master
-  vars_files:
-    - common/vars/main.yml
   tasks: 
     - include: pbs+maui/tasks/maui.yml
   handlers:
@@ -35,8 +29,6 @@
 
 - name: PBS worker nodes Playbook
   hosts: pbs_clients
-  vars_files:
-    - common/vars/main.yml
   tasks: 
     - include: common/tasks/nfs-clients.yml nfsserver={{groups.pbs_master[0]}} nfspath=/home nfsmount=/home nfsoptions=rw,async
     - include: pbs+maui/tasks/clients.yml

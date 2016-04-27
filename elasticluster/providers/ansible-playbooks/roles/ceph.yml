@@ -1,7 +1,5 @@
 ---
 - hosts: ceph_osd:ceph_mon:ceph_mds
-  vars_files:
-    - common/vars/main.yml
   vars:
     - fsid: 00baac7a-0ad4-4ab7-9d5e-fdaf7d122aee
     - osd_devs: /dev/vdb1
@@ -21,8 +19,6 @@
         - test
 
 - hosts: ceph_mon
-  vars_files:
-    - common/vars/main.yml
   tasks:
     - include: ceph/tasks/mon_0.yml
   handlers:
@@ -30,8 +26,6 @@
     - include: ceph/handlers/main.yml
 
 - hosts: ceph_mon
-  vars_files:
-    - common/vars/main.yml
   tasks:
     - include: ceph/tasks/mon.yml
   handlers:
@@ -39,8 +33,6 @@
     - include: ceph/handlers/main.yml
 
 - hosts: ceph_osd
-  vars_files:
-    - common/vars/main.yml
   vars:
     - osd_disk: /dev/vdb
   tasks:
@@ -50,8 +42,6 @@
     - include: ceph/handlers/main.yml
 
 - hosts: ceph_mds
-  vars_files:
-    - common/vars/main.yml
   tasks:
     - include: ceph/tasks/mds.yml
   handlers:
@@ -71,15 +61,11 @@
 #         - cephtest
       
 # - hosts: ceph_mon
-#   vars_files:
-#     - common/vars/main.yml
 #   tasks:
 #     - action: shell ceph auth get-key client.bootstrap-osd
 
 
 # - hosts: ceph_osd:ceph_mon:ceph_mds
-#   vars_files:
-#     - common/vars/main.yml
 #   tasks:
 #     - action: service name=ceph state=started
 #       tags:

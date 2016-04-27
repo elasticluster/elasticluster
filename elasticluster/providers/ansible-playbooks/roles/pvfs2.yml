@@ -1,7 +1,5 @@
 ---
 - hosts: pvfs2:pvfs2_data:pvfs2_meta:pvfs2_client
-  vars_files:
-    - common/vars/main.yml
   handlers:
     - include: common/handlers/main.yml
   tasks:
@@ -15,8 +13,6 @@
     - pvfs_url: "http://orangefs.org/downloads/LATEST/source/{{pvfs_tar}}"
     - pvfs2_storage: /srv/pvfs2
     - is_client: '"{{inventory_hostname}}" in {{groups.pvfs2_client}}'
-  vars_files:
-    - common/vars/main.yml
   handlers:
     - include: common/handlers/main.yml
   tasks:
@@ -45,8 +41,6 @@
   vars:
     - pvfs2_storage: /srv/pvfs2
     - is_client: '"{{inventory_hostname}}" in {{groups.pvfs2_client}}'
-  vars_files:
-    - common/vars/main.yml
   tasks:
     - action: shell scp /etc/pvfs2-fs.conf root@{{item}}:/etc/pvfs2-fs.conf
       with_items: 
@@ -75,8 +69,6 @@
   vars:
     - pvfs2_storage: /srv/pvfs2
     - is_client: '"{{inventory_hostname}}" in {{groups.pvfs2_client}}'
-  vars_files:
-    - common/vars/main.yml
   tasks:
     - action: shell modprobe pvfs2
     - action: file path=/pvfs2 state=directory

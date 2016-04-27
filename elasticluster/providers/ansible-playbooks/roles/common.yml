@@ -1,8 +1,6 @@
 ---
 - name: Common setup
   hosts: all
-  vars_files:
-    - common/vars/main.yml
   tasks: 
     - include: common/tasks/deb.yml
     - include: common/tasks/epel_repo.yml
