@@ -1,9 +1,0 @@
-{% if inventory_hostname in groups.hadoop_namenode %}
-{% for host in groups.hadoop_datanode %}
-{{ host }}
-{% endfor %}
-{% elif inventory_hostname in groups.hadoop_jobtracker %}
-{% for host in groups.hadoop_tasktracker %}
-{{ host }}
-{% endfor %}
-{% endif %}

@@ -1,0 +1,5 @@
+# hadoop-common/meta/main.yml
+---
+
+dependencies:
+  - { role: bigtop }

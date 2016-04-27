@@ -1,0 +1,11 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+#
+# The VM(s) below will run HDFS NameNode and YARN ResourceManager services.
+# 
+{% for fqdn in groups['hadoop_master'] %}
+{{fqdn}}
+{% endfor %}
