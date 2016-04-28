@@ -13,7 +13,7 @@
 
   <property>
     <name>javax.jdo.option.ConnectionURL</name>
-    <value>jdbc:postgresql://{{groups.hive[0]}}/{{HIVE_METASTORE_DB_NAME}}</value>
+    <value>jdbc:postgresql://{{HIVE_METASTORE_DB_HOST}}/{{HIVE_METASTORE_DB_NAME}}</value>
   </property>
 
   <property>
@@ -44,8 +44,12 @@
   <!--
   <property>
     <name>hive.metastore.uris</name>
-    <value>thrift://<n.n.n.n>:9083</value>
-    <description>IP address (or fully-qualified domain name) and port of the metastore host</description>
+    <value>thrift://{{HIVE_METASTORE_HOST}}:9083</value>
+    <description>
+      IP address (or fully-qualified domain name) and port
+      of the metastore host
+    </description>
   </property>
   -->
+
 </configuration>

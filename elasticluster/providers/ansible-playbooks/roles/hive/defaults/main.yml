@@ -5,7 +5,12 @@
 # symlinks `/etc/hive/conf` to the actual configuration
 HIVE_CONF_DIR: '/etc/hive/conf.elasticluster'
 
-HIVE_METASTORE_DB_HOST: '{{groups.hive[0]}}'
+# Hostname or IP address to use for building the `thrift://` endpoint
+HIVE_METASTORE_HOST: '{{groups.hive_server[0]}}'
+
+# DB connection parameters
+HIVE_METASTORE_DB_HOST: '{{HIVE_METASTORE_HOST}}'
 HIVE_METASTORE_DB_NAME: 'metastore'
 HIVE_METASTORE_DB_PASSWORD: 'bWGtMCZROdVpIl9K'
 HIVE_METASTORE_DB_USER: 'hive'
+
