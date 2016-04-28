@@ -1,0 +1,98 @@
+# hive/tasks/main.yml
+---
+#
+# Installation and configuration mostly follows these instructions:
+# http://www.cloudera.com/documentation/archive/cdh/4-x/4-2-0/CDH4-Installation-Guide/cdh4ig_topic_18_4.html
+#
+
+- name: Install Hive packages (base)
+  tags:
+    - hadoop
+    - hive
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - hive
+    # Java JDBC support for Hive
+    - libpostgresql-jdbc-java
+
+
+- name: Check if Hive schema has already been loaded
+  tags:
+    - hadoop
+    - hive
+  command:
+    'psql --username={{HIVE_METASTORE_DB_USER}} --dbname={{HIVE_METASTORE_DB_NAME}} -c "\d DBS"'
+  register: db_tables_check
+  ignore_errors: yes
+
+  
+- name: Load Hive schema
+  tags:
+    - hadoop
+    - hive
+  shell:
+    'psql --username="{{HIVE_METASTORE_DB_USER}}" --dbname="{{HIVE_METASTORE_DB_NAME}}" < /usr/lib/hive/scripts/metastore/upgrade/postgres/hive-schema-1.2.0.postgres.sql'
+  when: db_tables_check|failed
+
+  
+- name: Ensure Hive configuration directory exists
+  tags:
+    - hadoop
+    - hive
+  file:
+    path='{{HIVE_CONF_DIR}}'
+    state=directory
+    
+    
+- name: Copy Hive/BigTop default configuration files
+  tags:
+    - hadoop
+    - hive
+  command:
+    'rsync -ax --update --backup /etc/hive/conf.dist/ {{HIVE_CONF_DIR}}/'
+
+  
+- name: Deploy Hive/ElastiCluster configuration files
+  tags:
+    - hadoop
+    - hive
+  template:
+    src='{{item}}.j2'
+    dest='{{HIVE_CONF_DIR}}/{{item}}'
+  with_items:
+    - hive-env.sh
+    - hive-site.xml
+
+
+- name: Activate Hive/ElastiCluster configuration
+  alternatives:
+    name='hive-conf'
+    link='/etc/hive/conf'
+    path='{{HIVE_CONF_DIR}}'
+
+
+- name: Install Hive packages (services)
+  tags:
+    - hadoop
+    - hive
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - hive-metastore
+    - hive-server2
+
+
+- name: Start Hive services
+  tags:
+    - hadoop
+    - hive
+  service:
+    name="{{item}}"
+    state=started
+    enabled=yes
+  with_items:
+    - hive-metastore
+    - hive-server2

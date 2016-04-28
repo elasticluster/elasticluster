@@ -1,0 +1,11 @@
+# hive/defaults/main.yml
+---
+
+# Apache BigTop uses `/etc/hive/conf.*` directories and then
+# symlinks `/etc/hive/conf` to the actual configuration
+HIVE_CONF_DIR: '/etc/hive/conf.elasticluster'
+
+HIVE_METASTORE_DB_HOST: '{{groups.hive[0]}}'
+HIVE_METASTORE_DB_NAME: 'metastore'
+HIVE_METASTORE_DB_PASSWORD: 'bWGtMCZROdVpIl9K'
+HIVE_METASTORE_DB_USER: 'hive'

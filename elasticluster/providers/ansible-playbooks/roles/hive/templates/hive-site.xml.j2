@@ -13,7 +13,7 @@
 
   <property>
     <name>javax.jdo.option.ConnectionURL</name>
-    <value>jdbc:postgresql://{{groups.hadoop_master[0]}}/metastore</value>
+    <value>jdbc:postgresql://{{groups.hive[0]}}/{{HIVE_METASTORE_DB_NAME}}</value>
   </property>
 
   <property>
@@ -23,12 +23,12 @@
 
   <property>
     <name>javax.jdo.option.ConnectionUserName</name>
-    <value>hadoop</value>
+    <value>{{HIVE_METASTORE_DB_USER}}</value>
   </property>
 
   <property>
     <name>javax.jdo.option.ConnectionPassword</name>
-    <value>hadoop</value>
+    <value>{{HIVE_METASTORE_DB_PASSWORD}}</value>
   </property>
 
   <property>

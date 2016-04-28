@@ -22,7 +22,7 @@
     - hadoop-hdfs-fuse # Mountable HDFS
 
 
-- name: Ensure configuration directory exists
+- name: Ensure Hadoop configuration directory exists
   tags:
     - hadoop
   file:
@@ -47,7 +47,6 @@
     - capacity-scheduler.xml
     - core-site.xml
     - hdfs-site.xml
-    - hive-site.xml
     - mapred-site.xml
     - master
     - slaves

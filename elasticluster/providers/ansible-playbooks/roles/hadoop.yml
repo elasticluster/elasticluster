@@ -2,13 +2,20 @@
 
 - name: Install Hadoop master node
   hosts: hadoop_master
+  tags:
+    - hadoop
+    - master
   roles:
     - hdfs-namenode
     - yarn-master
+    - hive
 
 
 - name: Install Hadoop worker nodes
   hosts: hadoop_worker
+  tags:
+    - hadoop
+    - worker
   roles:
     - hdfs-datanode
     - yarn-worker
