@@ -52,6 +52,6 @@
 
 - name: Make Hive settings available to all Hadoop apps
   file:
-    path='{{HADOPP_CONF_DIR}}/hive-site.xml'
+    path='{{HADOOP_CONF_DIR}}/hive-site.xml'
     src='{{HIVE_CONF_DIR}}/hive-site.xml'
     state=symlink
