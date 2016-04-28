@@ -1,0 +1,51 @@
+# Default system properties included when running spark-submit.
+# This is useful for setting default environmental settings.
+
+spark.driver.memory              {{ansible_memory_mb.nocache.free}}m
+spark.executor.memory            {{ansible_memory_mb.nocache.free}}m
+
+# Limit of total size of serialized results of all partitions for each Spark action (e.g. collect)
+spark.driver.maxResultSize       {{(ansible_memory_mb.nocache.free * 0.8)|int}}m
+
+# Although the documentation says that PYSPARK_PYTHON and
+# PYSPARK_DRIVER_PYTHON control which Python interpreter will be used
+# by Spark, this seems not to be the case with Spark 1.6.1 which
+# always calls `python`.  So also set the PATH environmental variable
+# so that Anaconda Python is found first.
+#
+# Anyway, see: https://issues.apache.org/jira/browse/SPARK-9235
+#
+spark.executorEnv.PYSPARK_PYTHON {{anaconda_home}}/bin/python
+spark.executorEnv.PATH {{anaconda_home}}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+spark.yarn.appMasterEnv.PYSPARK_PYTHON {{anaconda_home}}/bin/python
+spark.yarn.appMasterEnv.PYSPARK_DRIVER_PYTHON {{anaconda_home}}/bin/python
+spark.yarn.appMasterEnv.PATH {{anaconda_home}}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Amount of memory to use per python worker process during
+# aggregation, in the same format as JVM memory strings (e.g. 512m, 2g).
+# If the memory used during aggregation goes above this amount, it will
+# spill the data into disks. 
+#
+spark.python.worker.memory       {{(ansible_memory_mb.nocache.free * 0.5)|int}}m
+
+# ensure the PostGreSQL JDBC connector is available
+spark.driver.extraClassPath      /usr/share/java/postgresql-jdbc4.jar
+spark.executor.extraClassPath    /usr/share/java/postgresql-jdbc4.jar
+
+# Maximum amount of time to wait for resources to register before scheduling begins
+spark.scheduler.maxRegisteredResourcesWaitingTime 5s
+
+# The minimum ratio of registered resources (registered resources /
+# total expected resources) (resources are executors in yarn mode, CPU
+# cores in standalone mode) to wait for before scheduling begins.
+# Specified as a double between 0.0 and 1.0. Regardless of whether the
+# minimum ratio of resources has been reached, the maximum amount of
+# time it will wait before scheduling begins is controlled by config
+# spark.scheduler.maxRegisteredResourcesWaitingTime. 
+#
+spark.scheduler.minRegisteredResourcesRatio 0.5 
+
+
+# Max out message size for those who do not care much about slowing
+# down computation due to too much communication
+spark.akka.frameSize	2000
