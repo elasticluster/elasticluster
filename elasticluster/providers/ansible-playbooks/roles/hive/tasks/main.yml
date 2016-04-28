@@ -48,3 +48,10 @@
     name='hive-conf'
     link='/etc/hive/conf'
     path='{{HIVE_CONF_DIR}}'
+
+
+- name: Make Hive settings available to all Hadoop apps
+  file:
+    path='{{HADOPP_CONF_DIR}}/hive-site.xml'
+    src='{{HIVE_CONF_DIR}}/hive-site.xml'
+    state=symlink
