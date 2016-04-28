@@ -15,8 +15,6 @@
     - hadoop-hdfs-secondarynamenode # Hadoop Secondary namenode
 
 - name: Format HDFS
-    - hadoop
-    - hdfs
   tags:
     - hadoop
     - hdfs
