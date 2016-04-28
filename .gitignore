@@ -4,3 +4,6 @@
 build
 dist
 elasticluster.egg-info
+
+# Ansible
+*.retry
