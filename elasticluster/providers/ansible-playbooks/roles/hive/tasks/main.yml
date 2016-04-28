@@ -54,4 +54,4 @@
   file:
     path='{{HADOOP_CONF_DIR}}/hive-site.xml'
     src='{{HIVE_CONF_DIR}}/hive-site.xml'
-    state=symlink
+    state=link
