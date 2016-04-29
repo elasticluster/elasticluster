@@ -7,4 +7,4 @@
 # instead of the one provided by the Linux distribution.
 export ANACONDA_HOME="{{anaconda_home}}"
 export PATH="${ANACONDA_HOME}/bin:${PATH}"
-export PYTHON="${ANACONDA_HOME}/bin/python"
+export PYTHON{{anaconda_python_version}}="${ANACONDA_HOME}/bin/python{{anaconda_python_version}}"

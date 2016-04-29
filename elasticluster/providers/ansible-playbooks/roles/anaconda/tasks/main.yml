@@ -21,8 +21,8 @@
     
 - name: make Anaconda Python the first match in $PATH
   template:
-    src=etc/profile.d/anaconda.sh.j2
-    dest=/etc/profile.d/anaconda.sh
+    src='etc/profile.d/anaconda.sh.j2'
+    dest='/etc/profile.d/anaconda{{anaconda_python_version}}.sh'
     mode=0444
     owner=root
     group=root
