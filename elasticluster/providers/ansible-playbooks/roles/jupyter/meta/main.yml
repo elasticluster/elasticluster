@@ -1,0 +1,8 @@
+# jupyter/meta/main.yml
+---
+
+dependencies:
+  # install Anaconda Python3 to run the Jupyter Notebook itself
+  - role: anaconda
+    anaconda_python_version: '3'
+    anaconda_in_path: true

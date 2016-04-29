@@ -1,0 +1,32 @@
+---
+
+- name: Check if the Python executable {{python_exe}} is installed
+  tags:
+    - jupyter
+    - kernels
+    - python
+  stat:
+    path='{{python_exe}}'
+  register: python_exe_path
+
+  
+- name: Determine version of Python interpreter {{python_exe}}
+  tags:
+    - jupyter
+    - kernels
+    - python
+  command:
+    '{{python_exe}} -c "import sys; sys.stdout.write(str(sys.version_info.major))"'
+  register: python_version
+  when: python_exe_path.stat.exists
+  
+  
+- name: Install Python{{python_version.stdout}} Jupyter kernel
+  tags:
+    - jupyter
+    - kernels
+    - python
+  command:
+    '{{python_exe}} -m ipykernel install'
+  become: yes
+  when: python_exe_path.stat.exists
