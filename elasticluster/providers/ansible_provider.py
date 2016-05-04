@@ -218,10 +218,10 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             ])
 
         # determine Ansible verbosity as a function of ElastiCluster's
-        # log level (since we lack access to
-        # `ElastiCluster().params.verbose` here, but we can still
-        # access the log configuration since it's global).
-        verbosity = min(0, (logging.WARNING - elasticluster.log.level) / 10)
+        # log level (we cannot read `ElastiCluster().params.verbose`
+        # here, still we can access the log configuration since it's
+        # global).
+        verbosity = (logging.WARNING - elasticluster.log.level) / 10
         if verbosity > 0:
             cmd.append('-' + ('v' * verbosity))  # e.g., `-vv`
 
