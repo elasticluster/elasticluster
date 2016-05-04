@@ -9,6 +9,7 @@
 # Run all other playbooks one by one, so they get a chance of doing
 # their setup depending on configured host groups
 - include: roles/slurm.yml
+- include: roles/jupyterhub.yml
 - include: roles/jenkins.yml
 - include: roles/ganglia.yml
 - include: roles/pbs+maui.yml
