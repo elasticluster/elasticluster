@@ -12,6 +12,11 @@
     cache_valid_time=0
   when: is_debian_or_ubuntu
 
+- name: Upgrade all installed packages to latest version
+  apt:
+    upgrade=safe
+  when: is_debian_or_ubuntu
+  
 - name: Ensure additional packages are installed
   apt:
     name={{item}}
