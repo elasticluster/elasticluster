@@ -34,6 +34,8 @@ except ImportError:
 # External modules
 from ConfigParser import RawConfigParser
 
+from pkg_resources import resource_filename
+
 try:
     # Voluptuous version >= 0.8.1
     from voluptuous import message, MultipleInvalid, Invalid, Schema
@@ -366,9 +368,7 @@ class ConfigValidator(object):
 
         # manually interpolate ansible path; configobj does not offer
         # an easy way to do it
-        ansible_pb_dir = os.path.join(
-            sys.prefix,
-            'share/elasticluster/providers/ansible-playbooks')
+        ansible_pb_dir = resource_filename('elasticluster', 'share/playbooks')
         for cluster, props in self.config.iteritems():
             if 'setup' in props and 'playbook_path' in props['setup']:
                 if props['setup']['playbook_path'].startswith(

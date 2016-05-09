@@ -32,6 +32,8 @@ import tempfile
 import unittest
 import sys
 
+from pkg_resources import resource_filename
+
 from voluptuous import Invalid, MultipleInvalid
 
 from elasticluster.conf import ConfigReader, ConfigValidator, Configurator
@@ -200,8 +202,8 @@ class TestConfigurator(unittest.TestCase):
                       in conf.items() if k.endswith('_groups'))
         self.assertEqual(groups, provider.groups)
 
-        playbook_path = os.path.join(sys.prefix,
-                                     'share/elasticluster/providers/ansible-playbooks', 'site.yml')
+        playbook_path = resource_filename('elasticluster',
+                                          'share/playbooks/site.yml')
         self.assertEqual(playbook_path, provider._playbook_path)
 
         storage_path = configurator.general_conf['storage_path']
