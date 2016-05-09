@@ -34,6 +34,9 @@ except ImportError:
 
 import coloredlogs
 
+from pkg_resources import resource_filename
+
+
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.subcommands import Start, SetupCluster
@@ -144,8 +147,8 @@ class ElastiCluster(cli.app.CommandLineApp):
             # Copy the default configuration file to the user's home
                 if not os.path.exists(os.path.dirname(self.params.config)):
                     os.mkdir(os.path.dirname(self.params.config))
-                template = os.path.join(
-                    sys.prefix, 'share/elasticluster/etc/config.template')
+                template = resource_filename(
+                    'elasticluster', 'share/elasticluster/etc/config.template')
                 log.warning("Deploying default configuration file to %s.",
                             self.params.config)
                 shutil.copyfile(template, self.params.config)

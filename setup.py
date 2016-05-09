@@ -69,18 +69,19 @@ def read_file_lines(path):
         return [line for line in lines
                 if line != '' and not line.startswith('#')]
 
-ANSIBLE_PB_DIR = 'elasticluster/providers/ansible-playbooks'
+PLAYBOOKS_SRC_DIR = 'elasticluster/share/playbooks'
 
-def ansible_pb_files():
+def playbook_files():
     basedir = os.path.dirname(__file__)
-    ansible_data = [('share/elasticluster/etc', ['docs/config.template'])]
-    for (dirname, dirnames, filenames) in os.walk(ANSIBLE_PB_DIR):
-        tmp = []
-        for fname in filenames:
-            if fname.startswith('.git'): continue
-            tmp.append(os.path.join(dirname, fname))
-        ansible_data.append((os.path.join('share', dirname), tmp))
-    return ansible_data
+    ansible_files = []
+    for current_dir, dir_entries, file_entries in os.walk(PLAYBOOKS_SRC_DIR):
+        file_resources = []
+        for filename in file_entries:
+            if filename.startswith('.git'):
+                continue
+            file_resources.append(os.path.join(current_dir, filename))
+        ansible_files.append((os.path.join('share', current_dir), file_resources))
+    return ansible_files
 
 
 ## state run-time dependencies
@@ -187,7 +188,7 @@ setup(
     ],
     packages=find_packages(),
     install_requires=required_packages,
-    data_files=ansible_pb_files(),
+    data_files=([('share/etc', ['docs/config.template'])] + playbook_files()),
     entry_points={
         'console_scripts': [
             'elasticluster = elasticluster.main:main',
@@ -196,36 +197,3 @@ setup(
     tests_require=['tox', 'mock', 'pytest'],  # read right-to-left
     cmdclass={'test': Tox},
 )
-
-
-if __name__ == "__main__":
-    if sys.argv[1] in ['develop', 'install']:
-        develop = True if sys.argv[1] == 'develop' else False
-        curdir = os.path.abspath(os.path.dirname(__file__))
-        sharedir = os.path.join(os.path.abspath(sys.prefix), 'share', 'elasticluster')
-        etcdir = os.path.join(sharedir, 'etc')
-        templatecfg = os.path.join(curdir, 'docs', 'config.template')
-        templatedest = os.path.join(etcdir, os.path.basename(templatecfg))
-        ansibledest = os.path.join(sharedir, 'providers', 'ansible-playbooks')
-        ansiblesrc = os.path.join(curdir, 'elasticluster', 'providers', 'ansible-playbooks')
-
-        if not os.path.exists(sharedir):
-            os.makedirs(sharedir)
-
-        if not os.path.exists(etcdir):
-            os.makedirs(etcdir)
-
-        if not os.path.exists(os.path.dirname(ansibledest)):
-            os.makedirs(os.path.dirname(ansibledest))
-
-        if not os.path.exists(ansibledest):
-            if develop:
-                os.symlink(ansiblesrc, ansibledest)
-            else:
-                shutil.copytree(ansiblesrc, ansibledest)
-
-        if not os.path.exists(templatedest):
-            if develop:
-                os.symlink(templatecfg, templatedest)
-            else:
-                shutil.copy(templatecfg, etcdir)

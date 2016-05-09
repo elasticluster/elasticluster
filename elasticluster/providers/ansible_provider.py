@@ -31,6 +31,10 @@ import sys
 from warnings import warn
 
 
+# 3rd party imports
+from pkg_resources import resource_filename
+
+
 # Elasticluster imports
 import elasticluster
 from elasticluster import log
@@ -107,11 +111,12 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         self.extra_conf = extra_conf
 
         if not self._playbook_path:
-            self._playbook_path = os.path.join(
-                sys.prefix,
-                'share/elasticluster/providers/ansible-playbooks',
-                'site.yml'
-            )
+            # according to
+            # https://pythonhosted.org/setuptools/pkg_resources.html#resource-extraction
+            # requesting the filename to a directory causes all the
+            # contained files and directories to be extracted as well
+            playbook_dir = resource_filename('elasticluster', 'share/playbooks')
+            self._playbook_path = os.path.join(playbook_dir, 'site.yml')
         else:
             self._playbook_path = os.path.expanduser(self._playbook_path)
             self._playbook_path = os.path.expandvars(self._playbook_path)

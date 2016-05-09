@@ -1,3 +1,0 @@
-private_vars/* filter=openssl diff=openssl
-[merge]
-  renormalize=true
