@@ -5,9 +5,9 @@
   tags:
     - jupyter
   conda:
-    name: jupyter
-    state: present
-    executable: '{{anaconda_home}}/bin/conda'
+    name=jupyter
+    state=present
+    executable='{{anaconda_home}}/bin/conda'
 
 
 # install Python kernels (for Python version 2 and 3)
