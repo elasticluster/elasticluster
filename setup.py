@@ -32,22 +32,14 @@ try:
 except ImportError:
     pass
 
-# ensure we use a recent enough version of setuptools; CentOS7 still
-# ships with 0.9.8!  Setuptools 8.0 is the first release to fully
-# implement PEP 440 version specifiers.
+# Ensure we use a recent enough version of setuptools: CentOS7 still
+# ships with 0.9.8!  There has been some instability in the support
+# for PEP-496 environment markers recently, but Setuptools 20.6.8
+# seems to have restored full support for them.  See also issue #249.
 from ez_setup import use_setuptools
-use_setuptools(version='8.0')
+use_setuptools(version='20.6.8')
 
-# Since 10.2.1, `setuptools.command.sdist` does no longer have a
-# `finders` attribute and CVS/SVN support is no longer active by
-# default.  Still, since we only require an older release (see above),
-# we might need to monkeypatch `setuptools.command.sdist` to make it
-# honor plain old `MANIFEST.in`
-try:
-    from setuptools.command import sdist
-    del sdist.finders[:]
-except AttributeError:
-    pass
+from setuptools.command import sdist
 
 
 ## auxiliary functions

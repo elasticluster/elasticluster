@@ -3,6 +3,8 @@
 """
 Setuptools bootstrapping installer.
 
+Maintained at https://github.com/pypa/setuptools/tree/bootstrap.
+
 Run this script to install or upgrade setuptools.
 """
 
@@ -23,8 +25,10 @@ from distutils import log
 
 try:
     from urllib.request import urlopen
+    from urllib.parse import urljoin
 except ImportError:
     from urllib2 import urlopen
+    from urlparse import urljoin
 
 try:
     from site import USER_SITE
@@ -33,7 +37,7 @@ except ImportError:
 
 LATEST = object()
 DEFAULT_VERSION = LATEST
-DEFAULT_URL = "https://pypi.python.org/packages/source/s/setuptools/"
+DEFAULT_URL = "https://pypi.io/packages/source/s/setuptools/"
 DEFAULT_SAVE_DIR = os.curdir
 
 
@@ -192,6 +196,11 @@ def _conflict_bail(VC_err, version):
 
 
 def _unload_pkg_resources():
+    sys.meta_path = [
+        importer
+        for importer in sys.meta_path
+        if importer.__class__.__module__ != 'pkg_resources.extern'
+    ]
     del_modules = [
         name for name in sys.modules
         if name.startswith('pkg_resources')
@@ -251,7 +260,7 @@ download_file_powershell.viable = has_powershell
 
 
 def download_file_curl(url, target):
-    cmd = ['curl', url, '--silent', '--output', target]
+    cmd = ['curl', url, '--location', '--silent', '--output', target]
     _clean_check(cmd, target)
 
 
@@ -344,7 +353,8 @@ def _resolve_version(version):
     if version is not LATEST:
         return version
 
-    resp = urlopen('https://pypi.python.org/pypi/setuptools/json')
+    meta_url = urljoin(DEFAULT_URL, '/pypi/setuptools/json')
+    resp = urlopen(meta_url)
     with contextlib.closing(resp):
         try:
             charset = resp.info().get_content_charset()
@@ -371,7 +381,7 @@ def _parse_args():
     parser = optparse.OptionParser()
     parser.add_option(
         '--user', dest='user_install', action='store_true', default=False,
-        help='install in user site package (requires Python 2.6 or later)')
+        help='install in user site package')
     parser.add_option(
         '--download-base', dest='download_base', metavar="URL",
         default=DEFAULT_URL,
@@ -386,9 +396,9 @@ def _parse_args():
         default=DEFAULT_VERSION,
     )
     parser.add_option(
-    	'--to-dir',
-    	help="Directory to save (and re-use) package",
-    	default=DEFAULT_SAVE_DIR,
+        '--to-dir',
+        help="Directory to save (and re-use) package",
+        default=DEFAULT_SAVE_DIR,
     )
     options, args = parser.parse_args()
     # positional arguments are ignored
@@ -396,13 +406,13 @@ def _parse_args():
 
 
 def _download_args(options):
-	"""Return args for download_setuptools function from cmdline args."""
-	return dict(
-		version=options.version,
-		download_base=options.download_base,
-		downloader_factory=options.downloader_factory,
-		to_dir=options.to_dir,
-	)
+    """Return args for download_setuptools function from cmdline args."""
+    return dict(
+        version=options.version,
+        download_base=options.download_base,
+        downloader_factory=options.downloader_factory,
+        to_dir=options.to_dir,
+    )
 
 
 def main():
