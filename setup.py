@@ -61,20 +61,6 @@ def read_file_lines(path):
         return [line for line in lines
                 if line != '' and not line.startswith('#')]
 
-PLAYBOOKS_SRC_DIR = 'elasticluster/share/playbooks'
-
-def playbook_files():
-    basedir = os.path.dirname(__file__)
-    ansible_files = []
-    for current_dir, dir_entries, file_entries in os.walk(PLAYBOOKS_SRC_DIR):
-        file_resources = []
-        for filename in file_entries:
-            if filename.startswith('.git'):
-                continue
-            file_resources.append(os.path.join(current_dir, filename))
-        ansible_files.append((os.path.join('share', current_dir), file_resources))
-    return ansible_files
-
 
 ## state run-time dependencies
 #
@@ -152,7 +138,7 @@ setup(
     name="elasticluster",
     version=read_whole_file("version.txt"),
     description="A command line tool to create, manage and setup computing clusters hosted on a public or private cloud infrastructure.",
-    long_description=open('README.rst').read(),
+    long_description=read_whole_file('README.rst'),
     author="Services and Support for Science IT, University of Zurich",
     author_email="team@s3it.lists.uzh.ch",
     license="LGPL",
@@ -180,7 +166,7 @@ setup(
     ],
     packages=find_packages(),
     install_requires=required_packages,
-    data_files=([('share/etc', ['docs/config.template'])] + playbook_files()),
+    include_package_data=True,  # include files mentioned by MANIFEST.in
     entry_points={
         'console_scripts': [
             'elasticluster = elasticluster.main:main',

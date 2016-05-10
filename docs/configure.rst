@@ -753,7 +753,7 @@ compute nodes. Your configuration will thus look like::
     flavor=bigdisk
 
 
-.. _`template configuration file`: https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template
+.. _`template configuration file`: https://raw.github.com/gc3-uzh-ch/elasticluster/master/elasticluster/share/etc/config.template
 
 Storage section
 ===============
