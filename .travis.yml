@@ -3,7 +3,8 @@ python:
   - "2.6"
   - "2.7"
 install:
-  - "pip install pytest mock"
+  - "pip install --upgrade setuptools"
+  - "pip install pytest mock tox"
   - "pip install ."
 script: py.test
 sudo: false
