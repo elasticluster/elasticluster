@@ -8,13 +8,13 @@
 .. |trevis-ci-status| image:: https://travis-ci.org/gc3-uzh-ch/elasticluster.svg?branch=master
 
 
-`ElastiCluster`_ aims to provide a user-friendly command line tool to
+ElastiCluster_ aims to provide a user-friendly command line tool to
 create, manage and setup computing clusters hosted on cloud
-infrastructures (like `Amazon's Elastic Compute Cloud EC2`_ or `Google
-Compute Engine`_) or a private `OpenStack`_ cloud). Its main goal is
+infrastructures (like `Amazon's Elastic Compute Cloud EC2`_, `Google
+Compute Engine`_, or a private OpenStack_ cloud). Its main goal is
 to get your own private cluster up and running with just a few
-commands; a `YouTube video`_ demoes the basic features of
-elasticluster.
+commands; this video_ demoes ElastiCluster setting up a
+computational batch-queueing cluster.
 
 Documentation for ElastiCluster is available on the `Read The Docs
 <http://elasticluster.readthedocs.org/>`_ website.  General discussion
@@ -31,27 +31,29 @@ IT`_ (S3IT) unit at the `University of Zurich`_, licensed under the
 Features
 ========
 
-`ElastiCluster`_ is in active development, but offers the following features at the current state:
+ElastiCluster_ is in active development, and offers the following
+features at the moment:
 
-* Simple configuration file to define cluster templates
+* INI-style configuration file to define cluster templates
 * Can start and manage multiple independent clusters at the same time
 * Automated cluster setup:
-    * use `Debian GNU/Linux`_, `Ubuntu`_, or `CentOS`_ as a base operating system
-    * choose `SLURM`_, `Grid Engine`_ or `TORQUE+MAUI`_ as a batch-queueing system
-    * setup your `Hadoop`_ cluster to start your favorite map/reduce job
+    * use `Debian GNU/Linux`_, Ubuntu_, or CentOS_ as a base operating system
+    * choose SLURM_, `Grid Engine`_ or `TORQUE+MAUI`_ as a batch-queueing system
+    * setup your Hadoop_ cluster to start your favorite map/reduce job
     * or create your `IPython cluster`_ to run your python code in
       parallel over multiple virtual machines
-    * configure a distributed storage like `GlusterFS`_ or `Ceph`_, or a
-      parallel filesystem like `OrangeFS`_ (formerly known as PVFS2)
-    * add useful tools like `Ganglia`_ for monitoring...
-    * ...or anything that you can install with an `Ansible`_ playbook!
+    * configure a distributed storage like GlusterFS_ or Ceph_, or a
+      parallel filesystem like OrangeFS_ (formerly known as PVFS2)
+    * add useful tools like Ganglia_ for monitoring...
+    * ...or anything that you can install with an Ansible_ playbook!
 * Grow and shrink a running cluster
 
-`ElastiCluster`_ is currently in active development: please use the
-GitHub issue tracker to `file enhancement requests and ideas`_
+ElastiCluster_ is currently in active development: please use the
+GitHub issue tracker to `file enhancement requests and ideas`_,
+or the `mailing-list`_ for discussion.
 
 We appreciate pull requests for new features and enhancements. Please
-use the master branch as starting point.
+use the *develop* branch as starting point.
 
 
 Quickstart
@@ -60,25 +62,19 @@ Quickstart
 Installing from PyPI
 --------------------
 
-`ElastiCluster`_ is a `Python`_ program; Python version 2.6 or 2.7 is
+ElastiCluster_ is a Python_ program; Python version 2.6 or 2.7 is
 required to run it.
 
-It's quite easy to install `elasticluster` using `pip`_; the command
-below is all you need to install `elasticluster` on your system::
+It's quite easy to install ElastiCluster using pip_; the command
+below is all you need to install ElastiCluster on your system::
 
     pip install elasticluster
 
-If you want to run `elasticluster` from source you have to **install**
-`Ansible`_ **first**::
 
-    pip install ansible
-    python setup.py install
-
-
-Installing the development version from github
+Installing the development version from GitHub
 ----------------------------------------------
 
-The source code of elasticluster is on `GitHub`_, if you want to test
+The source code of elasticluster is on GitHub_, if you want to test
 the latest development version you should clone the `github elasticluster
 repository`_.
 
@@ -88,12 +84,10 @@ controlled environment in which you can install elasticluster as
 normal user.
 
 Assuming you already have ``virtualenv`` installed on your machine,
-you first need to create a virtualenv and install `ansible`, which is
-needed by elasticluster::
+you first need to create a virtualenv::
 
     virtualenv elasticluster
     . elasticluster/bin/activate
-    pip install ansible
 
 Then you have to download the software. We suggest you to download it
 *within* the created virtualenv::
@@ -115,7 +109,7 @@ environment.
 .. _`GC3 Hobbes cloud`: http://www.gc3.uzh.ch/infrastructure/hobbes
 .. _`configuration template`: https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template.ini
 .. _`GNU General Public License version 3`: http://www.gnu.org/licenses/gpl.html
-.. _`YouTube video`: http://youtu.be/cR3C7XCSMmA
+.. _`video`: http://youtu.be/cR3C7XCSMmA
 
 .. _`Amazon's Elastic Compute Cloud EC2`: http://aws.amazon.com/ec2/
 .. _`Google Compute Engine`: https://cloud.google.com/products/compute-engine
