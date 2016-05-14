@@ -1,0 +1,14 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+# see: https://copr.fedorainfracloud.org/coprs/verdurin/slurm/
+[verdurin-slurm]
+name=Copr repo for SLURM owned by verdurin
+baseurl=https://copr-be.cloud.fedoraproject.org/results/verdurin/slurm/epel-{{ansible_distribution_major_version}}-$basearch/
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://copr-be.cloud.fedoraproject.org/results/verdurin/slurm/pubkey.gpg
+enabled=1
+enabled_metadata=1

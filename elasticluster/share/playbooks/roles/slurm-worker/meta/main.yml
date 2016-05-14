@@ -1,0 +1,5 @@
+# slurm-worker/meta/main.yml
+---
+
+dependencies:
+  - { role: slurm-client }

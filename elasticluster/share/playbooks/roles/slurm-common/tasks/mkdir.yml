@@ -1,0 +1,20 @@
+---
+
+# Ensure directory {{path}} exists, but follow symlinks to check
+
+# use this stat/file sequence to avoid Ansible replacing
+# compatibility symlinks with directories on Debian/Ubuntu
+
+- name: Check if SLURM work directory {{path}} exist
+  stat:
+    path='{{path}}'
+    follow=yes
+  register: p
+
+- name: Create work directory {{path}}
+  file:
+    path='{{path}}'
+    state=directory
+    owner=slurm
+    group=slurm
+  when: not p.stat.exists
