@@ -235,15 +235,16 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         if ansible_extra_args:
             cmd += shlex.split(ansible_extra_args)
 
-        elasticluster.log.debug(
-            "Running Ansible command `%s` ...", (' '.join(cmd)))
+        cmdline = ' '.join(cmd)
+        elasticluster.log.debug("Running Ansible command `%s` ...", cmdline)
+
         rc = call(cmd, env=ansible_env, bufsize=1, close_fds=True)
         if rc == 0:
             elasticluster.log.info("Cluster correctly configured.")
             return True
         else:
             elasticluster.log.error(
-                "Command `ansible-playbook` failed with exit code %d.", rc)
+                "Command `%s` failed with exit code %d.", cmdline, rc)
             elasticluster.log.error(
                 "Check the output lines above for additional information on this error.")
             elasticluster.log.error(
