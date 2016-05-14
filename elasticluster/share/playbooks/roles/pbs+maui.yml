@@ -6,13 +6,13 @@
 
 - name: PBS masternode Playbook
   hosts: pbs_master
+  roles:
+    - role: nfs-server
+      NFS_EXPORTS:
+        path: '/home'
+        clients: '{{groups.pbs_clients}}'
+        options: 'rw,no_root_squash,async'
   tasks: 
-    - include: common/tasks/nfs.yml
-    - nfsexport: path=/home dest=/etc/exports clients="{{groups.pbs_clients}}" options=rw,no_root_squash,async
-      notify: 
-        - ensure nfs service is running
-        - reload exports
-
     - include: pbs+maui/tasks/master.yml
     - include: cluster/tasks/packages.yml
   handlers:
@@ -29,8 +29,13 @@
 
 - name: PBS worker nodes Playbook
   hosts: pbs_clients
+  roles:
+    - role: nfs-client
+      NFS_MOUNTS:
+        fs: '{{groups.pbs_master[0]}}:/home'
+        mountpoint: '/home'
+        options: 'rw,async'
   tasks: 
-    - include: common/tasks/nfs-clients.yml nfsserver={{groups.pbs_master[0]}} nfspath=/home nfsmount=/home nfsoptions=rw,async
     - include: pbs+maui/tasks/clients.yml
     - include: cluster/tasks/packages.yml
   handlers:
