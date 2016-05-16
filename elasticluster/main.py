@@ -148,7 +148,7 @@ class ElastiCluster(cli.app.CommandLineApp):
                 if not os.path.exists(os.path.dirname(self.params.config)):
                     os.mkdir(os.path.dirname(self.params.config))
                 template = resource_filename(
-                    'elasticluster', 'share/elasticluster/etc/config.template')
+                    'elasticluster', 'share/etc/config.template')
                 log.warning("Deploying default configuration file to %s.",
                             self.params.config)
                 shutil.copyfile(template, self.params.config)
