@@ -184,7 +184,7 @@ Valid configuration keys for `google`
 ``network``
 
     The GCE network to be used. Default is `default`.
-    
+
 
 Valid configuration keys for *openstack*
 ----------------------------------------
@@ -383,6 +383,7 @@ instead::
     user_key_private=~/.ssh/id_rsa
     user_key_public=~/.ssh/id_rsa.pub
 
+
 Setup Section
 =============
 
@@ -467,6 +468,53 @@ The following configuration keys are only valid if `provider` is
     elasticluster. The default value points to the playbooks
     distributed with elasticluster.
 
+``ansible_command``
+
+    Path name of the ``ansible-playbook`` command; defaults to
+    ``ansible-playbook``, i.e., search for the command named
+    ``ansible-playbook`` in the shell search path.  Can also include
+    arguments that will be *prepended* to other arguments that
+    ElastiCluster adds to build the "setup" command invocation.
+
+``ansible_extra_args``
+
+    Arguments to *append* to the "setup" command invocation; can be used
+    to override specific parameters or to further influence the
+    behavior of the ``ansible-playbook`` command (e.g., skip certain tags).
+
+    The string is split according to POSIX shell parsing rules, so
+    quotes can be used to protect arguments with embedded spaces.
+
+    Examples::
+
+      [setup/ansible]
+      # do not run any setup action tagged as 'users'
+      ansible_extra_args = --skip-tags users
+
+      [setup/ansible]
+      # ask for confirmation at each step
+      ansible_extra_args = --step
+
+``ansible_<option>``
+    Any configuration key starting with the string ``ansible_`` is
+    used to set the corresponding (uppercased) environmental
+    variable and thus override Ansible configuration.
+
+    For example, the following settings raise the number of concurrent
+    Ansible connections to 20 and allow a maximum waiting time of 300
+    seconds for a single task to finish::
+
+      [setup/ansible]
+      # ...
+      ansible_forks=20
+      ansible_timeout=300
+
+    The full list of environment variables used by Ansible is available
+    from the `Ansible configuration`__ section of the Ansible online documentation.
+
+    .. __: http://docs.ansible.com/ansible/intro_configuration.html#environmental-configuration
+
+
 Examples
 --------
 
@@ -493,6 +541,7 @@ Some (working) examples::
     provider=ansible
     frontend_groups=mdce_master,mdce_worker,ganglia_monitor,ganglia_master
     worker_groups=mdce_worker,ganglia_monitor
+
 
 Cluster Section
 ===============
@@ -704,7 +753,7 @@ compute nodes. Your configuration will thus look like::
     flavor=bigdisk
 
 
-.. _`template configuration file`: https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template
+.. _`template configuration file`: https://raw.github.com/gc3-uzh-ch/elasticluster/master/elasticluster/share/etc/config.template
 
 Storage section
 ===============

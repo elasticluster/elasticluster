@@ -3,7 +3,7 @@
 # @(#)test_repository.py
 #
 #
-# Copyright (C) 2013, 2016 S3IT, University of Zurich. All rights reserved.
+# Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -40,25 +40,12 @@ from elasticluster.repository import PickleRepository, MemRepository, \
 import pytest
 
 
-class FakeCluster(Struct):
-    """Fake class used for the storage cluster class.  The only thing the
-    PickleRepository class assumes is that the saved class has a `name`
-    attribute.
-    """
-    def __init__(self, name='fake_cluster'):
-        self.name = name
-        self.nodes = {}
-
-    def __eq__(self, other):
-        return self.name == other.name
-
-
 class MemRepositoryTests(unittest.TestCase):
     def setUp(self):
         self.storage = MemRepository()
 
     def test_get_all(self):
-        clusters = [FakeCluster('test_%d' % i) for i in range(10)]
+        clusters = [Cluster('test_%d' % i) for i in range(10)]
 
         for cluster in clusters:
             self.storage.save_or_update(cluster)
@@ -68,7 +55,7 @@ class MemRepositoryTests(unittest.TestCase):
             assert cluster in clusters
 
     def test_get(self):
-        clusters = [FakeCluster('test_%d' % i) for i in range(10)]
+        clusters = [Cluster('test_%d' % i) for i in range(10)]
 
         for cluster in clusters:
             self.storage.save_or_update(cluster)
@@ -78,7 +65,7 @@ class MemRepositoryTests(unittest.TestCase):
             assert cluster in clusters
 
     def test_delete(self):
-        cluster = FakeCluster('test1')
+        cluster = Cluster('test1')
         self.storage.save_or_update(cluster)
         assert cluster.name in self.storage.clusters
 
@@ -99,7 +86,7 @@ class PickleRepositoryTests(MemRepositoryTests):
         pass
 
     def test_save_and_delete(self):
-        cluster = FakeCluster('test1')
+        cluster = Cluster('test1')
         self.storage.save_or_update(cluster)
 
         clusterpath = os.path.join(self.path, 'test1.pickle')
@@ -133,13 +120,14 @@ class JsonRepositoryTests(unittest.TestCase):
             assert cluster.name in cluster_names
 
     def test_get(self):
-        clusters = [FakeCluster('test_%d' % i) for i in range(10)]
+        clusters = [Cluster('test_%d' % i) for i in range(10)]
         cluster_names = [c.name for c in clusters]
 
         for cluster in clusters:
             self.storage.save_or_update(cluster)
 
         new_clusters = [self.storage.get(cluster.name) for cluster in clusters]
+        cluster_names = [c.name for c in clusters]
         for cluster in new_clusters:
             assert cluster.name in cluster_names
 
@@ -196,11 +184,12 @@ class YamlRepositoryTests(unittest.TestCase):
             self.storage.save_or_update(cluster)
 
         new_clusters = self.storage.get_all()
+        cluster_names = [c.name for c in clusters]
         for cluster in new_clusters:
             assert cluster.name in cluster_names
 
     def test_get(self):
-        clusters = [FakeCluster('test_%d' % i) for i in range(10)]
+        clusters = [Cluster('test_%d' % i) for i in range(10)]
 
         for cluster in clusters:
             self.storage.save_or_update(cluster)

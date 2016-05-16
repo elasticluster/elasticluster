@@ -1,0 +1,12 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+#
+# All hosts below will run the HDFS DataNode and YARN NodeManager
+# services.
+#
+{% for fqdn in groups['hadoop_worker'] %}
+{{fqdn}}
+{% endfor %}

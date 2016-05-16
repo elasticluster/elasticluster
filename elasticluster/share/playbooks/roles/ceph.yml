@@ -1,0 +1,73 @@
+---
+- hosts: ceph_osd:ceph_mon:ceph_mds
+  vars:
+    - fsid: 00baac7a-0ad4-4ab7-9d5e-fdaf7d122aee
+    - osd_devs: /dev/vdb1
+  tasks:
+    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
+    - include: ceph/tasks/main.yml
+  handlers:
+    - include: common/handlers/main.yml
+    - include: ceph/handlers/main.yml
+
+- hosts: ceph_osd:ceph_mon:ceph_mds
+  name: get facts
+  tasks:
+    - action: ceph_facts
+      tags:
+        - ceph
+        - test
+
+- hosts: ceph_mon
+  tasks:
+    - include: ceph/tasks/mon_0.yml
+  handlers:
+    - include: common/handlers/main.yml
+    - include: ceph/handlers/main.yml
+
+- hosts: ceph_mon
+  tasks:
+    - include: ceph/tasks/mon.yml
+  handlers:
+    - include: common/handlers/main.yml
+    - include: ceph/handlers/main.yml
+
+- hosts: ceph_osd
+  vars:
+    - osd_disk: /dev/vdb
+  tasks:
+    - include: ceph/tasks/osd.yml
+  handlers:
+    - include: common/handlers/main.yml
+    - include: ceph/handlers/main.yml
+
+- hosts: ceph_mds
+  tasks:
+    - include: ceph/tasks/mds.yml
+  handlers:
+    - include: common/handlers/main.yml
+    - include: ceph/handlers/main.yml
+
+
+# - hosts: all
+#   name: print
+#   tasks:
+#     - action: 'debug msg="Index {{inventory_hostname}}: {{ceph_idx}}"'
+#       tags:
+#         - test
+
+#     - action: 'debug msg="Index {{inventory_hostname}}: {{hostvars.{{inventory_hostname}}.ceph_name}}"'
+#       tags:
+#         - cephtest
+      
+# - hosts: ceph_mon
+#   tasks:
+#     - action: shell ceph auth get-key client.bootstrap-osd
+
+
+# - hosts: ceph_osd:ceph_mon:ceph_mds
+#   tasks:
+#     - action: service name=ceph state=started
+#       tags:
+#         - ceph
+#         - test

@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  THIS FILE IS CONTROLLED BY ELASTICLUSTER
+  local modifications will be overwritten
+  the next time `elasticluster setup` is run!
+-->
+
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+  <!-- connection data to the server -->
+  <property>
+    <name>mapreduce.jobhistory.address</name>
+    <value>{{groups.hadoop_master[0]}}:10020</value>
+    <description>
+      MapReduce JobHistory Server host:port
+      Default port is 10020.
+    </description>
+  </property>
+
+  <property>
+    <name>mapreduce.jobhistory.webapp.address</name>
+    <value>{{groups.hadoop_master[0]}}:19888</value>
+    <description>
+      MapReduce JobHistory Server Web UI host:port
+      Default port is 19888.
+    </description>
+  </property>
+
+  <!-- see: https://www.mapr.com/blog/best-practices-yarn-resource-management -->
+  <property>
+    <name>yarn.app.mapreduce.am.resource.cpu-vcores</name>
+    <value>1</value>
+    <description>
+      How many CPU cores to allocate to the AM.
+    </description>
+  </property>
+
+  <property>
+    <name>yarn.app.mapreduce.am.resource.mb</name>
+    <value>1200</value>
+    <description>
+      Memory resource limit for AMs; in MBs.
+    </description>
+  </property>
+
+  <property>
+    <name>yarn.app.mapreduce.am.command-opts</name>
+    <value>-Xmx1000</value>
+    <description>
+      Additional JVM command-line options; used here to set the max
+      heap-size for child jvms of AMs.  This is less than the total
+      memory allocation (see `am.resource.mb`); a good rule of thumb
+      is to set it to 80% of the total memory
+    </description>
+  </property>
+
+  <property>
+    <name>mapreduce.map.memory.mb</name>
+    <value>1000</value>
+    <description>
+      Memory resource limit for mappers; in MBs.
+    </description>
+  </property>
+
+  <property>
+    <name>mapreduce.map.java.opts</name>
+    <value>-Xmx900</value>
+    <description>
+      Max heap-size for child jvms of mappers.
+      This is less than the total memory allocation (see `mapreduce.map.memory.mb`);
+      a good rule of thumb is to set it to 80% of the total memory
+    </description>
+  </property>
+
+  <property>
+    <name>mapreduce.reduce.memory.mb</name>
+    <value>2400</value>
+    <description>
+      Memory resource limit for reducers; in MBs.
+    </description>
+  </property>
+
+  <property>
+    <name>mapreduce.reduce.java.opts</name>
+    <value>-Xmx2000</value>
+    <description>
+      Max heap-size for child jvms of reducers.
+      This is less than the total memory allocation (see `mapreduce.reduce.memory.mb`);
+      a good rule of thumb is to set it to 80% of the total memory
+    </description>
+  </property>
+
+</configuration>

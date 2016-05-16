@@ -1,6 +1,39 @@
-*.pyc
+# ElastiCluster-specific patterns
+elasticluster.egg-info/
 .noseids
-.tox
+.tox/
+
+# Python-specific
+*.py[co]
 build
 dist
-elasticluster.egg-info
+.venv
+
+# Ansible-specific
+*.retry
+
+# general exclusion patterns
+*.a
+*.o
+*.so
+*.sw[nop]
+*~
+.#*
+[#]*#
+*.bak
+*.old
+.gitignore
+
+# Final documents - ignore by default
+*.dvi
+*.pdf
+*.ps
+
+# Emacs byte-compiled files
+*.elc
+
+# archive formats - ignore by default
+*.tar
+*.tar.bz2
+*.tar.gz
+*.zip

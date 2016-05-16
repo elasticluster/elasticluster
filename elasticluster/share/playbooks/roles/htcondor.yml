@@ -1,0 +1,39 @@
+---
+- name: HTCondor common Playbook
+  hosts: condor_master:condor_workers
+  roles:
+    - { role: iptables, default_input_policy: 'ACCEPT' }
+  tasks: 
+    - include: cluster/tasks/packages.yml
+    - include: htcondor/tasks/common.yml
+
+  handlers:
+    - include: common/handlers/main.yml
+    - include: htcondor/handlers/common.yml
+
+- name: HTCondor master Playbook
+  hosts: condor_master
+  roles:
+    - role: nfs-server
+      NFS_EXPORTS:
+        path: '/home'
+        clients: '{{group.condor_workers}}'
+        options: 'rw,no_root_squash,async'
+  handlers:
+    - include: common/handlers/main.yml
+    - include: htcondor/handlers/common.yml
+
+
+- name: HTCondor worker nodes Playbook
+  hosts: condor_workers
+  roles:
+    - role: nfs-client
+      NFS_MOUNTS:
+        fs: '{{groups.condor_master[0]}}:/home'
+        mountpoint: '/home'
+  handlers:
+    - include: common/handlers/main.yml
+    - include: htcondor/handlers/common.yml
+
+# Get infos with
+# ansible -i hostsfile -m setup hostname

@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013-2014, 2016 S3IT, University of Zurich
+#   Copyright (C) 2013-2016 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -34,6 +34,9 @@ except ImportError:
 
 import coloredlogs
 
+from pkg_resources import resource_filename
+
+
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.subcommands import Start, SetupCluster
@@ -55,6 +58,7 @@ from elasticluster.migration_tools import MigrationCommand
 
 class ElastiCluster(cli.app.CommandLineApp):
     name = "elasticluster"
+    description = "Elasticluster will start, stop, grow, shrink clusters on an EC2 cloud."
 
     default_configuration_file = os.path.expanduser(
         "~/.elasticluster/config")
@@ -91,9 +95,10 @@ class ElastiCluster(cli.app.CommandLineApp):
                             Configurator.default_storage_path,
                        default=Configurator.default_storage_path)
         self.add_param('-c', '--config', metavar='PATH',
-                       help="Path to the configuration file. Default: `%s`. "
-                       "If directory PATH.d, also all files like "
-                       "PATH.d/*.conf are parsed." % self.default_configuration_file,
+                       help=("Path to the configuration file; default: `%s`. "
+                            "If directory `PATH.d` exists, also all files matching"
+                            " pattern `PATH.d/*.conf` are parsed."
+                             % self.default_configuration_file),
                        default=self.default_configuration_file)
         self.add_param('--version', action='store_true',
                        help="Print version information and exit.")
@@ -142,8 +147,8 @@ class ElastiCluster(cli.app.CommandLineApp):
             # Copy the default configuration file to the user's home
                 if not os.path.exists(os.path.dirname(self.params.config)):
                     os.mkdir(os.path.dirname(self.params.config))
-                template = os.path.join(
-                    sys.prefix, 'share/elasticluster/etc/config.template')
+                template = resource_filename(
+                    'elasticluster', 'share/etc/config.template')
                 log.warning("Deploying default configuration file to %s.",
                             self.params.config)
                 shutil.copyfile(template, self.params.config)
@@ -155,28 +160,30 @@ class ElastiCluster(cli.app.CommandLineApp):
                         self.params.config)
                     sys.exit(1)
 
+        assert self.params.func, ("No subcommand defined in `ElastiCluster.setup()")
+        try:
+            self.params.func.pre_run()
+        except (RuntimeError, ConfigurationError) as ex:
+            sys.stderr.write(str(ex).strip())
+            sys.stderr.write('\n')
+            sys.exit(1)
 
-        if self.params.func:
-            try:
-                self.params.func.pre_run()
-            except (RuntimeError, ConfigurationError) as ex:
-                sys.stderr.write(str(ex).strip() + '\n')
-                sys.exit(1)
 
     def main(self):
         """
-        Elasticluster will start, stop, grow, shrink clusters on an EC2 cloud.
-        """
-        # This is the main entry point of the elasticluster.  First the
-        # central configuration is created, which can be altered through
-        # the command line interface. Then the given command from the
-        # command line interface is called.
+        This is the main entry point of the ElastiCluster CLI.
 
-        # call the subcommand function (ususally execute)
+        First the central configuration is created, which can be altered
+        through the command line interface. Then the given command from
+        the command line interface is called.
+        """
+        assert self.params.func, ("No subcommand defined in `ElastiCluster.main()")
         try:
             return self.params.func()
         except MultipleInvalid as ex:
             print("Multiple errors: %s" % str.join(', ', [str(e) for e in ex.errors]))
+            print("Exiting.")
+            sys.exit(1)
         except Invalid as ex:
             print("Error: %s" % ex)
             print("Exiting.")

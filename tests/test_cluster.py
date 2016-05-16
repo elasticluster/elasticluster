@@ -34,7 +34,7 @@ from elasticluster.exceptions import ClusterError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 from elasticluster.repository import PickleRepository
 
-from helpers import Configuration
+from _helpers.config import Configuration
 
 
 class TestCluster(unittest.TestCase):
@@ -212,7 +212,7 @@ class TestCluster(unittest.TestCase):
 
         cluster.setup()
 
-        setup_provider.setup_cluster.assert_called_once_with(cluster)
+        setup_provider.setup_cluster.assert_called_once_with(cluster, tuple())
 
     def test_update(self):
         storage = MagicMock()

@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<!--
+  THIS FILE IS CONTROLLED BY ELASTICLUSTER
+  local modifications will be overwritten
+  the next time `elasticluster setup` is run!
+-->
+
+<configuration>
+
+  <!--
+      If this is not set, YARN applications fail with a
+      `NoClassDefFoundError`, see:
+      http://stackoverflow.com/questions/23458385/noclassdeffounderror-for-simple-yarn-application
+  -->
+  <property>
+    <name>yarn.application.classpath</name>
+    <value>
+      /etc/hadoop/conf,
+      /usr/lib/hadoop/*,
+      /usr/lib/hadoop/lib,
+      /usr/lib/hadoop/lib/*,
+      /usr/lib/hadoop-hdfs,
+      /usr/lib/hadoop-hdfs/*,
+      /usr/lib/hadoop-hdfs/lib/*,
+      /usr/lib/hadoop-yarn/*,
+      /usr/lib/hadoop-yarn/lib/*,
+      /usr/lib/hadoop-mapreduce/*,
+      /usr/lib/hadoop-mapreduce/lib/*
+    </value>
+  </property>
+
+
+  <!-- Site specific YARN configuration properties -->
+  <property>
+    <name>yarn.resourcemanager.hostname</name>
+    <value>{{groups.hadoop_master[0]}}</value>
+    <description>The hostname of the ResourceManager.</description>
+  </property>
+
+  <property>
+    <name>yarn.resourcemanager.scheduler.class</name>
+    <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler</value>
+    <description>
+      ResourceManager Scheduler class:
+      * CapacityScheduler (recommended),
+      * FairScheduler (also recommended), or
+      * FifoScheduler
+    </description>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.minimum-allocation-mb</name>
+    <value>500</value>
+    <description>
+      Minimum limit of memory to allocate to each container request
+      at the Resource Manager. In MBs.
+    </description>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.maximum-allocation-mb</name>
+    <value>13000</value>{# FIXME: should depend on host memory #}
+    <description>
+      Maximum limit of memory to allocate to each container request
+      at the Resource Manager. In MBs.
+    </description>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.minimum-allocation-vcores</name>
+    <value>1</value>
+    <description>
+      Minimum number of cores to allocate to each container request
+      at the Resource Manager.
+    </description>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.maximum-allocation-vcores</name>
+    <value>4</value>{# FIXME: should depend on host CPUs #}
+    <description>
+      Maximum number of cores to allocate to each container request
+      at the Resource Manager.
+    </description>
+  </property>
+
+  <!-- the `yarn.nodemanager.resource.*` properties override detected values for a *single* NodeManager -->
+  <property>
+    <name>yarn.nodemanager.resource.cpu-vcores</name>
+    <value>4</value>{# FIXME: should depend on host CPUs #}
+  </property>
+
+  <property>
+    <name>yarn.nodemanager.resource.memory-mb</name>
+    <value>14000</value><!-- keep 20% of total memory for OS + JVM overhead -->
+  </property>
+
+  <!-- log aggregation is necessary for correct Spark/YARN integration -->
+  <property>
+    <name>yarn.log-aggregation-enable</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <name>yarn.log-aggregation.retain-seconds</name>
+    <value>900000</value><!-- ~10 days -->
+    <description>
+      How long to keep aggregation logs before deleting them. -1 disables.
+      Be careful, set this too small and you will spam the name node.
+    </description>
+  </property>
+
+  <property>
+    <name>yarn.log-aggregation.retain-check-interval-seconds</name>
+    <value>0</value>
+    <description>
+      Time between checks for aggregated log retention.
+
+      If set to 0 or a negative value then the value is computed as
+      one-tenth of the aggregated log retention time.  Be careful, set
+      this too small and you will spam the name node.
+    </description>
+  </property>
+
+</configuration>

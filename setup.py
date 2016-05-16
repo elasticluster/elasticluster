@@ -32,33 +32,43 @@ try:
 except ImportError:
     pass
 
+# Ensure we use a recent enough version of setuptools: CentOS7 still
+# ships with 0.9.8!  There has been some instability in the support
+# for PEP-496 environment markers recently, but Setuptools 20.6.8
+# seems to have restored full support for them.  See also issue #249.
+from ez_setup import use_setuptools
+use_setuptools(version='20.6.8')
+
 from setuptools.command import sdist
 
-# Newer versions of setuptools do not have `finders` attribute.
-if hasattr(sdist, 'finders'):
-    del sdist.finders[:]
 
-ANSIBLE_PB_DIR = 'elasticluster/providers/ansible-playbooks'
+## auxiliary functions
+#
+def read_whole_file(path):
+    """
+    Return file contents as a string.
+    """
+    with open(path, 'r') as stream:
+        return stream.read()
+
+def read_file_lines(path):
+    """
+    Return list of file lines, stripped of leading and trailing
+    whitespace (including newlines), and of comment lines.
+    """
+    with open(path, 'r') as stream:
+        lines = [line.strip() for line in stream.readlines()]
+        return [line for line in lines
+                if line != '' and not line.startswith('#')]
 
 
-def ansible_pb_files():
-    basedir = os.path.dirname(__file__)
-    ansible_data = [('share/elasticluster/etc', ['docs/config.template'])]
-    for (dirname, dirnames, filenames) in os.walk(ANSIBLE_PB_DIR):
-        tmp = []
-        for fname in filenames:
-            if fname.startswith('.git'): continue
-            tmp.append(os.path.join(dirname, fname))
-        ansible_data.append((os.path.join('share', dirname), tmp))
-    return ansible_data
-
-
-from setuptools import setup, find_packages
+## state run-time dependencies
+#
 
 required_packages = [
     'PyCLI',
     'paramiko',
-    'ansible>=1.9.4, <2.0.0',
+    'ansible>=2.0',
     'voluptuous>=0.8.2',
     'configobj',
     'coloredlogs',
@@ -122,11 +132,13 @@ class Tox(TestCommand):
 
 ## real setup description begins here
 #
+from setuptools import setup, find_packages
+
 setup(
     name="elasticluster",
-    version="1.2.1.rc1",
+    version=read_whole_file("version.txt"),
     description="A command line tool to create, manage and setup computing clusters hosted on a public or private cloud infrastructure.",
-    long_description=open('README.rst').read(),
+    long_description=read_whole_file('README.rst'),
     author="Services and Support for Science IT, University of Zurich",
     author_email="team@s3it.lists.uzh.ch",
     license="LGPL",
@@ -154,7 +166,7 @@ setup(
     ],
     packages=find_packages(),
     install_requires=required_packages,
-    data_files=ansible_pb_files(),
+    include_package_data=True,  # include files mentioned by MANIFEST.in
     entry_points={
         'console_scripts': [
             'elasticluster = elasticluster.main:main',
@@ -163,36 +175,3 @@ setup(
     tests_require=['tox', 'mock', 'pytest'],  # read right-to-left
     cmdclass={'test': Tox},
 )
-
-
-if __name__ == "__main__":
-    if sys.argv[1] in ['develop', 'install']:
-        develop = True if sys.argv[1] == 'develop' else False
-        curdir = os.path.abspath(os.path.dirname(__file__))
-        sharedir = os.path.join(os.path.abspath(sys.prefix), 'share', 'elasticluster')
-        etcdir = os.path.join(sharedir, 'etc')
-        templatecfg = os.path.join(curdir, 'docs', 'config.template')
-        templatedest = os.path.join(etcdir, os.path.basename(templatecfg))
-        ansibledest = os.path.join(sharedir, 'providers', 'ansible-playbooks')
-        ansiblesrc = os.path.join(curdir, 'elasticluster', 'providers', 'ansible-playbooks')
-
-        if not os.path.exists(sharedir):
-            os.makedirs(sharedir)
-
-        if not os.path.exists(etcdir):
-            os.makedirs(etcdir)
-
-        if not os.path.exists(os.path.dirname(ansibledest)):
-            os.makedirs(os.path.dirname(ansibledest))
-
-        if not os.path.exists(ansibledest):
-            if develop:
-                os.symlink(ansiblesrc, ansibledest)
-            else:
-                shutil.copytree(ansiblesrc, ansibledest)
-
-        if not os.path.exists(templatedest):
-            if develop:
-                os.symlink(templatecfg, templatedest)
-            else:
-                shutil.copy(templatecfg, etcdir)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-#
-# Copyright (C) 2013 S3IT, University of Zurich
+# Copyright (C) 2013, 2015 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -257,20 +257,23 @@ class JsonRepository(DiskRepository):
     file_ending = 'json'
 
     def load(self, fp):
-        dcluster = json.load(fp)
+        data = json.load(fp)
         from elasticluster import Cluster
-        cluster = Cluster(**dcluster)
-
+        cluster = Cluster(**data)
         cluster.repository = self
         return cluster
 
     @staticmethod
     def dump(cluster, fp):
-        state = dict(cluster)
-        for key in ['repository', '_setup_provider', '_cloud_provider']:
-            if key in state:
-                del state[key]
+        state = cluster.to_dict(omit=(
+            '_cloud_provider',
+            '_naming_policy',
+            '_setup_provider',
+            'repository',
+            'storage_file',
+        ))
         json.dump(state, fp, default=dict, indent=4)
+
 
 class YamlRepository(DiskRepository):
     """This implementation of :py:class:`AbstractClusterRepository` stores the
@@ -282,18 +285,28 @@ class YamlRepository(DiskRepository):
     file_ending = 'yaml'
 
     def load(self, fp):
-        dcluster = yaml.load(fp)
+        data = yaml.load(fp)
         from elasticluster import Cluster
-        cluster = Cluster(**dcluster)
-
+        cluster = Cluster(**data)
         cluster.repository = self
         return cluster
 
     @staticmethod
     def dump(cluster, fp):
-        # To only save stuff we need, it's actually easier to
-        # serialize with json first :)
-        state = json.loads(json.dumps(dict(cluster), default=dict))
+        state = cluster.to_dict(omit=(
+            '_cloud_provider',
+            '_naming_policy',
+            '_setup_provider',
+            'repository',
+            'storage_file',
+        ))
+        # FIXME: This round-trip to JSON and back is used to
+        # deep-convert the contents of `state` into basic Python
+        # types, so that PyYAML can handle serialization without
+        # additional hints. It should be rewritten to use PyYAML's
+        # native "representers" mechanism, see:
+        # http://pyyaml.org/wiki/PyYAMLDocumentation#Constructorsrepresentersresolvers
+        state = json.loads(json.dumps(state, default=dict))
         yaml.safe_dump(state, fp, default_flow_style=False, indent=4)
 
 

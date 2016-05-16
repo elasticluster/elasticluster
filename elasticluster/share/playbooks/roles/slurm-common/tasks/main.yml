@@ -1,0 +1,116 @@
+---
+
+# need to do this here, as the SLURM packages are not yet installed
+
+- name: Create `slurm` system group
+  group:
+    name=slurm
+    system=yes
+  tags: 
+    - slurm
+
+
+- name: Create `slurm` system user 
+  user:
+    name=slurm
+    group=slurm
+    system=yes
+  tags: 
+    - slurm
+
+  
+- name: Create work directory {{item}}
+  file:
+    path='{{item}}'
+    state=directory
+    owner=slurm
+    group=slurm
+  with_items:
+    - /etc/slurm
+    - /var/lib/slurm
+    - /var/lib/slurm/checkpoint
+    - /var/lib/slurm/slurmctld
+    - /var/lib/slurm/slurmd
+    - /var/log/slurm
+    - /var/run/slurm
+  tags: 
+    - slurm
+
+
+# Debian/Ubuntu packages place configuration in `/etc/slurm-llnl` and
+# logs in `/var/log/slurm-llnl` -- symlink this to `/etc/slurm` and
+# `/var/log/slurm` etc. so we need not worry about varying paths in
+# playbooks and config files
+- name: Make compatibility symlinks
+  file:
+    path='{{ item.to }}'
+    src='{{ item.from }}'
+    state=link
+    force=yes
+  with_items:
+    - { from: '/etc/slurm',     to: '/etc/slurm-llnl' }
+    - { from: '/var/lib/slurm', to: '/var/lib/slurm-llnl' }
+    - { from: '/var/log/slurm', to: '/var/log/slurm-llnl' }
+    - { from: '/var/run/slurm', to: '/var/run/slurm-llnl' }
+  when: is_debian_compatible
+  tags: 
+    - slurm
+    - debian
+
+
+- name: Enable Copr SLURM repo by verdurin
+  tags: 
+    - slurm
+  template:
+    src=copr-slurm.repo.j2
+    dest='/etc/yum.repos.d/copr-slurm.repo'
+    mode=0444
+  when: is_rhel_compatible
+
+
+- include: munge.yml
+
+
+- name: Deploy SLURM configuration file
+  tags: 
+    - slurm
+  template:
+    src=slurm.conf.j2
+    dest=/etc/slurm/slurm.conf
+    owner=root
+    group=root
+    mode=0444
+
+
+- name: Install support packages (Debian/Ubuntu)
+  package:
+    pkg={{item}}
+    state=latest
+  with_items:
+    - dmtcp
+    - libopenmpi-dev
+    - openmpi-bin
+    - openmpi-checkpoint
+  when: is_debian_8_or_later or is_ubuntu_15_10_or_later
+
+
+- name: Install support packages (older Debian/Ubuntu)
+  package:
+    pkg={{item}}
+    state=latest
+  with_items:
+    - dmtcp
+    - libopenmpi1.5-dev
+    - openmpi1.5-bin
+    - openmpi1.5-checkpoint
+  when:
+    is_debian_or_ubuntu|bool and not (is_debian_8_or_later|bool or is_ubuntu_15_10_or_later|bool)
+
+
+- name: Install SLURM packages (RHEL-compatible)
+  package:
+    name={{item}}
+    state=present
+  with_items:
+    - openmpi-devel
+  when: is_rhel_compatible

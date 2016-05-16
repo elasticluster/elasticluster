@@ -1,0 +1,8 @@
+---
+
+- include: deb.yml
+- include: epel_repo.yml
+- include: hosts.yml hosts={{groups.all}}
+- include: hostname.yml
+- include: software.yml
+- include: ssh_host_based_authentication.yml

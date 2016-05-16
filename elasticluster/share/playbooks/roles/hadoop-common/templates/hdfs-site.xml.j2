@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  THIS FILE IS CONTROLLED BY ELASTICLUSTER
+  local modifications will be overwritten
+  the next time `elasticluster setup` is run!
+-->
+
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+  <property>
+    <name>dfs.replication</name>
+    <value>1</value>{# FIXME: should be configurable! #}
+  </property>
+
+  <property>
+    <name>dfs.datanode.du.reserved</name>
+    <value>1000000000</value>
+    <description>
+      Reserved space in bytes per volume. Always leave this much space
+      free for non-HDFS use.
+    </description>
+  </property>
+
+  <property>
+    <name>dfs.permissions</name>
+    <value>false</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.name.dir</name>
+    <value>file:////var/lib/hadoop-hdfs/cache/hdfs/dfs/name</value>
+    <description>NameNode directory for namespace and transaction logs storage.</description>
+  </property>
+
+  <property>
+    <name>dfs.datanode.data.dir</name>
+    <value>file:////var/lib/hadoop-hdfs/cache/hdfs/dfs/data</value>
+    <description>DataNode directory</description>
+  </property>
+
+  <property>
+    <name>dfs.datanode.use.datanode.hostname</name>
+    <value>false</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
+    <value>false</value>
+  </property>
+
+</configuration>

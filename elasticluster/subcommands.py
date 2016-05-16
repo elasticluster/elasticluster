@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013-2014 S3IT, University of Zurich
+# Copyright (C) 2013-2015 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.messina@s3it.uzh.ch>'
+__author__ = str.join(', ', [
+    'Nicolas Baer <nicolas.baer@uzh.ch>'
+    'Antonio Messina <antonio.messina@s3it.uzh.ch>'
+    'Riccardo Murri <riccardo.murri@gmail.com>'
+])
 
 # stdlib imports
 from abc import ABCMeta, abstractmethod
@@ -169,8 +173,7 @@ class Start(AbstractCommand):
             cluster_name = self.params.cluster
 
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
 
         # overwrite configuration
         for option, value in self.params.extra_conf.iteritems():
@@ -244,8 +247,7 @@ class Stop(AbstractCommand):
         """
         cluster_name = self.params.cluster
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         try:
             cluster = configurator.load_cluster(cluster_name)
         except (ClusterNotFound, ConfigurationError) as ex:
@@ -318,8 +320,7 @@ class ResizeCluster(AbstractCommand):
 
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
 
         # Get current cluster configuration
         cluster_name = self.params.cluster
@@ -433,8 +434,7 @@ class RemoveNode(AbstractCommand):
                                  "do not prompt.")
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
 
         # Get current cluster configuration
         cluster_name = self.params.cluster
@@ -489,8 +489,7 @@ class ListClusters(AbstractCommand):
 
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         repository = configurator.create_repository()
         clusters = repository.get_all()
 
@@ -531,8 +530,7 @@ class ListTemplates(AbstractCommand):
     def execute(self):
 
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         config = configurator.cluster_conf
 
         print("""%d cluster templates found in configuration file.""" % len(config))
@@ -587,8 +585,7 @@ class ListNodes(AbstractCommand):
         information like id and ip.
         """
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -627,11 +624,14 @@ class SetupCluster(AbstractCommand):
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity.")
+        parser.add_argument(
+            'extra', nargs='*', default=[],
+            help=("Extra arguments will be appended (unchanged)"
+                  " to the setup provider command-line invocation."))
 
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         cluster_name = self.params.cluster
 
         print("Updating cluster `%s`..." % cluster_name)
@@ -644,7 +644,7 @@ class SetupCluster(AbstractCommand):
             return
 
         print("Configuring cluster `%s`..." % cluster_name)
-        ret = cluster.setup()
+        ret = cluster.setup(self.params.extra)
         if ret:
             print("Your cluster is ready!")
         else:
@@ -675,8 +675,7 @@ class SshFrontend(AbstractCommand):
 
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -746,8 +745,7 @@ class SftpFrontend(AbstractCommand):
 
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -800,8 +798,7 @@ class GC3PieConfig(AbstractCommand):
         Load the cluster and build a GC3Pie configuration snippet.
         """
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -857,8 +854,7 @@ class ExportCluster(AbstractCommand):
 
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
 
         try:
             cluster = configurator.load_cluster(self.params.cluster)
@@ -963,14 +959,11 @@ class ImportCluster(AbstractCommand):
                             "`elasticluster export`.")
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         repo = configurator.create_repository()
         tmpdir = tempfile.mkdtemp()
         log.debug("Using temporary directory %s" % tmpdir)
-        tmpconf = get_configurator(self.params.config,
-                                   storage_path=tmpdir,
-                                   include_config_dirs=True)
+        tmpconf = get_configurator(self.params.config, storage_path=tmpdir)
         tmprepo =tmpconf.create_repository()
 
         rc=0

@@ -1,0 +1,7 @@
+# hive-server/defaults/main.yml
+---
+
+# Version of the Hive DB schema to load.  This goes hand-in-hand with
+# the Hive package version, but not quite: Hive 1.2.1 uses
+# schema version 1.2.0 ...
+hive_schema_version: '1.2.0'

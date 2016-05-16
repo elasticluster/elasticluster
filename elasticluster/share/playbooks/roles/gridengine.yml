@@ -1,0 +1,40 @@
+---
+- name: Common configuration
+  hosts: gridengine_master:gridengine_clients
+  roles:
+    - { role: iptables, default_input_policy: 'ACCEPT' }
+  tasks:
+    - include: cluster/tasks/packages.yml
+  handlers:
+    - include: common/handlers/main.yml
+
+- name: GridEngine masternode Playbook
+  hosts: gridengine_master
+  roles:
+    - role: nfs-server
+      NFS_MOUNTS:
+        path: '/home'
+        clients: '{{groups.gridengine_clients}}'
+        options: 'rw,no_root_squash,async'
+  tasks: 
+    - include: gridengine/tasks/master.yml
+  handlers:
+    - include: common/handlers/main.yml
+    - include: slurm/handlers/main.yml
+    - include: gridengine/handlers/main.yml
+
+- name: GridEngine worker nodes Playbook
+  hosts: gridengine_clients
+  roles:
+    - role: nfs-client
+      NFS_MOUNTS:
+        - fs: '{{groups.gridengine_master[0]}}:/home'
+          mountpoint: '/home'
+        - fs: '{{groups.gridengine_master[0]}}:/usr/share/gridengine/default/common'
+          mountpoint: '/usr/share/gridengine/default/common'
+  tasks: 
+    - include: gridengine/tasks/clients.yml
+  handlers:
+    - include: common/handlers/main.yml
+    - include: gridengine/handlers/main.yml
+

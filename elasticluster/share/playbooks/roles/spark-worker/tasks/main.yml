@@ -1,0 +1,27 @@
+# spark-worker/tasks/main.yml
+---
+
+- name: Install Spark packages (worker)
+  tags:
+    - hadoop
+    - spark
+    - worker
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - spark-worker # Server for Spark worker
+
+
+- name: Disable and stop Spark worker services
+  tags:
+    - hadoop
+    - spark
+    - worker
+  service:
+    name="{{item}}"
+    state=stopped
+    enabled=no
+  with_items:
+    - spark-worker # Server for Spark worker
+

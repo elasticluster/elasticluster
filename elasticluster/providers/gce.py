@@ -25,12 +25,14 @@ __author__ = 'Riccardo Murri <riccardo.murri@uzh.ch>, ' \
 
 
 # stdlib imports
+import collections
 import copy
 import httplib2
 import os
 import random
 import threading
 import time
+import types
 import uuid
 
 # External modules
@@ -234,6 +236,10 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str tags: comma-separated list of "tags" to label the instance
         :param str scheduling: scheduling option to use for the instance ("preemptible")
 
+        :param str|Sequence tags: "Tags" to label the instance.
+        Can be either a single string (individual tags are comma-separated),
+        or a sequence of strings (each string being a single tag).
+
         :return: str - instance id of the started instance
         """
         # construct URLs
@@ -272,14 +278,26 @@ class GoogleCloudProvider(AbstractCloudProvider):
             image_url = '%s%s/global/images/%s' % (
                 GCE_URL, os_cloud, image_id)
 
-        scheduling_option = {}
-        if scheduling:
-          if scheduling == 'preemptible':
+        if scheduling is None:
+            # use GCE's default
+            scheduling_option = {}
+        elif scheduling == 'preemptible':
             scheduling_option = {
               'preemptible': True
             }
-          else:
+        else:
             raise InstanceError("Unknown scheduling option: '%s'" % scheduling)
+
+        if isinstance(tags, types.StringTypes):
+            tags = tags.split(',')
+        elif isinstance(tags, collections.Sequence):
+            # ok, nothing to do
+            pass
+        elif tags is not None:
+            raise TypeError(
+                "The `tags` argument to `gce.start_instance`"
+                " should be a string or a list, got {T} instead"
+                .format(T=type(tags)))
 
         # construct the request body
         if node_name:
@@ -293,7 +311,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
             'name': instance_id,
             'machineType': machine_type_url,
             'tags': {
-              'items': tags.split(',') if tags else None
+              'items': tags,
             },
             'scheduling': scheduling_option,
             'disks': [{
