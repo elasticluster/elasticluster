@@ -4,8 +4,7 @@
    http://docutils.sf.net/rst.html for more information.
 
 
-`elasticluster.gc3_config`
-==========================
-.. automodule:: elasticluster.gc3_config
+`elasticluster.gc3pie_config`
+=============================
+.. automodule:: elasticluster.gc3pie_config
    :members:
-

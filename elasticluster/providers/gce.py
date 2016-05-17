@@ -235,8 +235,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str node_name: name of the instance
         :param str tags: comma-separated list of "tags" to label the instance
         :param str scheduling: scheduling option to use for the instance ("preemptible")
-
         :param str|Sequence tags: "Tags" to label the instance.
+
         Can be either a single string (individual tags are comma-separated),
         or a sequence of strings (each string being a single tag).
 

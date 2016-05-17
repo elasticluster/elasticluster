@@ -15,17 +15,17 @@ configuration file is stored in your home directory:
 ``~/.elasticluster/config`` but you can specify a different location
 from the command line with the `-c` option.
 
-In case the directory `~/.elasticluster/config.d` exists (or, if you
-run with `-c <PATH>`, the directory `<PATH>.d`), all files named
-`*.conf` contained in that directory are read and parsed. In this way,
-you can handle multiple clusters easily by distributing the
-configuration over multiple files, and disable only some of them by
-renaming the files.
+If directory `~/.elasticluster/config.d` exists (or, if you run
+``easlticluster`` with option `-c <PATH>`, the directory `<PATH>.d`),
+all files named `*.conf` contained in that directory are read and
+parsed. In this way, you can handle multiple clusters easily by
+distributing the configuration over multiple files, and disable only
+some of them by renaming the files.
 
 When `elasticluster` is run for the first time, if no configuration
-file is found it will copy a `template configuration file`_ in
-``~/.elasticluster/config``. Such template is fully commented and self
-documented.
+file is found it will copy a `example configuration file`_ in
+``~/.elasticluster/config``.  The example is fully commented and
+self-documenting.
 
 Therefore, after installing `elasticluster` for the first time, we
 suggest to run the following command::
@@ -61,7 +61,7 @@ followed by lines in the form::
 
     key=value
 
-Section names are in the form ``[type/name]`` wher `type` must be one of:
+Section names have the form ``[type/name]`` where `type` is one of:
 
 ``cloud``
     define a cloud provider
@@ -83,8 +83,9 @@ Section names are in the form ``[type/name]`` wher `type` must be one of:
   usually not needed, allow to specify a custom path for the storage
   directory and the default storage type.
 
-You must define at least one for each section types in order to have
-a valid configuration file.
+A valid configuration file must contain at least one section for each
+of the ``cloud``, ``login``, ``cluster``, and ``setup`` sections.
+
 
 
 
@@ -124,13 +125,14 @@ Valid configuration keys for `boto`
 
 ``ec2_url``
 
-    the url of the EC2 endpoint. For Amazon is probably
+    the url of the EC2 endpoint. For Amazon EC2 it is probably
     something like::
 
         https://ec2.us-east-1.amazonaws.com
 
-    replace ``us-east-1`` with the zone you want to use
-    while for OpenStack you can get it from the web interface
+    replace ``us-east-1`` with the zone you want to use.  If using
+    OpenStack's EC2 adapter, you can read the endpoint from the web
+    interface
 
 ``ec2_access_key``
 
@@ -154,8 +156,8 @@ Valid configuration keys for `boto`
 ``request_floating_ip``
 
     request assignment of a floating IP when the instance is
-    started. Valid values: `True`, `False`.
-    Some cloud providers does not automatically assign a public IP
+    started. Valid values are `True` and `False`.
+    Some cloud providers do not automatically assign a public IP
     to the instances, but this is often needed if you want to connect
     to the VM from outside. Setting ``request_floating_ip`` to `True`
     will force `elasticluster` to request such a floating IP if the
@@ -280,6 +282,7 @@ configuration file:
 * `ec2_url` using the value of the variable EC2_URL
 * `ec2_access_key` using the value of the variable EC2_ACCESS_KEY
 * `ec2_secret_key` using the value of the variable EC2_SECRET_KEY
+
 
 Google Compute Engine users
 +++++++++++++++++++++++++++

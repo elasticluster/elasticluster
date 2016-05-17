@@ -3,7 +3,7 @@
    This file follows reStructuredText markup syntax; see
    http://docutils.sf.net/rst.html for more information.
 
-.. This file is included by *any* other ``.txt`` file. 
+.. This file is included by *any* other ``.txt`` file.
    Be careful!!!
 
 
@@ -16,30 +16,36 @@
    References should be sorted by link name (case-insensitively), to
    make it easy to spot a missing or duplicate reference.
 
-.. _`Torque/PBS`: http://www.adaptivecomputing.com/products/open-source/torque/
-.. _`Grid Computing Competence Center`: http://www.gc3.uzh.ch/
-.. _`University of Zurich`: http://www.uzh.ch
-.. _`GNU General Public License version 3`: http://www.gnu.org/licenses/gpl.html
 .. _`Amazon's Elastic Compute Cloud EC2`: http://aws.amazon.com/ec2/
-.. _`OpenStack`: http://www.openstack.org/
-.. _`Google Compute Engine`: https://cloud.google.com/products/compute-engine/
-.. _`Debian GNU/Linux`: http://www.debian.org
-.. _`Ubuntu`: http://www.ubuntu.com
+.. _`Ansible`: http://ansible.com/
+.. _`boto library`: https://github.com/boto/boto
 .. _`CentOS`: http://www.centos.org/
-.. _`SLURM`: https://computing.llnl.gov/linux/slurm/
-.. _`Grid Engine`: http://gridengine.info
+.. _`Ceph`: http://ceph.com/
+.. _`Debian GNU/Linux`: http://www.debian.org
+.. _`elasticluster`: http://gc3-uzh-ch.github.io/elasticluster/
+.. _`example configuration file`: https://github.com/gc3-uzh-ch/elasticluster/raw/develop/elasticluster/share/etc/config.template
 .. _`Ganglia`: http://ganglia.info
+.. _`github elasticluster page`: https://github.com/gc3-uzh-ch/elasticluster
+.. _`github elasticluster repository`: https://github.com/gc3-uzh-ch/elasticluster
+.. _`github`: https://github.com/
+.. _`GlusterFS`: http://www.gluster.org/
+.. _`GNU General Public License version 3`: http://www.gnu.org/licenses/gpl.html
+.. _`Google Compute Engine`: https://cloud.google.com/products/compute-engine/
+.. _`Grid Computing Competence Center`: http://www.gc3.uzh.ch/
+.. _`GridEngine`: http://gridengine.info
 .. _`Hadoop`: http://hadoop.apache.org/
-.. _`Ansible`: http://ansible.cc 
-.. _`Python`: http://www.python.org
+.. _`HTCondor`: http://research.cs.wisc.edu/htcondor/
+.. _`IPython cluster`: http://ipython.org/ipython-doc/dev/parallel/
+.. _`mailing-list`: https://groups.google.com/forum/#!forum/elasticluster
+.. _`OpenStack`: http://www.openstack.org/
+.. _`OrangeFS`: http://orangefs.org/
 .. _`pip`: https://pypi.python.org/pypi/pip
 .. _`PyPI`: https://pypi.python.org/pypi
-.. _`github`: https://github.com/
-.. _`github elasticluster page`: https://github.com/gc3-uzh-ch/elasticluster
 .. _`python virtualenv`: https://pypi.python.org/pypi/virtualenv
-.. _`boto library`: https://github.com/boto/boto
-.. _`OrangeFS`: http://orangefs.org/
-.. _`IPython cluster`: http://ipython.org/ipython-doc/dev/parallel/
-.. _`HTCondor`: http://research.cs.wisc.edu/htcondor/
-.. _`GlusterFS`: http://www.gluster.org/
-.. _`Ceph`: http://ceph.com/
+.. _`Python`: http://www.python.org
+.. _`Services and Support for Science IT`: http://www.s3it.uzh.ch/
+.. _`Spark`: http://spark.apache.org/
+.. _`SLURM`: https://slurm.schedmd.com/
+.. _`Torque/PBS`: http://www.adaptivecomputing.com/products/open-source/torque/
+.. _`Ubuntu`: http://www.ubuntu.com
+.. _`University of Zurich`: http://www.uzh.ch

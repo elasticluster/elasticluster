@@ -29,7 +29,7 @@ The following options are general and are accepted by any subcommand:
 
     Path to the storage folder.  This directory is used to store
     information about the cluster which are running. By default this
-    is ``~/.elasticluster/storage`
+    is ``~/.elasticluster/storage``
 
     **WARNING**: If you delete this directory elasticluster will not
     be able to access the cluster anymore!
@@ -388,8 +388,6 @@ again. It is usually needed only when you customize and update your
 playbooks, in order to re-configure the cluster, since the **start**
 command already run `ansible` when all the machines are started.
 
-.. _ansible: http://www.ansible.com/
-
 Basic usage of the command is::
 
     usage: elasticluster setup [-h] [-v] cluster [-- extra ...]
@@ -559,7 +557,7 @@ options are passed to `ssh` command line:
     Enable check of the host key of the remote machine.
 
 The ``sftp`` command
--------------------
+--------------------
 
 After a cluster is started, the easiest way to upload or download
 files to and from the cluster is by using the **sftp** command. This

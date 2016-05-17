@@ -19,63 +19,88 @@
  Introduction
 --------------
 
-`elasticluster` aims to provide a user-friendly command line tool to
-create, manage and setup computional clusters hosted on cloud
+ElastiCluster_ aims to provide a user-friendly command line tool to
+create, manage and setup computing clusters hosted on cloud
 infrastructures (like `Amazon's Elastic Compute Cloud EC2`_, `Google
-Compute Engine`_ or an `OpenStack`_ cloud). Its main goal is to get
-your own private cluster up and running with just a few commands; a
-`YouTube video`_ demoes the basic features of elasticluster.
+Compute Engine`_, or a private OpenStack_ cloud). Its main goal is to
+get a private cluster up and running with just a few commands; this
+video_ demoes ElastiCluster setting up a computational batch-queueing
+cluster.
 
-Documentation for all versions of ElastiCluster is available online on
-the `Read The Docs <http://elasticluster.readthedocs.org/>`_ website.
-General discussion over ElastiCluster's usage, features, and bugs
-takes place on the `elasticluster@googlegroups.com
+Complete documentation for ElastiCluster is available on the `Read The
+Docs <http://elasticluster.readthedocs.org/>`_ website.  General
+discussion over ElastiCluster's usage, features, and bugs takes place
+on the `elasticluster@googlegroups.com
 <https://groups.google.com/forum/#!forum/elasticluster>`_ mailing-list
 (only subscribers can post).
 
+The ElastiCluster_ project is an effort of the `Services and Support
+for Science IT`_ (S3IT) unit at the `University of Zurich`_, licensed
+under the `GNU General Public License version 3`_.
 
-----------
- Features
-----------
 
-`elasticluster` is in active development, but the following features at the current state:
+Features
+========
 
-* Simple configuration file to define cluster templates
+ElastiCluster_ is in active development, and offers the following
+features at the moment:
+
+* INI-style configuration file to define cluster templates
 * Can start and manage multiple independent clusters at the same time
-* Automated cluster setup:
-    * use `Debian GNU/Linux`_, `Ubuntu`_, or `CentOS`_ as a base operating system
-    * supports multiple batch systems, including `SLURM`_, `Grid
-      Engine`_ or `Torque/PBS`_
-    * supports `Hadoop`_ clusters
-    * add useful tools like `Ganglia`_ for monitoring...
-    * ...or anything that you can install with an `Ansible`_ playbook!
-* Grow a running cluster
+  * Automated setup of:
 
-`elasticluster` is currently in active development: please use the
-GitHub issue tracker to `file enhancement requests and ideas`_
+  - HPC clusters using SLURM_ or GridEngine_;
+  - Spark_ / Hadoop_ clusters with HDFS and Hive/SQL;
+  - distributed storage clusters using GlusterFS_, OrangeFS_, or Ceph_;
+  - ...or anything that you can install with an Ansible_ playbook!
 
---------------
- Architecture
---------------
+* Growing and shrinking a running cluster.
 
-The architecture of elasticluster is quite simple: the configuration
-file in ``~/.elasticluster/config`` defines a set of *cluster
+ElastiCluster_ is currently in active development: please use the
+GitHub issue tracker to `file enhancement requests and ideas`_,
+or the `mailing-list`_ for discussion.
+
+We appreciate pull requests for new features and enhancements. Please
+use the *master* branch as starting point.
+
+
+----------
+ Overview
+----------
+
+The architecture of elasticluster is quite simple: the `configuration
+file`_ ``~/.elasticluster/config`` defines a set of *cluster
 configurations* and information on how to access a specific cloud
-webservice (including access id and secret keys).
+service (including access id and secret keys).
 
-Using the command line or a simple API, you can start a cluster and
-override some of the default values, like the number of nodes you want
-to fire up. Elasticluster will use the `boto library`_ to connect to
-the desired cloud, start the virtual machines and wait until they are
-accessible via ssh.
+Using the command line or a simple API_, you can start a cluster
+(possibly overriding some of the default values, like the number of
+nodes you want to fire up) and configure it:
 
-After all the virtual machines are up and running, elasticluster will
-use `ansible`_ to configure them.
+* ElastiCluster_ connects to the cloud provider indicated in the
+  cluster configuration file, starts virtual machines, and waits until
+  they are accessible via ssh.
 
-If you do a *resize* of the cluster (currently only growing a cluster
-is fully supported) new virtual machines will be created and again
-`ansible`_ will run for *all* of the virtual machines, in order to
+* After all the VMs are up and running, ElastiCluster runs `Ansible`_
+  to configure the cluster.
+
+Upon *resize* of the cluster [#grow-mostly]_, new virtual machines will
+be created and again `Ansible`_ will run on *all* the VMs, in order to
 properly add the new hosts to the cluster.
+
+ElastiCluster commands `export`_ and `import`_ allow moving a
+running cluster's definition and status data from one machine to the
+other, to allow controlling the same cluster from different places.
+
+.. _`api`: http://elasticluster.readthedocs.io/en/master/api/index.html
+.. _`configuration file`: http://elasticluster.readthedocs.io/en/master/configure.html
+.. _`export`: http://elasticluster.readthedocs.io/en/master/usage.html#the-export-command
+.. _`import`: http://elasticluster.readthedocs.io/en/master/usage.html#the-import-command
+
+.. [#grow-mostly] Currently, only growing a cluster is fully
+   supported; shrinking a loaded cluster may remove nodes with running
+   jobs and cause malfunctionings.  See the ``remove-node`` command
+   for a safer, albeit more low-level, way of shrinking clusters.
 
 
 -------------------
@@ -90,6 +115,7 @@ properly add the new hosts to the cluster.
   playbooks
   api/index
 
+
 --------------------
  Indices and tables
 --------------------
@@ -99,5 +125,5 @@ properly add the new hosts to the cluster.
 * :ref:`search`
 
 
-.. _`YouTube video`: http://youtu.be/cR3C7XCSMmA
+.. _`video`: http://youtu.be/cR3C7XCSMmA
 .. _`file enhancement requests and ideas`: https://github.com/gc3-uzh-ch/elasticluster/issues

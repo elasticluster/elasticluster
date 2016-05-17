@@ -5,26 +5,17 @@
 
 .. include:: global.inc
 
+
 .. _playbooks:
-  
+
 ============================================
-  Playbooks distributed with elasticluster  
+  Playbooks distributed with elasticluster
 ============================================
 
-After the requested number of Virtual Machines have been started,
-elasticluster uses `Ansible`_ to configure them based on the
-configuration options defined in the configuration file.
-
-We distribute a few playbooks together with elasticluster to configure
-some of the most wanted clusters. The playbooks are available at the
-``share/elasticluster/providers/ansible-playbooks/`` directory inside
-your virtualenv if you installed using `pip`_, or in the
-``elasticluster/providers/ansible-playbooks`` directory of the github
-source code. You can copy, customize and redistribute them freely
-under the terms of the GPLv3 license.
-
-A list of the most used playbooks distributed with elasticluster and
-some explanation on how to use them follows.
+ElastiCluster uses `Ansible`_ to configure the VM cluster based on the
+options read from the configuration file.  This chapter describes the
+Ansible playbooks bundled [#]_ with ElastiCluster and how to
+use them.
 
 In some cases, extra variables can be set to playbooks to modify its
 default behavior. In these cases, you can either define a variable
@@ -32,12 +23,21 @@ global to the cluster using::
 
     global_var_<varname>=<value>
 
-or, if the variable must be defined only for a specific group of nodes::
+or, if the variable must be defined only for a specific group of
+hosts::
 
     <groupname>_var_<varname>=<value>
 
 
-Slurm
+.. [#]
+
+   The playbooks can be found in the ``elasticluster/share/playbooks``
+   directory of the source code. You are free to copy,
+   customize and redistribute them under the terms of the `GNU General
+   Public License version 3`_ or (at your option) any later version.
+
+
+SLURM
 =====
 
 Tested on:
@@ -102,11 +102,11 @@ specific group of nodes (e.g
 ``frontend_var_slurm_selecttype=select/cons_res``).
 
 
-Gridengine
+GridEngine
 ==========
 
 Tested on:
- 
+
 * Ubuntu 12.04
 * CentOS 6.3 (except for GCE images)
 * Debian 7.1 (GCE)
@@ -119,7 +119,7 @@ Tested on:
 |``gridengine_clients`` | Act as compute node                  |
 +-----------------------+--------------------------------------+
 
-This playbook will install `Grid Engine`_ using the packages
+This playbook will install `GridEngine`_ using the packages
 distributed with Ubuntu or CentOS and will create a basic, working
 configuration.
 
@@ -156,6 +156,7 @@ You can combine the gridengine playbooks with ganglia. In this case the ``setup`
 Please note that Google Compute Engine provides Centos 6.2 images with
 a non-standard kernel which is **unsupported** by the gridengine
 packages.
+
 
 HTCondor
 ========
@@ -228,6 +229,7 @@ address http://10.2.3.4/ganglia/
 
 This playbook is supposed to be compatible with all the other available playbooks.
 
+
 IPython cluster
 ===============
 
@@ -265,7 +267,7 @@ A *snippet* of typical configuration for an Hadoop cluster is::
     worker_nodes=4
     ssh_to=controller
     ...
-    
+
     [setup/ansible_ipython]
     controller_groups=ipython_controller,ipython_engine
     worker_groups=ipython_engine
@@ -323,6 +325,7 @@ A *snippet* of a typical configuration for an Hadoop cluster is::
     hadoop-task-data_groups=hadoop_tasktracker,hadoop_datanode
     ...
 
+
 GlusterFS
 =========
 
@@ -367,14 +370,14 @@ A *snippet* of a typical configuration for a Gluster cluster is::
     setup_provider=ansible_gluster
     ssh_to=gluster-frontend
     ...
-    
+
     [setup/ansible_gluster]
     gluster-frontend_groups=gluster_client
     gluster-data_groups=gluster_data,gluster_client
     gluster-data_var_gluster_replicas=2
     gluster-data_var_gluster_stripes=1
     ...
-    
+
 
 OrangeFS/PVFS2
 ==============
@@ -418,4 +421,3 @@ You can combine, for instance, a SLURM cluster with a PVFS2 cluster::
 This configuration will create a SLURM cluster with 10 compute nodes,
 10 data nodes and a frontend, and will mount the ``/pvfs2`` directory
 from the data nodes to both the compute nodes and the frontend.
-

@@ -3,6 +3,8 @@
    This file follows reStructuredText markup syntax; see
    http://docutils.sf.net/rst.html for more information.
 
+.. include:: ../global.inc
+
 
 `elasticluster`
 ===============
@@ -27,7 +29,7 @@ Cluster
 This is the heart of elasticluster and handles all cluster relevant
 behavior.  You can basically start, setup and stop a cluster. Also it
 provides factory methods to add nodes to the cluster. A typical
-workflow is as follows (see slurm_ for a code example):
+workflow is as follows (see `slurm code example`_):
 
 1. create a new cluster
 2. add nodes to fit your computing needs
@@ -115,7 +117,7 @@ an alternative implementation can be provided following the
 Sample Code
 -----------
 
-.. _slurm:
+.. _`slurm code example`:
 
 Start and setup a SLURM cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -282,6 +284,3 @@ but any settings can be applied compliant with the logging module of python.
 
 .. automodule:: elasticluster
     :members:
-
-.. References
-.. _ansible: https://github.com/ansible/ansible

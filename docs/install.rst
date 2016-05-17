@@ -10,56 +10,47 @@
   Installation
 ================
 
-`elasticluster` is a `Python`_ program; Python version 2.6 or 2.7 is
+ElastiCluster_ is a `Python`_ program; Python version 2.6 or 2.7 is
 required to run it.
 
-The easiest way to install elasticluster is using `pip`_, this will
-install the latest **stable** release from the `PyPI`_ website. The
-following section: `Installing from PyPI`_ will explain you how to do
-it.
+The easiest way to install elasticluster is by using `pip`_, this will
+install the latest *stable* code release from the `PyPI`_ package
+repository.  Section `Installing released code from PyPI`_ will
+explain you how to do it.
 
 If you instead want to test the *development* version, go to the
-`Installing from github`_ section.
+`Installing development code from GitHub`_ section.
 
 In both cases, it's strongly suggested to install `elasticluster` in a
 `python virtualenv`_, so that you can easily uninstall or upgrade
 `elasticluster`.
 
 
-Installing from PyPI
---------------------
+Installing released code from PyPI
+----------------------------------
 
-It's quite easy to install `elasticluster` using
-`pip`_; the command below is all you
-need to install `elasticluster` on your system::
+It's quite easy to install `elasticluster` using `pip`_; the command
+below is all you need to install `elasticluster` on your system::
 
     pip install elasticluster
 
-If you want to run `elasticluster` from source you have to **install**
-`Ansible`_ **first**::
 
-    pip install ansible
-    python setup.py install
-
-
-Installing from GitHub
-----------------------
+Installing development code from GitHub
+---------------------------------------
 
 The source code of elasticluster is `github`_, if you want to test the
 latest development version you can clone the `github elasticluster repository`_.
 
-You need the ``git`` command in order to be able to clone it, and we
-suggest you to use `python virtualenv`_ in order to create a
-controlled environment in which you can install elasticluster as
-normal user.
+You will need the ``git`` command in order to be able to clone it, and
+we suggest you use a `python virtualenv`_ in order to create a
+controlled environment in which you can install ElastiCluster without
+conflicting with system files or Python libraries.
 
 Assuming you already have ``virtualenv`` installed on your machine,
-you first need to create a virtualenv and install `ansible`, which is
-needed by elasticluster::
+you first need to create a virtualenv::
 
     virtualenv elasticluster
     . elasticluster/bin/activate
-    pip install ansible
 
 Then you have to download the software. We suggest you to download it
 *within* the created virtualenv::
@@ -69,7 +60,7 @@ Then you have to download the software. We suggest you to download it
     cd src
     python setup.py install
 
-Now the ``elasticluster`` should be available in your current
+Now the ``elasticluster`` command should be available in your current
 environment.
 
 

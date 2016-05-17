@@ -4,7 +4,7 @@
    http://docutils.sf.net/rst.html for more information.
 
 
-.. _gc3libs:
+.. _api:
 
 -------------------------------
  Elasitcluster programming API
@@ -16,7 +16,7 @@
    elasticluster/cluster.rst
    elasticluster/conf.rst
    elasticluster/exceptions.rst
-   elasticluster/gc3_config.rst
+   elasticluster/gc3pie_config.rst
    elasticluster/helpers.rst
    elasticluster/main.rst
    elasticluster/module.rst
