@@ -329,30 +329,31 @@ A *snippet* of a typical configuration for an Hadoop cluster is::
 GlusterFS
 =========
 
-Tested on:
+Supported on:
 
-* Ubuntu 12.04
-* CentOS 6.3
+* Ubuntu 14.04 and later
+* RHEL/CentOS 6.x, 7.x
 
 +--------------------+----------------------------------------------------+
-| ansible groups     | role                                               |
+| ansible groups     | action                                             |
 +====================+====================================================+
-| ``gluster_data``   | Run a gluster *brick*                              |
+|``glusterfs_server``| Run a GlusterFS server with a single *brick*       |
 +--------------------+----------------------------------------------------+
-| ``gluster_client`` | Install gluster client and install a gluster       |
-|                    | filesystem on ``/glusterfs``                       |
+|``glusterfs_client``| Install gluster client and (optionally) mount      |
+|                    | a GlusterFS filesystem.                            |
 +--------------------+----------------------------------------------------+
 
-This will install a GlusterFS using all the ``gluster_data`` nodes as
-*bricks*, and any ``gluster_client`` to mount this filesystem in
+This will install a GlusterFS using all the ``glusterfs_server`` nodes
+as servers with a single brick located in directory `/srv/glusterfs`,
+and any ``glusterfs_client`` to mount this filesystem over directory
 ``/glusterfs``.
 
-Setup is very basic, and by default no replicas is set.
+To manage the GlusterFS filesystem you need to connect to a
+``gluster_server`` node.
 
-To manage the gluster filesystem you need to connect to a
-``gluster_data`` node.
-
-Extra variables can be set, by editing the `setup/` section:
+By default the volume is neither replicated nor striped, i.e., replica
+and stripe number is set to 1.  This can be changed by defining the
+following variables in the `setup/` section:
 
 +----------------------+------------+-----------------------------------------+
 | variable name        | default    | description                             |
@@ -362,21 +363,30 @@ Extra variables can be set, by editing the `setup/` section:
 | ``gluster_replicas`` | no replica | set replica value for default volume    |
 +----------------------+------------+-----------------------------------------+
 
-A *snippet* of a typical configuration for a Gluster cluster is::
+The following example configuration sets up a GlusterFS cluster using 8 data nodes
+and providing 2 replicas for each file::
 
     [cluster/gluster]
-    gluster-frontend_nodes=1
-    gluster-data_nodes=8
-    setup_provider=ansible_gluster
+    client_nodes=1
+    server_nodes=8
+    setup_provider=gluster
     ssh_to=gluster-frontend
-    ...
 
-    [setup/ansible_gluster]
-    gluster-frontend_groups=gluster_client
-    gluster-data_groups=gluster_data,gluster_client
-    gluster-data_var_gluster_replicas=2
-    gluster-data_var_gluster_stripes=1
-    ...
+    [setup/gluster]
+    client_groups=glusterfs_client
+    server_groups=glusterfs_server,glusterfs_client
+
+    # set replica and stripe parameters
+    server_var_gluster_replicas=2
+    server_var_gluster_stripes=1
+
+The "GlusterFS" playbook depends on the following Ansible roles being
+available:
+
+* `glusterfs-common <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/glusterfs-common>`_
+* `glusterfs-client <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/glusterfs-client>`_
+* `glusterfs-server <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/glusterfs-server>`_
+
 
 
 OrangeFS/PVFS2

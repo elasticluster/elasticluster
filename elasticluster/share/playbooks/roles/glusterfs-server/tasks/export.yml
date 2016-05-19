@@ -1,0 +1,70 @@
+---
+
+- name: Ensure brick directory '{{item.path}}' exists
+  file:
+    path='{{item.path}}'
+    state=directory
+
+- name: Build list of bricks
+  set_fact:
+    # from a list of hosts `['node1', 'node2']` form a string `node1:/brick node2:/brick`
+    _glusterfs_bricks: "{{ (groups.glusterfs_server + [' '])|join(':{{item.path}} ') }}"
+
+- name: Check if volume {{item.name}} already exists
+  command:
+    gluster volume info {{item.name}}
+  register: gluster_volume_info
+  ignore_errors: yes
+  when: is_glusterfs_main_server_node
+
+- name: Set GlusterFS volume options
+  set_fact:
+    _gluster_option_stripes:   '{%- if item.stripes is defined and item.stripes != "" and item.stripes|int > 1 -%}stripe {{item.stripes}}{%- endif -%}'
+    _gluster_option_replicas:  '{%- if item.replicas is defined and item.replicas != "" and item.replicas|int > 1 -%}replica {{item.replicas}}{%- endif -%}'
+    _gluster_option_transport: 'transport {{item.transport|default(tcp)}}'
+  
+- name: Create volume {{item.name}}
+  command: |    
+    gluster volume create {{item.name}} \
+      {{_gluster_option_stripes}}       \
+      {{_gluster_option_replicas}}      \
+      {{_gluster_option_transport}}     \
+      {{_glusterfs_bricks}} force
+  when: 'gluster_volume_info|failed and {{is_glusterfs_main_server_node}}'
+
+- name: Check whether all the bricks have been added
+  shell: |
+    for brick in {{_glusterfs_bricks}}; do
+      if ! gluster volume info {{item.name}} | grep -q $brick; then
+        echo -n "$brick "
+      fi
+    done
+    # ensure we exit w/ code 0 so Ansible will not complain
+    true
+  register: missing_bricks
+  when: is_glusterfs_main_server_node
+
+# XXX: what is this?  why is needed?
+- name: Ensure bricks are clean
+  shell: |
+    if ! gluster volume info | grep -q $(hostname):{{item.path}}; then
+      setfattr -x trusted.glusterfs.volume-id {{item.path}}
+      setfattr -x trusted.gfid {{item.path}}
+      rm -rf {{item.path}}/.glusterfs
+    fi
+    # ensure we exit w/ code 0 so Ansible will not complain
+    true
+
+- name: Add missing bricks
+  shell: |
+    if [ -n "{{missing_bricks.stdout}}" ]; then
+      gluster volume add-brick {{item.name}} {{missing_bricks.stdout}} force
+    fi
+  when: is_glusterfs_main_server_node
+
+- name: Start default volume
+  shell: |
+    if ! (gluster volume info {{item.name}} | grep -q "Status: Started"); then
+      gluster volume start {{item.name}}
+    fi
+  when: is_glusterfs_main_server_node

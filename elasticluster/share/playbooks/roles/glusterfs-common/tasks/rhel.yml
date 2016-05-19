@@ -1,0 +1,12 @@
+---
+
+- name: Add GlusterFS repository (RHEL-compatible)
+  get_url:
+    url='http://download.gluster.org/pub/gluster/glusterfs/{{glusterfs_version}}/LATEST/RHEL/glusterfs-epel.repo'
+    dest=/etc/yum.repos.d/gluster.repo
+    mode=0444
+    owner=root
+    group=root
+  tags:
+    - gluster
+    - glusterfs-common

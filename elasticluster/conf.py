@@ -22,6 +22,7 @@ __author__ = str.join(', ', [
 ])
 
 # System imports
+from collections import defaultdict
 import os
 import re
 import sys
@@ -30,6 +31,7 @@ try:
 except ImportError:
     # Python 3
     StringTypes = (str,)
+import warnings
 
 # External modules
 from ConfigParser import RawConfigParser
@@ -249,6 +251,40 @@ class Configurator(object):
         )
         return cluster
 
+    @staticmethod
+    def _read_node_groups(conf):
+        """
+        """
+        result = defaultdict(list)
+        for key, value in conf.items():
+            if not key.endswith('_groups'):
+                continue
+            node_kind = key[:-len('_groups')]
+            group_names = [group_name.strip()
+                           for group_name in value.split(',')]
+            for group_name in group_names:
+                # handle renames
+                if group_name in Configurator._renamed_node_groups:
+                    old_group_name = group_name
+                    group_name, remove_at = Configurator._renamed_node_groups[group_name]
+                    warnings.warn(
+                        "Group `{0}` was renamed to `{1}`;"
+                        " please fix your configuration file."
+                        " Support for automatically renaming"
+                        " this group will be removed in {2}."
+                        .format(old_group_name, group_name,
+                                (("ElastiCluster {0}".format(remove_at))
+                                 if remove_at
+                                 else ("a future version of ElastiCluster"))))
+                result[node_kind].append(group_name)
+        return result
+
+    _renamed_node_groups = {
+        # old name     ->  (new name             will be removed in...
+        'gluster_data' :   ('glusterfs_server',  '1.4'),
+        'gluster_client':  ('glusterfs_client',  '1.4'),
+    }
+
     def create_setup_provider(self, cluster_template, name=None):
         """Creates the setup provider for the given cluster template.
 
@@ -273,8 +309,7 @@ class Configurator(object):
             del conf['playbook_path']
         else:
             playbook_path = None
-        groups = dict((k[:-7], v.split(',')) for k, v
-                      in conf.items() if k.endswith('_groups'))
+        groups = self._read_node_groups(conf)
         environment = dict()
         for nodekind, grps in groups.iteritems():
             if not isinstance(grps, list):

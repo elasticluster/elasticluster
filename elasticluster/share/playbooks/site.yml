@@ -18,6 +18,6 @@
 - include: roles/hadoop.yml
 - include: roles/pvfs2.yml
 - include: roles/ceph.yml
-- include: roles/gluster.yml
+- include: roles/glusterfs.yml
 - include: roles/ipython.yml
 - include: roles/htcondor.yml
