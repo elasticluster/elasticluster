@@ -5,8 +5,15 @@ elasticluster.egg-info/
 
 # Python-specific
 *.py[co]
+.cache
+.coverage
 build
 dist
+docs/doctrees
+docs/html
+docs/latex
+.local
+setuptools-*.egg
 .venv
 
 # Ansible-specific
