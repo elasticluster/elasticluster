@@ -53,7 +53,21 @@
   when: 'is_rhel_compatible'
 
 
-- name: Ensure `slurmctld` and `slurmdbd` are running
+- name: Replace systemd unit file for SLURM services
+  file:
+    dest='/usr/lib/systemd/system/{{item}}.service'
+    src='usr/lib/systemd/system/{{item}}.service'
+    owner=root
+    group=root
+    mode=0444
+    backup=yes
+  with_items:
+    - slurmdbd
+    - slurmctld
+  when: 'is_rhel7_compatible'
+
+
+- name: Ensure `slurmdbd` is running
   tags: 
     - slurm
     - slurmdbd
@@ -62,5 +76,4 @@
     enabled=yes
     state=started
   with_items:
-    - '{{slurmctld_service_name}}'
     - '{{slurmdbd_service_name}}'
