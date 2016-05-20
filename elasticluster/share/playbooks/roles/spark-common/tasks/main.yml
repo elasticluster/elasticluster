@@ -18,12 +18,22 @@
     - spark-yarn-shuffle # Spark YARN Shuffle Service
 
 
+- name: Check if Py4J version-independent `.zip` archive exist
+  stat:
+    path='/usr/lib/spark/python/lib/py4j-src.zip'
+    follow=no
+  register: p
+  tags:
+    - hadoop
+    - spark
+
 - name: Symlink Py4J `.zip` archive under a version-independent name
   # XXX: We use shell globbing to find out what source file to link,
   # assuming there is one and only one Py4J `.zip` file.  
   shell: |
     cd /usr/lib/spark/python/lib
     ln -s py4j-*-src.zip py4j-src.zip
+  when: not p.stat.exists
   tags:
     - hadoop
     - spark
