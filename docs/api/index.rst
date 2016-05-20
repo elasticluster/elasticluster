@@ -7,7 +7,7 @@
 .. _api:
 
 -------------------------------
- Elasitcluster programming API
+ Elasticluster programming API
 -------------------------------
 
 .. toctree::
