@@ -399,7 +399,7 @@ user_key_public=""" + self.path + """
 [setup/ansible-slurm]
 provider=ansible
 frontend_groups=slurm_master
-compute_groups=slurm_clients
+compute_groups=slurm_workers
 
 [setup/ansible-gridengine]
 provider=ansible
@@ -544,7 +544,7 @@ user_key_public=~/.ssh/id_dsa.cloud.pub
 [setup/ansible-slurm]
 provider=ansible
 frontend_groups=slurm_master
-compute_groups=slurm_clients
+compute_groups=slurm_workers
 
 [cluster/slurm]
 cloud=hobbes-new
@@ -615,7 +615,7 @@ ssh_to=frontend
 [setup/ansible-slurm]
 provider=ansible
 frontend_groups=slurm_master
-compute_groups=slurm_clients
+compute_groups=slurm_workers
     '''
 
     def test_read_multiple_config1(self):

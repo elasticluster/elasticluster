@@ -31,7 +31,7 @@ class Configuration(object):
                     "provider": "ansible",
                     "playbook_path": "%(ansible_pb_dir)s/site.yml",
                     "frontend_groups": "slurm_master",
-                    "compute_groups": "slurm_clients",
+                    "compute_groups": "slurm_workers",
                     },
                 "cloud": {
                     "provider": "ec2_boto",
@@ -74,7 +74,7 @@ class Configuration(object):
                     "provider": "ansible",
                     "playbook_path": "%(ansible_pb_dir)s/site.yml",
                     "frontend_groups": "slurm_master",
-                    "compute_groups": "slurm_clients",
+                    "compute_groups": "slurm_workers",
                     },
                 "cloud": {
                     "provider": "openstack",
