@@ -112,6 +112,7 @@ other, to allow controlling the same cluster from different places.
   install
   configure
   usage
+  troubleshooting
   playbooks
   api/index
 
