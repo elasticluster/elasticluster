@@ -11,4 +11,4 @@
     src='{{item.fs}}'
     fstype=nfs
     opts='{{item.options|default("rw,async")}}'
-    state=mounted
+    state='{{item.state|default("mounted")}}'
