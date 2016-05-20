@@ -40,66 +40,79 @@ hosts::
 SLURM
 =====
 
-Tested on:
+Supported on:
 
-* Ubuntu 14.04
-* Ubuntu 12.04
-* Ubuntu 13.04
-* Debian 7.1 (GCE)
+* Ubuntu 12.04 and later
+* Debian 7 ("wheezy") and 8 ("jessie")
+* RHEL/CentOS 6.x and 7.x *(mostly)*
 
-+------------------+--------------------------------------+
-| ansible groups   | role                                 |
-+==================+======================================+
-|``slurm_master``  | Act as scheduler and submission host |
-+------------------+--------------------------------------+
-|``slurm_clients`` | Act as compute node                  |
-+------------------+--------------------------------------+
-
-This playbook will install the `SLURM`_ queue manager using the
-packages distributed with Ubuntu and will create a basic, working
-configuration.
+This playbook installs the `SLURM`_ batch-queueing system.
 
 You are supposed to only define one ``slurm_master`` and multiple
-``slurm_clients``. The first will act as login node and will run the
-scheduler, while the others will only execute the jobs.
+``slurm_workers``. The first will act as login node, NFS server for
+the ``/home`` filesystem, and runs the SLURM scheduler and accounting
+database; the workers will only execute the jobs.  A ``slurm_submit``
+role allows you to optionally install "SLURM client" nodes, i.e.,
+hosts whose only role in the cluster is to submit jobs and query the
+queue status.
 
-The ``/home`` filesystem is exported *from* the slurm server to the compute nodes.
+=================  ==================================================
+Ansible group      Action
+=================  ==================================================
+``slurm_master``   SLURM controller/scheduler node; also runs the
+                   accounting storage daemon `slurmdbd` and its
+                   MySQL/MariaDB backend.
+``slurm_workers``  SLURM execution node: runs the `slurmd` daemon.
+``slurm_submit``   SLURM client: has all the submission and query
+                   commands installed, but runs no daemon.
+=================  ==================================================
 
-A *snippet* of a typical configuration for a slurm cluster is::
+The following example configuration sets up a SLURM batch-queuing
+cluster using 1 front-end and 4 execution nodes::
 
     [cluster/slurm]
-    frontend_nodes=1
-    compute_nodes=5
-    ssh_to=frontend
-    setup_provider=ansible_slurm
-    ...
+    master_nodes=1
+    worker_nodes=4
+    ssh_to=master
+    setup_provider=slurm
+    # ...
 
-    [setup/ansible_slurm]
-    frontend_groups=slurm_master
-    compute_groups=slurm_clients
-    ...
+    [setup/slurm]
+    master_groups=slurm_master
+    worker_groups=slurm_workers
+    # ...
 
-You can combine the slurm playbooks with ganglia. In this case the ``setup`` stanza will look like::
+You can combine the SLURM playbook with the Ganglia one; in this case
+the ``setup`` stanza will look like::
 
     [setup/ansible_slurm]
     frontend_groups=slurm_master,ganglia_master
     compute_groups=slurm_clients,ganglia_monitor
     ...
 
-Extra variables can be set, by editing the `setup/` section:
+Extra variables can be set by editing the `setup/` section:
 
-+----------------------------------+-----------------+-------------------------------------------------+
-| variable name                    | default         | description                                     |
-+==================================+=================+=================================================+
-| ``slurm_selecttype``             | `select/linear` | Value of `SelectType` in `slurm.conf`           |
-+----------------------------------+-----------------+-------------------------------------------------+
-| ``slurm_selecttypeparameters``   | `CR_Memory`     | Value of `SelectTypeParameters` in `slurm.conf` |
-+----------------------------------+-----------------+-------------------------------------------------+
+================================== =================== =================================================
+Variable name                      Default             Description
+================================== =================== =================================================
+``slurm_selecttype``               ``select/cons_res`` Value of `SelectType` in `slurm.conf`
+``slurm_selecttypeparameters``     ``CR_Core_Memory``  Value of `SelectTypeParameters` in `slurm.conf`
+``slurm_maxarraysize``             1000                Maximum size of an array job
+``slurm_maxjobcount``              10000               Maximum nr. of jobs actively managed by the
+                                                       SLURM controller (i.e., pending and running)
+================================== =================== =================================================
 
-You may define them globally (e.g.
-``global_var_slurm_selecctype=select/cons_res``) or only for a
-specific group of nodes (e.g
-``frontend_var_slurm_selecttype=select/cons_res``).
+Note that the ``slurm_*`` extra variables need to be set *globally*
+(e.g., ``global_var_slurm_selectype``) because the SLURM configuration
+file must be identical across the whole cluster.
+
+The "SLURM" playbook depends on the following Ansible roles being
+available:
+
+* `slurm-common <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-common>`_
+* `slurm-client <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-client>`_
+* `slurm-master <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-master>`_
+* `slurm-worker <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-worker>`_
 
 
 GridEngine
