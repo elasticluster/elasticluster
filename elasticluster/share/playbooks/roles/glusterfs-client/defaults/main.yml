@@ -7,7 +7,7 @@
 #
 # - fs: the remote filesystem to mount, in the form "server:volume"
 # - mountpoint: path to the local mountpoint
-# - options: mount options, defaults to `rw,async` if not given
+# - options: mount options, defaults to `defaults,rw` if not given
 # - state: see documentation for Ansible module `mount`; the default value here is `mounted`
 #
 # For example::
