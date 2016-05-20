@@ -22,19 +22,17 @@ parsed. In this way, you can handle multiple clusters easily by
 distributing the configuration over multiple files, and disable only
 some of them by renaming the files.
 
-When `elasticluster` is run for the first time, if no configuration
-file is found it will copy a `example configuration file`_ in
-``~/.elasticluster/config``.  The example is fully commented and
-self-documenting.
-
-Therefore, after installing `elasticluster` for the first time, we
-suggest to run the following command::
+After installing ElastiCluster for the first time, we suggest you run
+the following command::
 
     elasticluster list-templates
 
-If you don't already have a configuration file, this command will
-create one for you. Of course, the file is not complete, as it does
-not contain any authentication information, and you will get an error
+If no configuration file is found, it will copy an `example
+configuration file`_ in`` ~/.elasticluster/config``. The example is
+fully commented and self-documenting.
+
+However, the example configuration file is not complete, as it does
+not contain any authentication information, so you will get an error
 similar to the following::
 
     WARNING:gc3.elasticluster:Deploying default configuration file to /home/antonio/.elasticluster/config.
@@ -42,7 +40,7 @@ similar to the following::
     WARNING:gc3.elasticluster:Ignoring cluster `ipython`.
     Error validating configuration file '/home/antonio/.elasticluster/config': `required key not provided @ data['image_user']`
 
-In this case, you have to edit the configuration file in
+You will have to edit the configuration file in
 ``~/.elasticluster/config`` and update it with the correct values.
 
 Please refer to the following section to understand the syntax of the
