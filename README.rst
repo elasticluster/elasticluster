@@ -37,10 +37,10 @@ features at the moment:
 * INI-style configuration file to define cluster templates
 * Can start and manage multiple independent clusters at the same time
 * Automated setup of:
-  - HPC clusters using SLURM_ or GridEngine_;
-  - Spark_ / Hadoop_ clusters with HDFS and Hive/SQL;
-  - distributed storage clusters using GlusterFS_, OrangeFS_, or Ceph_;
-  - ...or anything that you can install with an Ansible_ playbook!
+ * HPC clusters using SLURM_ or GridEngine_;
+ * Spark_ / Hadoop_ clusters with HDFS and Hive/SQL;
+ * distributed storage clusters using GlusterFS_, OrangeFS_, or Ceph_;
+ * ...or anything that you can install with an Ansible_ playbook!
 * Growing and shrinking a running cluster.
 
 ElastiCluster_ is currently in active development: please use the
