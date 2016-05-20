@@ -37,18 +37,16 @@ PriorityFavorSmall=NO
 ## accounting settings
 #
 
-# the `DefaultStorage*` keys set *both* the "accounting" and
-# the "job completion" (`JobComp*`) stuff
-DefaultStorageHost={{SLURM_ACCOUNTING_HOST}}
-DefaultStoragePort=6819
-
-DefaultStorageType=mysql
-DefaultStorageLoc={{SLURM_ACCOUNTING_DB_NAME}}
-DefaultStorageUser={{SLURM_ACCOUNTING_DB_USER}}
-
 AccountingStorageType=accounting_storage/slurmdbd
 AccountingStorageEnforce=associations,limits,qos
 AccountingStoreJobComment=YES
+AccountingStorageHost={{SLURM_ACCOUNTING_HOST}}
+AccountingStoragePort=6819
+
+# the "job completion" info is redundant if the accounting
+# infrastructure is enabled, so turn it off as it's an endless source
+# of authentication and DB connection problems ...
+JobCompType=jobcomp/none
 
 # No power consumption acct
 AcctGatherEnergyType=acct_gather_energy/none
@@ -65,8 +63,6 @@ AcctGatherProfileType=acct_gather_profile/none
 
 JobAcctGatherType=jobacct_gather/linux
 JobAcctGatherFrequency=60
-
-JobCompType=jobcomp/mysql
 
 
 ## job execution settings
