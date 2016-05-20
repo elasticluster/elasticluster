@@ -284,6 +284,7 @@ class Configurator(object):
         # old name     ->  (new name             will be removed in...
         'gluster_data' :   ('glusterfs_server',  '1.4'),
         'gluster_client':  ('glusterfs_client',  '1.4'),
+        'slurm_clients':   ('slurm_workers',     '1.4'),
     }
 
     def create_setup_provider(self, cluster_template, name=None):
