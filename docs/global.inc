@@ -18,6 +18,7 @@
 
 .. _`Amazon's Elastic Compute Cloud EC2`: http://aws.amazon.com/ec2/
 .. _`Ansible`: http://ansible.com/
+.. _`Bigtop`: http://bigtop.apache.org/
 .. _`boto library`: https://github.com/boto/boto
 .. _`CentOS`: http://www.centos.org/
 .. _`Ceph`: http://ceph.com/
@@ -34,6 +35,7 @@
 .. _`Grid Computing Competence Center`: http://www.gc3.uzh.ch/
 .. _`GridEngine`: http://gridengine.info
 .. _`Hadoop`: http://hadoop.apache.org/
+.. _`Hive`: http://hive.apache.org/
 .. _`HTCondor`: http://research.cs.wisc.edu/htcondor/
 .. _`IPython cluster`: http://ipython.org/ipython-doc/dev/parallel/
 .. _`mailing-list`: https://groups.google.com/forum/#!forum/elasticluster

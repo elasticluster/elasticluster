@@ -278,52 +278,64 @@ you are supposed to connect to the controller node via ssh and run
 your code from there.
 
 
-Hadoop
-======
+Hadoop + Spark
+==============
 
-Tested on:
+Supported on:
 
-* Ubuntu 12.04
-* CentOS 6.3
-* Debian 7.1 (GCE)
+* Ubuntu 14.04
+* Debian 8 ("jessie")
 
-+----------------------+-----------------------------------+
-| ansible groups       | role                              |
-+======================+===================================+
-|``hadoop_namenode``   | Run the Hadoop NameNode service   |
-+----------------------+-----------------------------------+
-|``hadoop_jobtracker`` | Run the Hadoop JobTracker service |
-+----------------------+-----------------------------------+
-|``hadoop_datanode``   | Act as datanode for HDFS          |
-+----------------------+-----------------------------------+
-|``hadoop_tasktracker``| Act as tasktracker node accepting |
-|                      | jobs from the JobTracker          |
-+----------------------+-----------------------------------+
+This playbook installs a Hadoop_ 2.x cluster with Spark_ and Hive_,
+using the packages provided by the Apache Bigtop_ project.  The
+cluster comprises the HDFS and YARN services: each worker node acts
+both as a HDFS "DataNode" and as a YARN execution node; there is a
+single master node, running YARN's "ResourceManager" and "JobHistory",
+and Hive's "MetaStore" services.
 
-Hadoop playbook will install a basic hadoop cluster using the packages
-available on the Hadoop website. The only supported version so far is
-**1.1.2 x86_64** and it works both on CentOS and Ubuntu.
+=================  ==================================================
+Ansible group      Action
+=================  ==================================================
+``hadoop_master``  Install the Hadoop cluster master node: run YARN
+                   "ResourceManager" and Hive "MetaStore" server.  In
+                   addition, install a PostgreSQL server to host Hive
+                   metastore tables.
+``hadoop_worker``  Install a YARN+HDFS node: run YARN's "NodeManager"
+                   and HDFS' "DataNode" services.  This is the group
+                   of nodes that actually provide the storage and
+                   execution capacity for the Hadoop cluster.
+=================  ==================================================
 
-You must define only one ``hadoop_namenode`` and one
-``hadoop_jobtracker``. Configuration in which both roles belong to the
-same machines are not tested. You can mix ``hadoop_datanode`` and
-``hadoop_tasktracker`` without problems though.
+HDFS is only formatted upon creation; if you want to reformat/zero out
+the HDFS filesystem you need to run the ``hdfs namenode -format``
+command yourself.  No rebalancing is done when adding or removing data
+nodes from the cluster.
 
-A *snippet* of a typical configuration for an Hadoop cluster is::
+**Nota bene:**
 
-    [cluster/hadoop]
-    hadoop-name_nodes=1
-    hadoop-jobtracker_nodes=1
-    hadoop-task-data_nodes=10
-    setup_provider=ansible_hadoop
-    ssh_to=hadoop-name
-    ...
+  1. Currently ElastiCluster turns off HDFS permission checking:
+     therefore Hadoop/HDFS clusters installed with ElastiCluster are
+     only suitable for shared usage by *mutually trusting* users.
 
-    [setup/ansible_hadoop]
-    hadoop-name_groups=hadoop_namenode
-    hadoop-jobtracker_groups=hadoop_jobtracker
-    hadoop-task-data_groups=hadoop_tasktracker,hadoop_datanode
-    ...
+  2. Currently ElastiCluster has no provision to vacate an HDFS data
+     node before removing it.  Be careful when shrinking a cluster, as
+     this may lead to data loss!
+
+The following example configuration sets up a Hadoop cluster using 4
+storage+execution nodes::
+
+    [cluster/hadoop+spark]
+    master_nodes=1
+    worker_nodes=4
+    ssh_to=master
+
+    setup_provider=hadoop+spark
+    # ...
+
+    [setup/hadoop+spark]
+    provider=ansible
+    master_groups=hadoop_master
+    worker_groups=hadoop_worker
 
 
 GlusterFS
