@@ -22,6 +22,8 @@ import logging
 import os
 import shutil
 import sys
+import utils
+import warnings
 
 # External modules
 import cli.app
@@ -122,6 +124,12 @@ class ElastiCluster(cli.app.CommandLineApp):
             sys.exit(0)
 
         cli.app.CommandLineApp.pre_run(self)
+
+        # print *all* Python warnings through the logging subsystem
+        warnings.resetwarnings()
+        warnings.simplefilter('once')
+        utils.redirect_warnings(logger='gc3.elasticluster')
+
         # Set verbosity level
         loglevel = max(1, logging.WARNING - 10 * max(0, self.params.verbose))
         coloredlogs.install(logger=log, level=loglevel)

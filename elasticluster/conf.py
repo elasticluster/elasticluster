@@ -275,7 +275,8 @@ class Configurator(object):
                         .format(old_group_name, group_name,
                                 (("ElastiCluster {0}".format(remove_at))
                                  if remove_at
-                                 else ("a future version of ElastiCluster"))))
+                                 else ("a future version of ElastiCluster"))),
+                        DeprecationWarning)
                 result[node_kind].append(group_name)
         return result
 

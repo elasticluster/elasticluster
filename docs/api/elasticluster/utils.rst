@@ -4,8 +4,7 @@
    http://docutils.sf.net/rst.html for more information.
 
 
-`elasticluster.helpers`
-=======================
-.. automodule:: elasticluster.helpers
+`elasticluster.utils`
+=====================
+.. automodule:: elasticluster.utils
    :members:
-

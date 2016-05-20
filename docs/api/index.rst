@@ -17,7 +17,6 @@
    elasticluster/conf.rst
    elasticluster/exceptions.rst
    elasticluster/gc3pie_config.rst
-   elasticluster/helpers.rst
    elasticluster/main.rst
    elasticluster/module.rst
    elasticluster/providers.rst
@@ -27,3 +26,4 @@
    elasticluster/providers/openstack.rst
    elasticluster/repository.rst
    elasticluster/subcommands.rst
+   elasticluster/utils.rst
