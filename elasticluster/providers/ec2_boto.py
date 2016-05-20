@@ -20,6 +20,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.mes
 import os
 import urllib
 import threading
+from warnings import warn
 
 # External modules
 import boto
@@ -362,18 +363,18 @@ class BotoCloudProvider(AbstractCloudProvider):
             pkey = DSSKey.from_private_key_file(private_key_path)
             is_dsa_key = True
         except PasswordRequiredException:
-            log.warning(
-                "Unable to check key file `%s` because it is encrypted with a "
-                "password. Please, ensure that you added it to the SSH agent "
-                "with `ssh-add %s`", private_key_path, private_key_path)
+            warn("Unable to check key file `{0}` because it is encrypted with a "
+                 "password. Please, ensure that you added it to the SSH agent "
+                 "with `ssh-add {1}`"
+                 .format(private_key_path, private_key_path))
         except SSHException:
             try:
                 pkey = RSAKey.from_private_key_file(private_key_path)
             except PasswordRequiredException:
-                log.warning(
-                    "Unable to check key file `%s` because it is encrypted with a "
-                    "password. Please, ensure that you added it to the SSH agent "
-                    "with `ssh-add %s`", private_key_path, private_key_path)
+                warn("Unable to check key file `{0}` because it is encrypted with a "
+                     "password. Please, ensure that you added it to the SSH agent "
+                     "with `ssh-add {1}`"
+                     .format(private_key_path, private_key_path))
             except SSHException:
                 raise KeypairError('File `%s` is neither a valid DSA key '
                                    'or RSA key.' % private_key_path)

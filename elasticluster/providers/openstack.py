@@ -26,6 +26,7 @@ __author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
 # System imports
 import os
 import threading
+from warnings import warn
 
 # External modules
 from novaclient import client
@@ -213,18 +214,18 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         try:
             pkey = DSSKey.from_private_key_file(private_key_path)
         except PasswordRequiredException:
-            log.warning(
-                "Unable to check key file `%s` because it is encrypted with a "
-                "password. Please, ensure that you added it to the SSH agent "
-                "with `ssh-add %s`", private_key_path, private_key_path)
+            warn("Unable to check key file `{0}` because it is encrypted with a "
+                 "password. Please, ensure that you added it to the SSH agent "
+                 "with `ssh-add {1}`"
+                 .format(private_key_path, private_key_path))
         except SSHException:
             try:
                 pkey = RSAKey.from_private_key_file(private_key_path)
             except PasswordRequiredException:
-                log.warning(
-                    "Unable to check key file `%s` because it is encrypted with a "
-                    "password. Please, ensure that you added it to the SSH agent "
-                    "with `ssh-add %s`", private_key_path, private_key_path)
+                warn("Unable to check key file `{0}` because it is encrypted with a "
+                     "password. Please, ensure that you added it to the SSH agent "
+                     "with `ssh-add {1}`"
+                     .format(private_key_path, private_key_path))
             except SSHException:
                 raise KeypairError('File `%s` is neither a valid DSA key '
                                    'or RSA key.' % private_key_path)
@@ -242,7 +243,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         "Keypair `%s` is present but has "
                         "different fingerprint. Aborting!" % name)
             else:
-                log.warning("Unable to check if the keypair is using the correct key.")
+                warn("Unable to check if the keypair is using the correct key.")
         except NotFound:
             log.warning(
                 "Keypair `%s` not found on resource `%s`, Creating a new one",
