@@ -2,4 +2,5 @@
 ---
 
 dependencies:
-  - { role: slurm-common }
+  - role: slurm-common
+    SLURM_ACCOUNTING_HOST: '{{groups.slurm_master[0]|default("slurmdbd")}}'
