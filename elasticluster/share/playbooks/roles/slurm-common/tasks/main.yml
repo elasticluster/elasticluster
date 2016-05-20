@@ -91,20 +91,7 @@
     - libopenmpi-dev
     - openmpi-bin
     - openmpi-checkpoint
-  when: '{{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}'
-
-
-- name: Install support packages (older Debian/Ubuntu)
-  package:
-    pkg={{item}}
-    state=latest
-  with_items:
-    - dmtcp
-    - libopenmpi1.5-dev
-    - openmpi1.5-bin
-    - openmpi1.5-checkpoint
-  when:
-    '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
+  when: '{{is_debian_or_ubuntu}}'
 
 
 - name: Install SLURM packages (RHEL-compatible)
