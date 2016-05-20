@@ -47,7 +47,7 @@ from elasticluster.exceptions import (
     SecurityGroupError,
 )
 
-DEFAULT_OS_NOVA_API_VERSION = "1.1"
+DEFAULT_OS_NOVA_API_VERSION = "2"
 
 class OpenStackCloudProvider(AbstractCloudProvider):
     """
