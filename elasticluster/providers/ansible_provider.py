@@ -226,7 +226,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         # log level (we cannot read `ElastiCluster().params.verbose`
         # here, still we can access the log configuration since it's
         # global).
-        verbosity = (logging.WARNING - elasticluster.log.level) / 10
+        verbosity = (logging.WARNING - elasticluster.log.getEffectiveLevel()) / 10
         if verbosity > 0:
             cmd.append('-' + ('v' * verbosity))  # e.g., `-vv`
 
