@@ -5,15 +5,25 @@
     - role: 'nfs-server'
       NFS_EXPORTS:
         - path: '/home'
-          clients: "{{groups.slurm_workers}}"
+          clients: "{{groups.slurm_workers + groups.slurm_submit|default([])}}"
     - slurm-master
 
       
 - name: Slurm worker nodes Playbook
-  hosts: slurm_workers:slurm_clients
+  hosts: slurm_workers
   roles:
     - role: 'nfs-client'
       NFS_MOUNTS:
         - fs: '{{groups.slurm_master[0]}}:/home'
           mountpoint: '/home'
     - slurm-worker
+
+
+- name: Slurm submit nodes Playbook
+  hosts: slurm_submit:slurm_client
+  roles:
+    - role: 'nfs-client'
+      NFS_MOUNTS:
+        - fs: '{{groups.slurm_master[0]}}:/home'
+          mountpoint: '/home'
+    - slurm-client

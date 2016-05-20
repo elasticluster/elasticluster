@@ -14,7 +14,7 @@
     - slurm-drmaa-dev
     - slurm-wlm-torque
     - sview
-  when: 'is_debian_8_or_later|bool or is_ubuntu_15_10_or_later|bool'
+  when: '{{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}'
 
 
 - block:
@@ -39,7 +39,7 @@
       with_items:
         - slurm-llnl
   when:
-    'is_debian_or_ubuntu|bool and not (is_debian_8_or_later|bool or is_ubuntu_15_10_or_later|bool)'
+    '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
 
 
 - block:
@@ -63,4 +63,4 @@
       with_items:
         - slurmd
         - slurmctld
-  when: is_rhel_compatible
+  when: 'is_rhel_compatible'
