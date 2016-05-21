@@ -53,17 +53,22 @@
   when: 'is_rhel_compatible'
 
 
-- name: Replace systemd unit file for SLURM services
-  file:
-    dest='/usr/lib/systemd/system/{{item}}.service'
-    src='usr/lib/systemd/system/{{item}}.service'
-    owner=root
-    group=root
-    mode=0444
-    backup=yes
-  with_items:
-    - slurmdbd
-    - slurmctld
+- block:
+  - name: Replace systemd unit file for SLURM services
+    copy:
+      dest='/usr/lib/systemd/system/{{item}}.service'
+      src='usr/lib/systemd/system/{{item}}.service'
+      owner=root
+      group=root
+      mode=0444
+      backup=yes
+    with_items:
+      - slurmdbd
+      - slurmctld
+  - name: Reload systemd unit files
+    command: |
+      systemctl daemon-reload
+    become: yes
   when: 'is_rhel7_compatible'
 
 
