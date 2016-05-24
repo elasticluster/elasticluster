@@ -44,7 +44,7 @@
   nfsexport:
     path='{{item.path}}'
     clients='{{item.clients}}'
-    options='{{item.options|default("rw,no_root_squash,async")}}'
+    options='{{item.options|default("rw,no_root_squash,async,no_subtree_check,crossmnt")}}'
     dest='/etc/exports'
     state=exported
   with_items: '{{NFS_EXPORTS}}'
