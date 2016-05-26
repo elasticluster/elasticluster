@@ -1,0 +1,3 @@
+---
+
+SLURM_ACCOUNTING_HOST: '{{groups.slurm_master[0]|default("slurmdbd")}}'
