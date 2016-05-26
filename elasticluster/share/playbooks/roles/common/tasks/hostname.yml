@@ -1,11 +1,23 @@
 ---
-- name: Update /etc/hostname file
-  when: is_debian_or_ubuntu
-  action: lineinfile dest=/etc/hostname regexp=.* line={{inventory_hostname}} create=yes
+#
+# Ensure the node host name matches the Ansible inventory name
+#
 
-- name: Update /etc/sysconfig/network file
-  when: is_centos
-  action: lineinfile dest=/etc/sysconfig/network regexp=^HOSTNAME= line=HOSTNAME={{inventory_hostname}}
+- name: Update `/etc/hostname`
+  lineinfile:
+    destfile='/etc/hostname'
+    regexp='.*'
+    line='{{inventory_hostname}}'
+    create=yes
+  when: is_debian_compatible
 
-- name: set hostname to current ansible name
-  action: command hostname {{inventory_hostname}}
+- name: Update HOSTNAME in file `/etc/sysconfig/network`
+  lineinfile:
+    destfile='/etc/sysconfig/network'
+    regexp='^HOSTNAME='
+    line='HOSTNAME={{inventory_hostname}}'
+  when: is_rhel_compatible
+
+- name: Set host name to Ansible "inventory name"
+  hostname: 
+    name='{{inventory_hostname}}'
