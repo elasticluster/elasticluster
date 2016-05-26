@@ -12,3 +12,9 @@
     fstype=nfs
     opts='{{item.options|default("rw,async")}}'
     state='{{item.state|default("mounted")}}'
+
+
+- name: Allow NFS homes through SELinux
+  command: |
+    setsebool -P use_nfs_home_dirs=1
+  when: '{{is_rhel_compatible}} and "{{item.mountpoint}}" == "/home"'
