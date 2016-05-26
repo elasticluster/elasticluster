@@ -27,3 +27,20 @@
         - fs: '{{groups.slurm_master[0]}}:/home'
           mountpoint: '/home'
     - slurm-client
+
+    
+- name: Restart SLURMd after all config is done
+  hosts: slurm_workers
+  tasks:
+    - service:
+        name=slurmd
+        state=restarted
+      when: '{{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}'
+    - service:
+        name=slurm-llnl
+        state=restarted
+      when: 'not {{is_debian_8_or_later}} and not {{is_ubuntu_15_10_or_later}}'
+    - service:
+        name=slurmd
+        state=restarted
+      when: '{{is_rhel_compatible}}'
