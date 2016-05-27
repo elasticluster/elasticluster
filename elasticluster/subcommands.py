@@ -133,8 +133,6 @@ class Start(AbstractCommand):
         parser.add_argument('cluster',
                             help="Type of cluster. It refers to a "
                                  "configuration stanza [cluster/<name>]")
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('-n', '--name', dest='cluster_name',
                             help='Name of the cluster.')
         parser.add_argument('--nodes', metavar='N1:GROUP[,N2:GROUP2,...]',
@@ -232,8 +230,6 @@ class Stop(AbstractCommand):
             description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('--force', action="store_true", default=False,
                             help="Remove the cluster even if not all the nodes"
                                  " have been terminated properly.")
@@ -286,8 +282,6 @@ class ResizeCluster(AbstractCommand):
                                  "N2 of group GROUP2 etc...")
         parser.add_argument('-t', '--template', help='name of the template '
                                                      'of this cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Only start the cluster, do not configure it")
         parser.add_argument('--yes', action="store_true", default=False,
@@ -424,8 +418,6 @@ class RemoveNode(AbstractCommand):
         parser.add_argument('cluster',
                             help='Cluster from which the node must be removed')
         parser.add_argument('node', help='Name of node to be removed')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Do not re-configure the cluster after "
                             "removing the node.")
@@ -484,8 +476,6 @@ class ListClusters(AbstractCommand):
             "list", help="List all started clusters.",
             description=self.__doc__)
         parser.set_defaults(func=self)
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
 
     def execute(self):
         configurator = get_configurator(self.params.config,
@@ -522,8 +512,6 @@ class ListTemplates(AbstractCommand):
             help="Show the templates defined in the configuration file.")
 
         parser.set_defaults(func=self)
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('clusters', nargs="*",
                             help="List only this cluster. Accepts globbing.")
 
@@ -566,8 +554,6 @@ class ListNodes(AbstractCommand):
                                "cluster", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('--json', action='store_true',
                             help="Produce JSON output")
         parser.add_argument('--pretty-json', action='store_true',
@@ -622,8 +608,6 @@ class SetupCluster(AbstractCommand):
             "setup", help="Configure the cluster.", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument(
             'extra', nargs='*', default=[],
             help=("Extra arguments will be appended (unchanged)"
@@ -663,8 +647,6 @@ class SshFrontend(AbstractCommand):
                         "`ssh` command", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('-n', '--node', metavar='HOSTNAME', dest='ssh_to',
                             help="Name of node you want to ssh to. By "
                             "default, the first node of the `ssh_to` option "
@@ -737,8 +719,6 @@ class SftpFrontend(AbstractCommand):
                             help="Name of node you want to ssh to. By "
                             "default, the first node of the `ssh_to` option "
                             "group is used.")
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('sftp_args', metavar='args', nargs='*',
                             help="Arguments to pass to ftp, instead of "
                                  "opening an interactive shell.")
@@ -788,8 +768,6 @@ class GC3PieConfig(AbstractCommand):
             description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('-a', '--append', metavar='FILE',
                             help='append configuration to file FILE')
 
@@ -951,8 +929,6 @@ class ImportCluster(AbstractCommand):
             "import", help="Import a cluster from a zip file",
             description=self.__doc__)
         parser.set_defaults(func=self)
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('--rename', metavar='NAME',
                             help="Rename the cluster during import.")
         parser.add_argument("file", help="Path to ZIP file produced by "
