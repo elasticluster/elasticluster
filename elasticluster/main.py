@@ -150,8 +150,8 @@ class ElastiCluster(cli.app.CommandLineApp):
                                  "%s\n" % (str(ex)))
                 sys.exit(1)
 
-        # If no configuration file was specified and default does not exists...
-        if not os.path.isfile(self.params.config):
+        # If no configuration file was specified and default does not exists and the user did not create a config dir...
+        if not os.path.isfile(self.params.config) and not os.path.isdir(self.params.config + '.d'):
             if self.params.config == self.default_configuration_file:
             # Copy the default configuration file to the user's home
                 if not os.path.exists(os.path.dirname(self.params.config)):
