@@ -105,7 +105,7 @@ provider is done in the `cluster` section (see later).
 Currently three cloud providers are available:
 
 - openstack: supports OpenStack cloud
-- boto: supports Amazon EC2 and compatible cloud
+- ec2_boto: supports Amazon EC2 and compatible cloud
 - google: supports Google Compute Engine
 
 Therefore the following configuration option needs to be set in the cloud
@@ -118,7 +118,7 @@ section:
 
 
 
-Valid configuration keys for `boto`
+Valid configuration keys for `ec2_boto`
 -----------------------------------
 
 ``ec2_url``
