@@ -15,7 +15,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
 
 # System imports
 import logging
@@ -32,12 +31,12 @@ try:
     from voluptuous import MultipleInvalid, Invalid
 except ImportError:
     # Voluptuous version <= 0.7.2
+    # noinspection PyUnresolvedReferences
     from voluptuous.voluptuous import MultipleInvalid, Invalid
 
 import coloredlogs
 
 from pkg_resources import resource_filename
-
 
 # Elasticluster imports
 from elasticluster import log
@@ -58,12 +57,26 @@ from elasticluster.conf import Configurator
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.migration_tools import MigrationCommand
 
+
+__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
+
+
 class ElastiCluster(cli.app.CommandLineApp):
     name = "elasticluster"
     description = "Elasticluster will start, stop, grow, shrink clusters on an EC2 cloud."
 
     default_configuration_file = os.path.expanduser(
         "~/.elasticluster/config")
+
+    # noinspection PyShadowingNames
+    def __init__(self, main=None, **kwargs):
+        super(ElastiCluster, self).__init__(main, **kwargs)
+
+        # to parse subcommands
+        self.subparsers = self.argparser.add_subparsers(
+            title="COMMANDS",
+            help="Available commands. Run `elasticluster cmd --help` "
+                 "to have information on command `cmd`.")
 
     def setup(self):
         cli.app.CommandLineApp.setup(self)
@@ -87,7 +100,7 @@ class ElastiCluster(cli.app.CommandLineApp):
                     ImportCluster(self.params),
                     ]
 
-        # global parameters
+        # Global parameters
         self.add_param('-v', '--verbose', action='count', default=0,
                        help="Increase verbosity. If at least four `-v` option "
                        "are given, elasticluster will create new VMs "
@@ -98,18 +111,12 @@ class ElastiCluster(cli.app.CommandLineApp):
                        default=Configurator.default_storage_path)
         self.add_param('-c', '--config', metavar='PATH',
                        help=("Path to the configuration file; default: `%s`. "
-                            "If directory `PATH.d` exists, also all files matching"
-                            " pattern `PATH.d/*.conf` are parsed."
+                             "If directory `PATH.d` exists, also all files matching"
+                             " pattern `PATH.d/*.conf` are parsed."
                              % self.default_configuration_file),
                        default=self.default_configuration_file)
         self.add_param('--version', action='store_true',
                        help="Print version information and exit.")
-
-        # to parse subcommands
-        self.subparsers = self.argparser.add_subparsers(
-            title="COMMANDS",
-            help="Available commands. Run `elasticluster cmd --help` "
-                 "to have information on command `cmd`.")
 
         for command in commands:
             if isinstance(command, AbstractCommand):
@@ -150,10 +157,21 @@ class ElastiCluster(cli.app.CommandLineApp):
                                  "%s\n" % (str(ex)))
                 sys.exit(1)
 
-        # If no configuration file was specified and default does not exists...
-        if not os.path.isfile(self.params.config):
+        self.check_config_or_copy_template()
+
+        assert self.params.func, "No subcommand defined in `ElastiCluster.setup()"
+        try:
+            self.params.func.pre_run()
+        except (RuntimeError, ConfigurationError) as ex:
+            sys.stderr.write(str(ex).strip())
+            sys.stderr.write('\n')
+            sys.exit(1)
+
+    def check_config_or_copy_template(self):
+        # If no configuration file was specified and default does not exists and the user did not create a config dir...
+        if not os.path.isfile(self.params.config) and not os.path.isdir(self.params.config + '.d'):
             if self.params.config == self.default_configuration_file:
-            # Copy the default configuration file to the user's home
+                # Copy the default configuration file to the user's home
                 if not os.path.exists(os.path.dirname(self.params.config)):
                     os.mkdir(os.path.dirname(self.params.config))
                 template = resource_filename(
@@ -169,15 +187,6 @@ class ElastiCluster(cli.app.CommandLineApp):
                         self.params.config)
                     sys.exit(1)
 
-        assert self.params.func, ("No subcommand defined in `ElastiCluster.setup()")
-        try:
-            self.params.func.pre_run()
-        except (RuntimeError, ConfigurationError) as ex:
-            sys.stderr.write(str(ex).strip())
-            sys.stderr.write('\n')
-            sys.exit(1)
-
-
     def main(self):
         """
         This is the main entry point of the ElastiCluster CLI.
@@ -186,7 +195,7 @@ class ElastiCluster(cli.app.CommandLineApp):
         through the command line interface. Then the given command from
         the command line interface is called.
         """
-        assert self.params.func, ("No subcommand defined in `ElastiCluster.main()")
+        assert self.params.func, "No subcommand defined in `ElastiCluster.main()"
         try:
             return self.params.func()
         except MultipleInvalid as ex:
