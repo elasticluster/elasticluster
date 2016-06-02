@@ -583,7 +583,9 @@ Mandatory configuration keys
 
     the image type to use. Different cloud providers call it
     differently, could be `instance type`, `instance size` or
-    `flavor`.
+    `flavor`. This setting can be overwritten in the Cluster Node
+    section, e.g. to use fewer resources on the frontend nodes than on
+    the compute nodes.
 
 ``security_group``
 
@@ -686,6 +688,10 @@ Some (working) examples::
     compute_nodes=2
     frontend_class=frontend
     network_ids=subnet-one
+
+    # Use a different flavor on the compute nodes
+    [cluster/slurm/compute]
+    flavor=m1.large
 
     [cluster/torque]
     cloud=hobbes
