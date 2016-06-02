@@ -48,3 +48,9 @@ __pycache__
 *.tar.gz
 *.zip
 
+# IntelliJ IDEA / PyCharm - Ignore everything in the `.idea` directory and the
+# `.iml` for now. This can be removed later, since it will make sharing of
+# configuration easier if more developers use these IDEs.
+.idea/*
+*.iml
+*.iws
