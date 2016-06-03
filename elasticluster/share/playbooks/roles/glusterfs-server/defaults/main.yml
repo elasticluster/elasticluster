@@ -41,4 +41,4 @@ glusterfs_main_host: '{{groups.glusterfs_server[0]}}'
 # a conditional expression that must evaluate to ``True`` on the node
 # that runs GlusterFS commands, ``False`` elsewhere.  By default, use
 # the first server node.
-is_glusterfs_main_server_node: "inventory_hostname == {{glusterfs_main_host}}"
+is_glusterfs_main_server_node: "inventory_hostname == '{{glusterfs_main_host}}'"
