@@ -45,12 +45,6 @@ from elasticluster.exceptions import TimeoutError, NodeNotFound, \
 from elasticluster.repository import MemRepository
 
 
-class IgnorePolicy(paramiko.MissingHostKeyPolicy):
-    def missing_host_key(self, client, hostname, key):
-        log.info('Ignoring unknown %s host key for %s: %s' %
-                 (key.get_name(), hostname, hexlify(key.get_fingerprint())))
-
-
 class Struct(object, UserDict.DictMixin):
     """
     This class is a clone of gc3libs.utils.Struct class from GC3Pie project: https://code.google.com/p/gc3pie/
@@ -151,7 +145,7 @@ class Cluster(Struct):
     :ivar nodes: dict [node_type] = [:py:class:`Node`] that represents all
                  nodes in this cluster
     """
-    startup_timeout = 60 * 10  #: timeout in seconds to start all nodes
+    startup_timeout = 60 * 15  #: timeout in seconds to start all nodes
 
 
     def __init__(self, name, user_key_name='elasticluster-key',
@@ -175,6 +169,8 @@ class Cluster(Struct):
 
         self.user_key_public = os.path.expanduser(user_key_public)
         self.user_key_public = os.path.expandvars(user_key_public)
+
+        self.ssh_hostkeys_from_console_output = extra.get('ssh_hostkeys_from_console_output')
 
         # this needs to exist before `add_node()` is called
         self._naming_policy = NodeNamingPolicy()
@@ -573,6 +569,10 @@ class Cluster(Struct):
             while pending_nodes:
                 for node in pending_nodes[:]:
                     ssh = node.connect(keyfile=self.known_hosts_file)
+                    if self.ssh_hostkeys_from_console_output:
+                        self.get_ssh_key_from_console_output(keys, node.instance_id, node.ips)
+
+                    ssh = node.connect(keyfile=self.known_hosts_file)
                     if ssh:
                         log.info("Connection to node %s (%s) successful.",
                                  node.name, node.connection_ip())
@@ -828,6 +828,20 @@ class Cluster(Struct):
                 log.warning("Ignoring error updating information on node %s: %s",
                           node, str(ex))
         self.repository.save_or_update(self)
+
+    def get_ssh_key_from_console_output(self, known_hosts, instance_id, names):
+        console_output = self._cloud_provider.get_console_output(instance_id)
+        hostkeys = re.sub(
+            r'^.*-+BEGIN SSH HOST KEY KEYS-+\s*(.*)[\r\n]-+END SSH HOST KEY KEYS-+.*',
+            r'\1', console_output, flags=re.DOTALL).strip()
+        hostkeys = re.split(r'[\r\n]+', hostkeys)
+
+        for key in hostkeys:
+            for name in names:
+                key_type, value = key.split()[0:2]
+                entry = paramiko.hostkeys.HostKeyEntry.from_line('{} {} {}'.format(name, key_type, value))
+                if entry:
+                    known_hosts.add(name, key_type, entry.key)
 
 
 class NodeNamingPolicy(object):

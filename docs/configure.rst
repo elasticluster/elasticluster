@@ -670,6 +670,11 @@ Optional configuration keys
     Only supported when the cloud provider is `google`.
     Only supported value is `preemptible`.
 
+``ssh_hostkeys_from_console_output``
+
+    whether to retrieve SSH host keys from instances´ console output,
+    instead of accepting the host keys without verification when connecting
+    via SSH for the first time.
 
 Examples
 --------
