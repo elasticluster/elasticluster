@@ -43,6 +43,31 @@ To fix the issue on RHEL/CentOS computers, please install package
 After installing the FFI devel packages, repeat the installation steps for ElastiCluster.
 
 
+Installation fails with: "fatal error: openssl/opensslv.h: No such file or directory"
+-------------------------------------------------------------------------------------
+
+While trying to install ElastiCluster with ``pip install``, you get a
+long error report that ends with lines like these::
+
+          building '_openssl' extension
+        x86_64-linux-gnu-gcc -pthread -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -I/usr/include/python2.7 -c build/temp.linux-x86_64-2.7/_openssl.c -o build/temp.linux-x86_64-2.7/build/temp.linux-x86_64-2.7/_openssl.o
+        build/temp.linux-x86_64-2.7/_openssl.c:423:30: fatal error: openssl/opensslv.h: No such file or directory
+        compilation terminated.
+        error: command 'x86_64-linux-gnu-gcc' failed with exit status 1
+
+To fix the issue on Debian/Ubuntu computers, please install package
+``libssl-dev`` prior to attempting to install ElastiCluster::
+
+        sudo apt-get install libssl-dev
+
+To fix the issue on RHEL/CentOS computers, please install package
+``libffi-devel``::
+
+        yum install openssl-devel # run this as root
+
+After installing the OpenSSL devel packages, repeat the installation steps for ElastiCluster.
+
+
 Setup of RHEL/CentOS 7 clusters fails immediately
 -------------------------------------------------
 
