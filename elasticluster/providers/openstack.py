@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+import re
 
 __docformat__ = 'reStructuredText'
 __author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
@@ -189,7 +190,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         # Here, it's always better if we update the instance.
         instance = self._load_instance(instance_id, force_reload=True)
-        return instance.status == 'ACTIVE'
+        return instance.status == 'ACTIVE' and self.is_cloud_init_finished(instance_id)
 
     # Protected methods
 
@@ -393,3 +394,17 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # for missing_vm in set(state['instance_ids']).difference(self._instances.keys()):
         #     log.warning("VM with id %s not found in cloud "
         #                 "%s" % (missing_vm, self._os_auth_url))
+
+    def is_cloud_init_finished(self, instance_id):
+        # type: (str) -> bool
+        """Check if a entry exists in the console log that ``cloud-init`` finished. This indicates that an OpenStack
+        instance is set-up correctly. It is also needed to successfully extract the SSH host keys.
+
+        :param instance_id: the ID of the instance to check
+        :return: True if ``cloud-init`` finished, False otherwise.
+        """
+        console_output = self.get_console_output(instance_id)
+        last_received_line = console_output.splitlines()[-1]
+        if re.match(r'.+cloud-init\[\d+\]: Cloud-init v\. \d+\.\d+\.\d+ finished', last_received_line):
+            return True
+        return False
