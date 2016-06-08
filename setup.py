@@ -185,6 +185,7 @@ setup(
             'elasticluster = elasticluster.__main__:main',
         ]
     },
+    setup_requires=['Babel>=2.3.4'],  # see Issue #268
     install_requires=([
         'PyCLI',
         'ansible>=2.2.3,!=2.3.0,<2.4',  ## whitelist only "known good" versions of Ansible
