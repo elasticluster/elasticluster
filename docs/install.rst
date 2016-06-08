@@ -34,6 +34,10 @@ below is all you need to install `elasticluster` on your system::
 
     pip install elasticluster
 
+If you run into any problems, please have a look at the
+`troubleshooting`:ref: section; the `mailing-list`_ is also a good
+place to get help.
+
 
 Installing development code from GitHub
 ---------------------------------------
@@ -62,6 +66,10 @@ Then you have to download the software. We suggest you to download it
 
 Now the ``elasticluster`` command should be available in your current
 environment.
+
+If you run into any problems, please have a look at the
+`troubleshooting`:ref: section; the `mailing-list`_ is also a good
+place to get help.
 
 
 Building documentation files
