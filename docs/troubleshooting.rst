@@ -17,6 +17,32 @@ further help and for any problem not reported here!
 .. contents::
 
 
+Installation fails with: " fatal error: ffi.h: No such file or directory"
+-------------------------------------------------------------------------
+
+While trying to install ElastiCluster with ``pip install``, you get a
+long error report that ends with these lines::
+
+        No package 'libffi' found
+        c/_cffi_backend.c:15:17: fatal error: ffi.h: No such file or directory
+         #include <ffi.h>
+                         ^
+        compilation terminated.
+        error: Setup script exited with error: command 'gcc' failed with exit status 1
+
+To fix the issue on Debian/Ubuntu computers, please install package
+``libffi-dev`` prior to attempting to install ElastiCluster::
+
+        sudo apt-get install libffi-dev
+
+To fix the issue on RHEL/CentOS computers, please install package
+``libffi-devel``::
+
+        yum install libffi-dev # run this as root
+
+After installing the FFI devel packages, repeat the installation steps for ElastiCluster.
+
+
 Setup of RHEL/CentOS 7 clusters fails immediately
 -------------------------------------------------
 
