@@ -17,7 +17,7 @@ further help and for any problem not reported here!
 .. contents::
 
 
-Installation fails with: " fatal error: ffi.h: No such file or directory"
+Installation fails with: "fatal error: ffi.h: No such file or directory"
 -------------------------------------------------------------------------
 
 While trying to install ElastiCluster with ``pip install``, you get a
@@ -38,7 +38,7 @@ To fix the issue on Debian/Ubuntu computers, please install package
 To fix the issue on RHEL/CentOS computers, please install package
 ``libffi-devel``::
 
-        yum install libffi-dev # run this as root
+        yum install libffi-devel # run this as root
 
 After installing the FFI devel packages, repeat the installation steps for ElastiCluster.
 
