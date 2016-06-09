@@ -581,6 +581,7 @@ class Cluster(Struct):
                             for ktype, keydata in key.items():
                                 keys.add(host, ktype, keydata)
                         pending_nodes.remove(node)
+                    self._save_keys_to_known_hosts_file(keys)
                 if pending_nodes:
                     time.sleep(5)
 
@@ -602,10 +603,7 @@ class Cluster(Struct):
         self.repository.save_or_update(self)
 
         # Save host keys
-        try:
-            keys.save(self.known_hosts_file)
-        except IOError:
-            log.warning("Ignoring error while saving known_hosts file %s" % self.known_hosts_file)
+        self._save_keys_to_known_hosts_file(keys)
 
         # A lot of things could go wrong when starting the cluster. To
         # ensure a stable cluster fitting the needs of the user in terms of
@@ -622,6 +620,12 @@ class Cluster(Struct):
                     min_nodes[group] = len(nodes)
 
         self._check_cluster_size(min_nodes)
+
+    def _save_keys_to_known_hosts_file(self, keys):
+        try:
+            keys.save(self.known_hosts_file)
+        except IOError:
+            log.warning("Ignoring error while saving known_hosts file %s" % self.known_hosts_file)
 
     def _check_cluster_size(self, min_nodes):
         """Checks the size of the cluster to fit the needs of the user. It
