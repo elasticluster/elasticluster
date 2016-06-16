@@ -337,7 +337,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         # If we reached this point, the instance was not found neither
         # in the cache or on the website.
         raise InstanceError("the given instance `%s` was not found "
-                            "on the coud" % instance_id)
+                            "on the cloud" % instance_id)
 
     def _check_keypair(self, name, public_key_path, private_key_path):
         """First checks if the keypair is valid, then checks if the keypair
