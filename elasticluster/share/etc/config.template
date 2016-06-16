@@ -11,7 +11,7 @@
 #
 # key=value
 #
-# Section names are in the form `[type/name]` wher `type` must be one of:
+# Section names are in the form `[type/name]` where `type` must be one of:
 #
 # - cloud   (define a cloud provider)
 # - login   (define a way to access a virtual machine)
@@ -58,7 +58,7 @@
 #          something like:
 #            https://ec2.us-east-1.amazonaws.com
 #          (replace `us-east-1` with the zone you want to use)
-#          while for OpenStack you can get it frmo the web interface
+#          while for OpenStack you can get it from the web interface
 #          (see later
 #
 # ec2_access_key: the access key (also known as access id) your cloud
