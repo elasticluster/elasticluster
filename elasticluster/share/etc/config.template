@@ -316,7 +316,7 @@ user_key_public=~/.ssh/id_rsa.pub
 #
 #                 - slurm_master: configure this machine as slurm masternode
 #
-#                 - slurm_clients: compute nodes of a slurm cluster
+#                 - slurm_workers: compute nodes of a slurm cluster
 #
 #                 - gridengine_master: configure as gridengine masternode
 #
@@ -366,7 +366,7 @@ user_key_public=~/.ssh/id_rsa.pub
 [setup/ansible-slurm]
 provider=ansible
 frontend_groups=slurm_master
-compute_groups=slurm_clients
+compute_groups=slurm_workers
 
 [setup/ansible-gridengine]
 provider=ansible

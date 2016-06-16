@@ -144,7 +144,7 @@ types on other cloud providers can be setup accordingly.
     # Initialising the setup provider needs a little more preparation:
     # the groups dictionary specifies the kind of nodes used for this cluster.
     # In this case we want a frontend and a compute kind. The frontend node
-    # (s) will be setup as slurm_master, the compute node(s) as slurm_clients.
+    # (s) will be setup as slurm_master, the compute node(s) as slurm_workers.
     # This corresponds to the documentation of the ansible playbooks
     # provided with elasticluster. The kind of the node is a name specified
     # by the user. This name will be used to set a new hostname on the
@@ -152,7 +152,7 @@ types on other cloud providers can be setup accordingly.
     # groups['kind'] = ['andible_group1', 'ansible_group2']
     groups = dict()
     groups['frontend'] = ['slurm_master']
-    groups['compute'] = ['slurm_clients']
+    groups['compute'] = ['slurm_workers']
 
     setup_provider = elasticluster.AnsibleSetupProvider(groups)
 

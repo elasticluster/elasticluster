@@ -64,7 +64,7 @@ In order to configure a slurm cluster, create an hosts file with::
     [slurm_master]
     hostname ansible_ssh_host=A.B.C.D
 
-    [slurm_clients]
+    [slurm_workers]
     node1 ansible_ssh_host=A.B.C.D
     node2 ansible_ssh_host=A.B.C.D
     node3 ansible_ssh_host=A.B.C.D
