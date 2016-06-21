@@ -14,18 +14,24 @@
         options: 'rw,no_root_squash,async'
   tasks: 
     - include: pbs+maui/tasks/master.yml
+      static: yes
     - include: cluster/tasks/packages.yml
+      static: yes
   handlers:
     - include: slurm/handlers/main.yml
     - include: common/handlers/main.yml
+      static: yes
     - include: pbs+maui/handlers/main.yml
+      static: yes
 
 - name: MAUI masternode Playbook
   hosts: maui_master
   tasks: 
     - include: pbs+maui/tasks/maui.yml
+      static: yes
   handlers:
     - include: pbs+maui/handlers/main.yml
+      static: yes
 
 - name: PBS worker nodes Playbook
   hosts: pbs_clients
@@ -37,7 +43,10 @@
         options: 'rw,async'
   tasks: 
     - include: pbs+maui/tasks/clients.yml
+      static: yes
     - include: cluster/tasks/packages.yml
+      static: yes
   handlers:
     - include: pbs+maui/handlers/main.yml
+      static: yes
 
