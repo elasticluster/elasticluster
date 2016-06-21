@@ -12,12 +12,17 @@
     - pbs_mom
 
 - name: Check pbs_mom config file is correct
-  action: lineinfile dest=/var/spool/torque/mom_priv/config
+  action: lineinfile dest=/var/lib/torque/mom_priv/config
           regexp='.*pbsserver.*'
           line='\$pbsserver {{groups.pbs_master[0]}}'
   notify: restart pbs_mom
 
 - name: Check pbs_mom usecp file
-  action: lineinfile dest=/var/spool/torque/mom_priv/config
+  action: lineinfile dest=/var/lib/torque/mom_priv/config
           regexp='.usecp .*'
           line='\$usecp *:/home /home'
+
+- name: fix /var/lib/torque/server_name
+#  action: template src=pbs+maui/templates/var/lib/torque/server_name.j2
+  template: src=pbs+maui/templates/var/lib/torque/server_name.j2 dest=/var/lib/torque/server_name
+  notify: restart pbs_mom
