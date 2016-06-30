@@ -22,7 +22,7 @@
     - gluster
     - glusterfs-server
 
-    
+
 - name: Ensure the GlusterFS service is running (RHEL-compatible)
   service:
     name='{{item}}'
@@ -35,9 +35,9 @@
     - gluster
     - glusterfs-server
 
-    
+
 - name: Configure peers (only on the first host)
-  shell: |    
+  shell: |
     gluster peer probe '{{item}}'
   with_items: '{{groups.glusterfs_server}}'
   when: is_glusterfs_main_server_node
@@ -47,8 +47,10 @@
 
 
 # build and export volumes
-- include: export.yml item='{{item}}'
+- include: export.yml
   with_items: '{{GLUSTERFS_VOLUMES}}'
+  loop_control:
+    loop_var: item
   tags:
     - gluster
     - glusterfs-server
