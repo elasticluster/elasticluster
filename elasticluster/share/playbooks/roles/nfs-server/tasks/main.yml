@@ -27,6 +27,19 @@
   when: is_rhel_compatible
 
 
+# exports need to be there before attempting to install/start the
+# server, otherwise the service startup script might refuse to start
+# the NFS server
+- name: Export directories
+  nfsexport:
+    path='{{item.path}}'
+    clients='{{item.clients}}'
+    options='{{item.options|default("rw,no_root_squash,async,no_subtree_check,crossmnt")}}'
+    dest='/etc/exports'
+    state=exported
+  with_items: '{{NFS_EXPORTS}}'
+
+
 - name: ensure NFS server is running (Debian/Ubuntu)
   tags:
     - nfs
@@ -38,16 +51,6 @@
   with_items:
     - nfs-kernel-server
   when: is_debian_compatible
-
-
-- name: Export directories
-  nfsexport:
-    path='{{item.path}}'
-    clients='{{item.clients}}'
-    options='{{item.options|default("rw,no_root_squash,async,no_subtree_check,crossmnt")}}'
-    dest='/etc/exports'
-    state=exported
-  with_items: '{{NFS_EXPORTS}}'
 
 
   # RHEL does not (auto)start needed services after installation
