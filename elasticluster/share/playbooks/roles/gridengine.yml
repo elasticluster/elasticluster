@@ -17,7 +17,7 @@
           clients: '{{groups.gridengine_clients}}'
           options: 'rw,no_root_squash,async'
         - path: '/usr/share/gridengine/default/common'
-          clients: '{{groups.gridengine_clients}}'
+          clients: '{{groups.gridengine_clients + groups.gridengine_master}}'
           options: 'rw,no_root_squash,sync'
   tasks: 
     - include: gridengine/tasks/master.yml
