@@ -420,24 +420,23 @@ class Cluster(Struct):
 
         :return: bool -- True on success, False otherwise
         """
-        log.debug("_start_node: working on node %s" % node.name)
+        log.debug("_start_node: working on node `%s`" % node.name)
         # TODO: the following check is not optimal yet. When a
         # node is still in a starting state,
         # it will start another node here,
         # since the `is_alive` method will only check for
         # running nodes (see issue #13)
         if node.is_alive():
-            log.info("Not starting node %s which is "
+            log.info("Not starting node `%s` which is "
                      "already up&running.", node.name)
             return True
         else:
             try:
                 node.start()
-                log.info("_start_node: node '%s' has been started", node.name)
+                log.info("Node `%s` has been started.", node.name)
                 return True
             except Exception as e:
-                log.error("could not start node `%s` for reason "
-                          "`%s`" % (node.name, e))
+                log.error("Could not start node `%s`: %s", node.name, e)
                 return None
 
     def start(self, min_nodes=None):
@@ -1093,7 +1092,7 @@ class Node(Struct):
         Therefore the `is_alive` and `update_ips` methods can be used to
         further gather details about the state of the node.
         """
-        log.info("Starting node %s.", self.name)
+        log.info("Starting node %s ...", self.name)
         self.instance_id = self._cloud_provider.start_instance(
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
