@@ -320,7 +320,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
             except NotFound:
                 raise InstanceError("the given instance `%s` was not found "
-                                    "on the coud" % instance_id)
+                                    "on the cloud" % instance_id)
         if instance_id in self._instances:
             return self._instances[instance_id]
 
@@ -338,7 +338,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # If we reached this point, the instance was not found neither
         # in the cache or on the website.
         raise InstanceError("the given instance `%s` was not found "
-                            "on the coud" % instance_id)
+                            "on the cloud" % instance_id)
 
     def _allocate_address(self, instance):
         """Allocates a free public ip address to the given instance
