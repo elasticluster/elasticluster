@@ -90,7 +90,7 @@
     - dmtcp
     - libopenmpi-dev
     - openmpi-bin
-    - openmpi-checkpoint
+    #- openmpi-checkpoint
   when: '{{is_debian_or_ubuntu}}'
 
 

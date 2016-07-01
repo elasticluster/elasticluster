@@ -1,16 +1,25 @@
 # Install and configure the MUNGE authentication service
 ---
 
-- name: Install MUNGE (Debian/Ubuntu)
+- block:
+  - name: Mask MUNGE from starting on install
+    command: systemctl mask munge.service creates=/etc/systemd/system/munge.service
+    when: ansible_service_mgr == 'systemd'
+  - name: Install MUNGE (Debian/Ubuntu)
+    package:
+      pkg=munge
+      state=latest
+  - name: Unmask MUNGE from starting on install
+    command: systemctl unmask munge.service && systemctl daemon-reload removes=/etc/systemd/system/munge.service
+    when: ansible_service_mgr == 'systemd'
+  - name:  Reload systemd
+    command: systemctl daemon-reload
+    when: ansible_service_mgr == 'systemd'
   tags:
     - slurm
     - munge
     - debian
-  package:
-    pkg=munge
-    state=latest
-  when:
-    is_debian_compatible
+  when: is_debian_compatible
 
 
 - name: Install MUNGE (RHEL-compatible)
@@ -38,7 +47,18 @@
     state=present
   when: is_ubuntu_trusty
 
-  
+- name: patch `/lib/systemd/system/munge.service` on Ubuntu >= 14.10
+  tags:
+    - slurm
+    - munge
+    - ubuntu
+  lineinfile:
+    dest='/lib/systemd/system/munge.service'
+    line='ExecStart=/usr/sbin/munged --syslog'
+    regexp='^ExecStart=/usr/sbin/munged'
+    state=present
+  when: is_ubuntu_14_10_or_later
+
 - name: Configure MUNGE
   tags:
     - slurm
