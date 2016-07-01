@@ -12,10 +12,13 @@
   hosts: gridengine_master
   roles:
     - role: nfs-server
-      NFS_MOUNTS:
-        path: '/home'
-        clients: '{{groups.gridengine_clients}}'
-        options: 'rw,no_root_squash,async'
+      NFS_EXPORTS:
+        - path: '/home'
+          clients: '{{groups.gridengine_clients}}'
+          options: 'rw,no_root_squash,async'
+        - path: '/usr/share/gridengine/default/common'
+          clients: '{{groups.gridengine_clients}}'
+          options: 'rw,no_root_squash,sync'
   tasks: 
     - include: gridengine/tasks/master.yml
   handlers:
