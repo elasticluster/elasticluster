@@ -9,7 +9,7 @@ is_debian: "'{{ansible_distribution}}' == 'Debian'"
 is_scientific_linux: "'{{ansible_distribution}}' == 'Scientific'"
 is_ubuntu: "'{{ansible_distribution}}' == 'Ubuntu'"
 
-is_debian_or_ubuntu: '{{is_debian}} or {{is_ubuntu}}'
+is_debian_or_ubuntu: "{{is_debian}} or {{is_ubuntu}}"
 
 
 # Debian releases by codename
