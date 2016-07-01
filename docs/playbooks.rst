@@ -87,7 +87,7 @@ the ``setup`` stanza will look like::
 
     [setup/ansible_slurm]
     frontend_groups=slurm_master,ganglia_master
-    compute_groups=slurm_clients,ganglia_monitor
+    compute_groups=slurm_workers,ganglia_monitor
     ...
 
 Extra variables can be set by editing the `setup/` section:
@@ -449,7 +449,7 @@ You can combine, for instance, a SLURM cluster with a PVFS2 cluster::
 
     [setup/ansible_slurm+pvfs2]
     frontend_groups=slurm_master,pvfs2_client
-    compute_groups=slurm_clients,pvfs2_client
+    compute_groups=slurm_workers,pvfs2_client
     pvfs-nodes_groups=pvfs2_meta,pvfs2_data
     ...
 
