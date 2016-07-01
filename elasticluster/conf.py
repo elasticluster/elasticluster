@@ -690,7 +690,7 @@ class ConfigReader(object):
                 errors.add("Invalid section name `%s`" % cluster)
                 continue
 
-            cluster_conf = dict(self.conf[cluster])
+            cluster_conf = self._make_cluster_conf(self.conf[cluster])
 
             try:
                 self.schemas['cluster'](cluster_conf)
@@ -776,3 +776,33 @@ class ConfigReader(object):
         if errors.errors:
             raise errors
         return (conf_values, storage_section)
+
+
+    def _make_cluster_conf(self, conf):
+        """
+        Create dictionary of cluster config keys.
+
+        Compatibility changes, renames, deprecation warnings, etc. all
+        happen here -- so that the rest of the code can always assume
+        the configuration is the latest documented format.
+        """
+        cfg = dict(conf)
+
+        # working on issue #279 uncovered a conflict between code and
+        # docs: the documentation referred to config keys
+        # `<class>_min_nodes` but the code actually looked for
+        # `<class>_nodes_min`.  Keep this last version as it makes the
+        # code simpler, but alert users of the change...
+        for k,v in cfg.items():
+            if k.endswith('_min_nodes'):
+                # replace with correct key name
+                new_k = k[:-len('_min_nodes')] + '_nodes_min'
+                cfg[new_k] = v
+                del cfg[k]
+                warnings.warn(
+                    "Configuration key '{0}' should be renamed to '{1}'."
+                    " Support for automatic renaming will be removed"
+                    " in the next major version of ElastiCluster."
+                    .format(k, new_k))
+
+        return cfg

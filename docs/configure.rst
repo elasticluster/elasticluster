@@ -638,11 +638,16 @@ Optional configuration keys
 
 ``<class>_min_nodes``
 
-    Define the minimum amount of nodes of type `<class>` that must be
-    up&running to configure the cluster. When starting a cluster,
-    creation of some instances may fail. If at least min_nodes are
-    started correctly (i.e. are not in error state), the cluster is
-    configured anyway, otherwise creation of the cluster will fail.
+    **Deprecated.** Please rename to ``<class>_nodes_min``.
+
+``<class>_nodes_min``
+
+    Minimum amount of nodes of type ``<class>`` that must be up &
+    running in order to start configuring the cluster. When starting a
+    cluster, creation of some instances may fail; if at least this
+    amount of nodes are started correctly (i.e. are not in error
+    state), the cluster is configured anyway; otherwise, creation of
+    the cluster will fail.
 
 ``thread_pool_max_size``
 

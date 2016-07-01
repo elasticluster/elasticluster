@@ -197,7 +197,7 @@ class Start(AbstractCommand):
             print("(this may take a while...)")
             conf = configurator.cluster_conf[cluster_template]
             min_nodes = dict(
-                (k[:-10], int(v)) for k, v in conf['cluster'].iteritems() if
+                (k[:-len('_nodes_min')], int(v)) for k, v in conf['cluster'].iteritems() if
                 k.endswith('_nodes_min'))
             cluster.start(min_nodes=min_nodes)
             if self.params.no_setup:

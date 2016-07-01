@@ -178,6 +178,15 @@ class TestConfigurator(unittest.TestCase):
         self.assertTrue(len(cluster.nodes["compute"]) == 2)
         self.assertTrue(len(cluster.nodes["frontend"]) == 1)
 
+    def test_create_cluster_with_nodes_min(self):
+        cfg = self.config.copy()
+        cfg['mycluster']['cluster']['compute_nodes_min'] = 1
+
+        configurator = Configurator(cfg)
+        cconf = configurator.cluster_conf['mycluster']['cluster']
+
+        self.assertEqual(cconf['compute_nodes_min'], 1)
+
     def test_load_cluster(self):
         # test without storage file
         storage_path = tempfile.mkdtemp()

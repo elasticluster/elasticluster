@@ -468,13 +468,12 @@ worker_groups=ipython_engine
 #              cluster will be connected to. Only supported when the
 #              cloud provider is ``openstack``
 #
-# <class>_min_nodes: Define the minimum amount of nodes of type
-#          `<class>` that must be up&running to configure the
-#          cluster. When starting a cluster, creation of some
-#          instances may fail. If at least min_nodes are started
-#          correctly (i.e. are not in error state), the cluster is
-#          configured anyway, otherwise creation of the cluster will
-#          fail.
+# <class>_nodes_min: Minimum amount of nodes of type `<class>` that
+#          must be up&running to configure the cluster. When starting
+#          a cluster, creation of some instances may fail; if at least
+#          this amount of nodes are started correctly (i.e. are not in
+#          error state), the cluster is configured anyway, otherwise
+#          creation of the cluster will fail.
 #
 # boot_disk_type: Define the type of boot disk to use.
 #                 Only supported when the cloud provider is `google`.
