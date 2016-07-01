@@ -1,6 +1,6 @@
 # Ensure additional packages are installed
 
-- name: Ensure extra reposistories are present (Ubuntu)
+- name: Ensure extra repositories are present (Ubuntu)
   apt_repository:
     repo="deb http://archive.ubuntu.com/ubuntu {{ansible_distribution_release}} universe multiverse"
     state=present
