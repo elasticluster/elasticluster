@@ -13,10 +13,18 @@
     - gridengine-execd
 
 - name: configure gridengine execd
-  action: lineinfile dest=/var/lib/gridengine/default/common/act_qmaster regexp='.*' line="{{groups.gridengine_master[0]}}"
-  when: is_debian_or_ubuntu
-  notify: restart execd
-
+  lineinfile:
+    dest=/var/lib/gridengine/default/common/act_qmaster
+    regexp='.*'
+    line='{{groups.gridengine_master[0]}}'
+  when: is_debian_compatible
+  
+- name: ensure execd daemon is running
+  service:
+    name=gridengine-exec
+    state=running
+  when: is_debian_compatible
+  
 - name: ensure execd daemon is running
   action: service name=sge_execd state=running
   when: is_centos

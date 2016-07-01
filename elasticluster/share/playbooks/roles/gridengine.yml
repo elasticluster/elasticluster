@@ -5,6 +5,10 @@
     - { role: iptables, default_input_policy: 'ACCEPT' }
   tasks:
     - include: cluster/tasks/packages.yml
+    - name: Ensure the cell directory exists
+      file:
+        path='/usr/share/gridengine/default/common'
+        state=directory
   handlers:
     - include: common/handlers/main.yml
 
@@ -18,7 +22,7 @@
           options: 'rw,no_root_squash,async'
         - path: '/usr/share/gridengine/default/common'
           clients: '{{groups.gridengine_clients + groups.gridengine_master}}'
-          options: 'rw,no_root_squash,sync'
+          options: 'rw,no_root_squash'
   tasks: 
     - include: gridengine/tasks/master.yml
   handlers:
@@ -27,6 +31,8 @@
     - include: gridengine/handlers/main.yml
 
 - name: GridEngine worker nodes Playbook
+  tags:
+    - gridengine
   hosts: gridengine_clients
   roles:
     - role: nfs-client
