@@ -614,7 +614,7 @@ class Cluster(Struct):
                              self.nodes.iterkeys())
         else:
             # check that each group has a minimum value
-            for group, nodes in nodes.iteritems():
+            for group, nodes in self.nodes.iteritems():
                 if group not in min_nodes:
                     min_nodes[group] = len(nodes)
 
