@@ -254,6 +254,7 @@ class Configurator(object):
     @staticmethod
     def _read_node_groups(conf):
         """
+        Return mapping from node kind names to list of Ansible host group names.
         """
         result = defaultdict(list)
         for key, value in conf.items():
