@@ -47,7 +47,7 @@
 
 
 # build and export volumes
-- include: export.yml item='{{item}}'
+- include: export.yml
   with_items: '{{GLUSTERFS_VOLUMES}}'
   tags:
     - gluster
