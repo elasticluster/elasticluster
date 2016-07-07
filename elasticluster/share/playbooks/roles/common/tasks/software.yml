@@ -38,6 +38,7 @@
     # other "standard" utilities
     - kexec-tools
     - m4
+    - moreutils
     - rsync
     - screen
     - tmux
@@ -73,6 +74,8 @@
     # other "standard" utilities
     - kexec-tools
     - m4
+    - moreutils
+    - moreutils-parallel
     - rsync
     - screen
     - tmux
