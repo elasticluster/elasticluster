@@ -72,5 +72,5 @@
   tasks:
     - action: shell modprobe pvfs2
     - action: file path=/pvfs2 state=directory
-    - action: shell pgrep pvfs2-client || pvfs2-client
-    - action: mount name=/pvfs2 src=tcp://{{groups.pvfs2_meta[0]}}:3334/pvfs2-fs fstype=pvfs2 opts=defaults,noauto state=mounted
+    - action: shell pgrep pvfs2-client || pvfs2-client --logtype=syslog
+    - action: mount name=/pvfs2 src=tcp://{{groups.pvfs2_meta[0]}}:3334/orangefs fstype=pvfs2 opts=defaults,noauto state=mounted
