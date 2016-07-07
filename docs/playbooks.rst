@@ -419,14 +419,14 @@ OrangeFS/PVFS2
 
 Tested on:
 
-* Ubuntu 12.04
+* Ubuntu 14.04
 
 +-----------------+----------------------------------------------------+
 | ansible groups  | role                                               |
 +=================+====================================================+
 |``pvfs2_meta``   | Run the pvfs2 metadata service                     |
 +-----------------+----------------------------------------------------+
-|``pvfs2_data``   | Run the pvfs2 data node                            |
+|``pvfs2_data``   | Run the pvfs2 data service                         |
 +-----------------+----------------------------------------------------+
 |``pvfs2_client`` | configure as pvfs2 client and mount the filesystem |
 +-----------------+----------------------------------------------------+
@@ -442,7 +442,7 @@ You can combine, for instance, a SLURM cluster with a PVFS2 cluster::
     [cluster/slurm+pvfs2]
     frontend_nodes=1
     compute_nodes=10
-    pvfs2-nodes=10
+    pvfs2_nodes=10
     ssh_to=frontend
     setup_provider=ansible_slurm+pvfs2
     ...
@@ -450,7 +450,7 @@ You can combine, for instance, a SLURM cluster with a PVFS2 cluster::
     [setup/ansible_slurm+pvfs2]
     frontend_groups=slurm_master,pvfs2_client
     compute_groups=slurm_workers,pvfs2_client
-    pvfs-nodes_groups=pvfs2_meta,pvfs2_data
+    pvfs2_groups=pvfs2_meta,pvfs2_data
     ...
 
 This configuration will create a SLURM cluster with 10 compute nodes,
