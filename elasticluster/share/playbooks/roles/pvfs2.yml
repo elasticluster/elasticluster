@@ -7,10 +7,10 @@
 
 - hosts: pvfs2:pvfs2_data:pvfs2_meta:pvfs2_client
   vars:
-    - pvfs_version: 2.8.7
+    - pvfs_version: 2.9.5
     - pvfs_tar: "orangefs-{{pvfs_version}}.tar.gz"
     - pvfs_src: "orangefs-{{pvfs_version}}"
-    - pvfs_url: "http://orangefs.org/downloads/LATEST/source/{{pvfs_tar}}"
+    - pvfs_url: "https://s3.amazonaws.com/download.orangefs.org/releases/{{pvfs_version}}/source/{{pvfs_tar}}"
     - pvfs2_storage: /srv/pvfs2
     - is_client: '"{{inventory_hostname}}" in {{groups.pvfs2_client}}'
   handlers:
