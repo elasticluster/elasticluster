@@ -315,10 +315,9 @@ class Cluster(Struct):
         """
         if not self._NODE_KIND_RE.match(kind):
             raise ValueError(
-                "Invalid name `%s`. The `kind` argument may only contain"
-                " alphanumeric characters, as it is going to be used as"
-                " host name" % kind
-            )
+                "Invalid name `{kind}`. The `kind` argument may only contain"
+                " alphanumeric characters, and must not end with a digit."
+                .format(kind=kind))
 
         if kind not in self.nodes:
             self.nodes[kind] = []
