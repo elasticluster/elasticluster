@@ -439,18 +439,18 @@ In addiction, it will mount the filesystem in ``/pvfs2`` on all the clients.
 
 You can combine, for instance, a SLURM cluster with a PVFS2 cluster::
 
-    [cluster/slurm+pvfs2]
+    [cluster/slurm+orangefs]
     frontend_nodes=1
     compute_nodes=10
-    pvfs2_nodes=10
+    orangefs_nodes=10
     ssh_to=frontend
-    setup_provider=ansible_slurm+pvfs2
+    setup_provider=ansible_slurm+orangefs
     ...
 
-    [setup/ansible_slurm+pvfs2]
+    [setup/ansible_slurm+orangefs]
     frontend_groups=slurm_master,pvfs2_client
     compute_groups=slurm_workers,pvfs2_client
-    pvfs2_groups=pvfs2_meta,pvfs2_data
+    orangefs_groups=pvfs2_meta,pvfs2_data
     ...
 
 This configuration will create a SLURM cluster with 10 compute nodes,
