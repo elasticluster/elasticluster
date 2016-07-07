@@ -32,7 +32,7 @@
 
     - action: shell chdir=/root/{{pvfs_src}} make kmod && make kmod_install && depmod -a
 
-    - action: shell pvfs2-genconfig --quiet --protocol tcp --ioservers {{groups.pvfs2_data}} --metaservers {{groups.pvfs2_meta}}  --storage /srv/pvfs2 /etc/pvfs2-fs.conf creates=/etc/pvfs2-fs.conf
+    - action: shell pvfs2-genconfig --quiet --protocol tcp --ioservers {{groups.pvfs2_data|join(',')}} --metaservers {{groups.pvfs2_meta|join(',')}}  --storage /srv/pvfs2 /etc/pvfs2-fs.conf creates=/etc/pvfs2-fs.conf
       when: inventory_hostname == groups.pvfs2_meta[0]
 
 
