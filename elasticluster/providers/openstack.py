@@ -191,6 +191,11 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         instance = self._load_instance(instance_id, force_reload=True)
         return instance.status == 'ACTIVE'
 
+    def get_console_output(self, instance_id):
+        instance = self._load_instance(instance_id)
+        instance.update()
+        return instance.get_console_output()
+
     # Protected methods
 
     def _check_keypair(self, name, public_key_path, private_key_path):
