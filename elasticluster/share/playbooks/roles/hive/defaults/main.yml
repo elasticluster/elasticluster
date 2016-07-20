@@ -6,7 +6,7 @@
 HIVE_CONF_DIR: '/etc/hive/conf.elasticluster'
 
 # Hostname or IP address to use for building the `thrift://` endpoint
-HIVE_METASTORE_HOST: '{{groups.hive_server[0]}}'
+HIVE_METASTORE_HOST: '{% if "hive_server" in groups %}{{groups.hive_server[0]}}{% else %}{{ansible_fqdn}}{% endif %}'
 
 # DB connection parameters
 HIVE_METASTORE_DB_HOST: '{{HIVE_METASTORE_HOST}}'
