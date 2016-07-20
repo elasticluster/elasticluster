@@ -39,7 +39,7 @@
     - service:
         name=slurm-llnl
         state=restarted
-      when: 'not {{is_debian_8_or_later}} and not {{is_ubuntu_15_10_or_later}}'
+      when: 'not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
     - service:
         name=slurmd
         state=restarted
