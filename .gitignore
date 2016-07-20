@@ -7,6 +7,7 @@ elasticluster.egg-info/
 *.py[co]
 .cache
 .coverage
+.eggs
 build
 dist
 docs/doctrees
@@ -44,3 +45,4 @@ setuptools-*.egg
 *.tar.bz2
 *.tar.gz
 *.zip
+
