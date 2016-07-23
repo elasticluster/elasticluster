@@ -20,6 +20,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.mes
 import os
 import urllib
 import threading
+import time
 from warnings import warn
 
 # External modules
@@ -153,6 +154,7 @@ class BotoCloudProvider(AbstractCloudProvider):
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
                        username=None, node_name=None, network_ids=None,
+                       price=None,timeout=None,
                        **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
@@ -206,18 +208,40 @@ class BotoCloudProvider(AbstractCloudProvider):
             security_groups = [security_group]
 
         try:
-            reservation = connection.run_instances(
-                image_id, key_name=key_name, security_groups=security_groups,
-                instance_type=flavor, user_data=image_userdata,
-                network_interfaces=interfaces)
+            #start spot instance if bid is specified
+            if price:
+                log.info("Requesting spot instance with price `%s`.",price)
+                request = connection.request_spot_instances(
+                                price,image_id, key_name=key_name, security_groups=security_groups,
+                                instance_type=flavor, user_data=image_userdata,
+                                network_interfaces=interfaces)[-1]
+                                
+                #wait until spot request is fullfilled (will wait forever if no timeout is given)
+                start_time = time.time()
+                log.info("Waiting for spot instance - timeout: `%s`.",str(timeout))
+                while  request.status.code != 'fulfilled':
+                    if timeout and time.time()-start_time > float(timeout):
+                        request.cancel()
+                        raise RuntimeError('spot instance timed out')
+                    time.sleep(10)
+                    #update request status
+                    request=connection.get_all_spot_instance_requests(request_ids=request.id)[-1]
+
+            else:
+                reservation = connection.run_instances(
+                    image_id, key_name=key_name, security_groups=security_groups,
+                    instance_type=flavor, user_data=image_userdata,
+                    network_interfaces=interfaces)
         except Exception as ex:
             log.error("Error starting instance: %s", ex)
             if "TooManyInstances" in ex:
                 raise ClusterError(ex)
             else:
                 raise InstanceError(ex)
-
-        vm = reservation.instances[-1]
+        if price:
+            vm  = connection.get_only_instances(instance_ids=[request.instance_id])[-1]
+        else:
+            vm = reservation.instances[-1]
         vm.add_tag("Name", node_name)
 
         # cache instance object locally for faster access later on

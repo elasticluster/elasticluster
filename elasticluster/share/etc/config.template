@@ -597,4 +597,10 @@ ssh_to=controller
 #
 # [cluster/slurm/frontend]
 # flavor=bigdisk
-
+#
+# To request ec2 spot instance specify price 
+# and (optional) timeout for node
+# [cluster/aws-slurm/compute]
+# price=0.08
+# timeout=600
+# flavor=m3.large
