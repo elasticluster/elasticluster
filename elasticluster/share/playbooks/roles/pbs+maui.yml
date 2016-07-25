@@ -9,7 +9,7 @@
   roles:
     - role: nfs-server
       NFS_EXPORTS:
-        path: '/home'
+      - path: '/home'
         clients: '{{groups.pbs_clients}}'
         options: 'rw,no_root_squash,async'
   tasks: 
@@ -32,7 +32,7 @@
   roles:
     - role: nfs-client
       NFS_MOUNTS:
-        fs: '{{groups.pbs_master[0]}}:/home'
+      - fs: '{{groups.pbs_master[0]}}:/home'
         mountpoint: '/home'
         options: 'rw,async'
   tasks: 
