@@ -1,7 +1,9 @@
 ---
 - name: Install MAUI RPM from a remote repo
   when: is_centos
-  yum: name=http://ftp.cs.stanford.edu/pub/rpms/centos/6.2/x86_64/maui-3.3.1-x86_64-fpmbuild.rpm state=present
+  yum:
+    name='http://ftp.cs.stanford.edu/pub/rpms/centos/{{ansible_distribution_major_version}}/x86_64/maui-3.3.1-x86_64-fpmbuild.rpm'
+    state=present
 
 - name: Ensure /var/spool/maui/log directory exists
   action: file path=/var/spool/maui/log state=directory
