@@ -55,6 +55,10 @@ class BotoCloudProvider(AbstractCloudProvider):
     """
     __node_start_lock = threading.Lock()  # lock used for node startup
 
+    # interval (in seconds) for polling the cloud provider,
+    # e.g., when requesting spot instances
+    POLL_INTERVAL = 10
+
     def __init__(self, ec2_url, ec2_region, ec2_access_key=None,
                  ec2_secret_key=None, vpc=None, storage_path=None,
                  request_floating_ip=False):
@@ -120,7 +124,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                 vpc_connection = boto.connect_vpc(
                     aws_access_key_id=self._access_key,
                     aws_secret_access_key=self._secret_key,
-                    is_secure=self._secure,
+rg                    is_secure=self._secure,
                     host=self._ec2host, port=self._ec2port,
                     path=self._ec2path, region=region)
                 log.debug("VPC connection has been successful.")
@@ -210,23 +214,24 @@ class BotoCloudProvider(AbstractCloudProvider):
         try:
             #start spot instance if bid is specified
             if price:
-                log.info("Requesting spot instance with price `%s`.",price)
+                log.info("Requesting spot instance with price `%s` ...", price)
                 request = connection.request_spot_instances(
                                 price,image_id, key_name=key_name, security_groups=security_groups,
                                 instance_type=flavor, user_data=image_userdata,
                                 network_interfaces=interfaces)[-1]
-                                
-                #wait until spot request is fullfilled (will wait forever if no timeout is given)
+
+                # wait until spot request is fullfilled (will wait
+                # forever if no timeout is given)
                 start_time = time.time()
-                log.info("Waiting for spot instance - timeout: `%s`.",str(timeout))
+                timeout = (float(timeout) if timeout else 0)
+                log.info("Waiting for spot instance (will time out in %d seconds) ...", timeout)
                 while  request.status.code != 'fulfilled':
-                    if timeout and time.time()-start_time > float(timeout):
+                    if timeout and time.time()-start_time > timeout:
                         request.cancel()
                         raise RuntimeError('spot instance timed out')
-                    time.sleep(10)
-                    #update request status
+                    time.sleep(self.POLL_INTERVAL)
+                    # update request status
                     request=connection.get_all_spot_instance_requests(request_ids=request.id)[-1]
-
             else:
                 reservation = connection.run_instances(
                     image_id, key_name=key_name, security_groups=security_groups,
