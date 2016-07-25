@@ -161,6 +161,37 @@ Valid configuration keys for `ec2_boto`
     will force `elasticluster` to request such a floating IP if the
     instance doesn't get one automatically.
 
+``price``
+
+    If set to a non-zero value, ElastiCluster will allocate `spot
+    instances`__ with a price less than or equal to the value given
+    here.  Note that there is currently no way to specify a currency:
+    the amount is expressed in whatever currency__ is default in the
+    Boto API (typically, US Dollars).
+
+    .. __: https://aws.amazon.com/ec2/spot/
+
+    .. __: http://boto.cloudhackers.com/en/latest/ref/mturk.html#module-boto.mturk.price
+
+    Defaults to 0, i.e., use regular non-spot instances.
+
+    This is typically best used in a *compute node* configuration
+    section (see an example in the `example configuration file`_); you
+    probably do not want to run login, file server or similar central
+    services on a spot instance (which can be terminated any time,
+    depending on spot price bid).
+
+
+``timeout``
+
+    Maximum amount of seconds to wait for a spot instance to become
+    available; if a request for a spot instance cannot be satisfied in
+    the given time, the instance startup process aborts.  If set to 0
+    (default), then wait indefinitely.
+
+    **Note:** Ignored if ``price`` is zero (default).
+
+
 
 Valid configuration keys for `google`
 -------------------------------------
