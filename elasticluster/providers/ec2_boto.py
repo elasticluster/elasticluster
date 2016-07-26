@@ -124,7 +124,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                 vpc_connection = boto.connect_vpc(
                     aws_access_key_id=self._access_key,
                     aws_secret_access_key=self._secret_key,
-rg                    is_secure=self._secure,
+                    is_secure=self._secure,
                     host=self._ec2host, port=self._ec2port,
                     path=self._ec2path, region=region)
                 log.debug("VPC connection has been successful.")
