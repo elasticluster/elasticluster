@@ -35,11 +35,11 @@
     - service:
         name=slurmd
         state=restarted
-      when: '{{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}'
+      when: '{{is_debian_compatible}} and ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
     - service:
         name=slurm-llnl
         state=restarted
-      when: 'not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
+      when: '{{is_debian_compatible}} and (not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}))'
     - service:
         name=slurmd
         state=restarted
