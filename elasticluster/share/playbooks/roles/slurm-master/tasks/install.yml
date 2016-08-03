@@ -1,24 +1,5 @@
 ---
 
-- name: Set variables (Debian/Ubuntu)
-  set_fact:
-    slurmctld_service_name: slurmctld
-    slurmdbd_service_name: slurmdbd
-  when: '{{is_debian_or_ubuntu}} and ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
-  
-- name: Set variables (older Debian/Ubuntu)
-  set_fact:
-    slurmctld_service_name: slurm-llnl
-    slurmdbd_service_name: slurm-llnl-slurmdbd
-  when: '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
-  
-- name: Set variables (RHEL-compatible)
-  set_fact:
-    slurmctld_service_name: slurmctld
-    slurmdbd_service_name: slurmdbd
-  when: 'is_rhel_compatible'
-
-  
 - name: Install SLURM master packages (Debian/Ubuntu)
   package:
     pkg='{{item}}'
