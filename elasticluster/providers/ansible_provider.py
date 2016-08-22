@@ -217,9 +217,9 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         if self._sudo:
             cmd.extend([
                 # force all plays to use `sudo` (even if not marked as such)
-                '--sudo',
+                '--become',
                 # desired sudo-to user
-                ('--sudo-user=' + self._sudo_user),
+                ('--become-user=' + self._sudo_user),
             ])
 
         # determine Ansible verbosity as a function of ElastiCluster's
