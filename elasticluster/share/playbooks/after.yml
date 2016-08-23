@@ -10,7 +10,10 @@
 # into ElastiCluster's main branch.
 #
 - name: Apply local customizations
+  tags:
+    - after
+    - local
   hosts: all
-  # by default this is a no-op (empty task list)
+  # by default these are no-op (empty task list)
+  roles: []
   tasks: []
-
