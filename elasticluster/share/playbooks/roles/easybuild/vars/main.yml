@@ -1,0 +1,4 @@
+---
+
+# directory where to download and run the bootstrap script
+easybuild_build_dir: '/var/tmp'

@@ -1,0 +1,5 @@
+---
+
+# Lmod's Lua distribution uses a custom non-GNU makefile which does not allow
+# out-of-tree build, so this *has* to be the same as the source files directory
+lua_build_dir: '{{lua_source_dir}}/lua-{{LUA_VERSION}}'

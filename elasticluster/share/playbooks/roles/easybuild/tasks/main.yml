@@ -1,0 +1,83 @@
+---
+
+#
+# Install EasyBuild
+#
+
+- name: Install OS-level dependecies
+  include: 'deps-{{ansible_os_family}}.yml'
+
+
+- name: Download bootstrap script
+  get_url:
+    url='{{ easybuild_bootstrap_url }}'
+    dest='{{ easybuild_build_dir }}/bootstrap_eb.py'
+
+
+- name: Set EasyBuild user name
+  # there seems to be no other way to recover the "non-root" user
+  # when Ansible is running with `--become`
+  set_fact:
+    easybuild_user: '{{ansible_env.SUDO_USER}}'
+
+
+- name: Create `easybuild` group
+  group:
+    name='easybuild'
+    state=present
+
+
+- name: Populate `easybuild` group
+  user:
+    name='{{easybuild_user}}'
+    groups='easybuild'
+    append=yes
+
+
+- name: Create required directories
+  file:
+    dest='{{item}}'
+    state=directory
+    mode='ug+rwx,g+s'
+    owner='{{easybuild_user}}'
+    group='easybuild'
+  with_items:
+    - "{{ EASYBUILD_PREFIX }}/"
+    - "{{ EASYBUILD_PREFIX }}/modules/all/EasyBuild/"
+    - "{{ EASYBUILD_PREFIX }}/modules/tools/EasyBuild/"
+    - "{{ EASYBUILD_PREFIX }}/software/"
+    - "{{ EASYBUILD_PREFIX }}/sources/"
+
+
+- name: Run the bootstrap script
+  command: 'python {{ easybuild_build_dir }}/bootstrap_eb.py {{EASYBUILD_PREFIX}}'
+  args:
+    chdir:   '{{ easybuild_build_dir }}'
+    creates: '{{EASYBUILD_PREFIX}}/software/EasyBuild/{{EASYBUILD_VERSION}}/bin/'
+  # important that we don't run this step as `root`
+  become: no
+  environment:
+    - EASYBUILD_MODULES_TOOL: Lmod
+    - EASYBUILD_PREFIX: '{{EASYBUILD_PREFIX}}'
+    # ensure Lmod is available
+    - PATH: '{{lmod_install_dir}}/libexec:{{ansible_env.PATH}}'
+
+
+- name: Deploy configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/{{item}}'
+    mode=0444
+  with_items:
+    - 'etc/easybuild.cfg'
+    - 'etc/profile.d/easybuild.sh'
+
+
+- name: Build initial set of software
+  shell:
+    set -e
+    . /etc/profile.d/easybuild.sh
+    . /etc/profile.d/lmod.sh
+    module load EasyBuild
+    eb {{ EASYBUILD_INSTALL|join(' ') }}
+  when: '{{ EASYBUILD_INSTALL|length > 0 }}'

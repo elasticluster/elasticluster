@@ -1,0 +1,64 @@
+---
+
+#
+# Install EasyBuild OS dependencies on Debian/Ubuntu machines
+#
+
+- name: Install required dependencies of EasyBuild (Debian/Ubuntu)
+  apt:
+    name='{{item}}'
+    state=present
+  with_items:
+    # see: http://easybuild.readthedocs.io/en/latest/Installation.html#dependencies
+    #
+    # required dependencies
+    - python2.7
+    - g++
+    - gcc
+    - gfortran
+    - libc6-dev
+    - make
+    - tcsh
+    # required shell tools
+    - bzip2
+    - gzip
+    - tar
+    - unzip
+    - xz-utils
+    - patch
+    - mlocate
+    # SW needed to build toolchains and common recipes
+    - libibverbs-dev
+    - python2.7-dev
+    - python-pip
+    - python-virtualenv
+    - libgsl0-dev
+    - libcurl4-openssl-dev
+    - libxml2-dev
+    - libssl-dev
+
+
+- name: Install optional dependencies of EasyBuild (Debian/Ubuntu)
+  apt:
+    name='{{item}}'
+    state=present
+  with_items:
+    - git
+    - graphviz
+    - mercurial
+    - python-pygraph
+    - subversion
+  ignore_errors: True
+
+
+- name: Install "filtered dependency" software (Debian/Ubuntu)
+  apt:
+    name='{{ item }}'
+    state=present
+  with_items:
+    - libbz2-dev
+    - libncurses-dev
+    - libreadline-dev
+    - libselinux-python
+    - m4
+  ignore_errors: True

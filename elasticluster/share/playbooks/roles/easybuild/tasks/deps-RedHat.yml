@@ -1,0 +1,64 @@
+---
+
+#
+# Install EasyBuild OS dependencies on RHEL-compatible machines
+#
+
+- name: Install required dependencies of EasyBuild (RHEL-compatible)
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    # see: http://easybuild.readthedocs.io/en/latest/Installation.html#dependencies
+    #
+    # required dependencies
+    - python
+    - "@Development tools"
+    - gcc
+    - gcc-c++
+    - gcc-gfortran
+    - glibc-devel
+    - make
+    # required shell tools
+    - bzip2
+    - gzip
+    - mlocate
+    - patch
+    - tar
+    - unzip
+    - xz
+    # SW needed to build toolchains and common recipes
+    - gsl-devel
+    - libcurl-devel
+    - libibverbs-devel
+    - libxml2-devel
+    - openssl-devel
+    - python-devel
+    - python-pip
+    - python-virtualenv
+
+
+- name: Install optional dependencies of EasyBuild (RHEL-compatible)
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - git
+    - graphviz
+    - mercurial
+    - subversion
+  ignore_errors: True
+
+
+- name: Install "filtered dependency" software (RHEL-compatible)
+  package:
+    name='{{ item }}'
+    state=present
+  with_items:
+    - bzip2-devel
+    - m4
+    - ncurses-devel
+    - ncurses-static
+    - readline-devel
+    - readline-static
+  ignore_errors: True

@@ -1,0 +1,60 @@
+---
+
+#
+# Post-installation configuration for Lmod
+#
+
+## automatically load Lmod for profile shells
+
+- name: Check for existence of `/etc/profile.d`
+  command: test -d /etc/profile.d
+  ignore_errors: True
+  register: lmod_check_for__etc_profile_d
+
+- name: Deploy shell profile snippets to load Lmod
+  # validate the file by loading it: if it loads correctly, we
+  # assume it also provides the functionality
+  file:
+    state=link
+    src="{{ lmod_root }}/lmod/{{ LMOD_VERSION }}/init/{{item.shell}}"
+    path="/etc/profile.d/lmod.{{item.shell}}"
+    mode=0444
+    validate="{{item.shell}} -c '{{item.source_cmd}} %s'"
+  with_items:
+    - { shell: 'sh',  source_cmd: '.' }
+    - { shell: 'csh', source_cmd: 'source' }
+  when: lmod_check_for__etc_profile_d|success
+
+
+- name: Deploy additional initialization scripts (verbatim)
+  copy:
+    dest="/{{item}}"
+    src="{{item}}"
+    mode=0444
+  with_items:
+    - "etc/profile.d/000_user_is_root.sh"
+
+
+- name: Deploy additional initialization scripts (templated)
+  template:
+    dest="/{{item}}"
+    src="{{item}}.j2"
+    mode=0444
+  with_items:
+    - "etc/profile.d/z80_StdEnv.sh"
+    - "etc/profile.d/z80_StdEnv.csh"
+
+
+## enable bash completion, if installed
+
+- name: Check for existence of `/etc/bash_completion.d`
+  command: test -d /etc/bash_completion.d
+  ignore_errors: True
+  register: lmod_check_for__etc_bash_completion_d
+
+- name: Enable bash completion for Lmod
+  file:
+    path='/etc/bash_completion.d/lmod'
+    state=link
+    src='{{ lmod_root }}/lmod/lmod/init/lmod_bash_completions'
+  when: lmod_check_for__etc_bash_completion_d|success
