@@ -7,6 +7,7 @@
   apt_repository:
     repo="deb http://archive.ubuntu.com/ubuntu {{ansible_distribution_release}} universe multiverse"
     state=present
+    mode=0444
   when: is_ubuntu
 
 - name: Ensure the APT package cache is updated
