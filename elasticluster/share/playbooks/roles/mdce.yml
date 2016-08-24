@@ -20,7 +20,7 @@
     nfsmount: /usr/local/MATLAB
     mbin: "{{nfsmount}}/R2013a/toolbox/distcomp/bin/"
   tasks:
-    - include: common/tasks/deb.yml
+    - include: common/tasks/init-Debian.yml
     - name: install missing X11 packages
       action: apt pkg={{item}} state=installed
       with_items:

@@ -1,4 +1,7 @@
-# Ensure additional packages are installed
+---
+#
+# Set up the package manager and its Ansible module for installing packages
+#
 
 - name: Ensure extra repositories are present (Ubuntu)
   apt_repository:
@@ -10,7 +13,6 @@
   apt:
     update_cache=yes
     cache_valid_time=0
-  when: is_debian_or_ubuntu
 
 - name: Install Ansible `apt` module dependencies
   # the `apt` module depends on both `aptitude` and `python-apt` to do
@@ -21,8 +23,7 @@
 - name: Upgrade all installed packages to latest version
   apt:
     upgrade=safe
-  when: is_debian_or_ubuntu
-  
+
 - name: Ensure additional packages are installed
   apt:
     name={{item}}
@@ -32,4 +33,3 @@
     - software-properties-common
     - python-software-properties
     - python-pycurl
-  when: is_debian_or_ubuntu
