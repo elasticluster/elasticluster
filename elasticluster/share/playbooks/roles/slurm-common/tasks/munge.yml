@@ -1,5 +1,32 @@
-# Install and configure the MUNGE authentication service
 ---
+#
+# Install and configure the MUNGE authentication service
+#
+
+# Recent versions of Ubuntu, starting 14.04, use a group-writable `/var/log`
+# directory, which upsets `munged`, see https://github.com/dun/munge/issues/31
+# for details. This requires a different fix depending on the version of
+# Ubuntu being installed:
+#
+# - on Ubuntu 14.04 ("trusty") and 14.10 ("utopic"), we can edit
+#   `/etc/default/munge` to add the `--syslog` startup option to `munged`.
+#
+# - Ubuntu later than 15.04 ("vivid") uses `systemd` and no longer reads
+#   `/etc/default/munge` files; in this case we need to: (1) "mask" (i.e.
+#   forcibly disable startup) the `munged` service, (2) install MUNGE, (3) patch
+#   the systemd service file to include the `--syslog` option, (4) "unmask" the
+#   `munged` service and start it.
+
+- name: Prevent MUNGE from starting
+  command: systemctl mask munge.service
+  args:
+   creates: '/etc/systemd/system/munge.service'
+  when: init_is_systemd
+  tags:
+    - slurm
+    - munge
+    - systemd
+
 
 - name: Install MUNGE (Debian/Ubuntu)
   tags:
@@ -25,18 +52,39 @@
     is_rhel_compatible
 
 
-- name: patch `/etc/default/munge` on Ubuntu 14.04
+- block:
+  - name: Allow MUNGE to start
+    command: systemctl unmask munge.service
+    args:
+      removes: /etc/systemd/system/munge.service
+  - name: Add `--syslog` option to `munged` startup
+    lineinfile:
+      dest='/lib/systemd/system/munge.service'
+      line='ExecStart=/usr/sbin/munged --syslog'
+      regexp='^ExecStart=/usr/sbin/munged'
+      state=present
+  - name:  Reload systemd configuration
+    command: systemctl daemon-reload
+  when: init_is_systemd
+  tags:
+    - slurm
+    - munge
+    - systemd
+
+
+- name: Add `--syslog` startup options for `munged` (Ubuntu 14.04)
   tags:
     - slurm
     - munge
     - ubuntu
     - trusty
+    - utopic
   lineinfile:
     dest='/etc/default/munge'
-    line='OPTIONS="--force"'
+    line='OPTIONS="--syslog"'
     regexp='^OPTIONS='
     state=present
-  when: is_ubuntu_trusty
+  when: '{{is_ubuntu_14_04}} or {{is_ubuntu_14_10}}'
 
   
 - name: Configure MUNGE

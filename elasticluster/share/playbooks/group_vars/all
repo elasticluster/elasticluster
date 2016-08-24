@@ -74,6 +74,11 @@ is_ubuntu_14_10_or_later: "{{is_ubuntu}} and ('{{ansible_distribution_version}}'
 is_ubuntu_15_10_or_later: "{{is_ubuntu}} and ('{{ansible_distribution_version}}' == '15.10' or {{ansible_distribution_major_version}}|int > 15)"
 
 
+# init system features
+init_is_systemd: "ansible_service_mgr == 'systemd'"
+init_is_upstart: "ansible_service_mgr == 'upstart'"
+
+
 # Local variables:
 #   mode: yaml
 # End:
