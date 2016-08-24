@@ -44,7 +44,7 @@ Supported on:
 
 * Ubuntu 12.04 and later
 * Debian 7 ("wheezy") and 8 ("jessie")
-* RHEL/CentOS 6.x and 7.x *(mostly)*
+* RHEL/CentOS 6.x and 7.x
 
 This playbook installs the `SLURM`_ batch-queueing system.
 

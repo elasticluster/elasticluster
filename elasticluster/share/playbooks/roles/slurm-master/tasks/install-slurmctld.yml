@@ -6,7 +6,6 @@
     state=latest
   with_items:
     - slurmctld
-    - slurmdbd
   when: '{{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}'
 
 
@@ -16,7 +15,6 @@
     state=latest
   with_items:
     - slurm-llnl
-    - slurm-llnl-slurmdbd
   when:
     '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
 
@@ -26,11 +24,9 @@
     name='{{item}}'
     state=latest
   with_items:
-    - slurm
     - slurm-plugins
-    - slurm-slurmdbd
     - slurm-slurmdb-direct
-    - slurm-sql
+    - slurm
   when: 'is_rhel_compatible'
 
 
@@ -44,22 +40,9 @@
       mode=0444
       backup=yes
     with_items:
-      - slurmdbd
       - slurmctld
   - name: Reload systemd unit files
     command: |
       systemctl daemon-reload
     become: yes
   when: 'is_rhel7_compatible'
-
-
-- name: Ensure `slurmdbd` is running
-  tags: 
-    - slurm
-    - slurmdbd
-  service:
-    name='{{item}}'
-    enabled=yes
-    state=started
-  with_items:
-    - '{{slurmdbd_service_name}}'

@@ -20,24 +20,11 @@
   when: 'is_rhel_compatible'
 
   
-# deploy config file before we install the daemon, so it will already
-# start with the correct config
-- name: Deploy SLURMDBD configuration
-  tags:
-    - slurm
-    - slurmdbd
-    - config
-  template:
-    src=slurmdbd.conf.j2
-    dest=/etc/slurm/slurmdbd.conf
-    owner=root
-    group=root
-    mode=0444
-  notify: restart slurmdbd
-
 - include: db.yml  
 
-- include: install.yml
+- include: install-slurmdbd.yml
+
+- include: install-slurmctld.yml
 
 - name: Create cluster in accounting database
   tags:
