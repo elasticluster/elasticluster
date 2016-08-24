@@ -14,7 +14,7 @@
 
 - name: Upgrade all installed packages to latest version
   apt:
-    upgrade=safe
+    upgrade=dist
   when: is_debian_or_ubuntu
   
 - name: Ensure additional packages are installed
@@ -22,7 +22,7 @@
     name={{item}}
     state=present
   with_items:
-    - aptitude
+#    - aptitude
     - python-apt
     - sysvinit-utils
     - software-properties-common
