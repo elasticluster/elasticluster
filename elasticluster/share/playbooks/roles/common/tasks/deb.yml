@@ -12,6 +12,12 @@
     cache_valid_time=0
   when: is_debian_or_ubuntu
 
+- name: Install Ansible `apt` module dependencies
+  # the `apt` module depends on both `aptitude` and `python-apt` to do
+  # package-level work, so we need to resort to a raw invocation of `apt-get`
+  command: apt-get install -y aptitude python-apt
+  become: yes
+
 - name: Upgrade all installed packages to latest version
   apt:
     upgrade=safe
@@ -22,8 +28,6 @@
     name={{item}}
     state=present
   with_items:
-    - aptitude
-    - python-apt
     - sysvinit-utils
     - software-properties-common
     - python-software-properties
