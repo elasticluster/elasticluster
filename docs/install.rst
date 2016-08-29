@@ -49,9 +49,9 @@ Installing released code from PyPI
   The code currently available on PyPI (ElastiCluster 1.2) is quite old and is
   lacking a number of important fixes and updates. Until ElastiCluster 1.3 is
   released, we suggest that you install from GitHub_ instead (see section
-  :ref:`Installing development code from GitHub` below)
+  :ref:`Installing development code from GitHub`_ below)
 
-Please follow the instructions in section `Install required dependencies`:ref:
+Please follow the instructions in section `Install required dependencies`_
 before proceeding.
 
 It's quite easy to install `elasticluster` using `pip`_; the command
@@ -70,7 +70,7 @@ Installing development code from GitHub
 The source code of ElastiCluster is on `GitHub`_, if you want to test the
 latest development version you can clone the `github elasticluster repository`_.
 
-Please follow the instructions in section `Install required dependencies`:ref:
+Please follow the instructions in section `Install required dependencies`_
 before proceeding.
 
 You will need the ``git`` command in order to be able to clone it, and
