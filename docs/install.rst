@@ -42,7 +42,7 @@ place to get help.
 Installing development code from GitHub
 ---------------------------------------
 
-The source code of elasticluster is `github`_, if you want to test the
+The source code of ElastiCluster is `github`_, if you want to test the
 latest development version you can clone the `github elasticluster repository`_.
 
 You will need the ``git`` command in order to be able to clone it, and
