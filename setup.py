@@ -67,6 +67,7 @@ def read_file_lines(path):
 
 required_packages = [
     'PyCLI',
+    'pycrypto',
     'paramiko',
     'ansible>=2.0',
     'voluptuous>=0.8.2',
