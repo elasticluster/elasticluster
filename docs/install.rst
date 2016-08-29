@@ -26,16 +26,33 @@ In both cases, it's strongly suggested to install `elasticluster` in a
 `elasticluster`.
 
 
+Install required dependencies
+-----------------------------
+
+To install software prerequisites for building and running ElastiCluster, run
+the following commands as the ``root`` admin user:
+
+* On a Debian or Ubuntu computer, run::
+
+    sudo apt-get install gcc git libc6-dev libffi-dev libssl-dev python-dev python-tz virtualenv
+
+* On a CentOS/RHEL computer, run::
+
+    yum install gcc git libffi-devel openssl-devel python-devel python-virtualenv pytz
+
+
 Installing released code from PyPI
 ----------------------------------
 
 .. warning::
 
   The code currently available on PyPI (ElastiCluster 1.2) is quite old and is
-  lacking a number of important fixes and updates. We suggest that you install
-  from GitHub instead (see the :ref:`Installing development code from GitHub`
-  section below)
+  lacking a number of important fixes and updates. Until ElastiCluster 1.3 is
+  released, we suggest that you install from GitHub_ instead (see section
+  :ref:`Installing development code from GitHub` below)
 
+Please follow the instructions in section `Install required dependencies`:ref:
+before proceeding.
 
 It's quite easy to install `elasticluster` using `pip`_; the command
 below is all you need to install `elasticluster` on your system::
@@ -50,8 +67,11 @@ place to get help.
 Installing development code from GitHub
 ---------------------------------------
 
-The source code of ElastiCluster is `github`_, if you want to test the
+The source code of ElastiCluster is on `GitHub`_, if you want to test the
 latest development version you can clone the `github elasticluster repository`_.
+
+Please follow the instructions in section `Install required dependencies`:ref:
+before proceeding.
 
 You will need the ``git`` command in order to be able to clone it, and
 we suggest you use a `python virtualenv`_ in order to create a
