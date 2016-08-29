@@ -29,6 +29,14 @@ In both cases, it's strongly suggested to install `elasticluster` in a
 Installing released code from PyPI
 ----------------------------------
 
+.. warning::
+
+  The code currently available on PyPI (ElastiCluster 1.2) is quite old and is
+  lacking a number of important fixes and updates. We suggest that you install
+  from GitHub instead (see the :ref:`Installing development code from GitHub`
+  section below)
+
+
 It's quite easy to install `elasticluster` using `pip`_; the command
 below is all you need to install `elasticluster` on your system::
 
