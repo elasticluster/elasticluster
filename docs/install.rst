@@ -70,7 +70,7 @@ Then you have to download the software. We suggest you to download it
     cd elasticluster
     git clone git://github.com/gc3-uzh-ch/elasticluster.git src
     cd src
-    python setup.py install
+    pip install -e .
 
 Now the ``elasticluster`` command should be available in your current
 environment.
