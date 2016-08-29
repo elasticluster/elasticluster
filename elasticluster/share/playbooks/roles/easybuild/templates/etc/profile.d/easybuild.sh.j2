@@ -42,3 +42,15 @@ fi
 #export EBROOTLIBREADLINE=/usr
 #export EBROOTM4=/usr
 #export EBROOTNCURSES=/usr
+
+
+{% if is_debian_compatible %}
+# some std include files (e.g., `sys/cdefs.h`) are not located in `/usr/include`
+# in Debian/Ubuntu systems; at least the Intel compilers are not able to find
+# them without additional indications.
+if [ -z "$CPATH" ]; then
+    export CPATH='/usr/include/x86_64-linux-gnu'
+else
+    export CPATH="$CPATH:/usr/include/x86_64-linux-gnu"
+fi
+{% endif %}
