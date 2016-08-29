@@ -17,6 +17,44 @@ further help and for any problem not reported here!
 .. contents::
 
 
+Installation fails complaining about version of ``setuptools``
+--------------------------------------------------------------
+
+While trying to install ElastiCluster on CentOS/RHEL machines with ``pip
+install``, you get a long error report that goes along these lines::
+
+  Obtaining file:///.../elasticluster/src
+    Running setup.py egg_info for package from file:///.../elasticluster/src
+
+      The required version of setuptools (>=20.6.8) is not available,
+      and can't be installed while this script is running. Please
+      install a more recent version first, using
+      'easy_install -U setuptools'.
+
+      (Currently using setuptools 0.9.8 (/.../elasticluster/lib/python2.7/site-packages))
+      Complete output from command python setup.py egg_info:
+
+  The required version of setuptools (>=20.6.8) is not available,
+  and can't be installed while this script is running. Please
+  install a more recent version first, using
+  'easy_install -U setuptools'.
+
+  (Currently using setuptools 0.9.8 (/.../elasticluster/lib/python2.7/site-packages))
+
+  ----------------------------------------
+  Cleaning up...
+  Command python setup.py egg_info failed with error code 2 in /.../elasticluster/src
+  Storing complete log in /home/hydra/rmurri/.pip/pip.log
+
+To fix the issue, please heed the advice given in the error message and run the
+command::
+
+  easy_install -U setuptools
+
+Then resume the installation procedure of ElastiCluster from where you left off
+and run the `pip` step again.
+
+
 Installation fails with: "fatal error: ffi.h: No such file or directory"
 -------------------------------------------------------------------------
 
