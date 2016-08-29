@@ -51,6 +51,10 @@ command::
 
   easy_install -U setuptools
 
+Alternatively, you can run this instead::
+
+  pip install --upgrade setuptools
+
 Then resume the installation procedure of ElastiCluster from where you left off
 and run the `pip` step again.
 
@@ -80,6 +84,11 @@ To fix the issue on RHEL/CentOS computers, please install package
 
 After installing the FFI devel packages, repeat the installation steps for ElastiCluster.
 
+(*Note:* this error comes from missing or badly installed dependency software
+for ElastiCluster; you might want to repeat the steps in section `Install
+required dependencies`:ref: again and be sure they run through successful
+completion.)
+
 
 Installation fails with: "fatal error: openssl/opensslv.h: No such file or directory"
 -------------------------------------------------------------------------------------
@@ -104,6 +113,75 @@ To fix the issue on RHEL/CentOS computers, please install package
         yum install openssl-devel # run this as root
 
 After installing the OpenSSL devel packages, repeat the installation steps for ElastiCluster.
+
+(*Note:* this error comes from missing or badly installed dependency software
+for ElastiCluster; you might want to repeat the steps in section `Install
+required dependencies`:ref: again and be sure they run through successful
+completion.)
+
+
+Installation fails with: "fatal error: Python.h: No such file or directory"
+---------------------------------------------------------------------------
+
+While trying to install ElastiCluster with ``pip install``, you get a
+long error report that ends with lines like these::
+
+  fatal error: Python.h: No such file or directory
+     #include <Python.h>
+                        ^
+    compilation terminated.
+  error: command 'gcc' failed with exit status 1
+
+To fix the issue on Debian/Ubuntu computers, please install package
+``gcc`` and ``libc6-dev`` prior to attempting to install ElastiCluster::
+
+        sudo apt-get install gcc libc6-dev
+
+To fix the issue on RHEL/CentOS computers, please install package
+``gcc``::
+
+        yum install gcc # run this as root
+
+After installing the GCC packages, repeat the installation steps for ElastiCluster.
+
+(*Note:* this error comes from missing or badly installed dependency software
+for ElastiCluster; you might want to repeat the steps in section `Install
+required dependencies`:ref: again and be sure they run through successful
+completion.)
+
+
+Installation fails with: "unable to execute gcc: No such file or directory"
+-------------------------------------------------------------------------------------
+
+While trying to install ElastiCluster with ``pip install``, you get a
+long error report that ends with lines like these::
+
+    Complete output from command python setup.py egg_info:
+    unable to execute gcc: No such file or directory
+    unable to execute gcc: No such file or directory
+
+    No working compiler found, or bogus compiler options
+    passed to the compiler from Python's distutils module.
+    See the error messages above.
+    (If they are about -mno-fused-madd and you are on OS/X 10.8,
+    see http://stackoverflow.com/questions/22313407/ .)
+
+To fix the issue on Debian/Ubuntu computers, please install package
+``gcc`` prior to attempting to install ElastiCluster::
+
+        sudo apt-get install gcc libc6-dev
+
+To fix the issue on RHEL/CentOS computers, please install package
+``gcc``::
+
+        yum install gcc # run this as root
+
+After installing the GCC packages, repeat the installation steps for ElastiCluster.
+
+(*Note:* this error comes from missing or badly installed dependency software
+for ElastiCluster; you might want to repeat the steps in section `Install
+required dependencies`:ref: again and be sure they run through successful
+completion.)
 
 
 Setup of RHEL/CentOS 7 clusters fails immediately
