@@ -41,7 +41,7 @@ Debian/Ubuntu
 +++++++++++++
 
 To install software prerequisites for building and running ElastiCluster, run
-the following commands (omit the ``sudo` word if running as the ``root`` admin
+the following commands (omit the ``sudo`` word if running as the ``root`` admin
 user)::
 
     sudo apt-get install gcc git libc6-dev libffi-dev libssl-dev python-dev python-tz virtualenv
@@ -53,8 +53,8 @@ MacOSX
 
   Installation and testing of ElastiCluster on MacOSX is not currently part of
   the development or the release cycle. So these notes could be severely out of
-  date. Please report issues and seek for solutions on the `elasticluster
-  mailing-list`_.
+  date. Please report issues and seek for solutions on the ElastiCluster
+  `mailing-list`_.
 
 In order to install ElastiCluster, you need to install `Xcode`_.
 It's free and you can install it directly from the `AppStore`_.
@@ -68,7 +68,7 @@ Installing released code from PyPI
   The code currently available on PyPI (ElastiCluster 1.2) is quite old and is
   lacking a number of important fixes and updates. Until ElastiCluster 1.3 is
   released, we suggest that you install from GitHub_ instead (see section
-  :ref:`Installing development code from GitHub`_ below)
+  `Installing development code from GitHub`_ below)
 
 Please follow the instructions in section `Install required dependencies`_
 before proceeding.
