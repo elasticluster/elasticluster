@@ -32,14 +32,13 @@ try:
 except ImportError:
     pass
 
-# Ensure we use a recent enough version of setuptools: CentOS7 still
-# ships with 0.9.8!  There has been some instability in the support
-# for PEP-496 environment markers recently, but Setuptools 20.6.8
-# seems to have restored full support for them.  See also issue #249.
-from ez_setup import use_setuptools
-use_setuptools(version='20.6.8')
 
-from setuptools.command import sdist
+# Ensure we use a recent enough version of setuptools: CentOS7 still ships with
+# 0.9.8! There has been some instability in the support for PEP-496 environment
+# markers recently, but Setuptools 20.10.0 seems to have restored full support
+# for them, including `python_implementation`. See also issue #249.
+from ez_setup import use_setuptools
+use_setuptools(version='20.10.0')
 
 
 ## auxiliary functions
@@ -61,53 +60,6 @@ def read_file_lines(path):
         return [line for line in lines
                 if line != '' and not line.startswith('#')]
 
-
-## state run-time dependencies
-#
-
-required_packages = [
-    'PyCLI',
-    'paramiko',
-    'ansible>=2.0',
-    'voluptuous>=0.8.2',
-    'configobj',
-    'coloredlogs',
-    # EC2 clouds
-    'boto',
-    # OpenStack clouds
-    'netifaces',
-    #'python-novaclient',  # need different vers for Py 2.6 and 2.7, see below
-    'pbr',
-    # GCE cloud
-    'google-api-python-client',
-    'python-gflags',
-]
-
-if sys.version_info < (2, 7):
-    # Additional dependencies for Python 2.6:
-    # - Google api python client *requires* argparse,
-    #   cfr. http://code.google.com/p/google-api-python-client/issues/detail?id=299
-    required_packages.append('argparse')
-    # - OpenStack's "keystoneclient" requires `importlib`
-    required_packages.append('importlib')
-    # - support for Python 2.6 was removed from `novaclient` in commit
-    #   81f8fa655ccecd409fe6dcda0d3763592c053e57 which is contained in
-    #   releases 3.0.0 and above; however, we also need to pin down
-    #   the version of `oslo.config` and all the dependencies thereof,
-    #   otherwise `pip` will happily download the latest and
-    #   incompatible version,since `python-novaclient` specifies only
-    #   the *minimal* version of dependencies it is compatible with...
-    required_packages.append('stevedore<1.10.0')
-    required_packages.append('debtcollector<1.0.0')
-    required_packages.append('keystoneauth<2.0.0')
-    required_packages.append('keystoneauth1<2.0.0')  # yes, there's `keystoneauth` and `keystoneauth1` !!
-    required_packages.append('oslo.config<3.0.0')
-    required_packages.append('oslo.i18n<3.1.0')
-    required_packages.append('oslo.serialization<2.1.0')
-    required_packages.append('oslo.utils<3.1.0')
-    required_packages.append('python-novaclient<3.0.0')
-else:
-    required_packages.append('python-novaclient')
 
 
 ## test runner setup
@@ -165,13 +117,50 @@ setup(
         "Topic :: System :: Distributed Computing",
     ],
     packages=find_packages(),
-    install_requires=required_packages,
     include_package_data=True,  # include files mentioned by MANIFEST.in
     entry_points={
         'console_scripts': [
             'elasticluster = elasticluster.main:main',
         ]
     },
+    install_requires=[
+        'PyCLI',
+        'ansible>=2.0',
+        'coloredlogs',
+        'configobj',
+        'paramiko',
+        'voluptuous>=0.8.2',
+        # EC2 clouds
+        'boto',
+        # GCE cloud
+        'google-api-python-client',
+        'python-gflags',
+        # OpenStack clouds
+        'netifaces',
+        'python-novaclient;python_version>="2.7"',
+        # Alternate dependencies for Python 2.6:
+        # - pyCLI requires argparse,
+        'argparse;python_version=="2.6"',
+        # - OpenStack's "keystoneclient" requires `importlib`
+        'importlib;python_version=="2.6"',
+        # - support for Python 2.6 was removed from `novaclient` in commit
+        #   81f8fa655ccecd409fe6dcda0d3763592c053e57 which is contained in
+        #   releases 3.0.0 and above; however, we also need to pin down
+        #   the version of `oslo.config` and all the dependencies thereof,
+        #   otherwise `pip` will happily download the latest and
+        #   incompatible version,since `python-novaclient` specifies only
+        #   the *minimal* version of dependencies it is compatible with...
+        'stevedore<1.10.0;python_version=="2.6"',
+        'debtcollector<1.0.0;python_version=="2.6"',
+        'keystoneauth<2.0.0;python_version=="2.6"',
+        # yes, there"s `keystoneauth` and `keystoneauth1` !!
+        'keystoneauth1<2.0.0;python_version=="2.6"',
+        'oslo.config<3.0.0;python_version=="2.6"',
+        'oslo.i18n<3.1.0;python_version=="2.6"',
+        'oslo.serialization<2.1.0;python_version=="2.6"',
+        'oslo.utils<3.1.0;python_version=="2.6"',
+        'python-novaclient<3.0.0;python_version=="2.6"',
+    ],
     tests_require=['tox', 'mock', 'pytest'],  # read right-to-left
     cmdclass={'test': Tox},
 )

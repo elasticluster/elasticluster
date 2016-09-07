@@ -17,6 +17,38 @@ further help and for any problem not reported here!
 .. contents::
 
 
+Installation fails with ``ValueError: ('Expected version spec in' [...]``
+-------------------------------------------------------------------------
+
+When trying to install ElastiCluster with ``pip install``, you get a long error
+report that ends with this Python traceback::
+
+  Traceback (most recent call last):
+    File "/opt/python/2.7.9/lib/python2.7/site-packages/pip/basecommand.py", line 232, in main
+      status = self.run(options, args)
+    File "/opt/python/2.7.9/lib/python2.7/site-packages/pip/commands/install.py", line 339, in run
+      requirement_set.prepare_files(finder)
+    File "/opt/python/2.7.9/lib/python2.7/site-packages/pip/req/req_set.py", line 436, in prepare_files
+      req_to_install.extras):
+    File "/opt/python/2.7.9/lib/python2.7/site-packages/pip/_vendor/pkg_resources/__init__.py", line 2496, in requires
+      dm = self._dep_map
+    File "/opt/python/2.7.9/lib/python2.7/site-packages/pip/_vendor/pkg_resources/__init__.py", line 2491, in _dep_map
+      dm.setdefault(extra,[]).extend(parse_requirements(reqs))
+    File "/opt/python/2.7.9/lib/python2.7/site-packages/pip/_vendor/pkg_resources/__init__.py", line 2820, in parse_requirements
+      "version spec")
+    File "/opt/python/2.7.9/lib/python2.7/site-packages/pip/_vendor/pkg_resources/__init__.py", line 2785, in scan_list
+      raise ValueError(msg, line, "at", line[p:])
+  ValueError: ('Expected version spec in', 'python-novaclient;python_version>="2.7"', 'at', ';python_version>="2.7"')
+
+This means that the ``pip` command is too old to properly parse `Python
+environment markers <https://www.python.org/dev/peps/pep-0508/>`_; ``pip``
+version 8.1.2 is the first one known to work well.
+
+To fix the issue, please upgrade ``pip`` to (at least) version 8.1.2::
+
+  pip install --upgrade 'pip>=8.1.2'
+
+
 Installation fails complaining about version of ``setuptools``
 --------------------------------------------------------------
 
