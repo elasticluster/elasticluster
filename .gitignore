@@ -14,8 +14,10 @@ docs/doctrees
 docs/html
 docs/latex
 .local
+.python-version
 setuptools-*.egg
 .venv
+__pycache__
 
 # Ansible-specific
 *.retry
