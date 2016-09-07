@@ -20,11 +20,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-__docformat__ = 'reStructuredText'
-
-import os
 import sys
-import shutil
 
 # fix Python issue 15881 (on Python <2.7.5)
 try:
@@ -49,17 +45,6 @@ def read_whole_file(path):
     """
     with open(path, 'r') as stream:
         return stream.read()
-
-def read_file_lines(path):
-    """
-    Return list of file lines, stripped of leading and trailing
-    whitespace (including newlines), and of comment lines.
-    """
-    with open(path, 'r') as stream:
-        lines = [line.strip() for line in stream.readlines()]
-        return [line for line in lines
-                if line != '' and not line.startswith('#')]
-
 
 
 ## test runner setup
