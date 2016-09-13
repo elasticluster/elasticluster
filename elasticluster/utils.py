@@ -57,7 +57,7 @@ except AttributeError:
     class _NullHandler(logging.Handler):
         def emit(self, record):
             pass
-    logging.NullHandler = _Nullhandler
+    logging.NullHandler = _NullHandler
 
 import warnings
 
