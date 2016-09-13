@@ -144,6 +144,7 @@ setup(
         'oslo.i18n<3.1.0;python_version=="2.6"',
         'oslo.serialization<2.1.0;python_version=="2.6"',
         'oslo.utils<3.1.0;python_version=="2.6"',
+        'python-keystoneclient<2.0.0;python_version=="2.6"',
         'python-novaclient<3.0.0;python_version=="2.6"',
     ],
     tests_require=['tox', 'mock', 'pytest'],  # read right-to-left
