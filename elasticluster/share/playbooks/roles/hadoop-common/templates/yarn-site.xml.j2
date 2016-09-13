@@ -87,12 +87,13 @@
   <!-- the `yarn.nodemanager.resource.*` properties override detected values for a *single* NodeManager -->
   <property>
     <name>yarn.nodemanager.resource.cpu-vcores</name>
-    <value>4</value>{# FIXME: should depend on host CPUs #}
+    <value>{{ ansible_processor_vcpus }}</value>
   </property>
 
   <property>
     <name>yarn.nodemanager.resource.memory-mb</name>
-    <value>14000</value><!-- keep 20% of total memory for OS + JVM overhead -->
+    <!-- recommended: keep 20% of total memory for OS + JVM overhead -->
+    <value>{{ (ansible_memory_mb.nocache.free * 0.80) | int }}</value>
   </property>
 
   <!-- log aggregation is necessary for correct Spark/YARN integration -->
