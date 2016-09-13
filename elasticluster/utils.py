@@ -49,6 +49,16 @@ __author__ = 'Riccardo Murri <riccardo.murri@gmail.com>'
 #
 
 import logging
+# ensure that `logging.NullHandler` is defined on Python 2.6 as well;
+# see: http://stackoverflow.com/questions/33175763/how-to-use-logging-nullhandler-in-python-2-6
+try:
+    logging.NullHandler
+except AttributeError:
+    class _NullHandler(logging.Handler):
+        def emit(self, record):
+            pass
+    logging.NullHandler = _Nullhandler
+
 import warnings
 
 _warnings_showwarning = None
