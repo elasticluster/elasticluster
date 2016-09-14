@@ -23,7 +23,13 @@
         - path: '/usr/share/gridengine/default/common'
           clients: '{{groups.gridengine_clients + groups.gridengine_master}}'
           options: 'rw,no_root_squash'
-  tasks: 
+  tasks:
+    - name: Enable "backports" repo (Debian 8 "jessie")
+      apt_repository:
+        repo='deb http://ftp.debian.org/debian jessie-backports main'
+        state=present
+        update_cache=yes
+      when: 'is_debian_jessie'
     - include: gridengine/tasks/master.yml
   handlers:
     - include: common/handlers/main.yml
@@ -42,6 +48,12 @@
         - fs: '{{groups.gridengine_master[0]}}:/usr/share/gridengine/default/common'
           mountpoint: '/usr/share/gridengine/default/common'
   tasks: 
+    - name: Enable "backports" repo (Debian 8 "jessie")
+      apt_repository:
+        repo='deb http://ftp.debian.org/debian jessie-backports main'
+        state=present
+        update_cache=yes
+      when: 'is_debian_jessie'
     - include: gridengine/tasks/clients.yml
   handlers:
     - include: common/handlers/main.yml
