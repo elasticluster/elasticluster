@@ -39,9 +39,17 @@
     - kexec-tools
     - m4
     - moreutils
-    - moreutils-parallel
     - rsync
     - screen
     - tmux
     - vim
 
+
+- name: Install commonly needed software (RHEL7-family)
+  package:
+    name={{item}}
+    state=present
+  with_items:
+    # other "standard" utilities
+    - moreutils
+  when: 'is_rhel_7_compatible'
