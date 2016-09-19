@@ -10,7 +10,7 @@
         dest='/etc/redhat-release'
         regexp='Scientific Linux CERN SLC'
         replace='Scientific Linux'
-  when: 'ansible_lsb.id == "ScientificCERNSLC"'
+  when: 'ansible_distribution == "Scientific"'
 
 
 - name: Set host name to Ansible "inventory name"
@@ -24,7 +24,4 @@
         dest='/etc/redhat-release'
         regexp='Scientific Linux'
         replace='Scientific Linux CERN SLC'
-  # if facts were gathered again now, `ansible_lsb.id` would be "Scientific"
-  # instead -- this playbook critically relies on Ansible gathering facts only
-  # at the beginning of the run
-  when: 'ansible_lsb.id == "ScientificCERNSLC"'
+  when: 'ansible_distribution == "Scientific"'
