@@ -135,9 +135,13 @@ SlurmctldPidFile=/var/run/slurm/slurmctld.pid
 SlurmctldPort=6817
 SlurmctldTimeout=300
 
+StateSaveLocation=/var/spool/slurm
+
 SlurmctldDebug=error
 SlurmctldLogFile=/var/log/slurm/slurmctld.log
 DebugFlags=backfill,cpu_bind,priority,reservation,selecttype,steps
+
+MailProg=/usr/bin/mail
 
 
 ## `slurmd` settings (compute nodes)

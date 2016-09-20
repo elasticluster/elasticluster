@@ -40,6 +40,7 @@
     - /var/lib/slurm/slurmd
     - /var/log/slurm
     - /var/run/slurm
+    - /var/spool/slurm
   tags: 
     - slurm
 
