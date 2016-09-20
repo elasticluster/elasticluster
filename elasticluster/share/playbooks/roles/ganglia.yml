@@ -2,7 +2,7 @@
 - name: Ganglia frontend/collector Playbook
   hosts: ganglia_master
   tasks:
-    - include: common/tasks/init-Debian.yml
+    - include: 'common/tasks/init-{{ansible_os_family}}.yml'
     - include: ganglia/tasks/server.yml
   tags:
     - ganglia
@@ -12,7 +12,7 @@
 - name: Ganglia monitor Playbook
   hosts: ganglia_monitor
   tasks:
-    - include: common/tasks/init-Debian.yml
+    - include: 'common/tasks/init-{{ansible_os_family}}.yml'
     - include: ganglia/tasks/client.yml
   handlers:
     - include: ganglia/handlers/main.yml
