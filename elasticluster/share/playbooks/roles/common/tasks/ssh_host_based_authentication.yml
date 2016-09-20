@@ -9,9 +9,9 @@
     - name: Link /sbin/initctl to /bin/true
       file: src=/bin/true dest=/sbin/initctl state=link
 
-  when: is_debian_or_ubuntu and is_docker_container is defined
+  when: '({{is_debian_or_ubuntu}}) and {{is_docker_container|default(False)}}'
 
-  
+
 - name: Setup SSH known hosts file
   template:
     dest=/etc/ssh/ssh_known_hosts
