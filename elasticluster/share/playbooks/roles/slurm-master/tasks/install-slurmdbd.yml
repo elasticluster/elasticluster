@@ -16,33 +16,11 @@
     - config
 
 
-- name: Install SLURM DBD packages (Debian/Ubuntu)
+- name: Install SLURM DBD packages
   package:
     pkg='{{item}}'
     state=latest
-  with_items:
-    - slurmdbd
-  when: '{{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}'
-
-
-- name: Install SLURM DBD packages (older Debian/Ubuntu)
-  package:
-    pkg='{{item}}'
-    state=latest
-  with_items:
-    - slurm-llnl-slurmdbd
-  when:
-    '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
-
-
-- name: Install SLURM DBD packages (RHEL-compatible)
-  package:
-    name='{{item}}'
-    state=latest
-  with_items:
-    - slurm-sql
-    - slurm-slurmdbd
-  when: 'is_rhel_compatible'
+  with_items: '{{ slurmdbd_packages }}'
 
 
 - block:
@@ -55,7 +33,7 @@
       mode=0444
       backup=yes
     with_items:
-      - slurmdbd
+      - '{{ slurmdbd_service_name }}'
   - name: Reload systemd unit files
     command: |
       systemctl daemon-reload

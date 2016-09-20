@@ -1,26 +1,10 @@
 # slurm-master/tasks/main.yml
 ---
 
-- name: Set variables (Debian/Ubuntu)
-  set_fact:
-    slurmctld_service_name: slurmctld
-    slurmdbd_service_name: slurmdbd
-  when: '{{is_debian_or_ubuntu}} and ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
-  
-- name: Set variables (older Debian/Ubuntu)
-  set_fact:
-    slurmctld_service_name: slurm-llnl
-    slurmdbd_service_name: slurm-llnl-slurmdbd
-  when: '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
-  
-- name: Set variables (RHEL-compatible)
-  set_fact:
-    slurmctld_service_name: slurmctld
-    slurmdbd_service_name: slurmdbd
-  when: 'is_rhel_compatible'
+- name: Load distribution-specific parameters
+  include: 'init-{{ansible_os_family}}.yml'
 
-  
-- include: db.yml  
+- include: db.yml
 
 - include: install-slurmdbd.yml
 

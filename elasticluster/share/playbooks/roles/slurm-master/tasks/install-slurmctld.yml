@@ -1,33 +1,10 @@
 ---
 
-- name: Install SLURM master packages (Debian/Ubuntu)
+- name: Install SLURM master packages
   package:
     pkg='{{item}}'
     state=latest
-  with_items:
-    - slurmctld
-  when: '{{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}'
-
-
-- name: Install SLURM master packages (older Debian/Ubuntu)
-  package:
-    pkg='{{item}}'
-    state=latest
-  with_items:
-    - slurm-llnl
-  when:
-    '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
-
-
-- name: Install SLURM master packages (RHEL-compatible)
-  package:
-    name='{{item}}'
-    state=latest
-  with_items:
-    - slurm-plugins
-    - slurm-slurmdb-direct
-    - slurm
-  when: 'is_rhel_compatible'
+  with_items: '{{ slurmctld_packages }}'
 
 
 - block:
@@ -40,7 +17,7 @@
       mode=0444
       backup=yes
     with_items:
-      - slurmctld
+      - '{{ slurmctld_service_name }}'
   - name: Reload systemd unit files
     command: |
       systemctl daemon-reload

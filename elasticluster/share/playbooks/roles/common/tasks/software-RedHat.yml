@@ -52,4 +52,4 @@
   with_items:
     # other "standard" utilities
     - moreutils
-  when: 'is_rhel_7_compatible'
+  when: 'is_rhel7_compatible'

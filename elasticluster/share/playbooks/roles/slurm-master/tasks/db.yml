@@ -29,7 +29,7 @@
     slurm_db_server_name: MySQL
     slurm_db_server_pkg: mysql-server
     slurm_db_python_pkg: MySQL-python
-    slurm_db_service_name: mysql
+    slurm_db_service_name: mysqld
   when: 'is_rhel6_compatible'
 
   
