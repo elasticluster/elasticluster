@@ -70,7 +70,6 @@
     notify: reload iptables
   tags:
     - iptables
-  when: 'not {{is_docker_container|default(False)}}'
 
 
 # See the above comment as to why these two blocks cannot be shortened into one
@@ -93,7 +92,6 @@
     become_user: root
   tags:
     - iptables
-  when: 'not {{is_docker_container|default(False)}}'
 
 
 - name: Enable SELinux (RHEL-family)
