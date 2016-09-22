@@ -1,0 +1,54 @@
+---
+
+# for once, package names are the same on Debian/Ubuntu and RHEL/CentOS
+- name: Install GlusterFS server packages
+  package:
+    name='{{item}}'
+    state=installed
+  with_items:
+    - glusterfs-server
+    - glusterfs-client
+  tags:
+    - gluster
+    - glusterfs-server
+
+
+- name: Ensure the GlusterFS service is running (Debian/Ubuntu)
+  service:
+    name=glusterfs-server
+    state=started
+  when: 'is_debian_compatible'
+  tags:
+    - gluster
+    - glusterfs-server
+
+
+- name: Ensure the GlusterFS service is running (RHEL-compatible)
+  service:
+    name='{{item}}'
+    state=started
+  with_items:
+    - glusterd
+    - glusterfsd
+  when: 'is_rhel_compatible'
+  tags:
+    - gluster
+    - glusterfs-server
+
+
+- name: Configure peers (only on the first host)
+  shell: |
+    gluster peer probe '{{item}}'
+  with_items: '{{groups.glusterfs_server}}'
+  when: is_glusterfs_main_server_node
+  tags:
+    - gluster
+    - glusterfs-server
+
+
+# build and export volumes
+- include: export.yml
+  with_items: '{{GLUSTERFS_VOLUMES}}'
+  tags:
+    - gluster
+    - glusterfs-server

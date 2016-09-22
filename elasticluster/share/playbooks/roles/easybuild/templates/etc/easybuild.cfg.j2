@@ -1,0 +1,47 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+
+[config]
+
+# module files configuration
+modules-tool = Lmod
+module-syntax = Lua
+
+# misc paths
+buildpath = /tmp
+installpath = {{EASYBUILD_PREFIX}}
+repositorypath = {{EASYBUILD_PREFIX}}/ebfiles
+sourcepath = {{EASYBUILD_PREFIX}}/sources
+
+# enable dependency resolution; search for `.eb` files here
+robot = %(repositorypath)s
+robot-paths = %(DEFAULT_ROBOT_PATHS)s
+
+# consider these dependencies already satisfied by the operating system
+# (this should include only very stable and CPU-independent SW)
+#filter-deps=bzip2,fontconfig,gzip,libreadline,libX11,libXext,libXft,libXinerama,libXt,M4,ncurses
+
+# build these, but hide module files to avoid cluttering `module avail`
+# with seldom-used software
+#hide-deps=libjpeg-turbo,libpng,SQLite,xextproto
+
+
+[override]
+
+# use the minimal toolchain that works
+# (including the "dummy" system compiler)
+minimal-toolchains = yes
+add-dummy-to-minimal-toolchains = yes
+
+# allow all users in the `easybuild` group to deploy SW
+group-writable-installdir = yes
+group = easybuild
+set-gid-bit = yes
+umask = 002
+
+# force "generic" optimizations that will work on any CPU type
+# unless users configured otherwise in ElastiCluster
+optarch={{ EASYBUILD_OPTARCH|default('GENERIC') }}

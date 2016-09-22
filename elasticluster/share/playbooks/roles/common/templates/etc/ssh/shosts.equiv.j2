@@ -1,0 +1,4 @@
+{% for host in groups.all %}
+{{ host }}
+{{ hostvars[host].ansible_default_ipv4.address | default('') }}
+{% endfor %}

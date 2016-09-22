@@ -1,0 +1,16 @@
+{
+ "language": "python",
+ "display_name": "Python {{python_version.stdout}} with Spark",
+    "argv": [
+        "/usr/bin/env",
+        "MASTER=yarn-client",
+        "PYSPARK_DRIVER_PYTHON={{python_exe}}",
+        "PYSPARK_PYTHON={{python_exe}}",
+        "PYTHONSTARTUP=/usr/local/share/jupyter/kernels/pyspark{{python_version.stdout}}/startup.py",
+        "{{python_exe}}",
+        "-m",
+        "ipykernel",
+        "-f",
+        "{connection_file}"
+    ]
+}

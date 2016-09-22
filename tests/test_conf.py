@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013 GC3, University of Zurich
+#   Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -15,7 +15,14 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
+
+from __future__ import absolute_import
+
+__author__ = '''
+Nicolas Baer <nicolas.baer@uzh.ch>,
+Riccardo Murri <riccardo.murri@uzh.ch>
+'''
+
 
 import copy
 import ConfigParser
@@ -25,7 +32,8 @@ import tempfile
 import unittest
 import sys
 
-import nose.tools as nt
+from pkg_resources import resource_filename
+
 from voluptuous import Invalid, MultipleInvalid
 
 from elasticluster.conf import ConfigReader, ConfigValidator, Configurator
@@ -33,6 +41,10 @@ from elasticluster.cluster import Node
 from elasticluster.exceptions import ClusterNotFound
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.providers.ec2_boto import BotoCloudProvider
+
+import pytest
+
+from _helpers.config import Configuration
 
 
 def minimal_configuration(valid_path):
@@ -125,101 +137,6 @@ def minimal_configuration(valid_path):
     return cfg
 
 
-class Configuration(object):
-
-    def get_config(self, path):
-        config = {
-            "mycluster": {
-                "setup": {
-                    "provider": "ansible",
-                    "playbook_path": "%(ansible_pb_dir)s/site.yml",
-                    "frontend_groups": "slurm_master",
-                    "compute_groups": "slurm_clients",
-                    },
-                "cloud": {
-                    "provider": "ec2_boto",
-                    "ec2_url": "http://cloud.gc3.uzh.ch:8773/services/Cloud",
-                    "ec2_access_key": "***fill in your data here***",
-                    "ec2_secret_key": "***fill in your data here***",
-                    "ec2_region": "nova",
-                    },
-                "login": {
-                    "image_user": "gc3-user",
-                    "image_user_sudo": "root",
-                    "image_sudo": "True",
-                    "user_key_name": "***name of SSH keypair on Hobbes***",
-                    "user_key_private": path,
-                    "user_key_public": path,
-                    },
-                "cluster": {
-                    "cloud": "hobbes",
-                    "login": "gc3-user",
-                    "setup_provider": "my-slurm-cluster",
-                    "frontend_nodes": "1",
-                    "compute_nodes": "2",
-                    },
-                "nodes": {
-                    "frontend": {
-                        "security_group": "default",
-                        "flavor": "m1.tiny",
-                        "image_id": "ami-00000048",
-                        },
-                    "compute": {
-                        "security_group": "default",
-                        "flavor": "m1.large",
-                        "image_id": "ami-00000048",
-                        }
-                    }
-                },
-
-            "os-cluster": {
-                "setup": {
-                    "provider": "ansible",
-                    "playbook_path": "%(ansible_pb_dir)s/site.yml",
-                    "frontend_groups": "slurm_master",
-                    "compute_groups": "slurm_clients",
-                    },
-                "cloud": {
-                    "provider": "openstack",
-                    "auth_url": "http://cloud.gc3.uzh.ch:5000/v2.0",
-                    "username": "myusername",
-                    "password": "mypassword",
-                    "project_name": "myproject",
-                    },
-                "login": {
-                    "image_user": "gc3-user",
-                    "image_user_sudo": "root",
-                    "image_sudo": "True",
-                    "user_key_name": "***name of SSH keypair on Hobbes***",
-                    "user_key_private": path,
-                    "user_key_public": path,
-                    },
-                "cluster": {
-                    "cloud": "hobbes",
-                    "login": "gc3-user",
-                    "setup_provider": "my-slurm-cluster",
-                    "frontend_nodes": "1",
-                    "compute_nodes": "2",
-                    },
-                "nodes": {
-                    "frontend": {
-                        "security_group": "default",
-                        "flavor": "m1.tiny",
-                        "image_id": "ami-00000048",
-                        },
-                    "compute": {
-                        "security_group": "default",
-                        "flavor": "m1.large",
-                        "image_id": "ami-00000048",
-                        }
-                    }
-                }
-
-            }
-
-        return config
-
-
 class TestConfigurator(unittest.TestCase):
 
     def setUp(self):
@@ -261,6 +178,15 @@ class TestConfigurator(unittest.TestCase):
         self.assertTrue(len(cluster.nodes["compute"]) == 2)
         self.assertTrue(len(cluster.nodes["frontend"]) == 1)
 
+    def test_create_cluster_with_nodes_min(self):
+        cfg = self.config.copy()
+        cfg['mycluster']['cluster']['compute_nodes_min'] = 1
+
+        configurator = Configurator(cfg)
+        cconf = configurator.cluster_conf['mycluster']['cluster']
+
+        self.assertEqual(cconf['compute_nodes_min'], 1)
+
     def test_load_cluster(self):
         # test without storage file
         storage_path = tempfile.mkdtemp()
@@ -285,8 +211,8 @@ class TestConfigurator(unittest.TestCase):
                       in conf.items() if k.endswith('_groups'))
         self.assertEqual(groups, provider.groups)
 
-        playbook_path = os.path.join(sys.prefix,
-                                     'share/elasticluster/providers/ansible-playbooks', 'site.yml')
+        playbook_path = resource_filename('elasticluster',
+                                          'share/playbooks/site.yml')
         self.assertEqual(playbook_path, provider._playbook_path)
 
         storage_path = configurator.general_conf['storage_path']
@@ -482,7 +408,7 @@ user_key_public=""" + self.path + """
 [setup/ansible-slurm]
 provider=ansible
 frontend_groups=slurm_master
-compute_groups=slurm_clients
+compute_groups=slurm_workers
 
 [setup/ansible-gridengine]
 provider=ansible
@@ -627,7 +553,7 @@ user_key_public=~/.ssh/id_dsa.cloud.pub
 [setup/ansible-slurm]
 provider=ansible
 frontend_groups=slurm_master
-compute_groups=slurm_clients
+compute_groups=slurm_workers
 
 [cluster/slurm]
 cloud=hobbes-new
@@ -647,21 +573,145 @@ ssh_to=frontend
     def test_missing_options(self):
         cfg = minimal_configuration(self.path)
 
-        @nt.raises(Invalid, MultipleInvalid)
         def missing_option(section, option):
-            tmpcfg = minimal_configuration()
-            _, cfgfile = tempfile.mkstemp()
-            tmpcfg.remove_option(section, option)
-            with open(cfgfile, 'w') as fd:
-                tmpcfg.write(fd)
-            try:
-                config = Configurator.fromConfig(cfgfile)
-            finally:
-                os.unlink(cfgfile)
+            with pytest.raises(Invalid, MultipleInvalid):
+                tmpcfg = minimal_configuration()
+                _, cfgfile = tempfile.mkstemp()
+                tmpcfg.remove_option(section, option)
+                with open(cfgfile, 'w') as fd:
+                    tmpcfg.write(fd)
+                try:
+                    config = Configurator.fromConfig(cfgfile)
+                finally:
+                    os.unlink(cfgfile)
 
         for section in cfg.sections():
             for option, value in cfg.items(section):
                 yield missing_option, section, option
+
+    # a few configuration snippets to mix and match
+
+    CONFIG_CLOUD_HOBBES = '''
+[cloud/hobbes]
+provider=ec2_boto
+ec2_url=http://hobbes.gc3.uzh.ch:8773/services/Cloud
+ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
+ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
+ec2_region=nova
+    '''
+    CONFIG_LOGIN_UBUNTU = '''
+[login/ubuntu]
+image_user=ubuntu
+image_user_sudo=root
+image_sudo=True
+user_key_name={keypair}
+user_key_private={keypair}
+user_key_public={keypair}
+    '''
+    CONFIG_CLUSTER_SLURM = '''
+[cluster/slurm]
+cloud=hobbes
+login=ubuntu
+setup_provider=ansible-slurm
+security_group=default
+image_id=ami-00000048
+flavor=m1.small
+frontend_nodes=1
+compute_nodes=2
+ssh_to=frontend
+    '''
+    CONFIG_SETUP_ANSIBLE_SLURM = '''
+[setup/ansible-slurm]
+provider=ansible
+frontend_groups=slurm_master
+compute_groups=slurm_workers
+    '''
+
+    def test_read_multiple_config1(self):
+        """
+        Check that configuration from multiple independent files is correctly aggregated.
+        """
+        self._test_multiple_config_files(
+            ('cfg1', (self.CONFIG_CLOUD_HOBBES
+                      + self.CONFIG_LOGIN_UBUNTU.format(keypair=self.path))),
+            ('cfg2', ''),
+            ('cfg3', (self.CONFIG_CLUSTER_SLURM
+                      + self.CONFIG_SETUP_ANSIBLE_SLURM)),
+        )
+
+    def test_read_multiple_config2(self):
+        """
+        Check that configuration from multiple files and configuration
+        directories is correctly aggregated.
+        """
+        self._test_multiple_config_files(
+            ('cfg', self.CONFIG_CLOUD_HOBBES),
+            ('cfg.d/login.conf', self.CONFIG_LOGIN_UBUNTU.format(keypair=self.path)),
+            ('cfg.d/cluster.conf',
+             (self.CONFIG_CLUSTER_SLURM + self.CONFIG_SETUP_ANSIBLE_SLURM)),
+        )
+
+    def test_read_multiple_config3(self):
+        """
+        Check that configuration from multiple files and configuration
+        directories is correctly aggregated, with an empty main config file.
+        """
+        self._test_multiple_config_files(
+            ('cfg', ''),
+            ('cfg.d/cloud.conf', self.CONFIG_CLOUD_HOBBES),
+            ('cfg.d/login.conf', self.CONFIG_LOGIN_UBUNTU.format(keypair=self.path)),
+            ('cfg.d/cluster.conf',
+             (self.CONFIG_CLUSTER_SLURM + self.CONFIG_SETUP_ANSIBLE_SLURM)),
+        )
+
+    def test_read_multiple_config4(self):
+        """
+        Check that configuration from multiple files and configuration
+        directories is correctly aggregated, with a missing main
+        config file.
+        """
+        self._test_multiple_config_files(
+            ('cfg.d/cloud.conf', self.CONFIG_CLOUD_HOBBES),
+            ('cfg.d/login.conf', self.CONFIG_LOGIN_UBUNTU.format(keypair=self.path)),
+            ('cfg.d/cluster.conf',
+             (self.CONFIG_CLUSTER_SLURM + self.CONFIG_SETUP_ANSIBLE_SLURM)),
+        )
+
+    def _test_multiple_config_files(self, *paths_and_configs):
+        """
+        Common code for all `test_read_multiple_config*` checks.
+        """
+        tmpdir = None
+        try:
+            tmpdir = tempfile.mkdtemp()
+            paths = []
+            for path, content in paths_and_configs:
+                path = os.path.join(tmpdir, path)
+                basedir = os.path.dirname(path)
+                if not os.path.exists(basedir):
+                    os.makedirs(basedir)
+                with open(path, 'w') as cfgfile:
+                    cfgfile.write(content)
+                paths.append(path)
+
+            config = Configurator.fromConfig(paths)
+
+            # check all clusters are there
+            cfg = config.cluster_conf
+            self.assertTrue("slurm" in cfg)
+
+            # check for nodes
+            self.assertTrue("frontend" in cfg["slurm"]["nodes"])
+            self.assertTrue("compute"  in cfg["slurm"]["nodes"])
+
+            # check one property in each category
+            self.assertEqual(cfg["slurm"]["cluster"]["security_group"], "default")
+            self.assertEqual(cfg["slurm"]["login"]["image_user"],       "ubuntu")
+            self.assertEqual(cfg["slurm"]["setup"]["provider"],         "ansible")
+            self.assertEqual(cfg["slurm"]["cloud"]["ec2_region"],       "nova")
+        finally:
+            if tmpdir:
+                shutil.rmtree(tmpdir)
 
 
 class TestConfigurationFile(unittest.TestCase):
@@ -703,7 +753,7 @@ class TestConfigurationFile(unittest.TestCase):
 
     def test_default_storage_options(self):
         cfg = minimal_configuration(self.cfgfile)
-        
+
         with open(self.cfgfile, 'w') as fd:
             cfg.write(fd)
         config = Configurator.fromConfig(self.cfgfile)
@@ -717,7 +767,7 @@ class TestConfigurationFile(unittest.TestCase):
         cfg.add_section('storage')
         cfg.set('storage', 'storage_path', '/foo/bar')
         cfg.set('storage', 'storage_type', 'json')
-        
+
         with open(self.cfgfile, 'w') as fd:
             cfg.write(fd)
         config = Configurator.fromConfig(self.cfgfile)
@@ -725,7 +775,6 @@ class TestConfigurationFile(unittest.TestCase):
         self.assertEqual(repo.storage_path, '/foo/bar')
         self.assertEqual(repo.default_store.file_ending, 'json')
 
-        
+
 if __name__ == "__main__":
-    import nose
-    nose.runmodule()
+    pytest.main(['-v', __file__])

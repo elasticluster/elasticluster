@@ -1,0 +1,34 @@
+---
+
+#
+# Install Lmod
+#
+
+
+# try installing from OS packages first...
+- name: Install Lmod from the OS repository (Debian-compatible)
+  apt: 
+    name='lmod={{ LMOD_VERSION }}*'
+    state=present
+  ignore_errors: True
+  register: lmod_pkg_install_deb
+  when: '{{ is_debian_compatible }}'
+
+- name: Install Lmod from the OS repository (RHEL-compatible)
+  yum:
+    name='Lmod-{{ LMOD_VERSION }}*'
+    state=present
+  ignore_errors: True
+  register: lmod_pkg_install_rpm
+  when: '{{ is_rhel_compatible }}'
+
+
+# ...if installing from OS packages failed, download and build sources
+- name: Build Lmod from source
+  include: build.yml
+  when: '{{ lmod_pkg_install_deb|failed or lmod_pkg_install_rpm|failed }}'
+
+
+# run post-install regardless of installation method
+- name: Post-installation configuration
+  include: post-install.yml

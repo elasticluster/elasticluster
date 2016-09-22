@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013-2014 GC3, University of Zurich
+# Copyright (C) 2013-2015 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.messina@s3it.uzh.ch>'
+__author__ = str.join(', ', [
+    'Nicolas Baer <nicolas.baer@uzh.ch>'
+    'Antonio Messina <antonio.messina@s3it.uzh.ch>'
+    'Riccardo Murri <riccardo.murri@gmail.com>'
+])
 
 # stdlib imports
 from abc import ABCMeta, abstractmethod
@@ -133,8 +137,6 @@ class Start(AbstractCommand):
         parser.add_argument('cluster',
                             help="Type of cluster. It refers to a "
                                  "configuration stanza [cluster/<name>]")
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('-n', '--name', dest='cluster_name',
                             help='Name of the cluster.')
         parser.add_argument('--nodes', metavar='N1:GROUP[,N2:GROUP2,...]',
@@ -173,8 +175,7 @@ class Start(AbstractCommand):
             cluster_name = self.params.cluster
 
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
 
         # overwrite configuration
         for option, value in self.params.extra_conf.iteritems():
@@ -200,7 +201,7 @@ class Start(AbstractCommand):
             print("(this may take a while...)")
             conf = configurator.cluster_conf[cluster_template]
             min_nodes = dict(
-                (k[:-10], int(v)) for k, v in conf['cluster'].iteritems() if
+                (k[:-len('_nodes_min')], int(v)) for k, v in conf['cluster'].iteritems() if
                 k.endswith('_nodes_min'))
             cluster.start(min_nodes=min_nodes)
             if self.params.no_setup:
@@ -233,8 +234,6 @@ class Stop(AbstractCommand):
             description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('--force', action="store_true", default=False,
                             help="Remove the cluster even if not all the nodes"
                                  " have been terminated properly.")
@@ -248,8 +247,7 @@ class Stop(AbstractCommand):
         """
         cluster_name = self.params.cluster
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         try:
             cluster = configurator.load_cluster(cluster_name)
         except (ClusterNotFound, ConfigurationError) as ex:
@@ -288,8 +286,6 @@ class ResizeCluster(AbstractCommand):
                                  "N2 of group GROUP2 etc...")
         parser.add_argument('-t', '--template', help='name of the template '
                                                      'of this cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Only start the cluster, do not configure it")
         parser.add_argument('--yes', action="store_true", default=False,
@@ -322,8 +318,7 @@ class ResizeCluster(AbstractCommand):
 
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
 
         # Get current cluster configuration
         cluster_name = self.params.cluster
@@ -362,19 +357,29 @@ class ResizeCluster(AbstractCommand):
                                      sample_node.image_user,
                                      sample_node.flavor,
                                      sample_node.security_group,
-                                     image_userdata=sample_node.image_userdata)
+                                     image_userdata=sample_node.image_userdata,
+                                     **sample_node.extra)
             else:
                 conf = configurator.cluster_conf[template]
                 conf_kind = conf['nodes'][grp]
+
+                image_user = conf['login']['image_user']
+                userdata = conf_kind.get('image_userdata', '')
+
+                extra = conf_kind.copy()
+                extra.pop('image_id', None)
+                extra.pop('flavor', None)
+                extra.pop('security_group', None)
+                extra.pop('image_userdata', None)
+
                 for i in range(self.params.nodes_to_add[grp]):
-                    image_user = conf['login']['image_user']
-                    userdata = conf_kind.get('image_userdata', '')
                     cluster.add_node(grp,
                                      conf_kind['image_id'],
                                      image_user,
                                      conf_kind['flavor'],
                                      conf_kind['security_group'],
-                                     image_userdata=userdata)
+                                     image_userdata=userdata,
+                                     **extra)
 
         for grp in self.params.nodes_to_remove:
             n_to_rm = self.params.nodes_to_remove[grp]
@@ -417,8 +422,6 @@ class RemoveNode(AbstractCommand):
         parser.add_argument('cluster',
                             help='Cluster from which the node must be removed')
         parser.add_argument('node', help='Name of node to be removed')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Do not re-configure the cluster after "
                             "removing the node.")
@@ -427,8 +430,7 @@ class RemoveNode(AbstractCommand):
                                  "do not prompt.")
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
 
         # Get current cluster configuration
         cluster_name = self.params.cluster
@@ -478,13 +480,10 @@ class ListClusters(AbstractCommand):
             "list", help="List all started clusters.",
             description=self.__doc__)
         parser.set_defaults(func=self)
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
 
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         repository = configurator.create_repository()
         clusters = repository.get_all()
 
@@ -517,16 +516,13 @@ class ListTemplates(AbstractCommand):
             help="Show the templates defined in the configuration file.")
 
         parser.set_defaults(func=self)
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('clusters', nargs="*",
                             help="List only this cluster. Accepts globbing.")
 
     def execute(self):
 
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         config = configurator.cluster_conf
 
         print("""%d cluster templates found in configuration file.""" % len(config))
@@ -562,8 +558,6 @@ class ListNodes(AbstractCommand):
                                "cluster", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('--json', action='store_true',
                             help="Produce JSON output")
         parser.add_argument('--pretty-json', action='store_true',
@@ -581,8 +575,7 @@ class ListNodes(AbstractCommand):
         information like id and ip.
         """
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -619,14 +612,17 @@ class SetupCluster(AbstractCommand):
             "setup", help="Configure the cluster.", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
+        parser.add_argument(
+            'extra', nargs='*', default=[],
+            help=("Extra arguments will be appended (unchanged)"
+                  " to the setup provider command-line invocation."))
 
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         cluster_name = self.params.cluster
+
+        print("Updating cluster `%s`..." % cluster_name)
         try:
             cluster = configurator.load_cluster(cluster_name)
             cluster.update()
@@ -636,7 +632,7 @@ class SetupCluster(AbstractCommand):
             return
 
         print("Configuring cluster `%s`..." % cluster_name)
-        ret = cluster.setup()
+        ret = cluster.setup(self.params.extra)
         if ret:
             print("Your cluster is ready!")
         else:
@@ -655,8 +651,6 @@ class SshFrontend(AbstractCommand):
                         "`ssh` command", description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('-n', '--node', metavar='HOSTNAME', dest='ssh_to',
                             help="Name of node you want to ssh to. By "
                             "default, the first node of the `ssh_to` option "
@@ -667,8 +661,7 @@ class SshFrontend(AbstractCommand):
 
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -743,16 +736,13 @@ class SftpFrontend(AbstractCommand):
                             help="Name of node you want to ssh to. By "
                             "default, the first node of the `ssh_to` option "
                             "group is used.")
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('sftp_args', metavar='args', nargs='*',
                             help="Arguments to pass to ftp, instead of "
                                  "opening an interactive shell.")
 
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -795,8 +785,6 @@ class GC3PieConfig(AbstractCommand):
             description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('-a', '--append', metavar='FILE',
                             help='append configuration to file FILE')
 
@@ -805,8 +793,7 @@ class GC3PieConfig(AbstractCommand):
         Load the cluster and build a GC3Pie configuration snippet.
         """
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = configurator.load_cluster(cluster_name)
@@ -862,8 +849,7 @@ class ExportCluster(AbstractCommand):
 
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
 
         try:
             cluster = configurator.load_cluster(self.params.cluster)
@@ -960,22 +946,17 @@ class ImportCluster(AbstractCommand):
             "import", help="Import a cluster from a zip file",
             description=self.__doc__)
         parser.set_defaults(func=self)
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity.")
         parser.add_argument('--rename', metavar='NAME',
                             help="Rename the cluster during import.")
         parser.add_argument("file", help="Path to ZIP file produced by "
                             "`elasticluster export`.")
     def execute(self):
         configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage,
-                                        include_config_dirs=True)
+                                        storage_path=self.params.storage)
         repo = configurator.create_repository()
         tmpdir = tempfile.mkdtemp()
         log.debug("Using temporary directory %s" % tmpdir)
-        tmpconf = get_configurator(self.params.config,
-                                   storage_path=tmpdir,
-                                   include_config_dirs=True)
+        tmpconf = get_configurator(self.params.config, storage_path=tmpdir)
         tmprepo =tmpconf.create_repository()
 
         rc=0

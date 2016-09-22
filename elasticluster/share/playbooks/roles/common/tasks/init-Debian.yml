@@ -1,0 +1,36 @@
+---
+#
+# Set up the package manager and its Ansible module for installing packages
+#
+
+- name: Ensure extra repositories are present (Ubuntu)
+  apt_repository:
+    repo="deb http://archive.ubuntu.com/ubuntu {{ansible_distribution_release}} universe multiverse"
+    state=present
+    mode=0444
+  when: is_ubuntu
+
+- name: Ensure the APT package cache is updated
+  apt:
+    update_cache=yes
+    cache_valid_time=0
+
+- name: Install Ansible `apt` module dependencies
+  # the `apt` module depends on both `aptitude` and `python-apt` to do
+  # package-level work, so we need to resort to a raw invocation of `apt-get`
+  command: apt-get install -y aptitude python-apt
+  become: yes
+
+- name: Upgrade all installed packages to latest version
+  apt:
+    upgrade=safe
+
+- name: Ensure additional packages are installed
+  apt:
+    name={{item}}
+    state=present
+  with_items:
+    - sysvinit-utils
+    - software-properties-common
+    - python-software-properties
+    - python-pycurl

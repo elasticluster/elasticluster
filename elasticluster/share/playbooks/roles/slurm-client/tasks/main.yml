@@ -1,0 +1,75 @@
+# slurm-client/tasks/main.yml
+---
+
+- name: Install required SLURM packages (Debian/Ubuntu)
+  package:
+    pkg={{item}}
+    state=latest
+  with_items:
+    - libpmi0-dev
+    - libslurm-dev
+    - libslurm-perl
+    - libslurmdb-perl
+    - slurm-client
+    - slurm-drmaa-dev
+    - slurm-wlm-torque
+    - sview
+  when: '{{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}'
+
+
+- block:
+  # since all the SLURM binaries are bundled in a single package
+  # `slurm-llnl`, we have to install it and *then* stop all the services
+    - name: Install required SLURM packages (older Debian/Ubuntu)
+      package:
+        pkg={{item}}
+        state=latest
+      with_items:
+        - libpmi0-dev
+        - libslurm-dev
+        - libslurm-perl
+        - libslurmdb-perl
+        - slurm-llnl
+        - slurm-llnl-sview
+        - slurm-llnl-torque
+    - service:
+        name={{item}}
+        enabled=no
+        state=stopped
+      with_items:
+        - slurm-llnl
+  when:
+    '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
+
+
+# since all the SLURM binaries are bundled in a single package
+# `slurm`, we have to install it and *then* stop all the services
+- name: Install SLURM packages (RHEL-compatible)
+  package:
+    name={{item}}
+    state=present
+  with_items:
+    - slurm
+    - slurm-devel
+    - slurm-perlapi
+    - slurm-sjobexit
+    - slurm-sjstat
+    - slurm-torque
+  when: 'is_rhel_compatible'
+
+- name: Stop SLURM services (RHEL/CentOS 6.x)
+  service:
+    name='slurm'
+    enabled=no
+    state=stopped
+  when: 'is_rhel6_compatible'
+
+- name: Stop SLURM services (RHEL/CentOS 7.x)
+  service:
+    name={{item}}
+    enabled=no
+    state=stopped
+  with_items:
+    - slurmd
+    - slurmctld
+  when: 'is_rhel7_compatible'

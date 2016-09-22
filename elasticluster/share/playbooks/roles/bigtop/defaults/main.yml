@@ -1,0 +1,10 @@
+# bigtop/defaults/main.yml
+---
+
+# What release of Apache Bigtop to get packages from
+bigtop_release: '1.1.0'
+
+# identifier for GnuPG key(s) used to sign packages from the Apache Bigtop repo
+bigtop_signing_key:
+  - '13971DA39475BD5D'
+  - '3A367EA0FA08B173'

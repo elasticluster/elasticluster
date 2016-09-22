@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  THIS FILE IS CONTROLLED BY ELASTICLUSTER
+  local modifications will be overwritten
+  the next time `elasticluster setup` is run!
+-->
+
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+  <!-- connection data to the server -->
+  <property>
+    <name>mapreduce.jobhistory.address</name>
+    <value>{{groups.hadoop_master[0]}}:10020</value>
+    <description>
+      MapReduce JobHistory Server host:port
+      Default port is 10020.
+    </description>
+  </property>
+
+  <property>
+    <name>mapreduce.jobhistory.webapp.address</name>
+    <value>{{groups.hadoop_master[0]}}:19888</value>
+    <description>
+      MapReduce JobHistory Server Web UI host:port
+      Default port is 19888.
+    </description>
+  </property>
+
+  <!-- see: https://www.mapr.com/blog/best-practices-yarn-resource-management -->
+  <property>
+    <name>yarn.app.mapreduce.am.resource.cpu-vcores</name>
+    <value>1</value>
+    <description>
+      How many CPU cores to allocate to the AM.
+
+      ElastiCluster's default is to only use one core.
+    </description>
+  </property>
+
+  <property>
+    <name>yarn.app.mapreduce.am.resource.mb</name>
+    <value>{{ (ansible_memory_mb.nocache.free / ansible_processor_vcpus * 1.25) | int }}</value>
+    <description>
+      Memory resource limit for AMs; in MBs.
+
+      ElastiCluster's default limit is 125% of
+      the available memory per processor core.
+    </description>
+  </property>
+
+  <property>
+    <name>yarn.app.mapreduce.am.command-opts</name>
+    <value>-Xmx{{ (ansible_memory_mb.nocache.free / ansible_processor_vcpus * 1.00) | int }}m</value>
+    <description>
+      Additional JVM command-line options; used here to set the max
+      heap-size for child jvms of AMs.  This is less than the total
+      memory allocation (see `am.resource.mb`); a good rule of thumb
+      is to set it to 80% of the total memory.
+
+      ElastiCluster's default is computed from
+      `yarn.app.mapreduce.am.resource.mb` using this rule.
+    </description>
+  </property>
+
+  <property>
+    <name>mapreduce.map.memory.mb</name>
+    <value>{{ (ansible_memory_mb.nocache.free / ansible_processor_vcpus * 1.00) | int }}</value>
+    <description>
+      Memory resource limit for mappers; in MBs.
+
+      ElastiCluster's default limit is 100% of
+      the available memory per processor core.
+    </description>
+  </property>
+
+  <property>
+    <name>mapreduce.map.java.opts</name>
+    <value>-Xmx{{ (ansible_memory_mb.nocache.free / ansible_processor_vcpus * 0.80) | int }}m</value>
+    <description>
+      Max heap-size for child jvms of mappers.
+      This is less than the total memory allocation (see `mapreduce.map.memory.mb`);
+      a good rule of thumb is to set it to 80% of the total memory.
+
+      ElastiCluster's default is computed from
+      `mapreduce.map.memory.mb` using this rule.
+    </description>
+  </property>
+
+  <property>
+    <name>mapreduce.reduce.memory.mb</name>
+    <value>{{ (ansible_memory_mb.nocache.free / ansible_processor_vcpus * 2.50) | int }}</value>
+    <description>
+      Memory resource limit for reducers; in MBs.
+
+      ElastiCluster's default limit is 250% of
+      the available memory per processor core.
+    </description>
+  </property>
+
+  <property>
+    <name>mapreduce.reduce.java.opts</name>
+    <value>-Xmx{{ (ansible_memory_mb.nocache.free / ansible_processor_vcpus * 2.00) | int }}m</value>
+    <description>
+      Max heap-size for child jvms of reducers.
+      This is less than the total memory allocation (see `mapreduce.reduce.memory.mb`);
+      a good rule of thumb is to set it to 80% of the total memory.
+
+      ElastiCluster's default is computed from
+      `mapreduce.map.memory.mb` using this rule.
+    </description>
+  </property>
+
+</configuration>

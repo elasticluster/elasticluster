@@ -1,0 +1,20 @@
+---
+
+- name: ensure {{fs.mountpoint}} directory exists
+  file:
+    path={{fs.mountpoint}}
+    state=directory
+
+- name: add to /etc/fstab
+  mount:
+    name='{{fs.mountpoint}}'
+    src='{{fs.fs}}'
+    fstype=nfs
+    opts='{{fs.options|default("rw,async")}}'
+    state='{{fs.state|default("mounted")}}'
+
+
+- name: Allow NFS homes through SELinux
+  command: |
+    setsebool -P use_nfs_home_dirs=1
+  when: '{{is_rhel_compatible}} and "{{fs.mountpoint}}" == "/home"'

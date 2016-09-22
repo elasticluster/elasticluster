@@ -1,0 +1,11 @@
+# jupyter/defaults/main.yml
+---
+
+# path to the executable to run the Python 2 kernel
+PYTHON2_EXE: '/opt/anaconda2/bin/python'
+
+# path to the executable to run the Python 3 kernel
+PYTHON3_EXE: '/opt/anaconda3/bin/python3'
+
+# path to the executable to run the R kernel
+R_EXE: '/usr/bin/R'

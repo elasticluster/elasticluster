@@ -1,0 +1,116 @@
+---
+
+#
+# Build Lmod from sources
+#
+
+- name: Install build-time dependencies (Debian-compatible)
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - gcc
+    - libc6-dev
+    - make
+  when: '{{is_debian_compatible}}'
+
+
+- name: Install build-time dependencies (RHEL-compatible)
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - "@Development tools"
+  when: '{{is_rhel_compatible}}'
+
+
+- name: Install required dependencies of Lmod (Debian-compatible)
+  package:
+    name='{{ item }}'
+    state=present
+  with_items:
+    - pkg-config
+    - tcl
+  when: '{{is_debian_compatible}}'
+
+
+- name: Install required dependencies of Lmod (RHEL-compatible)
+  package:
+    name='{{ item }}'
+    state=present
+  with_items:
+    - pkgconfig
+    - tcl
+  when: '{{is_rhel_compatible}}'
+
+
+# - name: Install optional dependencies of Lmod
+#   package:
+#     name='{{ item }}'
+#     state=present
+#   with_items:
+#     - lua-term
+#   ignore_errors: True
+
+
+- name: Create required directories
+  file:
+    dest='{{item}}'
+    state=directory
+    mode=0755
+  with_items:
+    - '{{lmod_install_dir}}/'
+    - '{{lmod_source_dir}}/'
+    - '{{lmod_build_dir}}/'
+    - '{{MODULES_ROOT}}/'
+
+
+- name: Download sources
+  get_url:
+    url='{{ lmod_source_url }}'
+    dest='{{ lmod_build_dir }}'
+
+
+- name: Extract sources
+  unarchive: 
+    src='{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}.tar.bz2'
+    dest='{{ lmod_build_dir }}/'
+    creates='{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}/configure'
+    copy=no
+
+
+- name: Run `./configure`
+  command: './configure --prefix="{{ lmod_root }}" --with-module-root-path="{{ MODULES_ROOT }}" {{ lmod_configure_extra_opts }}'
+  args:
+    chdir:   '{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}'
+    creates: 'makefile'
+  environment:
+    PATH: "{{ lua_exe|dirname or '/usr/bin' }}:{{ansible_env.PATH}}"
+
+
+# ATM rather pointless, as Lmod's `make all` just prints "done", but you never
+# know when they are going to introduce some real work here...
+- name: Run `make`
+  command: make
+  args:
+    chdir: '{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}'
+  environment:
+    PATH: "{{ lua_exe|dirname or '/usr/bin' }}:{{ansible_env.PATH}}"
+
+
+- name: Is installation directory writable?
+  command: test -w "{{lmod_install_dir}}/"
+  ignore_errors: yes
+  # need to force Ansible not to perform tasks as `root` automatically, else the
+  # `make install` task up next fails with "Permission denied"
+  become: no
+  register: lmod_install_dir_writable
+
+
+- name: Run `make install`
+  command: make install
+  args:
+    chdir:   '{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}'
+    creates: '{{lmod_install_dir}}/libexec/lmod'
+  environment:
+    PATH: "{{ (lua_exe|dirname) or '/usr/bin' }}:{{ansible_env.PATH}}"

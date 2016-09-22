@@ -1,0 +1,19 @@
+---
+
+LUA_VERSION: '5.1.4.8'
+
+lua_source_dir:  '/opt/lua/{{LUA_VERSION}}/src'
+lua_install_dir: '/opt/lua/{{LUA_VERSION}}'
+
+# where to download LUA sources from
+lua_source_url: 'http://sourceforge.net/projects/lmod/files/lua-{{LUA_VERSION}}.tar.gz/download'
+
+# Whether this Lua interpreter should be made
+# the first match in users' shell $PATH
+lua_add_to_path: False
+
+
+### No customization should be necessary or useful below this line ###
+
+# extra options to pass to LUA's `./configure` script
+lua_configure_extra_opts: ''

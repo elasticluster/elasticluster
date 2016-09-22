@@ -1,0 +1,56 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+
+#
+# Non-default settings for EasyBuild
+#
+
+# make sure the ElastiCluster-provided config file is found first
+if [ -z "$EASYBUILD_CONFIGFILES" ]; then
+    export EASYBUILD_CONFIGFILES="/etc/easybuild.cfg"
+else
+    export EASYBUILD_CONFIGFILES="/etc/easybuild.cfg,$EASYBUILD_CONFIGFILES"
+fi
+
+# integrate with Lmod
+if (command -v module > /dev/null); then
+    # use the `module` command if found
+    module use "{{EASYBUILD_PREFIX}}/modules/all"
+else
+    # manually munge MODULEPATH
+    if [ -z "$MODULEPATH" ]; then
+        export MODULEPATH="{{EASYBUILD_PREFIX}}/modules/all"
+    else
+        export MODULEPATH="{{EASYBUILD_PREFIX}}/modules/all:$MODULEPATH"
+    fi
+fi
+
+
+# # use a cluster-wide dir for temp log storage (works better with --job)
+#export EASYBUILD_TMPDIR=/scratch/$USER
+#export EASYBUILD_TMP_LOGDIR=/scratch/$USER
+
+
+# need to define `EBROOT...` for each "filtered" dep, because of
+# https://github.com/hpcugent/easybuild-framework/issues/1494
+# (see `/etc/easybuild.cfg` for list of filtered deps)
+#export EBROOTBZIP2=/usr
+#export EBROOTGZIP=/usr
+#export EBROOTLIBREADLINE=/usr
+#export EBROOTM4=/usr
+#export EBROOTNCURSES=/usr
+
+
+{% if is_debian_compatible %}
+# some std include files (e.g., `sys/cdefs.h`) are not located in `/usr/include`
+# in Debian/Ubuntu systems; at least the Intel compilers are not able to find
+# them without additional indications.
+if [ -z "$CPATH" ]; then
+    export CPATH='/usr/include/x86_64-linux-gnu'
+else
+    export CPATH="$CPATH:/usr/include/x86_64-linux-gnu"
+fi
+{% endif %}

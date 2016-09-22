@@ -1,0 +1,33 @@
+---
+
+# for once, the package name on Debian/Ubuntu and RHEL/CentOS is the same
+- name: Install GlusterFS client
+  package:
+    name=glusterfs-client
+    state=installed
+  tags:
+    - gluster
+    - glusterfs-client
+
+    
+- name: Create mountpoint directory {{item.mountpoint}}
+  file:
+    path='{{item.mountpoint}}'
+    state=directory
+  with_items: '{{GLUSTERFS_MOUNTS}}'
+  tags:
+      - gluster
+      - glusterfs-client
+
+      
+- name: Mount GlusterFS filesystem {{item.mountpoint}}
+  mount:
+    src='{{item.fs}}'
+    name='{{item.mountpoint}}'
+    fstype=glusterfs
+    opts='{{item.options|default("defaults,rw")}}'
+    state='{{item.state|default("mounted")}}'
+  with_items: '{{GLUSTERFS_MOUNTS}}'
+  tags:
+      - gluster
+      - glusterfs-client

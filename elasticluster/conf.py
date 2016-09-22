@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013, 2014 GC3, University of Zurich
+# Copyright (C) 2013, 2014, 2015 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,15 +15,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
+__author__ = str.join(', ', [
+    'Nicolas Baer <nicolas.baer@uzh.ch>',
+    'Antonio Messina <antonio.s.messina@gmail.com>',
+    'Riccardo Murri <riccardo.murri@gmail.com>',
+])
 
 # System imports
+from collections import defaultdict
 import os
 import re
 import sys
+try:
+    from types import StringTypes
+except ImportError:
+    # Python 3
+    StringTypes = (str,)
+import warnings
 
 # External modules
 from ConfigParser import RawConfigParser
+
+from pkg_resources import resource_filename
 
 try:
     # Voluptuous version >= 0.8.1
@@ -103,40 +116,22 @@ class Configurator(object):
         validator.validate()
 
     @classmethod
-    def fromConfig(cls, configfiles, storage_path=None,
-                   include_config_dirs=False):
-        """Helper method to initialize Configurator from an ini file.
+    def fromConfig(cls, configfiles, storage_path=None):
+        """
+        Helper method to initialize Configurator from a `.ini`-format file.
 
-        :param str configfiles: path to the ini file(s). For each file
-                                in `configfiles`, if a directory `*.d`
-                                exists, also reads all the `*.conf`
-                                files in that directory.
+        :param list configfiles: list of paths to the ini file(s).
+            For each path ``P`` in `configfiles`, if a directory named ``P.d``
+            exists, also reads all the `*.conf` files in that directory.
 
-        :param str storage_path: path to the storage directory. If
-                                 defined, a
-                                 :py:class:`repository.DiskRepository`
-                                 class will be instantiated.
-
-        :param str include_config_dirs: Default is False. If True, for
-                               each `file` in `configfiles` also files
-                               in `file.d` ending with `.conf` will be
-                               loaded
+        :param str storage_path:
+            path to the storage directory. If defined, a
+            :py:class:`repository.DiskRepository` class will be instantiated.
 
         :return: :py:class:`Configurator`
-
         """
-        # FIXME: This is not python3 compatible!
-        if isinstance(configfiles, basestring):
+        if isinstance(configfiles, StringTypes):
             configfiles = [configfiles]
-        # Also, expand any possible user variable
-        configfiles = [os.path.expanduser(cfg) for cfg in configfiles]
-        for cfgfile in configfiles[:]:
-            cfgdir = cfgfile + '.d'
-            if os.path.isfile(cfgfile) and os.path.isdir(cfgdir):
-                for fname in os.listdir(cfgdir):
-                    fullpath = os.path.join(cfgdir, fname)
-                    if fname.endswith('.conf') and fullpath not in configfiles:
-                        configfiles.append(fullpath)
         config_reader = ConfigReader(configfiles)
         (conf, storage_conf) = config_reader.read_config()
 
@@ -259,6 +254,43 @@ class Configurator(object):
         )
         return cluster
 
+    @staticmethod
+    def _read_node_groups(conf):
+        """
+        Return mapping from node kind names to list of Ansible host group names.
+        """
+        result = defaultdict(list)
+        for key, value in conf.items():
+            if not key.endswith('_groups'):
+                continue
+            node_kind = key[:-len('_groups')]
+            group_names = [group_name.strip()
+                           for group_name in value.split(',')]
+            for group_name in group_names:
+                # handle renames
+                if group_name in Configurator._renamed_node_groups:
+                    old_group_name = group_name
+                    group_name, remove_at = Configurator._renamed_node_groups[group_name]
+                    warnings.warn(
+                        "Group `{0}` was renamed to `{1}`;"
+                        " please fix your configuration file."
+                        " Support for automatically renaming"
+                        " this group will be removed in {2}."
+                        .format(old_group_name, group_name,
+                                (("ElastiCluster {0}".format(remove_at))
+                                 if remove_at
+                                 else ("a future version of ElastiCluster"))),
+                        DeprecationWarning)
+                result[node_kind].append(group_name)
+        return result
+
+    _renamed_node_groups = {
+        # old name     ->  (new name             will be removed in...
+        'gluster_data' :   ('glusterfs_server',  '1.4'),
+        'gluster_client':  ('glusterfs_client',  '1.4'),
+        'slurm_clients':   ('slurm_workers',     '1.4'),
+    }
+
     def create_setup_provider(self, cluster_template, name=None):
         """Creates the setup provider for the given cluster template.
 
@@ -283,8 +315,7 @@ class Configurator(object):
             del conf['playbook_path']
         else:
             playbook_path = None
-        groups = dict((k[:-7], v.split(',')) for k, v
-                      in conf.items() if k.endswith('_groups'))
+        groups = self._read_node_groups(conf)
         environment = dict()
         for nodekind, grps in groups.iteritems():
             if not isinstance(grps, list):
@@ -306,14 +337,50 @@ class Configurator(object):
         return provider(groups, playbook_path=playbook_path,
                         environment_vars=environment,
                         storage_path=storage_path,
+                        sudo=conf_login['image_sudo'],
                         sudo_user=conf_login['image_user_sudo'],
-                        sudo=conf_login['image_sudo'], **conf)
+                        **conf)
 
     def create_repository(self):
         storage_path = self.general_conf['storage_path']
         storage_type = self.general_conf['storage_type']
         return MultiDiskRepository(storage_path, storage_type)
 
+
+## custom validators
+@message("file could not be found")
+def file_exists(v):
+    f = os.path.expanduser(os.path.expandvars(v))
+    if os.access(f, os.F_OK):
+        return f
+    else:
+        raise Invalid("file `{v}` could not be found".format(v=v))
+
+@message("file cannot be read")
+def can_read_file(v):
+    f = os.path.expanduser(os.path.expandvars(v))
+    if os.access(f, os.R_OK):
+        return f
+    else:
+        raise Invalid("cannot read file `{v}`".format(v=v))
+
+@message("cannot execute file")
+def can_execute_file(v):
+    f = os.path.expanduser(os.path.expandvars(v))
+    if os.access(f, os.X_OK):
+        return f
+    else:
+        raise Invalid("cannot execute file `{v}`".format(v=v))
+
+@message("Unsupported nova API version")
+def nova_api_version(version):
+    try:
+        from novaclient import client,exceptions
+        client.get_client_class(version)
+        return version
+    except exceptions.UnsupportedVersion as ex:
+        raise Invalid(
+            "Invalid value for `nova_api_version`: {0}".format(ex))
 
 
 class ConfigValidator(object):
@@ -326,10 +393,10 @@ class ConfigValidator(object):
         self.config = config
 
     def _pre_validate(self):
-        """Handles all pre validation phase functionality, such as:
+        """Handles all pre-validation tasks, such as:
 
         * reading environment variables
-        * interpolating configuraiton options
+        * interpolating configuration options
         """
         # read cloud provider environment variables (ec2_boto, google, openstack, or azure)
         for cluster, props in self.config.iteritems():
@@ -340,11 +407,9 @@ class ConfigValidator(object):
                     if not value and PARAM in os.environ:
                         props['cloud'][param] = os.environ[PARAM]
 
-        # interpolate ansible path manual, since configobj does not offer
-        # an easy way to handle this
-        ansible_pb_dir = os.path.join(
-            sys.prefix,
-            'share/elasticluster/providers/ansible-playbooks')
+        # manually interpolate ansible path; configobj does not offer
+        # an easy way to do it
+        ansible_pb_dir = resource_filename('elasticluster', 'share/playbooks')
         for cluster, props in self.config.iteritems():
             if 'setup' in props and 'playbook_path' in props['setup']:
                 if props['setup']['playbook_path'].startswith(
@@ -355,9 +420,9 @@ class ConfigValidator(object):
                     self.config[cluster]['setup']['playbook_path'] = pbpath
 
     def _post_validate(self):
-        """Handles all post validation phase functionality, such as:
+        """Handles all post-validation tasks, such as:
 
-        * expanding file paths
+        * expand file paths
         """
         # expand all paths
         for cluster, values in self.config.iteritems():
@@ -373,33 +438,18 @@ class ConfigValidator(object):
             conf['login']['user_key_public'] = pubkey
 
     def validate(self):
-        """Validates the given configuration :py:attr:`self.config` to comply
-        with elasticluster. As well all types are converted to the expected
-        format if possible.
+        """
+        Validate the given configuration,
+        converting properties to native Python types.
 
+        The configuration to check must have been given to the
+        constructor and stored in :py:attr:`self.config`.
+
+        :raises: :py:class:`voluptuous.Invalid` if one property is invalid
         :raises: :py:class:`voluptuous.MultipleInvalid` if multiple
                  properties are not compliant
-        :raises: :py:class:`voluptuous.Invalid` if one property is invalid
         """
         self._pre_validate()
-        # custom validators
-        @message("file could not be found")
-        def check_file(v):
-            f = os.path.expanduser(os.path.expanduser(v))
-            if os.path.exists(f):
-                return f
-            else:
-                raise Invalid("file could not be found `%s`" % v)
-
-        @message("Unsupported nova API version")
-        def nova_api_version(version):
-            try:
-                from novaclient import client,exceptions
-                client.get_client_class(version)
-                return version
-            except exceptions.UnsupportedVersion as ex:
-                raise Invalid(
-                    "Invalid option for `nova_api_version`: %s" % ex)
 
         # schema to validate all cluster properties
         schema = {"cluster": {"cloud": All(str, Length(min=1)),
@@ -407,25 +457,28 @@ class ConfigValidator(object):
                               "login": All(str, Length(min=1)),
                           },
                   "setup": {"provider": All(str, Length(min=1)),
-                            Optional("playbook_path"): check_file(),
+                            Optional("playbook_path"): can_read_file(),
+                            Optional("ansible_command"): All(can_read_file(), can_execute_file()),
+                            Optional("ansible_extra_args"): All(str, Length(min=1)),
                             Optional("ssh_pipelining"): Boolean(str),
                         },
                   "login": {"image_user": All(str, Length(min=1)),
                             "image_user_sudo": All(str, Length(min=1)),
                             "image_sudo": Boolean(str),
                             "user_key_name": All(str, Length(min=1)),
-                            "user_key_private": check_file(),
-                            "user_key_public": check_file(),
+                            "user_key_private": can_read_file(),
+                            "user_key_public": can_read_file(),
                         },
         }
 
         cloud_schema_ec2 = {"provider": 'ec2_boto',
                             "ec2_url": Url(str),
-                            "ec2_access_key": All(str, Length(min=1)),
-                            "ec2_secret_key": All(str, Length(min=1)),
+                            Optional("ec2_access_key"): All(str, Length(min=1)),
+                            Optional("ec2_secret_key"): All(str, Length(min=1)),
                             "ec2_region": All(str, Length(min=1)),
                             Optional("request_floating_ip"): Boolean(str),
                             Optional("vpc"): All(str, Length(min=1)),
+                            Optional("instance_profile"): All(str, Length(min=1)),
         }
         cloud_schema_gce = {"provider": 'google',
                             "gce_client_id": All(str, Length(min=1)),
@@ -433,6 +486,7 @@ class ConfigValidator(object):
                             "gce_project_id": All(str, Length(min=1)),
                             Optional("noauth_local_webserver"): Boolean(str),
                             Optional("zone"): All(str, Length(min=1)),
+                            Optional("network"): All(str, Length(min=1)),
         }
 
         cloud_schema_openstack = {"provider": 'openstack',
@@ -531,8 +585,8 @@ class ConfigReader(object):
     cloud_section = "cloud"
     node_section = "node"
 
-    def __init__(self, configfiles):
-        self.configfiles = configfiles
+    def __init__(self, paths):
+        self.configfiles = self._list_config_files(paths)
 
         configparser = RawConfigParser()
         config_tmp = configparser.read(self.configfiles)
@@ -542,24 +596,6 @@ class ConfigReader(object):
 
         #self.conf = ConfigObj(self.configfile, interpolation=False)
 
-        @message("file could not be found")
-        def check_file(v):
-            f = os.path.expanduser(os.path.expanduser(v))
-            if os.path.exists(f):
-                return f
-            else:
-                raise Invalid("file could not be found `%s`" % v)
-
-        @message("Unsupported nova API version")
-        def nova_api_version(version):
-            try:
-                from novaclient import client, exceptions
-                client.get_client_class(version)
-                return version
-            except exceptions.UnsupportedVersion as ex:
-                raise Invalid(
-                    "Invalid option for `nova_api_version`: %s" % ex)
-
         self.schemas = {
             "storage": Schema(
                 {Optional("storage_path"): All(str),
@@ -568,8 +604,8 @@ class ConfigReader(object):
             "cloud": Schema(
                 {"provider": Any('ec2_boto', 'google', 'openstack', 'azure'),
                  "ec2_url": Url(str),
-                 "ec2_access_key": All(str, Length(min=1)),
-                 "ec2_secret_key": All(str, Length(min=1)),
+                 Optional("ec2_access_key"): All(str, Length(min=1)),
+                 Optional("ec2_secret_key"): All(str, Length(min=1)),
                  "ec2_region": All(str, Length(min=1)),
                  "auth_url": All(str, Length(min=1)),
                  "username": All(str, Length(min=1)),
@@ -595,9 +631,43 @@ class ConfigReader(object):
                  "image_user_sudo": All(str, Length(min=1)),
                  "image_sudo": Boolean(str),
                  "user_key_name": All(str, Length(min=1)),
-                 "user_key_private": check_file(),
-                 "user_key_public": check_file()}, required=True)
+                 "user_key_private": can_read_file(),
+                 "user_key_public": can_read_file()}, required=True)
         }
+
+    @staticmethod
+    def _list_config_files(paths, expand_user_dir=True):
+        """
+        Return list of (existing) configuration files.
+
+        The list of configuration file is built in the following way:
+
+        - any path pointing to an existing file is included in the result;
+
+        - for any path ``P``, if directory ``P.d`` exists, any file
+          contained in it and named ``*.conf`` is included in the
+          result;
+
+        - non-existing paths are (silently) ignored and omitted from the
+          returned result.
+
+        If keyword argument `expand_user_dir` is true (default), then
+        each path is expanded with `os.path.expanduser`.
+        """
+        configfiles = set()
+        if expand_user_dir:
+            paths = [os.path.expanduser(cfg) for cfg in paths]
+        for path in paths:
+            if os.path.isfile(path):
+                configfiles.add(path)
+            path_d = path + '.d'
+            if os.path.isdir(path_d):
+                for entry in os.listdir(path_d):
+                    if entry.endswith('.conf'):
+                        cfgfile = os.path.join(path_d, entry)
+                        if cfgfile not in configfiles:
+                            configfiles.add(cfgfile)
+        return list(configfiles)
 
     def read_config(self):
         """Reads the configuration properties from the ini file and links the
@@ -633,7 +703,7 @@ class ConfigReader(object):
                 errors.add("Invalid section name `%s`" % cluster)
                 continue
 
-            cluster_conf = dict(self.conf[cluster])
+            cluster_conf = self._make_cluster_conf(self.conf[cluster])
 
             try:
                 self.schemas['cluster'](cluster_conf)
@@ -719,3 +789,33 @@ class ConfigReader(object):
         if errors.errors:
             raise errors
         return (conf_values, storage_section)
+
+
+    def _make_cluster_conf(self, conf):
+        """
+        Create dictionary of cluster config keys.
+
+        Compatibility changes, renames, deprecation warnings, etc. all
+        happen here -- so that the rest of the code can always assume
+        the configuration is the latest documented format.
+        """
+        cfg = dict(conf)
+
+        # working on issue #279 uncovered a conflict between code and
+        # docs: the documentation referred to config keys
+        # `<class>_min_nodes` but the code actually looked for
+        # `<class>_nodes_min`.  Keep this last version as it makes the
+        # code simpler, but alert users of the change...
+        for k,v in cfg.items():
+            if k.endswith('_min_nodes'):
+                # replace with correct key name
+                new_k = k[:-len('_min_nodes')] + '_nodes_min'
+                cfg[new_k] = v
+                del cfg[k]
+                warnings.warn(
+                    "Configuration key '{0}' should be renamed to '{1}'."
+                    " Support for automatic renaming will be removed"
+                    " in the next major version of ElastiCluster."
+                    .format(k, new_k))
+
+        return cfg

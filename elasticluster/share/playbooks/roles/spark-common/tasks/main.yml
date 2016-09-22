@@ -1,0 +1,86 @@
+# spark-common/tasks/main.yml
+---
+
+- name: Install Spark packages (common)
+  tags:
+    - hadoop
+    - spark
+    - common
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - spark-core # Lightning-Fast Cluster Computing
+    - spark-datanucleus # DataNucleus libraries for Apache Spark
+    - spark-extras # External/extra libraries for Apache Spark
+    - spark-python # Python client for Spark
+    - spark-thriftserver # Thrift server for Spark SQL
+    - spark-yarn-shuffle # Spark YARN Shuffle Service
+
+
+- name: Check if Py4J version-independent `.zip` archive exist
+  stat:
+    path='/usr/lib/spark/python/lib/py4j-src.zip'
+    follow=no
+  register: p
+  tags:
+    - hadoop
+    - spark
+
+- name: Symlink Py4J `.zip` archive under a version-independent name
+  # XXX: We use shell globbing to find out what source file to link,
+  # assuming there is one and only one Py4J `.zip` file.  
+  shell: |
+    cd /usr/lib/spark/python/lib
+    ln -s py4j-*-src.zip py4j-src.zip
+  when: not p.stat.exists
+  tags:
+    - hadoop
+    - spark
+
+
+- name: Ensure Spark configuration directory exists
+  tags:
+    - hadoop
+    - spark
+  file:
+    path='{{SPARK_CONF_DIR}}'
+    state=directory
+    
+    
+- name: Copy Spark/BigTop default configuration files
+  tags:
+    - hadoop
+    - spark
+  command:
+    'rsync -ax --update --backup /etc/spark/conf.dist/ {{SPARK_CONF_DIR}}/'
+
+  
+- name: Deploy Spark/ElastiCluster configuration files
+  tags:
+    - hadoop
+    - spark
+  template:
+    src='{{item}}.j2'
+    dest='{{SPARK_CONF_DIR}}/{{item}}'
+  with_items:
+    - spark-defaults.conf
+    #- spark-env.sh
+
+
+- name: Activate Spark/ElastiCluster configuration
+  alternatives:
+    name='spark-conf'
+    link='/etc/spark/conf'
+    path='{{SPARK_CONF_DIR}}'
+
+
+- name: Deploy PySpark configuration files
+  tags:
+    - hadoop
+    - spark
+  copy:
+    src='{{item}}'
+    dest='/{{item}}'
+  with_items:
+    - etc/profile.d/pyspark.sh

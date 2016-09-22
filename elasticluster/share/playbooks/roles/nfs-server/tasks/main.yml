@@ -1,0 +1,86 @@
+---
+#
+# Install an NFSv4 server
+#
+
+- name: install NFS server software (Debian/Ubuntu)
+  tags:
+    - nfs
+    - nfs-server
+  package:
+    pkg='{{item}}'
+    state=present
+  with_items:
+    - nfs-kernel-server
+    - nfs-common
+  when: is_debian_compatible
+
+- name: install NFS server software (RHEL-compatible)
+  tags:
+    - nfs
+    - nfs-server
+  package:
+    pkg='{{item}}'
+    state=present
+  with_items:
+    - nfs-utils
+  when: is_rhel_compatible
+
+
+# exports need to be there before attempting to install/start the
+# server, otherwise the service startup script might refuse to start
+# the NFS server
+- name: Export directories
+  nfsexport:
+    path='{{item.path}}'
+    clients='{{item.clients}}'
+    options='{{item.options|default("rw,no_root_squash,async,no_subtree_check,crossmnt")}}'
+    dest='/etc/exports'
+    state=exported
+  with_items: '{{NFS_EXPORTS}}'
+
+
+- name: ensure NFS server is running (Debian/Ubuntu)
+  tags:
+    - nfs
+    - nfs-server
+  service:
+    name={{item}}
+    enabled=yes
+    state=started
+  with_items:
+    - nfs-kernel-server
+  when: is_debian_compatible
+
+
+  # RHEL does not (auto)start needed services after installation
+- name: ensure NFS server is running (RHEL-compatible)
+  tags:
+    - nfs
+    - nfs-server
+  service:
+    name={{item}}
+    enabled=yes
+    state=started
+  with_items:
+    - nfs-server
+  when: is_rhel7_compatible
+
+- name: ensure NFS server is running (RHEL-compatible)
+  tags:
+    - nfs
+    - nfs-server
+  service:
+    name={{item}}
+    enabled=yes
+    state=started
+  with_items:
+    - rpcbind
+    - nfslock
+    - nfs
+  when: is_rhel6_compatible
+
+
+- name: Reload NFS exports file
+  shell:
+    exportfs -r

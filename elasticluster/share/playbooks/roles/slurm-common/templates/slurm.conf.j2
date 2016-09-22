@@ -1,0 +1,172 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+# **Note:** This file needs to have identical contents on all nodes of
+# the cluster.  See the `slurm.conf` man page for more information.
+# 
+
+# Unique name for identifying this cluster entries in the DB
+ClusterName=elasticluster
+
+
+## scheduler settings
+#
+SchedulerType=sched/backfill
+SchedulerPort=7321
+SelectType={{slurm_selecttype|default('select/cons_res')}}
+SelectTypeParameters={{slurm_selecttypeparameters|default('CR_Core_Memory')}}
+FastSchedule=1
+
+# use the "multifactor" plugin with weights set up to be multi-user ready
+PriorityType=priority/multifactor
+PriorityWeightAge=1000
+PriorityWeightFairshare=5000
+PriorityWeightJobSize=500
+PriorityWeightPartition=1000
+PriorityWeightQOS=2000
+
+# fair share settings
+PriorityDecayHalfLife=14-0
+PriorityUsageResetPeriod=NONE
+PriorityMaxAge=7-0
+PriorityFavorSmall=NO
+
+
+## accounting settings
+#
+
+AccountingStorageType=accounting_storage/slurmdbd
+AccountingStorageEnforce=associations,limits,qos
+AccountingStoreJobComment=YES
+AccountingStorageHost={{SLURM_ACCOUNTING_HOST}}
+AccountingStoragePort=6819
+
+# the "job completion" info is redundant if the accounting
+# infrastructure is enabled, so turn it off as it's an endless source
+# of authentication and DB connection problems ...
+JobCompType=jobcomp/none
+
+# No power consumption acct
+AcctGatherEnergyType=acct_gather_energy/none
+
+# No IB usage accounting
+AcctGatherInfinibandType=acct_gather_infiniband/none
+
+# No filesystem accounting (only works with Lustre)
+AcctGatherFilesystemType=acct_gather_filesystem/none
+
+# No job profiling (for now)
+AcctGatherProfileType=acct_gather_profile/none
+#AcctGatherProfileType=acct_gather_profile/hdf5
+
+JobAcctGatherType=jobacct_gather/linux
+JobAcctGatherFrequency=60
+
+
+## job execution settings
+#
+
+CheckpointType=checkpoint/none
+#CheckpointType=checkpoint/blcr
+JobCheckpointDir=/var/lib/slurm/checkpoint
+
+# requeue jobs on node failure, unless users ask otherwise
+JobRequeue=1
+
+# max number of jobs in a job array
+MaxArraySize={{slurm_maxarraysize|default(1000)}}
+
+# max number of jobs pending + running
+MaxJobCount={{slurm_maxjobcount|default(10000)}}
+
+
+MpiDefault=openmpi
+# Note: Apparently, the `MpiParams` option is needed also for non-mpi
+# jobs in slurm 2.5.3.
+MpiParams=ports=12000-12999
+
+# track resource usage via Linux /proc tree
+ProctrackType=proctrack/linuxproc
+#ProctrackType=proctrack/cgroup
+
+# do not propagate `ulimit` restrictions found on login nodes
+PropagateResourceLimits=NONE
+
+# automatically return nodes to service, unless they have been marked DOWN by admins
+ReturnToService=1
+
+TaskPlugin=task/none
+#TaskPlugin=task/cgroup
+#TaskEpilog=/etc/slurm/task_epilog
+#TaskProlog=/etc/slurm/task_prolog
+
+TmpFs=/tmp
+
+# limit virtual mem usage to 101% of real mem usage
+VSizeFactor=101
+
+
+# misc timeout settings (commented lines show the default)
+#
+BatchStartTimeout=60
+CompleteWait=35
+#EpilogMsgTime=2000 
+#HealthCheckInterval=0 
+#HealthCheckProgram= 
+InactiveLimit=0
+KillWait=30
+#MessageTimeout=10 
+#ResvOverRun=0 
+MinJobAge=300
+#OverTimeLimit=0 
+#UnkillableStepTimeout=60 
+#VSizeFactor=0 
+Waittime=0
+
+
+## `slurmctld` settings (controller nodes)
+#
+ControlMachine={{SLURM_MASTER_HOST}}
+ControlAddr={{SLURM_MASTER_ADDR}}
+
+SlurmctldPidFile=/var/run/slurm/slurmctld.pid
+SlurmctldPort=6817
+SlurmctldTimeout=300
+
+StateSaveLocation=/var/spool/slurm
+
+SlurmctldDebug=error
+SlurmctldLogFile=/var/log/slurm/slurmctld.log
+DebugFlags=backfill,cpu_bind,priority,reservation,selecttype,steps
+
+MailProg=/usr/bin/mail
+
+
+## `slurmd` settings (compute nodes)
+#
+SlurmdPort=6818
+SlurmdPidFile=/var/run/slurm/slurmd.pid
+SlurmdSpoolDir=/var/lib/slurm/slurmd
+SlurmdTimeout=300
+
+SlurmdDebug=error
+SlurmdLogFile=/var/log/slurm/slurmd.log
+
+AuthType=auth/munge
+CryptoType=crypto/munge
+
+DisableRootJobs=NO
+
+
+## Cluster nodes
+# 
+{% for host in groups.slurm_workers %}
+NodeName={{host}} RealMemory={{hostvars[host]['ansible_memtotal_mb']}} CPUs={{hostvars[host]['ansible_processor_vcpus']}} Sockets={{hostvars[host]['ansible_processor_vcpus']}} CoresPerSocket=1 ThreadsPerCore=1
+{% endfor %}
+
+
+## Cluster partitions
+#
+PartitionName=main Nodes={% for host in groups.slurm_workers %}{{host}},{%endfor%} MaxTime=INFINITE State=UP Default=YES

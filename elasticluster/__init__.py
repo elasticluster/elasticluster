@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013 GC3, University of Zurich
+#   Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 import logging
 
-logging.basicConfig()
 log = logging.getLogger("gc3.elasticluster")
 log.DO_NOT_FORK = False
 
@@ -35,10 +34,7 @@ from elasticluster.providers.gce import GoogleCloudProvider
 from elasticluster.providers.azure_provider import AzureCloudProvider
 
 def get_configurator(configfiles='~/.elasticluster/config',
-                     storage_path=None,
-                     include_config_dirs=True):
+                     storage_path=None):
     from elasticluster.conf import Configurator
-    conf = Configurator.fromConfig(configfiles,
-                                   storage_path,
-                                   include_config_dirs=True)
+    conf = Configurator.fromConfig(configfiles, storage_path)
     return conf

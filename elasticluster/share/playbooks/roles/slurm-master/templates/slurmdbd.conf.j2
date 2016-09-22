@@ -1,0 +1,92 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+
+#
+# SLURM DB configuration `slurmdbd.conf`.
+#
+# This is only required on machines running the `slurmdbd`
+# daemon for accounting storage interface.
+#
+# see: http://slurm.schedmd.com/slurmdbd.conf.html
+
+# how to run the SLURM DBD process
+PidFile=/var/run/slurm/slurmdbd.pid
+LogFile=/var/log/slurm/slurmdbd.log
+DebugLevel=error
+
+# I get "error: Update Association request from non-super user
+# uid=64030" if `slurmdbd` is running with `SlurmUser=slurm` and
+# `slurmctld` is instead running with `SlurmUser=root`, so run
+# everything as root for now...
+#
+#SlurmUser=root
+
+# authentication method between SLURM components
+AuthType=auth/munge
+
+# socket binding data for the SLURM DBD; must match the values for
+# `AccountingStorageHost` and `AccountingStoragePort` in `slurm.conf`
+DbdHost={{SLURM_ACCOUNTING_HOST}}
+#DbdBackupHost=?
+DbdPort=6819
+
+# DB connection data
+StorageType=accounting_storage/mysql
+StorageHost=localhost
+StoragePort=3306
+StorageUser={{SLURM_ACCOUNTING_DB_USER}}
+StoragePass={{SLURM_ACCOUNTING_DB_PASS}}
+StorageLoc={{SLURM_ACCOUNTING_DB_NAME}}
+
+# control data visibility
+#
+# This controls what type of information is hidden from regular users.
+# By default, all information is visible to all users.  User
+# SlurmUser, root, and users with AdminLevel=Admin can always view all
+# information.  Multiple values may be specified with a comma
+# separator.  Acceptable values include:
+# 
+# accounts
+#        prevents users from viewing any account definitions unless
+#        they are coordinators of them.
+# 
+# jobs
+#        prevents users from viewing job records belonging to other
+#        users unless they are coordinators of the association running
+#        the job when using sacct.
+# 
+# reservations
+#        restricts getting reservation information to users with
+#        operator status and above.
+# 
+# usage
+#        prevents users from viewing usage of any other user.  This
+#        applies to sreport.
+# 
+# users
+#        prevents users from viewing information of any user other
+#        than themselves, this also makes it so users can only see
+#        associations they deal with.  Coordinators can see
+#        associations of all users they are coordinator of, but can
+#        only see themselves when listing users.
+#
+#PrivateData=
+
+# By default, accouting records are never purged, which is fine for
+# us.  If we ever want to enable purging, we should also enable the
+# `Archive*` options which allow saving the data that is about to be
+# purged from the DB.
+#
+#PurgeEventAfter=
+#PurgeJobAfter=
+#PurgeStepAfter=
+#PurgeSuspendAfter=
+
+# A Wckey is an orthogonal way to do accounting against maybe a group
+# of unrelated accounts. WCKeys can be defined using sacctmgr add
+# wckey 'name'. When a job is run use srun --wckey and time will be
+# summed up for this wckey.
+TrackWCKey=yes

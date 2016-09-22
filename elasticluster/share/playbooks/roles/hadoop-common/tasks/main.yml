@@ -1,0 +1,62 @@
+# hadoop-common/tasks/main.yml
+---
+
+- name: Install Java 7 JRE
+  tags:
+    - hadoop
+  package:
+    name=openjdk-7-jre-headless
+    state=present
+
+    
+- name: Install Hadoop packages (common)
+  tags:
+    - hadoop
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - hadoop # Hadoop is a software platform for processing vast amounts of data
+    - hadoop-client # Hadoop client side dependencies
+    - hadoop-doc # Hadoop Documentation
+    - hadoop-hdfs-fuse # Mountable HDFS
+
+
+- name: Ensure Hadoop configuration directory exists
+  tags:
+    - hadoop
+  file:
+    path='{{HADOOP_CONF_DIR}}'
+    state=directory
+    
+    
+- name: Copy Hadoop/BigTop default configuration files
+  tags:
+    - hadoop
+  command:
+    'rsync -ax --update --backup /etc/hadoop/conf.empty/ {{HADOOP_CONF_DIR}}/'
+
+  
+- name: Deploy Hadoop/ElastiCluster configuration files
+  tags:
+    - hadoop
+  template:
+    src='{{item}}.j2'
+    dest='{{HADOOP_CONF_DIR}}/{{item}}'
+  with_items:
+    - capacity-scheduler.xml
+    - core-site.xml
+    - hdfs-site.xml
+    - mapred-site.xml
+    - master
+    - slaves
+    - yarn-site.xml
+
+
+- name: Activate Hadoop/ElastiCluster configuration
+  alternatives:
+    name='hadoop-conf'
+    link='/etc/hadoop/conf'
+    path='{{HADOOP_CONF_DIR}}'
+  #command:
+  #  'update-alternatives --install /etc/hadoop/conf hadoop-conf {{HADOOP_CONF_DIR}} 90'

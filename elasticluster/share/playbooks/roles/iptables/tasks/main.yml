@@ -1,0 +1,103 @@
+---
+# This task is used to set very simple firewall rules, allowing
+# everything from a set of hosts and denying everything but ssh
+# connections from any other host.
+#
+# Mandatory variables:
+#
+#
+# Optional variables:
+#
+# trusted_hosts:  list of ip addresses. By default, all the hosts in
+#                 the group `all`.
+#
+# default_accept: if equal to `1` or `true`, all connection *from
+#                 internet* are accepted (but not from the internal
+#
+
+- name: Load distribution-specific data
+  include: 'init-{{ansible_os_family}}.yml'
+
+
+- name: Temporarily disable SELinux (RHEL-family)
+  when: is_rhel_compatible
+  selinux:
+    policy=targeted
+    state=permissive
+
+
+- name: Install iptables packages (Debian/Ubuntu)
+  tags: iptables
+  when: is_debian_or_ubuntu
+  apt:
+    name={{item}}
+    state=present
+  with_items:
+    - iptables
+    - iptables-persistent
+
+
+- name: Install iptables package (RHEL-family)
+  tags: iptables
+  when: is_rhel_compatible
+  yum:
+    name={{item}}
+    state=present
+  with_items:
+    - iptables
+    - iptables-services
+
+
+# We cannot use `with_items:` here as that would require that the Jinja template
+# in `dest=...` be expanded twice (recursively) and I cannot find any way of
+# triggering this in Ansible.  So here, we go, copy+paste+edit ...
+- block:
+  - name: Deploy IPv4 netfilter rules
+    template:
+      dest="{{configfile['etc/iptables/rules.v4']}}"
+      src="etc/iptables/rules.v4.j2"
+      owner=root
+      group=root
+      mode=0444
+    notify: reload iptables
+  - name: Deploy IPv6 netfilter rules
+    template:
+      dest="{{configfile['etc/iptables/rules.v6']}}"
+      src="etc/iptables/rules.v6.j2"
+      owner=root
+      group=root
+      mode=0444
+    notify: reload iptables
+  tags:
+    - iptables
+  when: 'not {{is_docker_container|default(False)}}'
+
+
+# See the above comment as to why these two blocks cannot be shortened into one
+# `with_items:` loop
+- block:
+  - name: Ensure IPv4 netfilter rules are loaded at boot
+    tags: iptables
+    service:
+      name='{{service['iptables']}}'
+      enabled=yes
+      state=started
+    become: yes
+    become_user: root
+  - name: Ensure IPv6 netfilter rules are loaded at boot
+    service:
+      name='{{service['ip6tables']}}'
+      enabled=yes
+      state=started
+    become: yes
+    become_user: root
+  tags:
+    - iptables
+  when: 'not {{is_docker_container|default(False)}}'
+
+
+- name: Enable SELinux (RHEL-family)
+  when: is_rhel_compatible
+  selinux:
+    policy=targeted
+    state=enforcing

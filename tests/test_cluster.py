@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013 GC3, University of Zurich
+#   Copyright (C) 2013, 2016 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -15,6 +15,9 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
+from __future__ import absolute_import
+
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 import json
@@ -30,7 +33,8 @@ from elasticluster.cluster import Cluster, Node
 from elasticluster.exceptions import ClusterError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 from elasticluster.repository import PickleRepository
-from tests.test_conf import Configuration
+
+from _helpers.config import Configuration
 
 
 class TestCluster(unittest.TestCase):
@@ -208,7 +212,7 @@ class TestCluster(unittest.TestCase):
 
         cluster.setup()
 
-        setup_provider.setup_cluster.assert_called_once_with(cluster)
+        setup_provider.setup_cluster.assert_called_once_with(cluster, tuple())
 
     def test_update(self):
         storage = MagicMock()
@@ -382,6 +386,6 @@ class TestNode(unittest.TestCase):
         self.failUnlessRaises(KeyError, lambda x: x['_cloud_provider'], dnode)
         self.assertEqual(node['_cloud_provider'], node._cloud_provider)
 
+
 if __name__ == "__main__":
-    import nose
-    nose.runmodule()
+    pytest.main(['-v', __file__])

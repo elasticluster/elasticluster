@@ -3,6 +3,8 @@
    This file follows reStructuredText markup syntax; see
    http://docutils.sf.net/rst.html for more information.
 
+.. include:: ../global.inc
+
 
 `elasticluster`
 ===============
@@ -27,7 +29,7 @@ Cluster
 This is the heart of elasticluster and handles all cluster relevant
 behavior.  You can basically start, setup and stop a cluster. Also it
 provides factory methods to add nodes to the cluster. A typical
-workflow is as follows (see slurm_ for a code example):
+workflow is as follows (see `slurm code example`_):
 
 1. create a new cluster
 2. add nodes to fit your computing needs
@@ -115,7 +117,7 @@ an alternative implementation can be provided following the
 Sample Code
 -----------
 
-.. _slurm:
+.. _`slurm code example`:
 
 Start and setup a SLURM cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,7 +144,7 @@ types on other cloud providers can be setup accordingly.
     # Initialising the setup provider needs a little more preparation:
     # the groups dictionary specifies the kind of nodes used for this cluster.
     # In this case we want a frontend and a compute kind. The frontend node
-    # (s) will be setup as slurm_master, the compute node(s) as slurm_clients.
+    # (s) will be setup as slurm_master, the compute node(s) as slurm_workers.
     # This corresponds to the documentation of the ansible playbooks
     # provided with elasticluster. The kind of the node is a name specified
     # by the user. This name will be used to set a new hostname on the
@@ -150,7 +152,7 @@ types on other cloud providers can be setup accordingly.
     # groups['kind'] = ['andible_group1', 'ansible_group2']
     groups = dict()
     groups['frontend'] = ['slurm_master']
-    groups['compute'] = ['slurm_clients']
+    groups['compute'] = ['slurm_workers']
 
     setup_provider = elasticluster.AnsibleSetupProvider(groups)
 
@@ -282,6 +284,3 @@ but any settings can be applied compliant with the logging module of python.
 
 .. automodule:: elasticluster
     :members:
-
-.. References
-.. _ansible: https://github.com/ansible/ansible

@@ -1,0 +1,44 @@
+---
+
+#
+# Define GlusterFS volumes to be created and exported.
+#
+# Each item in this list must be an associative array with the
+# following keys:
+#
+# - `name`: name seen & used by clients to mount the volume
+#
+# - `path`: actual storage path ("brick" in GlusterFS nomenclature);
+#   is the same on all server hosts (this is a limitation of this -
+#   playbook, not of GlusterFS itself)
+#
+# - `replicas`: number of online replicas for each file; omit to use GlusterFS' default
+#
+# - `stripes`: striping factor of the volume; omit to use GlusterFS' default
+#
+# - `transport`: transport option for the GlusterFS daemon (as of
+#   version 3.7.3, one of: `tcp`, `rdma`, or `tcp,rdma`), , or the -
+#   empty string `''` to use GlusterFS' default
+#
+# The `replicas`, `stripes`, and `transport` keys are optional, and
+# GlusterFS defaults are used if omitted.
+#
+GLUSTERFS_VOLUMES:
+  - name: 'glusterfs'
+    path: '/srv/glusterfs'
+    replicas: ''
+    stripes: ''
+    transport: 'tcp'
+
+    
+# GlusterFS setup commands should be issued on one single server in
+# the whole cluster; name that host here.  (I'm not sure there is a
+# sane default for this setting, feel free to suggest an alternate
+# selection logic.)
+glusterfs_main_host: '{{groups.glusterfs_server[0]}}'
+
+# Select the host where volume-building commands will be run.  This is
+# a conditional expression that must evaluate to ``True`` on the node
+# that runs GlusterFS commands, ``False`` elsewhere.  By default, use
+# the first server node.
+is_glusterfs_main_server_node: "inventory_hostname == '{{glusterfs_main_host}}'"

@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013 GC3, University of Zurich
+#   Copyright (C) 2013, 2016 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -26,6 +26,8 @@ from mock import MagicMock, PropertyMock
 from elasticluster.exceptions import KeypairError, InstanceError, \
     SecurityGroupError, SubnetError, ImageError
 from elasticluster.providers.ec2_boto import BotoCloudProvider
+
+import pytest
 
 
 class TestBotoCloudProvider(unittest.TestCase):
@@ -115,7 +117,7 @@ class TestBotoCloudProvider(unittest.TestCase):
             con.run_instances.assert_called_once_with(image_id,
                     key_name=key_name, security_groups=[security_group],
                     instance_type=flavor, user_data=image_userdata,
-                    network_interfaces=None)
+                    network_interfaces=None, instance_profile_name=None)
 
 
         except:
@@ -160,7 +162,8 @@ class TestBotoCloudProvider(unittest.TestCase):
 
         ips = provider.get_ips(instance_id)
 
-        self.assertEqual(ips, (ip_private, ip_public))
+        # get_ips() returns list of *unique* IPs
+        assert ips == list(set([ip_private, ip_public]))
 
 
     def test_is_instance_running(self):
@@ -181,8 +184,8 @@ class TestBotoCloudProvider(unittest.TestCase):
         provider._instances[instance_id] = instance
         provider._instances[nr_instance_id] = nr_instance
 
-        self.assertTrue(provider.is_instance_running(instance_id))
-        self.assertFalse(provider.is_instance_running(nr_instance_id))
+        assert provider.is_instance_running(instance_id)
+        assert not provider.is_instance_running(nr_instance_id)
 
 
 
@@ -194,7 +197,7 @@ class TestBotoCloudProvider(unittest.TestCase):
         con = MagicMock()
         provider = self._create_provider()
         provider._ec2_connection = con
-        with self.assertRaises(InstanceError):
+        with pytest.raises(InstanceError):
             provider._load_instance("not-existing")
 
         # check instance already fetched
@@ -203,7 +206,7 @@ class TestBotoCloudProvider(unittest.TestCase):
         provider._instances[instance_present_id] = instance_present
 
         i = provider._load_instance(instance_present_id)
-        self.assertEqual(i, instance_present)
+        assert i == instance_present
 
         # check instance fetched by boto
         instance_boto = MagicMock()
@@ -216,16 +219,16 @@ class TestBotoCloudProvider(unittest.TestCase):
 
         i = provider._load_instance(instance_boto_id)
 
-        self.assertEqual(i, instance_boto)
+        assert i == instance_boto
 
         # check cached instance (example from above boto-instance)
         con.reset_mock()
         del provider._instances[instance_boto_id]
         i = provider._load_instance(instance_boto_id)
 
-        self.assertEqual(i, instance_boto)
+        assert i == instance_boto
         # ensure that the instance has been cached
-        self.assertEqual(con.get_all_instances.call_count, 0)
+        assert con.get_all_instances.call_count == 0
 
     def test_check_security_group(self):
         """
@@ -238,14 +241,14 @@ class TestBotoCloudProvider(unittest.TestCase):
 
         # security group that does not exist
         con.get_all_security_groups.return_value = []
-        with self.assertRaises(SecurityGroupError):
+        with pytest.raises(SecurityGroupError):
             provider._check_security_group("not-existing")
 
         group = MagicMock()
         type(group).name = PropertyMock(return_value="key-exists")
         type(group).id = PropertyMock(return_value="id-exists")
         con.get_all_security_groups.return_value = [group]
-        with self.assertRaises(SecurityGroupError):
+        with pytest.raises(SecurityGroupError):
             provider._check_security_group("not-existing")
 
         # security group that exists
@@ -258,7 +261,7 @@ class TestBotoCloudProvider(unittest.TestCase):
         con.get_all_security_groups.return_value = [group, group2]
 
         # VPC and security groups with the same name
-        with self.assertRaises(SecurityGroupError):
+        with pytest.raises(SecurityGroupError):
             provider._check_security_group("key-exists")
 
     def test_check_subnet(self):
@@ -273,14 +276,14 @@ class TestBotoCloudProvider(unittest.TestCase):
 
         # subnet that does not exist
         vpc.get_all_subnets.return_value = []
-        with self.assertRaises(SubnetError):
+        with pytest.raises(SubnetError):
             provider._check_subnet("not-existing")
 
         subnet = MagicMock()
         type(subnet).tags = PropertyMock(return_value={"Name": "key-exists"})
         type(subnet).id = PropertyMock(return_value="id-exists")
         vpc.get_all_subnets.return_value = [subnet]
-        with self.assertRaises(SubnetError):
+        with pytest.raises(SubnetError):
             provider._check_subnet("not-existing")
 
         # subnet that exists, by name or by key
@@ -293,7 +296,7 @@ class TestBotoCloudProvider(unittest.TestCase):
         vpc.get_all_subnets.return_value = [subnet, subnet2]
 
         # subnets with the same name
-        with self.assertRaises(SubnetError):
+        with pytest.raises(SubnetError):
             provider._check_subnet("key-exists")
 
     def test_find_image_id(self):
@@ -313,10 +316,10 @@ class TestBotoCloudProvider(unittest.TestCase):
         provider = self._create_provider()
         provider._ec2_connection = con
 
-        self.assertEqual(provider._find_image_id(name), image_id)
-        self.assertEqual(provider._find_image_id(image_id), image_id)
+        assert provider._find_image_id(name) == image_id
+        assert provider._find_image_id(image_id) == image_id
 
-        with self.assertRaises(ImageError):
+        with pytest.raises(ImageError):
             provider._find_image_id("not-existing")
 
 
@@ -406,7 +409,7 @@ class TestBotoCloudProvider(unittest.TestCase):
                                    fingerprint)
 
         # checking keypair with wrong fingerprint
-        with self.assertRaises(KeypairError):
+        with pytest.raises(KeypairError):
             self._check_keypair_helper(key_content_prv, key_content_pub,
                                         "wrong-fingerprint")
 
@@ -450,14 +453,6 @@ class TestBotoCloudProvider(unittest.TestCase):
                                    fingerprint, key_exists=True)
 
         # amazon does not allow dsa keys
-        with self.assertRaises(KeypairError):
+        with pytest.raises(KeypairError):
             self._check_keypair_helper(key_content_prv, key_content_pub,
                         fingerprint, key_exists=False, host="us.amazon.com")
-
-
-
-
-
-
-
-

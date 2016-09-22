@@ -1,0 +1,13 @@
+---
+
+- name: Load configuration and service names (RHEL-compatible)
+  set_fact:
+    # map config file names across distributions
+    configfile:
+      'etc/iptables/rules.v4': '/etc/sysconfig/iptables'
+      'etc/iptables/rules.v6': '/etc/sysconfig/ip6tables'
+    # same for init service names
+    service:
+      'iptables':  'iptables'
+      'ip6tables': 'ip6tables'
+    when: '{{is_rhel_compatible}}'

@@ -1,0 +1,76 @@
+---
+- hosts: pvfs2:pvfs2_data:pvfs2_meta:pvfs2_client
+  handlers:
+    - include: common/handlers/main.yml
+  tasks:
+    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
+
+- hosts: pvfs2:pvfs2_data:pvfs2_meta:pvfs2_client
+  vars:
+    - pvfs_version: 2.9.5
+    - pvfs_tar: "orangefs-{{pvfs_version}}.tar.gz"
+    - pvfs_src: "orangefs-{{pvfs_version}}"
+    - pvfs_url: "https://s3.amazonaws.com/download.orangefs.org/releases/{{pvfs_version}}/source/{{pvfs_tar}}"
+    - pvfs2_storage: /srv/pvfs2
+    - is_client: '"{{inventory_hostname}}" in {{groups.pvfs2_client}}'
+  handlers:
+    - include: common/handlers/main.yml
+  tasks:
+    - action: apt name={{item}} state=installed update_cache=yes
+      with_items:
+        - build-essential
+        - libdb-dev
+        - bison
+        - flex
+        - pkg-config
+        - libfuse-dev
+
+    - action: get_url url={{pvfs_url}} dest=/root/
+    - action: command tar -zxf {{pvfs_tar}} chdir=/root/ creates=/root/{{pvfs_src}}/configure
+ # --enable-segv-backtrace
+    - action: 'shell chdir=/root/{{pvfs_src}} ./configure --enable-fuse --with-kernel=/usr/src/linux-headers-$(uname -r) && make && make install creates=/root/{{pvfs_src}}/src/server/pvfs2-server'
+
+    - action: shell chdir=/root/{{pvfs_src}} make kmod && make kmod_install && depmod -a
+
+    - action: shell pvfs2-genconfig --quiet --protocol tcp --ioservers {{groups.pvfs2_data|join(',')}} --metaservers {{groups.pvfs2_meta|join(',')}}  --storage /srv/pvfs2 /etc/pvfs2-fs.conf creates=/etc/pvfs2-fs.conf
+      when: inventory_hostname == groups.pvfs2_meta[0]
+
+
+
+- hosts: pvfs2:pvfs2_data:pvfs2_meta
+  vars:
+    - pvfs2_storage: /srv/pvfs2
+    - is_client: '"{{inventory_hostname}}" in {{groups.pvfs2_client}}'
+  tasks:
+    - action: shell scp /etc/pvfs2-fs.conf root@{{item}}:/etc/pvfs2-fs.conf
+      with_items: 
+        - "{{groups.pvfs2_meta}}"
+        - "{{groups.pvfs2_data}}"
+      when: inventory_hostname == groups.pvfs2_meta[0]
+
+    - name: ensure the storage path is correct
+      action: 'lineinfile dest=/etc/pvfs2-fs.conf regexp="StorageSpace {{pvfs2_storage}}" line="	StorageSpace {{pvfs2_storage}}"'
+
+    - shell: pvfs2-server /etc/pvfs2-fs.conf -f creates=/{{pvfs2_storage}}/collections.db
+
+    - shell: cp /root/{{pvfs_src}}/examples/pvfs2-server.rc /etc/init.d/pvfs2 creates=/etc/init.d/pvfs2
+      when: is_centos
+    - action: file path=/etc/init.d/pvfs2 mode=755 state=file
+      when: is_centos
+
+    - action: copy src=pvfs2/files/pvfs2.debian.init dest=/etc/init.d/pvfs2
+      when: is_debian_or_ubuntu
+    - action: file path=/etc/init.d/pvfs2 mode=755 state=file
+      when: is_debian_or_ubuntu
+
+    - action: service name=pvfs2 state=started
+
+- hosts: pvfs2_client
+  vars:
+    - pvfs2_storage: /srv/pvfs2
+    - is_client: '"{{inventory_hostname}}" in {{groups.pvfs2_client}}'
+  tasks:
+    - action: shell modprobe pvfs2
+    - action: file path=/pvfs2 state=directory
+    - action: shell pgrep pvfs2-client || pvfs2-client --logtype=syslog
+    - action: mount name=/pvfs2 src=tcp://{{groups.pvfs2_meta[0]}}:3334/orangefs fstype=pvfs2 opts=defaults,noauto state=mounted

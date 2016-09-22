@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013 GC3, University of Zurich
+# Copyright (C) 2013 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.mes
 import os
 import urllib
 import threading
+import time
+from warnings import warn
 
 # External modules
 import boto
@@ -50,16 +52,23 @@ class BotoCloudProvider(AbstractCloudProvider):
     :param bool request_floating_ip: Whether ip are assigned automatically
                                     `True` or floating ips have to be
                                     assigned manually `False`
+    :param str instance_profile: Instance profile with IAM role permissions
     """
     __node_start_lock = threading.Lock()  # lock used for node startup
 
-    def __init__(self, ec2_url, ec2_region, ec2_access_key, ec2_secret_key,
-                 vpc=None, storage_path=None, request_floating_ip=False):
+    # interval (in seconds) for polling the cloud provider,
+    # e.g., when requesting spot instances
+    POLL_INTERVAL = 10
+
+    def __init__(self, ec2_url, ec2_region, ec2_access_key=None,
+                 ec2_secret_key=None, vpc=None, storage_path=None,
+                 request_floating_ip=False, instance_profile=None):
         self._url = ec2_url
         self._region_name = ec2_region
         self._access_key = ec2_access_key
         self._secret_key = ec2_secret_key
         self._vpc = vpc
+        self._instance_profile = instance_profile
         self.request_floating_ip = request_floating_ip
 
         # read all parameters from url
@@ -151,6 +160,7 @@ class BotoCloudProvider(AbstractCloudProvider):
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
                        username=None, node_name=None, network_ids=None,
+                       price=None,timeout=None,
                        **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
@@ -204,18 +214,43 @@ class BotoCloudProvider(AbstractCloudProvider):
             security_groups = [security_group]
 
         try:
-            reservation = connection.run_instances(
-                image_id, key_name=key_name, security_groups=security_groups,
-                instance_type=flavor, user_data=image_userdata,
-                network_interfaces=interfaces)
+            #start spot instance if bid is specified
+            if price:
+                log.info("Requesting spot instance with price `%s` ...", price)
+                request = connection.request_spot_instances(
+                                price,image_id, key_name=key_name, security_groups=security_groups,
+                                instance_type=flavor, user_data=image_userdata,
+                                network_interfaces=interfaces,
+                                instance_profile_name=self._instance_profile)[-1]
+
+                # wait until spot request is fullfilled (will wait
+                # forever if no timeout is given)
+                start_time = time.time()
+                timeout = (float(timeout) if timeout else 0)
+                log.info("Waiting for spot instance (will time out in %d seconds) ...", timeout)
+                while  request.status.code != 'fulfilled':
+                    if timeout and time.time()-start_time > timeout:
+                        request.cancel()
+                        raise RuntimeError('spot instance timed out')
+                    time.sleep(self.POLL_INTERVAL)
+                    # update request status
+                    request=connection.get_all_spot_instance_requests(request_ids=request.id)[-1]
+            else:
+                reservation = connection.run_instances(
+                    image_id, key_name=key_name, security_groups=security_groups,
+                    instance_type=flavor, user_data=image_userdata,
+                    network_interfaces=interfaces,
+                    instance_profile_name=self._instance_profile)
         except Exception as ex:
             log.error("Error starting instance: %s", ex)
             if "TooManyInstances" in ex:
                 raise ClusterError(ex)
             else:
                 raise InstanceError(ex)
-
-        vm = reservation.instances[-1]
+        if price:
+            vm  = connection.get_only_instances(instance_ids=[request.instance_id])[-1]
+        else:
+            vm = reservation.instances[-1]
         vm.add_tag("Name", node_name)
 
         # cache instance object locally for faster access later on
@@ -335,7 +370,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         # If we reached this point, the instance was not found neither
         # in the cache or on the website.
         raise InstanceError("the given instance `%s` was not found "
-                            "on the coud" % instance_id)
+                            "on the cloud" % instance_id)
 
     def _check_keypair(self, name, public_key_path, private_key_path):
         """First checks if the keypair is valid, then checks if the keypair
@@ -361,18 +396,18 @@ class BotoCloudProvider(AbstractCloudProvider):
             pkey = DSSKey.from_private_key_file(private_key_path)
             is_dsa_key = True
         except PasswordRequiredException:
-            log.warning(
-                "Unable to check key file `%s` because it is encrypted with a "
-                "password. Please, ensure that you added it to the SSH agent "
-                "with `ssh-add %s`", private_key_path, private_key_path)
+            warn("Unable to check key file `{0}` because it is encrypted with a "
+                 "password. Please, ensure that you added it to the SSH agent "
+                 "with `ssh-add {1}`"
+                 .format(private_key_path, private_key_path))
         except SSHException:
             try:
                 pkey = RSAKey.from_private_key_file(private_key_path)
             except PasswordRequiredException:
-                log.warning(
-                    "Unable to check key file `%s` because it is encrypted with a "
-                    "password. Please, ensure that you added it to the SSH agent "
-                    "with `ssh-add %s`", private_key_path, private_key_path)
+                warn("Unable to check key file `{0}` because it is encrypted with a "
+                     "password. Please, ensure that you added it to the SSH agent "
+                     "with `ssh-add {1}`"
+                     .format(private_key_path, private_key_path))
             except SSHException:
                 raise KeypairError('File `%s` is neither a valid DSA key '
                                    'or RSA key.' % private_key_path)

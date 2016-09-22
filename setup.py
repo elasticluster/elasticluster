@@ -3,7 +3,7 @@
 # @(#)setup.py
 #
 #
-# Copyright (C) 2013, GC3, University of Zurich. All rights reserved.
+# Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -20,65 +20,64 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-__docformat__ = 'reStructuredText'
-
-import os
 import sys
-import shutil
 
-from setuptools.command import sdist
-
-# Newer versions of setuptools do not have `finders` attribute.
-if hasattr(sdist, 'finders'):
-    del sdist.finders[:]
-
-ANSIBLE_PB_DIR = 'elasticluster/providers/ansible-playbooks'
+# fix Python issue 15881 (on Python <2.7.5)
+try:
+    import multiprocessing
+except ImportError:
+    pass
 
 
-def ansible_pb_files():
-    basedir = os.path.dirname(__file__)
-    ansible_data = [('share/elasticluster/etc', ['docs/config.template'])]
-    for (dirname, dirnames, filenames) in os.walk(ANSIBLE_PB_DIR):
-        tmp = []
-        for fname in filenames:
-            if fname.startswith('.git'): continue
-            tmp.append(os.path.join(dirname, fname))
-        ansible_data.append((os.path.join('share', dirname), tmp))
-    return ansible_data
+# Ensure we use a recent enough version of setuptools: CentOS7 still ships with
+# 0.9.8! There has been some instability in the support for PEP-496 environment
+# markers recently, but Setuptools 20.10.0 seems to have restored full support
+# for them, including `python_implementation`. See also issue #249.
+from ez_setup import use_setuptools
+use_setuptools(version='20.10.0')
 
 
+## auxiliary functions
+#
+def read_whole_file(path):
+    """
+    Return file contents as a string.
+    """
+    with open(path, 'r') as stream:
+        return stream.read()
+
+
+## test runner setup
+#
+# See http://tox.readthedocs.org/en/latest/example/basic.html#integration-with-setuptools-distribute-test-commands
+# on how to run tox when python setup.py test is run
+#
+from setuptools.command.test import test as TestCommand
+
+class Tox(TestCommand):
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        # import here, cause outside the eggs aren't loaded
+        import tox
+        errno = tox.cmdline(self.test_args)
+        sys.exit(errno)
+
+
+## real setup description begins here
+#
 from setuptools import setup, find_packages
-
-required_packages = [
-    'PyCLI',
-    'paramiko',
-    'ansible>=1.9.0',
-    'voluptuous>=0.8.2',
-    'configobj',
-    # EC2 clouds
-    'boto',
-    # OpenStack clouds
-    'python-novaclient',
-    'pbr==0.11.0',
-    # GCE cloud
-    'google-api-python-client',
-    'python-gflags',
-	'azure',
-]
-
-if sys.version_info[:2] == (2, 6):
-    # Python 2.6. 
-    # Google api python client *requires* argparse
-    # cfr. http://code.google.com/p/google-api-python-client/issues/detail?id=299
-    required_packages.append('argparse')
 
 setup(
     name="elasticluster",
-    version="1.3-dev",
+    version=read_whole_file("version.txt").strip(),
     description="A command line tool to create, manage and setup computing clusters hosted on a public or private cloud infrastructure.",
-    long_description=open('README.rst').read(),
-    author="Grid Computing Competence Centre, University of Zurich",
-    author_email="info@gc3.lists.uzh.ch",
+    long_description=read_whole_file('README.rst'),
+    author="Services and Support for Science IT, University of Zurich",
+    author_email="team@s3it.lists.uzh.ch",
     license="LGPL",
     keywords="cloud openstack amazon ec2 ssh hpc gridengine torque slurm batch job elastic",
     url="https://github.com/gc3-uzh-ch/elasticluster",
@@ -103,44 +102,64 @@ setup(
         "Topic :: System :: Distributed Computing",
     ],
     packages=find_packages(),
-    install_requires=required_packages,
-    tests_require=['tox', 'mock', 'nose'],
-    data_files=ansible_pb_files(),
+    include_package_data=True,  # include files mentioned by MANIFEST.in
     entry_points={
         'console_scripts': [
             'elasticluster = elasticluster.main:main',
         ]
     },
+    install_requires=[
+        'PyCLI',
+        'ansible>=2.0',
+        'coloredlogs',
+        'configobj',
+        'paramiko',
+        'voluptuous>=0.8.2',
+        # EC2 clouds
+        'boto',
+        # GCE cloud
+        'google-api-python-client',
+        'python-gflags',
+        'simplejson>=2.5.0', # needed by `uritemplate` but somehow not picked up
+        # OpenStack clouds
+        'netifaces',
+        #'python-novaclient' ## this needs special treatment depending on Python version, see below
+    ],
+    # The `python_version` environment marker was introduced in PEP 508,
+    # but apparently `setuptools` silently ignores it (still, as of version 27.2.0),
+    # so we have to revert to this weird syntax for conditional dependencies...
+    # see https://hynek.me/articles/conditional-python-dependencies/ for more details
+    extras_require = {
+        # NOTE: `python_version>="2.7""` will also be silently ignored!
+        ':python_version=="2.7"': [
+            'python-novaclient',
+        ],
+        ':python_version=="2.6"': [
+            # Alternate dependencies for Python 2.6:
+            # - pyCLI requires argparse,
+            'argparse',
+            # - OpenStack's "keystoneclient" requires `importlib`
+            'importlib',
+            # - support for Python 2.6 was removed from `novaclient` in commit
+            #   81f8fa655ccecd409fe6dcda0d3763592c053e57 which is contained in
+            #   releases 3.0.0 and above; however, we also need to pin down
+            #   the version of `oslo.config` and all the dependencies thereof,
+            #   otherwise `pip` will happily download the latest and
+            #   incompatible version,since `python-novaclient` specifies only
+            #   the *minimal* version of dependencies it is compatible with...
+            'stevedore<1.10.0',
+            'debtcollector<1.0.0',
+            'keystoneauth<2.0.0',
+            # yes, there"s `keystoneauth` and `keystoneauth1` !!
+            'keystoneauth1<2.0.0',
+            'oslo.config<3.0.0',
+            'oslo.i18n<3.1.0',
+            'oslo.serialization<2.1.0',
+            'oslo.utils<3.1.0',
+            'python-keystoneclient<2.0.0',
+            'python-novaclient<3.0.0',
+        ],
+    },
+    tests_require=['tox', 'mock', 'pytest'],  # read right-to-left
+    cmdclass={'test': Tox},
 )
-
-if __name__ == "__main__":
-    if sys.argv[1] in ['develop', 'install']:
-        develop = True if sys.argv[1] == 'develop' else False
-        curdir = os.path.abspath(os.path.dirname(__file__))
-        sharedir = os.path.join(os.path.abspath(sys.prefix), 'share', 'elasticluster')
-        etcdir = os.path.join(sharedir, 'etc')
-        templatecfg = os.path.join(curdir, 'docs', 'config.template')
-        templatedest = os.path.join(etcdir, os.path.basename(templatecfg))
-        ansibledest = os.path.join(sharedir, 'providers', 'ansible-playbooks')
-        ansiblesrc = os.path.join(curdir, 'elasticluster', 'providers', 'ansible-playbooks')
-
-        if not os.path.exists(sharedir):
-            os.makedirs(sharedir)
-
-        if not os.path.exists(etcdir):
-            os.makedirs(etcdir)
-
-        if not os.path.exists(os.path.dirname(ansibledest)):
-            os.makedirs(os.path.dirname(ansibledest))
-
-        if not os.path.exists(ansibledest):
-            if develop:
-                os.symlink(ansiblesrc, ansibledest)
-            else:
-                shutil.copytree(ansiblesrc, ansibledest)
-
-        if not os.path.exists(templatedest):
-            if develop:
-                os.symlink(templatecfg, templatedest)
-            else:
-                shutil.copy(templatecfg, etcdir)

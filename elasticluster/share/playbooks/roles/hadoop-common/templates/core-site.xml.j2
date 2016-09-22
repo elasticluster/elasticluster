@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  THIS FILE IS CONTROLLED BY ELASTICLUSTER
+  local modifications will be overwritten
+  the next time `elasticluster setup` is run!
+-->
+
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+  <property>
+    <name>fs.defaultFS</name>
+    <value>hdfs://{{groups.hadoop_master[0]}}:54310</value>
+    <description>
+      URI of the default file system.
+
+      The URI scheme determines the config property (fs.SCHEME.impl)
+      naming the FileSystem implementation class.  The uri's authority
+      is used to determine the host, port, etc. for a filesystem.
+    </description>
+  </property>
+
+  <property>
+    <name>hadoop.tmp.dir</name>
+    <value>/tmp</value>
+  </property>
+
+</configuration>

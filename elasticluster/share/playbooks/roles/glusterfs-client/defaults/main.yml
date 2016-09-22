@@ -1,0 +1,23 @@
+---
+
+# A list of GlusterFS filesystems to mount.
+#
+# Each filesystem is defined by an associative array with the
+# following key/value pairs: 
+#
+# - fs: the remote filesystem to mount, in the form "server:volume"
+# - mountpoint: path to the local mountpoint
+# - options: mount options, defaults to `defaults,rw` if not given
+# - state: see documentation for Ansible module `mount`; the default value here is `mounted`
+#
+# For example::
+#     
+#     GLUSTERFS_MOUNTS:
+#       - fs: 'master:data'
+#         mountpoint: '/data'
+#         options: 'ro'
+#         state: mounted
+#     
+# By default, this parameter is the empty list, i.e., no GlusterFS filesystems are mounted.
+#
+GLUSTERFS_MOUNTS: []

@@ -4,10 +4,10 @@
    http://docutils.sf.net/rst.html for more information.
 
 
-.. _gc3libs:
+.. _api:
 
 -------------------------------
- Elasitcluster programming API
+ Elasticluster programming API
 -------------------------------
 
 .. toctree::
@@ -16,10 +16,8 @@
    elasticluster/cluster.rst
    elasticluster/conf.rst
    elasticluster/exceptions.rst
-   elasticluster/gc3_config.rst
-   elasticluster/helpers.rst
+   elasticluster/gc3pie_config.rst
    elasticluster/main.rst
-   elasticluster/module.rst
    elasticluster/providers.rst
    elasticluster/providers/ansible_provider.rst
    elasticluster/providers/ec2_boto.rst
@@ -27,3 +25,4 @@
    elasticluster/providers/openstack.rst
    elasticluster/repository.rst
    elasticluster/subcommands.rst
+   elasticluster/utils.rst

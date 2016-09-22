@@ -1,0 +1,53 @@
+---
+
+# deploy config file before we install the daemon, so it will already
+# start with the correct config
+- name: Deploy SLURMDBD configuration
+  template:
+    src=slurmdbd.conf.j2
+    dest=/etc/slurm/slurmdbd.conf
+    owner=root
+    group=root
+    mode=0444
+  notify: restart slurmdbd
+  tags:
+    - slurm
+    - slurmdbd
+    - config
+
+
+- name: Install SLURM DBD packages
+  package:
+    pkg='{{item}}'
+    state=latest
+  with_items: '{{ slurmdbd_packages }}'
+
+
+- block:
+  - name: Replace systemd unit file for SLURM services
+    copy:
+      dest='/usr/lib/systemd/system/{{item}}.service'
+      src='usr/lib/systemd/system/{{item}}.service'
+      owner=root
+      group=root
+      mode=0444
+      backup=yes
+    with_items:
+      - '{{ slurmdbd_service_name }}'
+  - name: Reload systemd unit files
+    command: |
+      systemctl daemon-reload
+    become: yes
+  when: 'is_rhel7_compatible'
+
+
+- name: Ensure `slurmdbd` is running
+  tags: 
+    - slurm
+    - slurmdbd
+  service:
+    name='{{item}}'
+    enabled=yes
+    state=started
+  with_items:
+    - '{{slurmdbd_service_name}}'

@@ -1,0 +1,16 @@
+# hive/defaults/main.yml
+---
+
+# Apache BigTop uses `/etc/hive/conf.*` directories and then
+# symlinks `/etc/hive/conf` to the actual configuration
+HIVE_CONF_DIR: '/etc/hive/conf.elasticluster'
+
+# Hostname or IP address to use for building the `thrift://` endpoint
+HIVE_METASTORE_HOST: '{% if "hive_server" in groups %}{{groups.hive_server[0]}}{% else %}{{ansible_fqdn}}{% endif %}'
+
+# DB connection parameters
+HIVE_METASTORE_DB_HOST: '{{HIVE_METASTORE_HOST}}'
+HIVE_METASTORE_DB_NAME: 'metastore'
+HIVE_METASTORE_DB_PASSWORD: 'bWGtMCZROdVpIl9K'
+HIVE_METASTORE_DB_USER: 'hive'
+

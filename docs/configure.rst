@@ -6,35 +6,33 @@
 .. include:: global.inc
 
 =================
-  Configuration  
+  Configuration
 =================
 
 All the information about how to access a cloud provider and how to
 setup a cluster is stored in a configuration file. The default
-configuration file is stored in your home directory: 
+configuration file is stored in your home directory:
 ``~/.elasticluster/config`` but you can specify a different location
 from the command line with the `-c` option.
 
-In case the directory `~/.elasticluster/config.d` exists (or, if you
-run with `-c <PATH>`, the directory `<PATH>.d`), all files named
-`*.conf` contained in that directory are read and parsed. In this way,
-you can handle multiple clusters easily by distributing the
-configuration over multiple files, and disable only some of them by
-renaming the files.
+If directory `~/.elasticluster/config.d` exists (or, if you run
+``easlticluster`` with option `-c <PATH>`, the directory `<PATH>.d`),
+all files named `*.conf` contained in that directory are read and
+parsed. In this way, you can handle multiple clusters easily by
+distributing the configuration over multiple files, and disable only
+some of them by renaming the files.
 
-When `elasticluster` is run for the first time, if no configuration
-file is found it will copy a `template configuration file`_ in
-``~/.elasticluster/config``. Such template is fully commented and self
-documented.
-
-Therefore, after installing `elasticluster` for the first time, we
-suggest to run the following command::
+After installing ElastiCluster for the first time, we suggest you run
+the following command::
 
     elasticluster list-templates
 
-If you don't already have a configuration file, this command will
-create one for you. Of course, the file is not complete, as it does
-not contain any authentication information, and you will get an error
+If no configuration file is found, it will copy an `example
+configuration file`_ in`` ~/.elasticluster/config``. The example is
+fully commented and self-documenting.
+
+However, the example configuration file is not complete, as it does
+not contain any authentication information, so you will get an error
 similar to the following::
 
     WARNING:gc3.elasticluster:Deploying default configuration file to /home/antonio/.elasticluster/config.
@@ -42,7 +40,7 @@ similar to the following::
     WARNING:gc3.elasticluster:Ignoring cluster `ipython`.
     Error validating configuration file '/home/antonio/.elasticluster/config': `required key not provided @ data['image_user']`
 
-In this case, you have to edit the configuration file in
+You will have to edit the configuration file in
 ``~/.elasticluster/config`` and update it with the correct values.
 
 Please refer to the following section to understand the syntax of the
@@ -54,14 +52,14 @@ Basic syntax of the configuration file
 ======================================
 
 The file is parsed by ConfigParser module and has a syntax similar
-to Microsoft Windows INI files. 
+to Microsoft Windows INI files.
 
 It consists of `sections` led by a ``[sectiontype/name]`` header and
 followed by lines in the form::
 
     key=value
 
-Section names are in the form ``[type/name]`` wher `type` must be one of:
+Section names have the form ``[type/name]`` where `type` is one of:
 
 ``cloud``
     define a cloud provider
@@ -83,8 +81,9 @@ Section names are in the form ``[type/name]`` wher `type` must be one of:
   usually not needed, allow to specify a custom path for the storage
   directory and the default storage type.
 
-You must define at least one for each section types in order to have
-a valid configuration file.
+A valid configuration file must contain at least one section for each
+of the ``cloud``, ``login``, ``cluster``, and ``setup`` sections.
+
 
 
 
@@ -106,7 +105,7 @@ provider is done in the `cluster` section (see later).
 Currently three cloud providers are available:
 
 - openstack: supports OpenStack cloud
-- boto: supports Amazon EC2 and compatible cloud
+- ec2_boto: supports Amazon EC2 and compatible cloud
 - google: supports Google Compute Engine
 
 Therefore the following configuration option needs to be set in the cloud
@@ -119,18 +118,19 @@ section:
 
 
 
-Valid configuration keys for `boto`
+Valid configuration keys for `ec2_boto`
 -----------------------------------
 
-``ec2_url`` 
+``ec2_url``
 
-    the url of the EC2 endpoint. For Amazon is probably
+    the url of the EC2 endpoint. For Amazon EC2 it is probably
     something like::
 
         https://ec2.us-east-1.amazonaws.com
 
-    replace ``us-east-1`` with the zone you want to use
-    while for OpenStack you can get it from the web interface
+    replace ``us-east-1`` with the zone you want to use.  If using
+    OpenStack's EC2 adapter, you can read the endpoint from the web
+    interface
 
 ``ec2_access_key``
 
@@ -154,12 +154,51 @@ Valid configuration keys for `boto`
 ``request_floating_ip``
 
     request assignment of a floating IP when the instance is
-    started. Valid values: `True`, `False`.
-    Some cloud providers does not automatically assign a public IP
+    started. Valid values are `True` and `False`.
+    Some cloud providers do not automatically assign a public IP
     to the instances, but this is often needed if you want to connect
     to the VM from outside. Setting ``request_floating_ip`` to `True`
     will force `elasticluster` to request such a floating IP if the
     instance doesn't get one automatically.
+
+``price``
+
+    If set to a non-zero value, ElastiCluster will allocate `spot
+    instances`__ with a price less than or equal to the value given
+    here.  Note that there is currently no way to specify a currency:
+    the amount is expressed in whatever currency__ is default in the
+    Boto API (typically, US Dollars).
+
+    .. __: https://aws.amazon.com/ec2/spot/
+
+    .. __: http://boto.cloudhackers.com/en/latest/ref/mturk.html#module-boto.mturk.price
+
+    Defaults to 0, i.e., use regular non-spot instances.
+
+    This is typically best used in a *compute node* configuration
+    section (see an example in the `example configuration file`_); you
+    probably do not want to run login, file server or similar central
+    services on a spot instance (which can be terminated any time,
+    depending on spot price bid).
+
+
+``timeout``
+
+    Maximum amount of seconds to wait for a spot instance to become
+    available; if a request for a spot instance cannot be satisfied in
+    the given time, the instance startup process aborts.  If set to 0
+    (default), then wait indefinitely.
+
+    **Note:** Ignored if ``price`` is zero (default).
+
+
+``instance_profile``
+
+     Name of an `IAM instance profile`__ that contains roles allowing
+     EC2 instances to have specified privileges. For example, you can
+     allow EC2 instances to access S3 without passing credentials in.
+
+     .. __: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html
 
 
 Valid configuration keys for `google`
@@ -180,6 +219,11 @@ Valid configuration keys for `google`
 ``zone``
 
     The GCE zone to be used. Default is `us-central1-a`.
+
+``network``
+
+    The GCE network to be used. Default is `default`.
+
 
 Valid configuration keys for *openstack*
 ----------------------------------------
@@ -212,7 +256,7 @@ Valid configuration keys for *openstack*
 
 ``region_name``
 
-    OpenStack region (optional) 
+    OpenStack region (optional)
 
 ``request_floating_ip``
 
@@ -245,7 +289,7 @@ For Amazon instead (region us-east-1) you can use::
     [cloud/amazon-us-east-1]
     provider=ec2_boto
     ec2_url=https://ec2.us-east-1.amazonaws.com
-    ec2_access_key=****REPLACE WITH YOUR ACCESS ID**** 
+    ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
     ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
     ec2_region=us-east-1
     vpc=vpc-one
@@ -265,8 +309,8 @@ From the horizon web interface you can download a file containing your
 EC2 credentials by logging into your provider web interface and
 clicking on:
 
-"*settings*" 
-  => "*EC2 Credentials*" 
+"*settings*"
+  => "*EC2 Credentials*"
     => "*Download EC2 Credentials*"
 
 The ``ec2rc.sh`` file will contain some values. Update the
@@ -275,6 +319,7 @@ configuration file:
 * `ec2_url` using the value of the variable EC2_URL
 * `ec2_access_key` using the value of the variable EC2_ACCESS_KEY
 * `ec2_secret_key` using the value of the variable EC2_SECRET_KEY
+
 
 Google Compute Engine users
 +++++++++++++++++++++++++++
@@ -295,7 +340,7 @@ Engine visit the following page:
 
     Application type: Installed application
     Installed application type: Other
-  
+
 7. Click the "Create Client ID" button
 8. You'll see your Client ID and Client secret listed under
    "Client ID for native application"
@@ -378,6 +423,7 @@ instead::
     user_key_private=~/.ssh/id_rsa
     user_key_public=~/.ssh/id_rsa.pub
 
+
 Setup Section
 =============
 
@@ -418,9 +464,9 @@ The following configuration keys are only valid if `provider` is
     ``slurm_master``
         configure this machine as slurm masternode
 
-    ``slurm_clients``
+    ``slurm_workers``
         compute nodes of a slurm cluster
-      
+
     ``ganglia_master``
         configure as ganglia web frontend.  On the
         master, you probably want to define `ganglia monitor` as well
@@ -432,7 +478,7 @@ The following configuration keys are only valid if `provider` is
     combinations make sense. A common setup is, for instance::
 
         frontend_groups=slurm_master,ganglia_master,ganglia_monitor
-        compute_groups=slurm_clients,ganglia_monitor
+        compute_groups=slurm_workers,ganglia_monitor
 
     This will configure the frontend node as slurm master and ganglia
     frontend, and the compute nodes as clients for both slurm and
@@ -462,6 +508,53 @@ The following configuration keys are only valid if `provider` is
     elasticluster. The default value points to the playbooks
     distributed with elasticluster.
 
+``ansible_command``
+
+    Path name of the ``ansible-playbook`` command; defaults to
+    ``ansible-playbook``, i.e., search for the command named
+    ``ansible-playbook`` in the shell search path.  Can also include
+    arguments that will be *prepended* to other arguments that
+    ElastiCluster adds to build the "setup" command invocation.
+
+``ansible_extra_args``
+
+    Arguments to *append* to the "setup" command invocation; can be used
+    to override specific parameters or to further influence the
+    behavior of the ``ansible-playbook`` command (e.g., skip certain tags).
+
+    The string is split according to POSIX shell parsing rules, so
+    quotes can be used to protect arguments with embedded spaces.
+
+    Examples::
+
+      [setup/ansible]
+      # do not run any setup action tagged as 'users'
+      ansible_extra_args = --skip-tags users
+
+      [setup/ansible]
+      # ask for confirmation at each step
+      ansible_extra_args = --step
+
+``ansible_<option>``
+    Any configuration key starting with the string ``ansible_`` is
+    used to set the corresponding (uppercased) environmental
+    variable and thus override Ansible configuration.
+
+    For example, the following settings raise the number of concurrent
+    Ansible connections to 20 and allow a maximum waiting time of 300
+    seconds for a single task to finish::
+
+      [setup/ansible]
+      # ...
+      ansible_forks=20
+      ansible_timeout=300
+
+    The full list of environment variables used by Ansible is available
+    from the `Ansible configuration`__ section of the Ansible online documentation.
+
+    .. __: http://docs.ansible.com/ansible/intro_configuration.html#environmental-configuration
+
+
 Examples
 --------
 
@@ -470,7 +563,7 @@ Some (working) examples::
     [setup/ansible-slurm]
     provider=ansible
     frontend_groups=slurm_master
-    compute_groups=slurm_clients
+    compute_groups=slurm_workers
 
     [setup/ansible-gridengine]
     provider=ansible
@@ -488,6 +581,7 @@ Some (working) examples::
     provider=ansible
     frontend_groups=mdce_master,mdce_worker,ganglia_monitor,ganglia_master
     worker_groups=mdce_worker,ganglia_monitor
+
 
 Cluster Section
 ===============
@@ -528,7 +622,9 @@ Mandatory configuration keys
 
     the image type to use. Different cloud providers call it
     differently, could be `instance type`, `instance size` or
-    `flavor`.
+    `flavor`. This setting can be overwritten in the Cluster Node
+    section, e.g. to use fewer resources on the frontend nodes than on
+    the compute nodes.
 
 ``security_group``
 
@@ -581,11 +677,16 @@ Optional configuration keys
 
 ``<class>_min_nodes``
 
-    Define the minimum amount of nodes of type `<class>` that must be
-    up&running to configure the cluster. When starting a cluster,
-    creation of some instances may fail. If at least min_nodes are
-    started correctly (i.e. are not in error state), the cluster is
-    configured anyway, otherwise creation of the cluster will fail.
+    **Deprecated.** Please rename to ``<class>_nodes_min``.
+
+``<class>_nodes_min``
+
+    Minimum amount of nodes of type ``<class>`` that must be up &
+    running in order to start configuring the cluster. When starting a
+    cluster, creation of some instances may fail; if at least this
+    amount of nodes are started correctly (i.e. are not in error
+    state), the cluster is configured anyway; otherwise, creation of
+    the cluster will fail.
 
 ``thread_pool_max_size``
 
@@ -604,6 +705,16 @@ Optional configuration keys
     Values are specified in gigabytes.
     Default value is 10.
 
+``tags``
+    Comma-separated list of instance tags.
+    Only supported when the cloud provider is `google`.
+
+``scheduling``
+    Define the type of instance scheduling.
+    Only supported when the cloud provider is `google`.
+    Only supported value is `preemptible`.
+
+
 Examples
 --------
 
@@ -621,6 +732,10 @@ Some (working) examples::
     compute_nodes=2
     frontend_class=frontend
     network_ids=subnet-one
+
+    # Use a different flavor on the compute nodes
+    [cluster/slurm/compute]
+    flavor=m1.large
 
     [cluster/torque]
     cloud=hobbes
@@ -689,7 +804,7 @@ compute nodes. Your configuration will thus look like::
     flavor=bigdisk
 
 
-.. _`template configuration file`: https://raw.github.com/gc3-uzh-ch/elasticluster/master/docs/config.template
+.. _`template configuration file`: https://raw.github.com/gc3-uzh-ch/elasticluster/master/elasticluster/share/etc/config.template
 
 Storage section
 ===============

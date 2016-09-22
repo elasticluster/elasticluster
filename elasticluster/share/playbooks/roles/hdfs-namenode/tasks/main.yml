@@ -1,0 +1,47 @@
+# hdfs-namenode/tasks/main.yml
+---
+
+- name: Install Hadoop packages (HDFS NameNode)
+  tags:
+    - hadoop
+    - hdfs
+    - namenode
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - hadoop-hdfs # The Hadoop Distributed File System
+    - hadoop-hdfs-namenode # The Hadoop namenode manages the block locations of HDFS files
+    - hadoop-hdfs-secondarynamenode # Hadoop Secondary namenode
+
+- name: Format HDFS
+  tags:
+    - hadoop
+    - hdfs
+    - namenode
+  command:
+    hdfs namenode -format
+    creates="/var/lib/hadoop-hdfs/cache/hdfs/dfs/name/current/VERSION"
+  become: yes
+  become_user: hdfs
+
+- name: Start HDFS services (NameNode)
+  tags:
+    - hadoop
+    - hdfs
+    - namenode
+  service:
+    name="{{item}}"
+    state=started
+    enabled=yes
+  with_items:
+    - hadoop-hdfs-namenode
+    - hadoop-hdfs-secondarynamenode
+
+- name: Make entire HDFS world-writable
+  tags:
+    - hadoop
+  command:
+    hdfs dfs -chmod 0777 /
+  become: yes
+  become_user: hdfs

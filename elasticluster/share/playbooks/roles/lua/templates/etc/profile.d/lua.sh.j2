@@ -1,0 +1,8 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+
+
+# Use the ElastiCluster-installed Lua interpreter as the first one in $PATH,
+# instead of the one (possibly) provided by the Linux distribution.
+export PATH="{{ lua_install_dir }}/bin:${PATH}"

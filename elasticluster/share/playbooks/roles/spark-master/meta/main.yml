@@ -1,0 +1,5 @@
+# spark-master/meta/main.yml
+---
+
+dependencies:
+  - { role: spark-common }

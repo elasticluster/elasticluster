@@ -1,0 +1,44 @@
+---
+#
+# Install all "standard" software that could be needed for installing
+# other software, and for effectively managing a cluster.  Basically
+# this includes the following categories of utilities:
+#
+# - compression utilities and archivers
+# - version control systems
+# - standard UNIX build utilities like C compiler, make, etc.
+# - a few other misc utilities that one can reasonably expect
+#
+
+- name: Install commonly needed software (Debian-family)
+  package:
+    name={{item}}
+    state=present
+  with_items:
+    # compression and archivers
+    - bzip2
+    - cpio
+    - gzip
+    - lzip
+    - p7zip-full
+    - tar
+    - unzip
+    - xz-utils
+    - zip
+    # version control systems
+    - git
+    - mercurial
+    - subversion
+    # basic build environment
+    - g++
+    - gcc
+    - libc6-dev
+    - make
+    # other "standard" utilities
+    - kexec-tools
+    - m4
+    - moreutils
+    - rsync
+    - screen
+    - tmux
+    - vim

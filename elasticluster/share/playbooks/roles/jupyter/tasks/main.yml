@@ -1,0 +1,31 @@
+# jupyter/tasks/main.yml
+---
+
+- name: Install Jupyter
+  tags:
+    - jupyter
+  conda:
+    name=jupyter
+    state=present
+    executable='{{anaconda_home}}/bin/conda'
+
+
+# install Python kernels (for Python version 2 and 3)
+- include: python.yml python_exe='{{PYTHON2_EXE}}'
+- include: python.yml python_exe='{{PYTHON3_EXE}}'
+
+
+# install PySpark kernels (for Python version 2 and 3)
+- include: pyspark.yml python_exe='{{PYTHON2_EXE}}'
+- include: pyspark.yml python_exe='{{PYTHON3_EXE}}'
+
+
+- block:
+    - name: Install Jupyter/IPython kernel for bash (module)
+      pip:
+        name='bash_kernel'
+        state=present
+        executable='{{anaconda_home}}/bin/pip'
+    - name: Install Jupyter/IPython kernel for bash (kernel spec)
+      command:
+        '{{anaconda_home}}/bin/python -m bash_kernel.install'

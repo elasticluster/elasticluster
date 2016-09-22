@@ -1,0 +1,61 @@
+---
+- name: Common configuration
+  hosts: gridengine_master:gridengine_clients
+  roles:
+    - { role: iptables, default_input_policy: 'ACCEPT' }
+  tasks:
+    - include: cluster/tasks/packages.yml
+    - name: Ensure the cell directory exists
+      file:
+        path='/usr/share/gridengine/default/common'
+        state=directory
+  handlers:
+    - include: common/handlers/main.yml
+
+- name: GridEngine masternode Playbook
+  hosts: gridengine_master
+  roles:
+    - role: nfs-server
+      NFS_EXPORTS:
+        - path: '/home'
+          clients: '{{groups.gridengine_clients}}'
+          options: 'rw,no_root_squash,async'
+        - path: '/usr/share/gridengine/default/common'
+          clients: '{{groups.gridengine_clients + groups.gridengine_master}}'
+          options: 'rw,no_root_squash'
+  tasks:
+    - name: Enable "backports" repo (Debian 8 "jessie")
+      apt_repository:
+        repo='deb http://ftp.debian.org/debian jessie-backports main'
+        state=present
+        update_cache=yes
+      when: 'is_debian_jessie'
+    - include: gridengine/tasks/master.yml
+  handlers:
+    - include: common/handlers/main.yml
+    - include: slurm/handlers/main.yml
+    - include: gridengine/handlers/main.yml
+
+- name: GridEngine worker nodes Playbook
+  tags:
+    - gridengine
+  hosts: gridengine_clients
+  roles:
+    - role: nfs-client
+      NFS_MOUNTS:
+        - fs: '{{groups.gridengine_master[0]}}:/home'
+          mountpoint: '/home'
+        - fs: '{{groups.gridengine_master[0]}}:/usr/share/gridengine/default/common'
+          mountpoint: '/usr/share/gridengine/default/common'
+  tasks: 
+    - name: Enable "backports" repo (Debian 8 "jessie")
+      apt_repository:
+        repo='deb http://ftp.debian.org/debian jessie-backports main'
+        state=present
+        update_cache=yes
+      when: 'is_debian_jessie'
+    - include: gridengine/tasks/clients.yml
+  handlers:
+    - include: common/handlers/main.yml
+    - include: gridengine/handlers/main.yml
+

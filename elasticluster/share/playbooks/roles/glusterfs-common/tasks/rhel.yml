@@ -1,0 +1,16 @@
+---
+
+- name: Add CentOS Extras repository (RHEL-compatible)
+  yum_repository:
+    name=extras
+    enabled=yes
+    file='CentOS-Base'
+    description='CentOS-$releasever - Extras'
+    baseurl='http://mirror.centos.org/centos/$releasever/extras/$basearch/'
+    mirrorlist='http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=extras&infra=$infra'
+    gpgcheck=yes
+    gpgkey='file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-{{ansible_distribution_major_version}}'
+    state=present
+  tags:
+    - gluster
+    - glusterfs-common

@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  THIS FILE IS CONTROLLED BY ELASTICLUSTER
+  local modifications will be overwritten
+  the next time `elasticluster setup` is run!
+-->
+
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+  <property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:postgresql://{{HIVE_METASTORE_DB_HOST}}/{{HIVE_METASTORE_DB_NAME}}</value>
+  </property>
+
+  <property>
+    <name>javax.jdo.option.ConnectionDriverName</name>
+    <value>org.postgresql.Driver</value>
+  </property>
+
+  <property>
+    <name>javax.jdo.option.ConnectionUserName</name>
+    <value>{{HIVE_METASTORE_DB_USER}}</value>
+  </property>
+
+  <property>
+    <name>javax.jdo.option.ConnectionPassword</name>
+    <value>{{HIVE_METASTORE_DB_PASSWORD}}</value>
+  </property>
+
+  <property>
+    <name>datanucleus.autoStartMechanism</name>
+    <value>SchemaTable</value>
+  </property>
+
+  <property>
+    <name>datanucleus.autoCreateSchema</name>
+    <value>false</value>
+  </property>
+
+  <!--
+  <property>
+    <name>hive.metastore.uris</name>
+    <value>thrift://{{HIVE_METASTORE_HOST}}:9083</value>
+    <description>
+      IP address (or fully-qualified domain name) and port
+      of the metastore host
+    </description>
+  </property>
+  -->
+
+</configuration>

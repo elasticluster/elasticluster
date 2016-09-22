@@ -1,0 +1,19 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+[Unit]
+Description=Slurm DBD accounting daemon
+After=network.target
+ConditionPathExists=/etc/slurm/slurmdbd.conf
+
+[Service]
+Type=forking
+EnvironmentFile=-/etc/sysconfig/slurmdbd
+ExecStart=/usr/sbin/slurmdbd $SLURMDBD_OPTIONS
+ExecReload=/bin/kill -HUP $MAINPID
+PIDFile=/var/run/slurm/slurmdbd.pid
+
+[Install]
+WantedBy=multi-user.target

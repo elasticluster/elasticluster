@@ -1,0 +1,53 @@
+# hive-server/tasks/main.yml
+---
+#
+# Installation and configuration mostly follows these instructions:
+# http://www.cloudera.com/documentation/archive/cdh/4-x/4-2-0/CDH4-Installation-Guide/cdh4ig_topic_18_4.html
+#
+
+- name: Check if Hive schema has already been loaded
+  tags:
+    - hadoop
+    - hive
+    - hive-server
+  command:
+    'psql --username={{HIVE_METASTORE_DB_USER}} --dbname={{HIVE_METASTORE_DB_NAME}} -c "\d DBS"'
+  register: db_tables_check
+  ignore_errors: yes
+
+  
+- name: Load Hive schema
+  tags:
+    - hadoop
+    - hive
+    - hive-server
+  shell:
+    'psql --username="{{HIVE_METASTORE_DB_USER}}" --dbname="{{HIVE_METASTORE_DB_NAME}}" < /usr/lib/hive/scripts/metastore/upgrade/postgres/hive-schema-{{hive_schema_version}}.postgres.sql'
+  when: db_tables_check|failed
+
+  
+- name: Install Hive packages (services)
+  tags:
+    - hadoop
+    - hive
+    - hive-server
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - hive-metastore
+    - hive-server2
+
+
+- name: Enable and start Hive services
+  tags:
+    - hadoop
+    - hive
+    - hive-server
+  service:
+    name="{{item}}"
+    state=started
+    enabled=yes
+  with_items:
+    - hive-metastore
+    - hive-server2

@@ -1,0 +1,14 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+# load the initial default set of modules,
+# see: http://lmod.readthedocs.io/en/latest/070_standard_modules.html
+if ( ! $?__Lmod_Init_Default_Modules || ! $?LD_LIBRARY_PATH ) then
+    setenv __Lmod_Init_Default_Modoules 1
+    setenv LMOD_SYSTEM_DEFAULT_MODULES "{{ LMOD_DEFAULT_MODULES|join(':') }}"
+    module --initial_load restore
+else
+    module refresh
+endif

@@ -1,0 +1,60 @@
+---
+
+- name: Check if PySpark is installed
+  tags:
+    - jupyter
+    - kernels
+    - python
+    - pyspark
+  stat:
+    path=/usr/bin/pyspark
+  register: pyspark_exe_path
+
+  
+- name: Check if the Python executable {{python_exe}} is installed
+  tags:
+    - jupyter
+    - kernels
+    - python
+    - pyspark
+  stat:
+    path='{{python_exe}}'
+  register: python_exe_path
+
+  
+- name: Determine version of Python interpreter {{python_exe}}
+  tags:
+    - jupyter
+    - kernels
+    - python
+    - pyspark
+  command:
+    '{{python_exe}} -c "import sys; sys.stdout.write(str(sys.version_info.major))"'
+  register: python_version
+  when: python_exe_path.stat.exists
+  
+  
+- block:
+    - name: Install PySpark{{python_version.stdout}} kernel (directory)
+      file:
+        path='/usr/local/share/jupyter/kernels/pyspark{{python_version.stdout}}'
+        mode=0555
+        state=directory
+    - name: Install PySpark{{python_version.stdout}} kernel (kernel spec)
+      template:
+        src='pyspark.kernel.json.j2'
+        dest='/usr/local/share/jupyter/kernels/pyspark{{python_version.stdout}}/kernel.json'
+        mode=0444
+    - name: Install PySpark{{python_version.stdout}} kernel (startup file)
+      copy:
+        src='usr/local/share/jupyter/kernels/pyspark{{python_version.stdout}}/startup.py'
+        dest='/usr/local/share/jupyter/kernels/pyspark{{python_version.stdout}}/startup.py'
+        mode=0444
+  when: pyspark_exe_path.stat.exists and python_exe_path.stat.exists
+  become: yes
+  tags:
+    - jupyter
+    - kernels
+    - python
+    - pyspark
+  

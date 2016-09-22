@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013 GC3, University of Zurich
+# Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,12 +25,14 @@ __author__ = 'Riccardo Murri <riccardo.murri@uzh.ch>, ' \
 
 
 # stdlib imports
+import collections
 import copy
 import httplib2
 import os
 import random
 import threading
 import time
+import types
 import uuid
 
 # External modules
@@ -212,9 +214,11 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        username=None,
                        # these params are specific to the
                        # GoogleCloudProvider
-                       instance_name=None,
+                       node_name=None,
                        boot_disk_type='pd-standard',
                        boot_disk_size=10,
+                       tags=None,
+                       scheduling=None,
                        **kwargs):
         """Starts a new instance with the given properties and returns
         the instance id.
@@ -228,8 +232,13 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str image_id: image type (os) to use for the instance
         :param str image_userdata: command to execute after startup
         :param str username: username for the given ssh key, default None
+        :param str node_name: name of the instance
+        :param str tags: comma-separated list of "tags" to label the instance
+        :param str scheduling: scheduling option to use for the instance ("preemptible")
+        :param str|Sequence tags: "Tags" to label the instance.
 
-        :param str instance_name: name of the instance
+        Can be either a single string (individual tags are comma-separated),
+        or a sequence of strings (each string being a single tag).
 
         :return: str - instance id of the started instance
         """
@@ -269,21 +278,48 @@ class GoogleCloudProvider(AbstractCloudProvider):
             image_url = '%s%s/global/images/%s' % (
                 GCE_URL, os_cloud, image_id)
 
+        if scheduling is None:
+            # use GCE's default
+            scheduling_option = {}
+        elif scheduling == 'preemptible':
+            scheduling_option = {
+              'preemptible': True
+            }
+        else:
+            raise InstanceError("Unknown scheduling option: '%s'" % scheduling)
+
+        if isinstance(tags, types.StringTypes):
+            tags = tags.split(',')
+        elif isinstance(tags, collections.Sequence):
+            # ok, nothing to do
+            pass
+        elif tags is not None:
+            raise TypeError(
+                "The `tags` argument to `gce.start_instance`"
+                " should be a string or a list, got {T} instead"
+                .format(T=type(tags)))
+
         # construct the request body
-        if instance_name is None:
-            instance_name = 'elasticluster-%s' % uuid.uuid4()
+        if node_name:
+            instance_id = node_name.lower().replace('_', '-')  # GCE doesn't allow "_"
+        else:
+            instance_id = 'elasticluster-%s' % uuid.uuid4()
 
         public_key_content = file(public_key_path).read()
 
         instance = {
-            'name': instance_name,
+            'name': instance_id,
             'machineType': machine_type_url,
+            'tags': {
+              'items': tags,
+            },
+            'scheduling': scheduling_option,
             'disks': [{
                 'autoDelete': 'true',
                 'boot': 'true',
                 'type': 'PERSISTENT',
                 'initializeParams' : {
-                    'diskName': "%s-disk" % instance_name,
+                    'diskName': "%s-disk" % instance_id,
                     'diskType': boot_disk_type_url,
                     'diskSizeGb': boot_disk_size_gb,
                     'sourceImage': image_url
@@ -319,7 +355,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
             response = self._execute_request(request)
             response = self._wait_until_done(response)
             self._check_response(response)
-            return instance_name
+            return instance_id
         except (HttpError, CloudProviderError) as e:
             log.error("Error creating instance `%s`" % e)
             raise InstanceError("Error creating instance `%s`" % e)
@@ -330,6 +366,10 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str instance_id: instance identifier
         :raises: `InstanceError` if instance can not be stopped
         """
+        if not instance_id:
+          log.info("Instance to stop has no instance id")
+          return
+
         gce = self._connect()
 
         try:
@@ -337,7 +377,15 @@ class GoogleCloudProvider(AbstractCloudProvider):
                                         instance=instance_id, zone=self._zone)
             response = self._execute_request(request)
             self._check_response(response)
-        except (HttpError, CloudProviderError) as e:
+        except HttpError as e:
+            # If the instance does not exist, we can a 404 - just log it, and
+            # return without exception so the caller can remove the reference.
+            if e.resp.status == 404:
+              log.warning("Instance to stop `%s` was not found" % instance_id)
+            else:
+              raise InstanceError("Could not stop instance `%s`: `%s`"
+                                  % (instance_id, e))
+        except CloudProviderError as e:
             raise InstanceError("Could not stop instance `%s`: `%s`"
                                 % (instance_id, e))
 
@@ -364,31 +412,39 @@ class GoogleCloudProvider(AbstractCloudProvider):
             return list()
 
     def get_ips(self, instance_id):
-        """Retrieves the ip addresses (private and public) from the cloud
+        """Retrieves the ip addresses (public) from the cloud
         provider by the given instance id.
 
         :param str instance_id: id of the instance
         :return: list (ips)
         :raises: InstanceError if the ip could not be retrieved.
         """
+        if not instance_id:
+          raise InstanceError("could not retrieve the ip address for node: "
+                              "no associated instance id")
         gce = self._connect()
         instances = gce.instances()
         try:
             request = instances.get(instance=instance_id,
                                     project=self._project_id, zone=self._zone)
             response = self._execute_request(request)
-            ip_private = None
             ip_public = None
+
+            # If the instance is in status TERMINATED, then there will be
+            # no IP addresses.
+            if response and response['status'] in ('STOPPING', 'TERMINATED'):
+              log.info("node '%s' state is '%s'; no IP address(es)" %
+                       (instance_id, response['status']))
+              return [None]
+
             if response and "networkInterfaces" in response:
                 interfaces = response['networkInterfaces']
                 if interfaces:
-                    ip_private = interfaces[0]['networkIP']
-
                     if "accessConfigs" in interfaces[0]:
                         ip_public = interfaces[0]['accessConfigs'][0]['natIP']
 
-            if ip_private and ip_public:
-                return [ip_private, ip_public]
+            if ip_public:
+                return [ip_public]
             else:
                 raise InstanceError("could not retrieve the ip address for "
                                     "node `%s`, please check the node "

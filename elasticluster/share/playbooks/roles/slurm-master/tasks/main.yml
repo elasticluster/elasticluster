@@ -1,0 +1,44 @@
+# slurm-master/tasks/main.yml
+---
+
+- name: Load distribution-specific parameters
+  include: 'init-{{ansible_os_family}}.yml'
+
+- include: db.yml
+
+- include: install-slurmdbd.yml
+
+- include: install-slurmctld.yml
+
+- name: Create cluster in accounting database
+  tags:
+    - slurm
+  shell: |
+    sacctmgr --parsable --noheader list cluster | grep '^elasticluster|' \
+      || sacctmgr -i -Q add cluster elasticluster
+
+- name: Create an account for default cluster
+  tags:
+    - slurm
+  shell: |
+    sacctmgr --immediate --parsable --noheader list account Cluster=elasticluster  | grep '^root|' \
+      || sacctmgr -i --quiet add account root Cluster=elasticluster
+
+- name: Add default user to cluster
+  tags:
+    - slurm
+  shell: |
+    sacctmgr --immediate --parsable --noheader list user Account=root | grep '^{{ansible_ssh_user}}|' \
+      || sacctmgr -i --quiet add user '{{ansible_ssh_user}}' DefaultAccount=root
+
+
+- name: Ensure `slurmctld` is running
+  tags: 
+    - slurm
+    - slurmctld
+  service:
+    name='{{item}}'
+    enabled=yes
+    state=started
+  with_items:
+    - '{{slurmctld_service_name}}'

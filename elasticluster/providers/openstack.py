@@ -3,7 +3,7 @@
 # @(#)openstack.py
 #
 #
-# Copyright (C) 2013, GC3, University of Zurich. All rights reserved.
+# Copyright (C) 2013, 2015 S3IT, University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -26,6 +26,7 @@ __author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
 # System imports
 import os
 import threading
+from warnings import warn
 
 # External modules
 from novaclient import client
@@ -37,10 +38,16 @@ from paramiko.ssh_exception import SSHException
 from elasticluster import log
 from elasticluster.memoize import memoize
 from elasticluster.providers import AbstractCloudProvider
-from elasticluster.exceptions import SecurityGroupError, KeypairError, \
-    ImageError, InstanceError, ClusterError
+from elasticluster.exceptions import (
+    ClusterError,
+    FlavorError,
+    ImageError,
+    InstanceError,
+    KeypairError,
+    SecurityGroupError,
+)
 
-DEFAULT_OS_NOVA_API_VERSION = "1.1"
+DEFAULT_OS_NOVA_API_VERSION = "2"
 
 class OpenStackCloudProvider(AbstractCloudProvider):
     """
@@ -207,18 +214,18 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         try:
             pkey = DSSKey.from_private_key_file(private_key_path)
         except PasswordRequiredException:
-            log.warning(
-                "Unable to check key file `%s` because it is encrypted with a "
-                "password. Please, ensure that you added it to the SSH agent "
-                "with `ssh-add %s`", private_key_path, private_key_path)
+            warn("Unable to check key file `{0}` because it is encrypted with a "
+                 "password. Please, ensure that you added it to the SSH agent "
+                 "with `ssh-add {1}`"
+                 .format(private_key_path, private_key_path))
         except SSHException:
             try:
                 pkey = RSAKey.from_private_key_file(private_key_path)
             except PasswordRequiredException:
-                log.warning(
-                    "Unable to check key file `%s` because it is encrypted with a "
-                    "password. Please, ensure that you added it to the SSH agent "
-                    "with `ssh-add %s`", private_key_path, private_key_path)
+                warn("Unable to check key file `{0}` because it is encrypted with a "
+                     "password. Please, ensure that you added it to the SSH agent "
+                     "with `ssh-add {1}`"
+                     .format(private_key_path, private_key_path))
             except SSHException:
                 raise KeypairError('File `%s` is neither a valid DSA key '
                                    'or RSA key.' % private_key_path)
@@ -236,7 +243,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         "Keypair `%s` is present but has "
                         "different fingerprint. Aborting!" % name)
             else:
-                log.warning("Unable to check if the keypair is using the correct key.")
+                warn("Unable to check if the keypair is using the correct key.")
         except NotFound:
             log.warning(
                 "Keypair `%s` not found on resource `%s`, Creating a new one",
@@ -313,7 +320,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
             except NotFound:
                 raise InstanceError("the given instance `%s` was not found "
-                                    "on the coud" % instance_id)
+                                    "on the cloud" % instance_id)
         if instance_id in self._instances:
             return self._instances[instance_id]
 
@@ -331,7 +338,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # If we reached this point, the instance was not found neither
         # in the cache or on the website.
         raise InstanceError("the given instance `%s` was not found "
-                            "on the coud" % instance_id)
+                            "on the cloud" % instance_id)
 
     def _allocate_address(self, instance):
         """Allocates a free public ip address to the given instance

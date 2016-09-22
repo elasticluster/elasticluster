@@ -1,0 +1,8 @@
+---
+- name: JupyterHub playbook
+  hosts: jupyterhub
+  roles:
+    - jupyter
+  tags:
+    - jupyter
+    - jupyterhub

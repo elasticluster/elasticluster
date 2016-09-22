@@ -1,0 +1,9 @@
+# slurm-common/meta/main.yml
+---
+
+# Install the GlusterFS client software, to allow to easily use
+# GlusterFS with a SLURM compute cluster
+
+dependencies:
+  - role: glusterfs-client
+    GLUSTERFS_MOUNTS: []

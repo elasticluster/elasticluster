@@ -1,0 +1,27 @@
+---
+#
+# Ensure the node host name matches the Ansible inventory name
+#
+
+# work around for Ansible's lack of support for "Scientific Linux CERN";
+# temporarily set distribution ID to "Scientific Linux"
+- name: Patch `/etc/redhat-release`
+  replace:
+        dest='/etc/redhat-release'
+        regexp='Scientific Linux CERN SLC'
+        replace='Scientific Linux'
+  when: 'ansible_distribution == "Scientific"'
+
+
+- name: Set host name to Ansible "inventory name"
+  hostname: 
+    name='{{inventory_hostname}}'
+
+
+# undo SLC workaround
+- name: Undo patch to `/etc/redhat-release`
+  replace:
+        dest='/etc/redhat-release'
+        regexp='Scientific Linux'
+        replace='Scientific Linux CERN SLC'
+  when: 'ansible_distribution == "Scientific"'

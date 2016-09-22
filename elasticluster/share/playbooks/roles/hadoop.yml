@@ -1,0 +1,28 @@
+---
+
+- name: Install Hadoop master node
+  hosts: hadoop_master
+  tags:
+    - hadoop
+    - master
+  roles:
+    - hdfs-namenode
+    - role: hive-server
+      HIVE_METASTORE_HOST: '{{groups.hadoop_master[0]}}'
+      HIVE_CLIENTS: '{{groups.hadoop_master + groups.hadoop_worker}}'
+    - yarn-master
+    - spark-master
+
+
+- name: Install Hadoop worker nodes
+  hosts: hadoop_worker
+  tags:
+    - hadoop
+    - worker
+  roles:
+    - hdfs-datanode
+    - role: hive
+      HIVE_METASTORE_HOST: '{{groups.hadoop_master[0]}}'
+    - yarn-worker
+    - spark-worker
+

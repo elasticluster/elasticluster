@@ -1,0 +1,15 @@
+# slurm-common/defaults/main.yml
+---
+
+SLURM_MASTER_HOST: "{{groups['slurm_master'][0]}}"
+SLURM_MASTER_ADDR: "{{hostvars[SLURM_MASTER_HOST].ansible_default_ipv4.address}}"
+
+# XXX: there is really no good default for the accounting host: a host
+# name or IP address is needed here, which must be reachable by all
+# hosts in the cluster.  Default to `slurmdbd` so if host
+# names/aliases are set according to the services that run, everything
+# works fine.
+SLURM_ACCOUNTING_HOST: "slurmdbd"
+SLURM_ACCOUNTING_DB_NAME: "slurm"
+SLURM_ACCOUNTING_DB_USER: "slurm"
+SLURM_ACCOUNTING_DB_PASS: "ua7diKee"

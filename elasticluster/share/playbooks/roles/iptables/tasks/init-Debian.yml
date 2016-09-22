@@ -1,0 +1,26 @@
+---
+
+- name: Load configuration and service names (Debian/Ubuntu)
+  set_fact:
+    # map config file names across distributions
+    configfile:
+      'etc/iptables/rules.v4': '/etc/iptables/rules.v4'
+      'etc/iptables/rules.v6': '/etc/iptables/rules.v6'
+    # same for init service names
+    service:
+      'iptables':  'netfilter-persistent'
+      'ip6tables': 'netfilter-persistent'
+  when: '{% if is_debian_compatible and ((is_debian_8_or_later) or (is_ubuntu_15_10_or_later)) %}true{% else %}false{% endif %}'
+
+
+- name: Load configuration and service names (older Debian/Ubuntu)
+  set_fact:
+    # map config file names across distributions
+    configfile:
+      'etc/iptables/rules.v4': '/etc/iptables/rules.v4'
+      'etc/iptables/rules.v6': '/etc/iptables/rules.v6'
+    # same for init service names
+    service:
+      'iptables':  'iptables-persistent'
+      'ip6tables': 'iptables-persistent'
+  when: '{% if is_debian_compatible and not ((is_debian_8_or_later) or (is_ubuntu_15_10_or_later)) %}true{% else %}false{% endif %}'

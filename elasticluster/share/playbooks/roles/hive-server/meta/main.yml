@@ -1,0 +1,20 @@
+# hive-server/meta/main.yml
+---
+
+dependencies:
+  - role: hive
+  - role: postgresql
+    postgresql_users:
+      - name: '{{HIVE_METASTORE_DB_USER}}'
+        pass: '{{HIVE_METASTORE_DB_PASSWORD}}'
+        encrypted: no
+    postgresql_databases:
+      - name: '{{HIVE_METASTORE_DB_NAME}}'
+        owner: '{{HIVE_METASTORE_DB_USER}}'
+    postgresql_pg_hba_passwd_hosts: '{{HIVE_CLIENTS|default([HIVE_METASTORE_HOST])}}'
+    postgresql_listen_addresses:
+      - '*'
+    # FIXME: should depend on cluster size (e.g., 3*total nr. of cores)
+    postgresql_max_connections: 1000
+    # actually needed by Hive, see: http://www.cloudera.com/documentation/archive/cdh/4-x/4-2-0/CDH4-Installation-Guide/cdh4ig_topic_18_4.html
+    postgresql_standard_conforming_strings: off

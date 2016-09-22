@@ -1,0 +1,5 @@
+# yarn-worker/meta/main.yml
+---
+
+dependencies:
+  - { role: hadoop-common }

@@ -1,0 +1,10 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+
+
+# Use Anaconda Python as the first Python interpreter in $PATH,
+# instead of the one provided by the Linux distribution.
+export ANACONDA_HOME="{{anaconda_home}}"
+export PATH="${ANACONDA_HOME}/bin:${PATH}"
+export PYTHON{{anaconda_python_version}}="${ANACONDA_HOME}/bin/python{{anaconda_python_version}}"

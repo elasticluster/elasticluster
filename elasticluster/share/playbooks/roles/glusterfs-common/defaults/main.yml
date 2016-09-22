@@ -1,0 +1,4 @@
+---
+
+# version of the SW to install
+glusterfs_version: '3.7'

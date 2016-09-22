@@ -1,0 +1,6 @@
+# slurm-client/meta/main.yml
+---
+
+dependencies:
+  - role: slurm-common
+    SLURM_ACCOUNTING_HOST: '{{groups.slurm_master[0]|default("slurmdbd")}}'
