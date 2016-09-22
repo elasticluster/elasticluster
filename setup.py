@@ -67,6 +67,53 @@ class Tox(TestCommand):
         sys.exit(errno)
 
 
+## conditional dependencies
+#
+# Although PEP-508 and a number of predecessors specify a syntax for
+# conditional dependencies in Python packages, support for it is inconsistent
+# (at best) among the PyPA tools. An attempt to use the conditional syntax has
+# already caused issues #308, #249, #227, and many more headaches to me while
+# trying to find a combination of `pip`, `setuptools`, `wheel`, and dependency
+# specification syntax that would work reliably across all supported Linux
+# distributions. I give up, and revert to computing the dependencies via
+# explicit Python code in `setup.py`; this will possibly break wheels but it's
+# the least damage I can do ATM.
+
+python_version = sys.version_info[:2]
+if python_version == (2, 6):
+    version_dependent_requires = [
+        # Alternate dependencies for Python 2.6:
+        # - PyCLI requires argparse,
+        'argparse',
+        # - OpenStack's "keystoneclient" requires `importlib`
+        'importlib',
+        # - support for Python 2.6 was removed from `novaclient` in commit
+        #   81f8fa655ccecd409fe6dcda0d3763592c053e57 which is contained in
+        #   releases 3.0.0 and above; however, we also need to pin down
+        #   the version of `oslo.config` and all the dependencies thereof,
+        #   otherwise `pip` will happily download the latest and
+        #   incompatible version,since `python-novaclient` specifies only
+        #   the *minimal* version of dependencies it is compatible with...
+        'stevedore<1.10.0',
+        'debtcollector<1.0.0',
+        'keystoneauth<2.0.0',
+        # yes, there"s `keystoneauth` and `keystoneauth1` !!
+        'keystoneauth1<2.0.0',
+        'oslo.config<3.0.0',
+        'oslo.i18n<3.1.0',
+        'oslo.serialization<2.1.0',
+        'oslo.utils<3.1.0',
+        'python-keystoneclient<2.0.0',
+        'python-novaclient<3.0.0',
+    ]
+elif python_version == (2, 7):
+    version_dependent_requires = [
+        'python-novaclient',
+    ]
+else:
+    raise RuntimeError("ElastiCluster requires Python 2.6 or 2.7")
+
+
 ## real setup description begins here
 #
 from setuptools import setup, find_packages
@@ -108,7 +155,7 @@ setup(
             'elasticluster = elasticluster.main:main',
         ]
     },
-    install_requires=[
+    install_requires=([
         'PyCLI',
         'ansible>=2.0',
         'coloredlogs',
@@ -121,45 +168,11 @@ setup(
         'google-api-python-client',
         'python-gflags',
         'simplejson>=2.5.0', # needed by `uritemplate` but somehow not picked up
+        'pytz',   ## required by `positional` but somehow not picked up
         # OpenStack clouds
         'netifaces',
         #'python-novaclient' ## this needs special treatment depending on Python version, see below
-    ],
-    # The `python_version` environment marker was introduced in PEP 508,
-    # but apparently `setuptools` silently ignores it (still, as of version 27.2.0),
-    # so we have to revert to this weird syntax for conditional dependencies...
-    # see https://hynek.me/articles/conditional-python-dependencies/ for more details
-    extras_require = {
-        # NOTE: `python_version>="2.7""` will also be silently ignored!
-        ':python_version=="2.7"': [
-            'python-novaclient',
-        ],
-        ':python_version=="2.6"': [
-            # Alternate dependencies for Python 2.6:
-            # - pyCLI requires argparse,
-            'argparse',
-            # - OpenStack's "keystoneclient" requires `importlib`
-            'importlib',
-            # - support for Python 2.6 was removed from `novaclient` in commit
-            #   81f8fa655ccecd409fe6dcda0d3763592c053e57 which is contained in
-            #   releases 3.0.0 and above; however, we also need to pin down
-            #   the version of `oslo.config` and all the dependencies thereof,
-            #   otherwise `pip` will happily download the latest and
-            #   incompatible version,since `python-novaclient` specifies only
-            #   the *minimal* version of dependencies it is compatible with...
-            'stevedore<1.10.0',
-            'debtcollector<1.0.0',
-            'keystoneauth<2.0.0',
-            # yes, there"s `keystoneauth` and `keystoneauth1` !!
-            'keystoneauth1<2.0.0',
-            'oslo.config<3.0.0',
-            'oslo.i18n<3.1.0',
-            'oslo.serialization<2.1.0',
-            'oslo.utils<3.1.0',
-            'python-keystoneclient<2.0.0',
-            'python-novaclient<3.0.0',
-        ],
-    },
+    ] + version_dependent_requires),
     tests_require=['tox', 'mock', 'pytest'],  # read right-to-left
     cmdclass={'test': Tox},
 )
