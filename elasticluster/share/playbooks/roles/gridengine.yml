@@ -33,7 +33,6 @@
     - include: gridengine/tasks/master.yml
   handlers:
     - include: common/handlers/main.yml
-    - include: slurm/handlers/main.yml
     - include: gridengine/handlers/main.yml
 
 - name: GridEngine worker nodes Playbook
