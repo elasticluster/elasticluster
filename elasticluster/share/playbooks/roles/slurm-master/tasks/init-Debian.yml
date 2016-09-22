@@ -1,0 +1,26 @@
+---
+
+- name: Set SLURM playbook params (Debian/Ubuntu)
+  set_fact:
+    slurmctld_service_name: slurmctld
+    slurmctld_packages:
+      - mailutils
+      - slurmctld
+    slurmdbd_service_name: slurmdbd
+    slurmdbd_packages:
+      - slurmdbd
+  when:
+    '{{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}'
+
+
+- name: Set SLURM playbook params (older Debian/Ubuntu)
+  set_fact:
+    slurmctld_service_name: slurm-llnl
+    slurmctld_packages:
+      - mailutils
+      - slurm-llnl
+    slurmdbd_service_name: slurm-llnl-slurmdbd
+    slurmdbd_packages:
+      - slurm-llnl-slurmdbd
+  when:
+    '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'

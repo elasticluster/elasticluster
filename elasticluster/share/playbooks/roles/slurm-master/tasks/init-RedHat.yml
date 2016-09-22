@@ -1,0 +1,32 @@
+---
+
+- name: Set SLURM playbook params (RHEL 7.x compatible)
+  set_fact:
+    slurmctld_service_name: slurmctld
+    slurmctld_packages:
+      - mailx
+      - slurm-plugins
+      - slurm-slurmdb-direct
+      - slurm
+    slurmdbd_service_name: slurmdbd
+    slurmdbd_packages:
+      - slurm-sql
+      - slurm-slurmdbd
+  when:
+    'is_rhel7_compatible'
+
+
+- name: Set SLURM playbook params (RHEL 6.x compatible)
+  set_fact:
+    slurmctld_service_name: slurm
+    slurmctld_packages:
+      - mailx
+      - slurm-plugins
+      - slurm-slurmdb-direct
+      - slurm
+    slurmdbd_service_name: slurmdbd
+    slurmdbd_packages:
+      - slurm-sql
+      - slurm-slurmdbd
+  when:
+    'is_rhel6_compatible'
