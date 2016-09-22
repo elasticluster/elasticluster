@@ -14,7 +14,6 @@
 - include: roles/ganglia.yml
 - include: roles/pbs+maui.yml
 - include: roles/gridengine.yml
-- include: roles/mdce.yml
 - include: roles/hadoop.yml
 - include: roles/pvfs2.yml
 - include: roles/ceph.yml
