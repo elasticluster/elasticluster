@@ -30,11 +30,12 @@ except ImportError:
 
 
 # Ensure we use a recent enough version of setuptools: CentOS7 still ships with
-# 0.9.8! There has been some instability in the support for PEP-496 environment
-# markers recently, but Setuptools 20.10.0 seems to have restored full support
-# for them, including `python_implementation`. See also issue #249.
+# 0.9.8! Although at the moment ElastiCluster does not make use of any advanced
+# feature from `setuptools`, some dependent package requires >=17.1 (at the
+# time of this writing) and this version number is likely to increase with time
+# -- so just pick a "known good one".
 from ez_setup import use_setuptools
-use_setuptools(version='20.10.0')
+use_setuptools(version='21.0.0')
 
 
 ## auxiliary functions
