@@ -35,7 +35,7 @@ CentOS/RHEL
 To install software prerequisites for building and running ElastiCluster, run
 the following commands as the ``root`` admin user::
 
-    yum install gcc git libffi-devel openssl-devel python-devel python-virtualenv pytz
+    yum install gcc gcc-c++ git libffi-devel openssl-devel python-devel python-virtualenv
 
 Debian/Ubuntu
 +++++++++++++
@@ -44,7 +44,7 @@ To install software prerequisites for building and running ElastiCluster, run
 the following commands (omit the ``sudo`` word if running as the ``root`` admin
 user)::
 
-    sudo apt-get install gcc git libc6-dev libffi-dev libssl-dev python-dev python-tz virtualenv
+    sudo apt-get install gcc g++ git libc6-dev libffi-dev libssl-dev python-dev virtualenv
 
 MacOSX
 ++++++
