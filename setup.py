@@ -158,7 +158,7 @@ setup(
     },
     install_requires=([
         'PyCLI',
-        'ansible>=2.0',
+        'ansible>=2.0,!=2.1.1.0',  ## see: https://github.com/ansible/ansible/issues/16952
         'coloredlogs',
         'configobj',
         'paramiko',
