@@ -343,6 +343,34 @@ Running`__ by Lorin Hochstein.
 .. _`ssh pipelining`: http://docs.ansible.com/ansible/intro_configuration.html#pipelining
 
 
+Setup of Ubuntu 16.04 ("xenial") clusters fails immediately
+-----------------------------------------------------------
+
+While running ``elasticluster setup`` (or in the final part of
+``elasticluster start``) an Ansible playbook is run, but it stops as
+early as the first task.  A long error message follows, resembling
+this one::
+
+  PLAY [Common setup for all hosts] **********************************************
+
+  TASK [setup] *******************************************************************
+  fatal: [master001]: FAILED! => {"changed": false, "failed": true, "module_stderr": "", "module_stdout": "/bin/sh: 1: /usr/bin/python: not found\r\n", "msg": "MODULE FAILURE", "parsed": false}
+  ...
+
+The key part of the error message is: ``/usr/bin/python: not found``; `Ubuntu
+16.04 does not install Python 2.x`__ by default.
+
+To fix the issue install package ``python`` on the Ubuntu VMs:
+
+* run ``sudo apt install python`` in a VM started with tha base image;
+* make a snapshot;
+* use that snmapshot as the base for ElastiCluster.
+
+Additional support will be required in ElastiCluster to automate these steps,
+see `issue #304 <https://github.com/gc3-uzh-ch/elasticluster/issues/304>`_
+
+.. __: http://summit.ubuntu.com/uos-1511/meeting/22568/python3-only-on-the-images/
+
 Issues when installing from source on MacOSX
 --------------------------------------------
 
