@@ -78,21 +78,85 @@ install``, you get a long error report that goes along these lines::
   Command python setup.py egg_info failed with error code 2 in /.../elasticluster/src
   Storing complete log in /home/hydra/rmurri/.pip/pip.log
 
-To fix the issue, please heed the advice given in the error message and run the
-command::
-
-  easy_install -U setuptools
-
-Alternatively, you can run this instead::
+To fix the issue, please run this command instead::
 
   pip install --upgrade setuptools
 
 Then resume the installation procedure of ElastiCluster from where you left off
-and run the `pip` step again.
+and run the ``pip`` step again.
+
+.. warning::
+
+  *Do not* heed the advice given in the error message and run the command
+  `easy_install -U setuptools``: it might get you in trouble later on,
+  see next section.
+
+
+Installation fails with ``VersionConflict: ... Requirement.parse('setuptools>=17.1'))``
+---------------------------------------------------------------------------------------
+
+When trying to install ElastiCluster with ``pip install``, amid the installation
+of dependency packages, you get a long error report that ends with a Python
+traceback similar to this one (some parts omitted for clarity)::
+
+      Complete output from command .../bin/python -c "import setuptools;__file__='.../build/funcsigs/setup.py';exec(compile(open(__file__).read().replace('\r\n', '\n'), __file__, 'exec'))" install --record /tmp/pip-P4Xwfz-record/install-record.txt --single-version-externally-managed --install-headers .../include/site/python2.7:
+        Traceback (most recent call last):
+
+      File "<string>", line 1, in <module>
+      ...
+      File ".../lib/python2.7/site-packages/pkg_resources.py", line 630, in resolve
+
+        raise VersionConflict(dist,req) # XXX put more info here
+
+      pkg_resources.VersionConflict: (setuptools 0.9.8 (.../lib/python2.7/site-packages), Requirement.parse('setuptools>=17.1'))
+
+To fix the issue, run this command instead::
+
+  pip install --updgrade setuptools
+
+Then resume the installation procedure of ElastiCluster from where you left off
+and run the ``pip`` step again.
+
+This problem has so far only been reported on CentOS 7.x and apparently only
+happens when both the following conditions are met:
+
+1. The version of ``setuptools`` initially installed in the virtual environment
+   was less than the one required by ElastiCluster (e.g. CentOS' default 0.9.8);
+2. The ``setuptools`` Python package was updated by running ``easy_install -U setuptools``.
+
+
+Upgrading ``setuptools`` fails with ``ImportError: No module named extern``
+---------------------------------------------------------------------------
+
+Updating ``setuptools`` by means of the ``easy_install`` command fails with a
+traceback like the one below::
+
+  $ easy_install -U setuptools
+  Traceback (most recent call last):
+    File "/tmp/e/bin/easy_install", line 9, in <module>
+      load_entry_point('setuptools==27.3.0', 'console_scripts', 'easy_install')()
+    File "/tmp/e/lib/python2.7/site-packages/pkg_resources.py", line 378, in load_entry_point
+      return get_distribution(dist).load_entry_point(group, name)
+    File "/tmp/e/lib/python2.7/site-packages/pkg_resources.py", line 2566, in load_entry_point
+      return ep.load()
+    File "/tmp/e/lib/python2.7/site-packages/pkg_resources.py", line 2260, in load
+      entry = __import__(self.module_name, globals(),globals(), ['__name__'])
+    File "build/bdist.linux-x86_64/egg/setuptools/__init__.py", line 10, in <module>
+    File "build/bdist.linux-x86_64/egg/setuptools/extern/__init__.py", line 1, in <module>
+  ImportError: No module named extern
+
+To fix the issue, run this command instead::
+
+  pip install --upgrade setuptools
+
+Then resume the installation procedure of ElastiCluster from where you left off
+and run the ``pip`` step again.
+
+This problem has so far only been reported on CentOS 7.x platforms.
 
 
 Installation fails with: "fatal error: ffi.h: No such file or directory"
--------------------------------------------------------------------------
+------------------------------------------------------------------------
 
 While trying to install ElastiCluster with ``pip install``, you get a
 long error report that ends with these lines::
@@ -183,7 +247,7 @@ completion.)
 
 
 Installation fails with: "unable to execute gcc: No such file or directory"
--------------------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 While trying to install ElastiCluster with ``pip install``, you get a
 long error report that ends with lines like these::
@@ -214,6 +278,28 @@ After installing the GCC packages, repeat the installation steps for ElastiClust
 for ElastiCluster; you might want to repeat the steps in section `Install
 required dependencies`:ref: again and be sure they run through successful
 completion.)
+
+
+Installation fails with ``Too many levels of symbolic links``
+-------------------------------------------------------------
+
+Running ``pip install`` to install ElastiCluster fails with a Python error like
+the one below (some parts omitted for brevity)::
+
+   Cleaning up...
+   Exception:
+   Traceback (most recent call last):
+     ...
+     File ".../lib/python2.7/site-packages/pip/download.py", line 420, in unpack_file_url
+       shutil.copytree(source, location)
+     File "/usr/lib64/python2.7/shutil.py", line 208, in copytree
+       raise Error, errors
+   Error: [..., "[Errno 40] Too many levels of symbolic links: '/home/centos/elasticluster/elasticluster/share/playbooks/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles/roles'")]
+
+This error only happens because the ``pip`` program is too old.
+Upgrade ``pip`` by running the command::
+
+  pip install --upgrade "pip>=7.1.0"
 
 
 Setup of RHEL/CentOS 7 clusters fails immediately
