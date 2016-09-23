@@ -28,6 +28,7 @@ import shlex
 import shutil
 from subprocess import call
 import sys
+import re
 from warnings import warn
 
 
@@ -42,7 +43,6 @@ from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers import AbstractSetupProvider
 
 IPV6_RE = re.compile('\[([a-f:A-F0-9]*[%[0-z]+]?)\](?::(\d+))?')
-
 
 class AnsibleSetupProvider(AbstractSetupProvider):
     """This implementation uses ansible to configure and manage the cluster

@@ -21,7 +21,10 @@ import xml.etree.ElementTree as xmltree
 # External imports
 import azure
 import azure.servicemanagement
-from azure.http import HTTPRequest
+from azure.servicemanagement._http import HTTPRequest
+from azure.servicemanagement._http.httpclient import _HTTPClient
+from azure.servicemanagement._common_serialization import _get_request_body
+from urllib2 import quote as url_quote
 
 # Elasticluster imports
 from elasticluster import log
@@ -117,15 +120,43 @@ def _create_rsa_fingerprint(key_path):
     fingerprint = stdout.strip()[5:52].replace(':', '')
     return fingerprint
 
+def _update_request_uri_query(request):
+        '''pulls the query string out of the URI and moves it into
+        the query portion of the request object.  If there are already
+        query parameters on the request the parameters in the URI will
+        appear after the existing parameters'''
+
+        if '?' in request.path:
+            request.path, _, query_string = request.path.partition('?')
+            if query_string:
+                query_params = query_string.split('&')
+                for query in query_params:
+                    if '=' in query:
+                        name, _, value = query.partition('=')
+                        request.query.append((name, value))
+
+        request.path = url_quote(request.path, '/()$=\',')
+
+        # add encoded queries to request.path.
+        if request.query:
+            request.path += '?'
+            for name, value in request.query:
+                if value is not None:
+                    request.path += name + '=' + url_quote(value, '/()$=\',') + '&'
+            request.path = request.path[:-1]
+
+        return request.path, request.query
+
 
 def _rest_put(subscription, path, xml):
     # can't use SDK _perform_put because we need text/plain content-type
     request = HTTPRequest()
     request.method = 'PUT'
-    request.host = azure.MANAGEMENT_HOST
+    request.host = azure.servicemanagement.constants.MANAGEMENT_HOST
     request.path = path
-    request.body = azure._get_request_body(xml)
-    request.path, request.query = azure._update_request_uri_query(request)
+    request.body = _get_request_body(xml)
+    request.path, request.query = _update_request_uri_query(request)
+
     # request.headers.append(('Content-Length', str(len(request.body))))
     request.headers.append(('Content-Type', 'text/plain'))
     request.headers = subscription._sms._update_management_header(
@@ -520,7 +551,7 @@ class AzureCloudService(object):
             log.debug("cloud service %s exists", self._name)
             return True
         except Exception as exc:
-            if str(exc) != 'Not found (Not Found)':
+            if not str(exc).startswith('Not Found'):
                 log.error('error checking for cloud service %s: %s',
                           self._name, str(exc))
                 raise
@@ -577,7 +608,7 @@ class AzureCloudService(object):
                 service_name=self._name, deployment_name=self._name)
             return dep
         except Exception as exc:
-            if str(exc) == 'Not found (Not Found)':
+            if str(exc).startswith('Not Found'):
                 return None
             log.error('error getting deployment %s: %s', self._name, exc)
             raise
@@ -665,10 +696,6 @@ class AzureCloudService(object):
                     role_type='PersistentVMRole')
                 sub._wait_result(result)
                 break
-            except azure.WindowsAzureConflictError as exc:
-                log.error('WindowsAzureConflictError creating vm %s (attempt '
-                          '%i of %i): %s', v_m._qualified_name,
-                          attempt, RETRIES, exc)
             except Exception as exc:
                 log.error('error creating vm %s (attempt '
                           '%i of %i): %s', v_m._qualified_name,
@@ -715,7 +742,7 @@ class AzureCloudService(object):
                 log.error('error stopping vm %s (attempt '
                           '%i of %i): %s', v_m._qualified_name,
                           attempt, RETRIES, exc)
-                if str(exc) == 'Not found (Not Found)':
+                if str(exc).startswith('Not Found'):
                     # assume the error is right, and try to clean up the
                     # leftovers of the vm state
                     with self._resource_lock:
@@ -772,7 +799,7 @@ class AzureStorageAccount(object):
             log.debug("storage account %s exists", self._name)
             return True
         except Exception as exc:
-            if str(exc) != 'Not found (Not Found)':
+            if not str(exc).startswith('Not Found'):
                 log.error('error checking for storage account %s: %s',
                           self._name, str(exc))
                 raise
@@ -884,7 +911,7 @@ class AzureVNet(object):
                 check_response(response)
                 return response.body
             except Exception as exc:
-                if str(exc) == 'Not found (Not Found)':
+                if str(exc).startswith('Not Found'):
                     return None
                 log.error('error in _get_xml for vnet %s '
                           '(attempt %i of %i): %s',
@@ -1292,7 +1319,7 @@ class AzureVM(object):
                     else:
                         self._public_ip_internal = instance.instance_endpoints[
                             0].vip
-                    return instance.power_state
+                    return self._public_ip_internal
             raise Exception("could not get public IP for instance %s"
                             % self._qualified_name)
         return self._public_ip_internal
@@ -1463,7 +1490,7 @@ class AzureCloudProvider(AbstractCloudProvider):
                       self._config._n_vms_requested)
             # pause here to try to address the fact that Ansible setup fails
             # more often on the first try than subsequent tries
-            time.sleep(40)
+            time.sleep(_retry_sleep())
         self._save_or_update()  # store our state
         return v_m._qualified_name
 
@@ -1670,7 +1697,7 @@ class AzureCloudProvider(AbstractCloudProvider):
                       disk_name, disk_info['TRIES'])
             return True
         except Exception as exc:
-            if str(exc) == 'Not found (Not Found)':
+            if str(exc).startswith('Not Found'):
                 log.debug(
                     "_delete_vhd: 'not found' deleting %s, assuming "
                     "success", disk_name)
