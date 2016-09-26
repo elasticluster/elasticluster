@@ -112,7 +112,7 @@ traceback similar to this one (some parts omitted for clarity)::
 
 To fix the issue, run this command instead::
 
-  pip install --updgrade setuptools
+  pip install --upgrade setuptools
 
 Then resume the installation procedure of ElastiCluster from where you left off
 and run the ``pip`` step again.
