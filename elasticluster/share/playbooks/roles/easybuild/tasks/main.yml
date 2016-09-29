@@ -47,6 +47,7 @@
     - "{{ EASYBUILD_PREFIX }}/modules/tools/EasyBuild/"
     - "{{ EASYBUILD_PREFIX }}/software/"
     - "{{ EASYBUILD_PREFIX }}/sources/"
+    - "{{ EASYBUILD_PREFIX }}/sources/l"  # already existing due to `lua` and `lmod`
 
 
 - name: Run the bootstrap script
