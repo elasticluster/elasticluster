@@ -64,6 +64,15 @@
     - PATH: '{{lmod_install_dir}}/libexec:{{ansible_env.PATH}}'
 
 
+# If this is installed, `eb -l` can colorize output
+- name: Install the `coloredlogs` Python package
+  pip:
+    name=coloredlogs
+  become: yes
+  become_user: root
+  ignore_errors: yes
+
+
 - name: Deploy configuration files
   template:
     src='{{item}}.j2'
