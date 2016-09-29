@@ -45,12 +45,24 @@
     dest='{{lua_source_dir}}/lua-{{LUA_VERSION}}.tar.gz'
     mode=0444
 
-
+# XXX: Ansible issues a warning message "Consider using unarchive module rather
+# than running tar"; however, `unarchive` seems to misteriously fail on CentOS
+# 7.2.1511, and there have been many reports of it failing when file names
+# contain "unexpected" characters (e.g., spaces or non-ASCII characters)
+#
+# If `unarchive` worked correctly, this would be the Ansible stanza to use::
+#
+#   - name: Extract Lua sources
+#     unarchive:
+#       src='{{ lua_source_dir }}/lua-{{LUA_VERSION}}.tar.gz'
+#       dest='{{ lua_source_dir }}/'
+#       copy=no
+#
 - name: Extract Lua sources
-  unarchive:
-    src='{{ lua_source_dir }}/lua-{{LUA_VERSION}}.tar.gz'
-    dest='{{ lua_source_dir }}/'
-    copy=no
+  command:
+    'tar -xzf "{{ lua_source_dir }}/lua-{{LUA_VERSION}}.tar.gz" -C "{{ lua_source_dir }}"'
+  args:
+    creates='{{ lua_source_dir }}/lua-{{LUA_VERSION}}/configure'
 
 
 - name: Set up Lua compilation

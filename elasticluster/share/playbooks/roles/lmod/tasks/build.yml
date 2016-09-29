@@ -71,12 +71,23 @@
     dest='{{ lmod_build_dir }}'
 
 
+# XXX: See comment in `roles/lua/tasks/build.yml` about `unarchive` failing with
+# no apparent reason.
+#
+# If `unarchive` worked correctly, this would be the Ansible stanza to use::
+#
+#   - name: Extract sources
+#     unarchive:
+#       src='{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}.tar.bz2'
+#       dest='{{ lmod_build_dir }}/'
+#       creates='{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}/configure'
+#       copy=no
+#
 - name: Extract sources
-  unarchive: 
-    src='{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}.tar.bz2'
-    dest='{{ lmod_build_dir }}/'
-    creates='{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}/configure'
-    copy=no
+  command:
+    'tar -xjf "{{ lmod_build_dir }}/Lmod-{{LMOD_VERSION}}.tar.bz2" -C "{{ lmod_build_dir }}"'
+  args:
+    creates='{{ lmod_build_dir }}/Lmod-{{LMOD_VERSION}}/configure'
 
 
 - name: Run `./configure`
