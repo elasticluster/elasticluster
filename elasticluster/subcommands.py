@@ -227,7 +227,7 @@ class Stop(AbstractCommand):
         parser.add_argument('--force', action="store_true", default=False,
                             help="Remove the cluster even if not all the nodes"
                                  " have been terminated properly.")
-        parser.add_argument('--yes', action="store_true", default=False,
+        parser.add_argument('--yes', '-y', action="store_true", default=False,
                             help="Assume `yes` to all queries and "
                                  "do not prompt.")
 
