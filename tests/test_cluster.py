@@ -313,6 +313,17 @@ class TestNode(unittest.TestCase):
         cloud_provider = node._cloud_provider
         cloud_provider.stop_instance.assert_called_once_with(instance_id)
 
+    def test_stop_with_no_id(self):
+        """
+        Stop Node with ID ``None``
+        """
+        node = self.get_node()
+        node.instance_id = None
+
+        node.stop()
+
+        assert node._cloud_provider.stop_instance.call_count == 0
+
     def test_is_alive(self):
         """
         Node is alive

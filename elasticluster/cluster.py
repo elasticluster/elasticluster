@@ -151,7 +151,7 @@ class Cluster(Struct):
     :ivar nodes: dict [node_type] = [:py:class:`Node`] that represents all
                  nodes in this cluster
     """
-    startup_timeout = 60 * 10  #: timeout in seconds to start all nodes
+    startup_timeout = 30 * 1  #: timeout in seconds to start all nodes
 
 
     def __init__(self, name, user_key_name='elasticluster-key',
@@ -1122,18 +1122,20 @@ class Node(Struct):
             username=self.image_user, node_name="%s-%s" % (self.cluster_name, self.name), **self.extra)
         log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
 
+
     def stop(self):
         """
         Terminate the VM instance launched on the cloud for this specific node.
         """
-        log.info("Shutting down instance `%s` ...", self.instance_id)
-        self._cloud_provider.stop_instance(self.instance_id)
-        # When an instance is terminated, the EC2 cloud provider will
-        # basically return it as "running" state. Setting the
-        # `instance_id` attribute to None will force `is_alive()`
-        # method not to check with the cloud provider, and forever
-        # forgetting about the instance id.
-        self.instance_id = None
+        if self.instance_id is not None:
+            log.info("Shutting down instance `%s` ...", self.instance_id)
+            self._cloud_provider.stop_instance(self.instance_id)
+            # When an instance is terminated, the EC2 cloud provider will
+            # basically return it as "running" state. Setting the
+            # `instance_id` attribute to None will force `is_alive()`
+            # method not to check with the cloud provider, and forever
+            # forgetting about the instance id.
+            self.instance_id = None
 
     def is_alive(self):
         """Checks if the current node is up and running in the cloud. It
