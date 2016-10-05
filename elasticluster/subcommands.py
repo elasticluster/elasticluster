@@ -240,17 +240,16 @@ class Stop(AbstractCommand):
                                         storage_path=self.params.storage)
         try:
             cluster = configurator.load_cluster(cluster_name)
-        except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Stopping cluster %s: %s\n" %
-                      (cluster_name, ex))
-            return
+        except (ClusterNotFound, ConfigurationError) as err:
+            log.error("Cannot stop cluster `%s`: %s", cluster_name, err)
+            return os.EX_NOINPUT
 
         if not self.params.yes:
             confirm_or_abort(
                 "Do you want really want to stop cluster `{cluster_name}`?"
                 .format(cluster_name=cluster_name),
                 msg="Aborting upon user request.")
-        print("Destroying cluster `%s`" % cluster_name)
+        print("Destroying cluster `%s` ..." % cluster_name)
         cluster.stop(force=self.params.force)
 
 
