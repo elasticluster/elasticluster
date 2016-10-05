@@ -41,7 +41,7 @@ from binascii import hexlify
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.exceptions import TimeoutError, NodeNotFound, \
-    InstanceError, ClusterError
+    InstanceError, InstanceNotFoundError, ClusterError
 from elasticluster.repository import MemRepository
 
 
@@ -704,45 +704,68 @@ class Cluster(Struct):
             raise NodeNotFound("Node %s not found" % nodename)
 
     def stop(self, force=False):
-        """Destroys all instances of this cluster and calls delete on the
-        repository.
-
-        :param bool force: force termination of instances in any case
         """
-        for node in self.get_all_nodes():
-            if node.instance_id:
-                try:
-                    node.stop()
-                    self.nodes[node.kind].remove(node)
-                    log.debug("Removed node with instance id %s from %s"
-                              % (node.instance_id, node.kind))
-                except:
-                    # Boto does not always raises an `Exception` class!
-                    log.error("could not stop instance `%s`, it might "
-                              "already be down.", node.instance_id)
+        Terminate all VMs in this cluster and delete its repository.
+
+        :param bool force:
+          remove cluster from storage even if not all nodes could be stopped.
+        """
+        log.debug("Stopping cluster `%s` ...", self.name)
+
+        failed = self._stop_all_nodes()
+
+        if failed:
+            if force:
+                self._delete_saved_data()
+                log.warning(
+                    "Not all cluster nodes have been terminated."
+                    " However, as requested, data about the cluster"
+                    " has been removed from local storage.")
             else:
-                log.debug("Not stopping node with no instance id. It seems "
-                          "like node `%s` did not start correctly."
-                          % node.name)
-                self.nodes[node.kind].remove(node)
-
-        if not self.get_all_nodes():
-            log.debug("Removing cluster %s.", self.name)
-            self._setup_provider.cleanup(self)
-            self.repository.delete(self)
-        elif not force:
-            log.warning("Not all instances have been terminated. "
-                        "Please rerun the `elasticluster stop %s`", self.name)
-            self.repository.save_or_update(self)
+                self.repository.save_or_update(self)
+                log.warning(
+                    "Not all cluster nodes have been terminated."
+                    " Fix errors above and re-run `elasticluster stop %s`",
+                    self.name)
         else:
-            log.warning("Not all instances have been terminated. However, "
-                        "as requested, the cluster has been force-removed.")
-            self._setup_provider.cleanup(self)
-            self.repository.delete(self)
+            self._delete_saved_data()
 
-        # Remove also ssh known hosts
+    def _delete_saved_data(self):
+        self._setup_provider.cleanup(self)
+        self.repository.delete(self)
         if os.path.exists(self.known_hosts_file):
             os.remove(self.known_hosts_file)
+
+    def _stop_all_nodes(self):
+        """
+        Terminate all cluster nodes. Return number of failures.
+        """
+        failed = 0
+        for node in self.get_all_nodes():
+            if not node.instance_id:
+                log.warning(
+                    "Node `%s` has no instance ID."
+                    " Assuming it did not start correctly,"
+                    " so removing it anyway from the cluster.", node.name)
+                self.nodes[node.kind].remove(node)
+                continue
+            # try and stop node
+            try:
+                node.stop()
+                self.nodes[node.kind].remove(node)
+                log.debug(
+                    "Removed node `%s` from cluster `%s`", node.name, self.name)
+            except InstanceNotFoundError as err:
+                log.info(
+                    "Node `%s` (instance ID `%s`) was not found;"
+                    " assuming it has already been terminated.",
+                    node.name, node.instance_id)
+            except Exception as err:
+                failed += 1
+                log.error(
+                    "Could not stop node `%s` (instance ID `%s`): %s %s",
+                    node.name, node.instance_id, err, err.__class__)
+        return failed
 
 
     def get_frontend_node(self):
@@ -1100,10 +1123,10 @@ class Node(Struct):
         log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
 
     def stop(self):
-        """Destroys the instance launched on the cloud for this specific node.
         """
-        log.info("shutting down instance `%s`",
-                 self.instance_id)
+        Terminate the VM instance launched on the cloud for this specific node.
+        """
+        log.info("Shutting down instance `%s` ...", self.instance_id)
         self._cloud_provider.stop_instance(self.instance_id)
         # When an instance is terminated, the EC2 cloud provider will
         # basically return it as "running" state. Setting the

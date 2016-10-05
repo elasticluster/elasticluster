@@ -43,6 +43,7 @@ from elasticluster.exceptions import (
     FlavorError,
     ImageError,
     InstanceError,
+    InstanceNotFoundError,
     KeypairError,
     SecurityGroupError,
 )
@@ -81,7 +82,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self.request_floating_ip = request_floating_ip
         self.nova_api_version = nova_api_version
         self._instances = {}
-        self._cached_instances = []
+        self._cached_instances = {}
 
         self.client = client.Client(self.nova_api_version,
                                     self._os_username, self._os_password, self._os_tenant_name,
@@ -295,12 +296,20 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         return self.client.flavors.list()
 
     def _load_instance(self, instance_id, force_reload=True):
-        """Checks if an instance with the given id is cached. If not it
-        will connect to the cloud and put it into the local cache
-        _instances.
+        """
+        Return instance with the given id.
+
+        For performance reasons, the instance ID is first searched for in the
+        collection of VM instances started by ElastiCluster
+        (`self._instances`), then in the list of all instances known to the
+        cloud provider at the time of the last update
+        (`self._cached_instances`), and finally the cloud provider is directly
+        queried.
 
         :param str instance_id: instance identifier
-        :param bool force_reload: reload instance from server
+        :param bool force_reload:
+          if ``True``, skip searching caches and reload instance from server
+          and immediately reload instance data from cloud provider
         :return: py:class:`novaclient.v1_1.servers.Server` - instance
         :raises: `InstanceError` is returned if the instance can't
                  be found in the local cache or in the cloud.
@@ -309,36 +318,34 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             try:
                 # Remove from cache and get from server again
                 vm = self.client.servers.get(instance_id)
-                # update cache
-                self._instances[instance_id] = vm
-                # delete internal cache, just in case
-                for i in self._cached_instances:
-                    if i.id == instance_id:
-                        self._cached_instances.remove(i)
-                        self._cached_instances.append(vm)
-                        break
-
             except NotFound:
-                raise InstanceError("the given instance `%s` was not found "
-                                    "on the cloud" % instance_id)
+                raise InstanceNotFoundError(
+                    "Instance `{instance_id}` not found"
+                    .format(instance_id=instance_id))
+            # update caches
+            self._instances[instance_id] = vm
+            self._cached_instances[instance_id] = vm
+
+        # if instance is known, return it
         if instance_id in self._instances:
             return self._instances[instance_id]
 
-        # Instance not in the internal dictionary.
-        # First, check the internal cache:
-        if instance_id not in [i.id for i in self._cached_instances]:
+        # else, check (cached) list from provider
+        if instance_id not in self._cached_instances:
             # Refresh the cache, just in case
-            self._cached_instances = self.client.servers.list()
+            self._cached_instances = dict(
+                (vm.id, vm) for vm in self.client.servers.list())
 
-        for inst in self._cached_instances:
-            if inst.id == instance_id:
-                self._instances[instance_id] = inst
-                return inst
+        if instance_id in self._cached_instances:
+            inst = self._cached_instances[instance_id]
+            self._instances[instance_id] = inst
+            return inst
 
         # If we reached this point, the instance was not found neither
-        # in the cache or on the website.
-        raise InstanceError("the given instance `%s` was not found "
-                            "on the cloud" % instance_id)
+        # in the caches nor on the website.
+        raise InstanceNotFoundError(
+            "Instance `{instance_id}` not found"
+            .format(instance_id=instance_id))
 
     def _allocate_address(self, instance):
         """Allocates a free public ip address to the given instance
@@ -380,7 +387,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                                     self._os_username, self._os_password, self._os_tenant_name,
                                     self._os_auth_url, region_name=self._os_region_name)
         self._instances = {}
-        self._cached_instances = []
+        self._cached_instances = {}
         # recover instance objects from the cloud.
 
         # This is Disabled as we don't want to reload the

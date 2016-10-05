@@ -23,8 +23,14 @@ import unittest
 
 from mock import MagicMock, PropertyMock
 
-from elasticluster.exceptions import KeypairError, InstanceError, \
-    SecurityGroupError, SubnetError, ImageError
+from elasticluster.exceptions import (
+    KeypairError,
+    InstanceError,
+    InstanceNotFoundError,
+    SecurityGroupError,
+    SubnetError,
+    ImageError
+)
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 
 import pytest
@@ -197,7 +203,7 @@ class TestBotoCloudProvider(unittest.TestCase):
         con = MagicMock()
         provider = self._create_provider()
         provider._ec2_connection = con
-        with pytest.raises(InstanceError):
+        with pytest.raises(InstanceNotFoundError):
             provider._load_instance("not-existing")
 
         # check instance already fetched
@@ -218,7 +224,6 @@ class TestBotoCloudProvider(unittest.TestCase):
         con.get_all_instances.return_value = [res]
 
         i = provider._load_instance(instance_boto_id)
-
         assert i == instance_boto
 
         # check cached instance (example from above boto-instance)

@@ -46,7 +46,7 @@ from oauth2client.tools import argparser
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.providers import AbstractCloudProvider
-from elasticluster.exceptions import ImageError, InstanceError, CloudProviderError
+from elasticluster.exceptions import ImageError, InstanceError, InstanceNotFoundError, CloudProviderError
 
 
 # constants and defaults
@@ -378,16 +378,19 @@ class GoogleCloudProvider(AbstractCloudProvider):
             response = self._execute_request(request)
             self._check_response(response)
         except HttpError as e:
-            # If the instance does not exist, we can a 404 - just log it, and
-            # return without exception so the caller can remove the reference.
+            # If the instance does not exist, we get a 404
             if e.resp.status == 404:
-              log.warning("Instance to stop `%s` was not found" % instance_id)
+                raise InstanceNotFoundError(
+                    "Instance `{instance_id}` was not found"
+                    .format(instance_id=instance_id))
             else:
-              raise InstanceError("Could not stop instance `%s`: `%s`"
-                                  % (instance_id, e))
+                raise InstanceError(
+                    "Could not stop instance `{instance_id}`: `{e}`"
+                    .format(instance_id=instance_id, e=e))
         except CloudProviderError as e:
-            raise InstanceError("Could not stop instance `%s`: `%s`"
-                                % (instance_id, e))
+            raise InstanceError(
+                "Could not stop instance `{instance_id}`: `{e}`"
+                .format(instance_id=instance_id, e=e))
 
     def list_instances(self, filter=None):
         """List instances on GCE, optionally filtering the results.

@@ -33,7 +33,7 @@ from paramiko.ssh_exception import SSHException
 from elasticluster import log
 from elasticluster.providers import AbstractCloudProvider
 from elasticluster.exceptions import VpcError, SecurityGroupError, \
-    SubnetError, KeypairError, ImageError, InstanceError, ClusterError
+    SubnetError, KeypairError, ImageError, InstanceError, InstanceNotFoundError, ClusterError
 
 
 class BotoCloudProvider(AbstractCloudProvider):
@@ -340,37 +340,54 @@ class BotoCloudProvider(AbstractCloudProvider):
             return None
 
     def _load_instance(self, instance_id):
-        """Checks if an instance with the given id is cached. If not it
-        will connect to the cloud and put it into the local cache
-        _instances.
+        """
+        Return instance with the given id.
+
+        For performance reasons, the instance ID is first searched for in the
+        collection of VM instances started by ElastiCluster
+        (`self._instances`), then in the list of all instances known to the
+        cloud provider at the time of the last update
+        (`self._cached_instances`), and finally the cloud provider is directly
+        queried.
 
         :param str instance_id: instance identifier
         :return: py:class:`boto.ec2.instance.Reservation` - instance
         :raises: `InstanceError` is returned if the instance can't
                  be found in the local cache or in the cloud.
         """
-        connection = self._connect()
+        # if instance is known, return it
         if instance_id in self._instances:
             return self._instances[instance_id]
 
-        # Instance not in the internal dictionary.
-        # First, check the internal cache:
-        if instance_id not in [i.id for i in self._cached_instances]:
-            # Refresh the cache, just in case
-            self._cached_instances = []
-            reservations = connection.get_all_instances()
-            for res in reservations:
-                self._cached_instances.extend(res.instances)
+        # else, check (cached) list from provider
+        if instance_id not in self._cached_instances:
+            self._cached_instances = self._build_cached_instances()
 
-        for inst in self._cached_instances:
-            if inst.id == instance_id:
-                self._instances[instance_id] = inst
-                return inst
+        if instance_id in self._cached_instances:
+            inst = self._cached_instances[instance_id]
+            self._instances[instance_id] = inst
+            return inst
 
         # If we reached this point, the instance was not found neither
-        # in the cache or on the website.
-        raise InstanceError("the given instance `%s` was not found "
-                            "on the cloud" % instance_id)
+        # in the caches nor on the website.
+        raise InstanceNotFoundError(
+            "Instance `{instance_id}` not found"
+            .format(instance_id=instance_id))
+
+    def _build_cached_instances(self):
+        """
+        Build lookup table of VM instances known to the cloud provider.
+
+        The returned dictionary links VM id with the actual VM object.
+        """
+        connection = self._connect()
+        reservations = connection.get_all_instances()
+        cached_instances = {}
+        for rs in reservations:
+            for vm in rs.instances:
+                cached_instances[vm.id] = vm
+        return cached_instances
+
 
     def _check_keypair(self, name, public_key_path, private_key_path):
         """First checks if the keypair is valid, then checks if the keypair
