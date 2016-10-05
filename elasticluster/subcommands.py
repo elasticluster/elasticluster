@@ -32,19 +32,13 @@ import shutil
 import sys
 import tempfile
 
+
 # Elasticluster imports
 from elasticluster import get_configurator, log
 from elasticluster.exceptions import ClusterNotFound, ConfigurationError, \
     ImageError, SecurityGroupError, NodeNotFound, ClusterError
+from elasticluster.utils import confirm_or_abort
 
-def ask_confirmation(msg):
-    """Ask for confirmation. Returns True or False accordingly"""
-    yesno = raw_input(msg + " [yN] ")
-    if yesno.lower() not in ['yes', 'y']:
-        print("Aborting as per user request.")
-        return False
-    else:
-        return True
 
 class AbstractCommand():
     """
@@ -252,13 +246,10 @@ class Stop(AbstractCommand):
             return
 
         if not self.params.yes:
-            # Ask for confirmation
-            yesno = raw_input(
-                "Do you want really want to stop "
-                "cluster %s? [yN] " % cluster_name)
-            if yesno.lower() not in ['yes', 'y']:
-                print("Aborting as per user request.")
-                sys.exit(0)
+            confirm_or_abort(
+                "Do you want really want to stop cluster `{cluster_name}`?"
+                .format(cluster_name=cluster_name),
+                msg="Aborting upon user request.")
         print("Destroying cluster `%s`" % cluster_name)
         cluster.stop(force=self.params.force)
 
@@ -386,12 +377,8 @@ class ResizeCluster(AbstractCommand):
             print("    " + str.join("\n    ", [n.name for n in to_remove]))
 
             if not self.params.yes:
-                # Ask for confirmation.
-                yesno = raw_input(
-                    "Do you really want to remove them? [yN] ")
-                if yesno.lower() not in ['yes', 'y']:
-                    print("Aborting as per user request.")
-                    sys.exit(0)
+                confirm_or_abort("Do you really want to remove them?",
+                                 msg="Aborting upon user request.")
 
             for node in to_remove:
                 cluster.nodes[grp].remove(node)
@@ -449,12 +436,9 @@ class RemoveNode(AbstractCommand):
 
         # Run
         if not self.params.yes:
-            # Ask for confirmation.
-            yesno = raw_input(
-                "Do you really want to remove node %s? [yN] " % node.name)
-            if yesno.lower() not in ['yes', 'y']:
-                print("Aborting as per user request.")
-                sys.exit(0)
+            confirm_or_abort("Do you really want to remove node `{}`?"
+                             .format(node.name),
+                             msg="Aborting upon user request.")
 
         cluster.remove_node(node, stop=True)
         print("Node %s removed" % node.name)
@@ -873,34 +857,39 @@ class ExportCluster(AbstractCommand):
                 verbose_add(cluster.known_hosts_file, comment='known_hosts')
                 if self.params.save_keys:
                     # that's sensible stuff, let's ask permission.
-                    if ask_confirmation("""
+                    print("""
+==========================
 WARNING! WARNING! WARNING!
 ==========================
-You are about to add your ssh *private* key to the
+You are about to add your SSH *private* key to the
 ZIP archive. These are sensible data: anyone with
 access to the ZIP file will have access to any host
 where this private key has been deployed.
 
-Are yousure you still want to copy them?"""):
-                        # Also save all the public and private keys we can find.
+                    """)
+                    confirm_or_abort(
+                        "Are you sure you still want to copy them?",
+                        msg="Aborting upon user request.")
 
-                        # Cluster keys
-                        verbose_add(cluster.user_key_public)
-                        verbose_add(cluster.user_key_private)
+                    # Also save all the public and private keys we can find.
 
-                        # Node keys, if found
-                        for node in cluster.get_all_nodes():
-                            if node.user_key_public != cluster.user_key_public:
-                                verbose_add(node.user_key_public,
-                                            "%s/%s/%s/" % (cluster.name,
-                                                           node.kind,
-                                                           node.name))
-                        for node in cluster.get_all_nodes():
-                            if node.user_key_private != cluster.user_key_private:
-                                verbose_add(node.user_key_private,
-                                            "%s/%s/%s/" % (cluster.name,
-                                                           node.kind,
-                                                           node.name))
+                    # Cluster keys
+                    verbose_add(cluster.user_key_public)
+                    verbose_add(cluster.user_key_private)
+
+                    # Node keys, if found
+                    for node in cluster.get_all_nodes():
+                        if node.user_key_public != cluster.user_key_public:
+                            verbose_add(node.user_key_public,
+                                        "%s/%s/%s/" % (cluster.name,
+                                                       node.kind,
+                                                       node.name))
+                    for node in cluster.get_all_nodes():
+                        if node.user_key_private != cluster.user_key_private:
+                            verbose_add(node.user_key_private,
+                                        "%s/%s/%s/" % (cluster.name,
+                                                       node.kind,
+                                                       node.name))
             except OSError as ex:
                 # A file is probably missing!
                 log.error("Fatal error: cannot add file %s to zip archive: %s."

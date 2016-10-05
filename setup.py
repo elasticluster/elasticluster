@@ -159,6 +159,7 @@ setup(
     install_requires=([
         'PyCLI',
         'ansible>=2.0,!=2.1.1.0',  ## see: https://github.com/ansible/ansible/issues/16952
+        'click>=4.0',  ## click.prompt() added in 4.0
         'coloredlogs',
         'configobj',
         'paramiko',
