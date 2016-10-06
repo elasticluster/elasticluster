@@ -114,11 +114,11 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         :return: str - instance id of the started instance
         """
 
-        log.debug("Checking keypair `%s`.", key_name)
+        log.debug("Checking keypair `%s` ...", key_name)
         with OpenStackCloudProvider.__node_start_lock:
             self._check_keypair(key_name, public_key_path, private_key_path)
 
-        log.debug("Checking security group `%s`.", security_group)
+        log.debug("Checking security group `%s` ...", security_group)
         self._check_security_group(security_group)
 
         # Check if the image id is present.
@@ -136,9 +136,10 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         nics = None
         if 'network_ids' in kwargs:
-            nics=[{'net-id': netid.strip(), 'v4-fixed-ip': ''} for netid in kwargs['network_ids'].split(',') ]
-            log.debug("Specifying networks for vm %s: %s",
-                      node_name, str.join(', ', [nic['net-id'] for nic in nics]))
+            nics=[{'net-id': netid.strip(), 'v4-fixed-ip': ''}
+                  for netid in kwargs['network_ids'].split(',') ]
+            log.debug("Specifying networks for node %s: %s",
+                      node_name, ', '.join([nic['net-id'] for nic in nics]))
 
         vm = self.client.servers.create(
             node_name, image_id, flavor, key_name=key_name,

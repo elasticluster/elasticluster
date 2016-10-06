@@ -1108,19 +1108,23 @@ class Node(Struct):
             state['image_id'] = state['image']
 
     def start(self):
-        """Starts the node on the cloud using the given
-        instance properties. This method is non-blocking, as soon
-        as the node id is returned from the cloud provider, it will return.
-        Therefore the `is_alive` and `update_ips` methods can be used to
-        further gather details about the state of the node.
+        """
+        Start the node on the cloud using the given instance properties.
+
+        This method is non-blocking: as soon as the node id is returned from
+        the cloud provider, it will return. The `is_alive`:meth: and
+        `update_ips`:meth: methods should be used to further gather details
+        about the state of the node.
         """
         log.info("Starting node %s ...", self.name)
         self.instance_id = self._cloud_provider.start_instance(
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
             self.flavor, self.image_id, self.image_userdata,
-            username=self.image_user, node_name="%s-%s" % (self.cluster_name, self.name), **self.extra)
-        log.debug("Node %s has instance_id: `%s`", self.name, self.instance_id)
+            username=self.image_user,
+            node_name=("%s-%s" % (self.cluster_name, self.name)),
+            **self.extra)
+        log.debug("Node `%s` has instance ID `%s`", self.name, self.instance_id)
 
 
     def stop(self):
