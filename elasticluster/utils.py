@@ -21,8 +21,10 @@ __docformat__ = 'reStructuredText'
 __author__ = 'Riccardo Murri <riccardo.murri@gmail.com>'
 
 # stdlib imports
+from contextlib import contextmanager
 import functools
 import os
+import signal
 import sys
 import time
 
@@ -87,6 +89,51 @@ class memoize(object):
                 # Better to not cache than to blow up entirely.
                 return f(*args)
         return wrapped_f
+
+
+@contextmanager
+def sighandler(signum, handler):
+    """
+    Context manager to run code with UNIX signal `signum` bound to `handler`.
+
+    The existing handler is saved upon entering the context and restored upon
+    exit.
+
+    The `handler` argument may be anything that can be passed to Python's
+    `signal.signal <https://docs.python.org/2/library/signal.html#signal.signal>`_
+    standard library call.
+    """
+    prev_handler = signal.getsignal(signum)
+    signal.signal(signum, handler)
+    yield
+    signal.signal(signum, prev_handler)
+
+
+@contextmanager
+def timeout(delay, handler=None):
+    """
+    Context manager to run code and deliver a SIGALRM signal after `delay` seconds.
+
+    Note that `delay` must be a whole number; otherwise it is converted to an
+    integer by Python's `int()` built-in function. For floating-point numbers,
+    that means rounding off to the nearest integer from below.
+
+    If the optional argument `handler` is supplied, it must be a callable that
+    is invoked if the alarm triggers while the code is still running. If no
+    `handler` is provided (default), then a `RuntimeError` with message
+    ``Timeout`` is raised.
+    """
+    delay = int(delay)
+    if handler is None:
+        def default_handler(signum, frame):
+            raise RuntimeError("{:d} seconds timeout expired".format(delay))
+        handler = default_handler
+    prev_sigalrm_handler = signal.getsignal(signal.SIGALRM)
+    signal.signal(signal.SIGALRM, handler)
+    signal.alarm(delay)
+    yield
+    signal.alarm(0)
+    signal.signal(signal.SIGALRM, prev_sigalrm_handler)
 
 
 ## Warnings redirection
