@@ -124,14 +124,16 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # Check if the image id is present.
         images = self._get_images()
         if image_id not in [img.id for img in images]:
-            raise ImageError("No image found with id '%s' on cloud "
-                             "%s" % (image_id, self._os_auth_url))
+            raise ImageError(
+                "No image found with ID `{0}` in project `{1}` of cloud {2}"
+                .format(image_id, self._os_tenant_name, self._os_auth_url))
 
         # Check if the flavor exists
         flavors = [fl for fl in self._get_flavors() if fl.name == flavor]
         if not flavors:
             raise FlavorError("No flavor found with name %s on cloud "
-                              "%s" % (flavor, self._os_auth_url))
+                "No flavor found with name `{0}` in project `{1}` of cloud {2}"
+                .format(flavor, self._os_tenant_name, self._os_auth_url))
         flavor = flavors[0]
 
         nics = None
