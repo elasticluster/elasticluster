@@ -153,7 +153,7 @@ setup(
     include_package_data=True,  # include files mentioned by MANIFEST.in
     entry_points={
         'console_scripts': [
-            'elasticluster = elasticluster.main:main',
+            'elasticluster = elasticluster.__main__:main',
         ]
     },
     install_requires=([
