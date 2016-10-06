@@ -36,7 +36,7 @@ from paramiko.ssh_exception import SSHException
 
 # Elasticluster imports
 from elasticluster import log
-from elasticluster.memoize import memoize
+from elasticluster.utils import memoize
 from elasticluster.providers import AbstractCloudProvider
 from elasticluster.exceptions import (
     ClusterError,

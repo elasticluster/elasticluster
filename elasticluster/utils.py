@@ -21,8 +21,10 @@ __docformat__ = 'reStructuredText'
 __author__ = 'Riccardo Murri <riccardo.murri@gmail.com>'
 
 # stdlib imports
+import functools
 import os
 import sys
+import time
 
 # 3rd party imports
 import click
@@ -47,6 +49,44 @@ def confirm_or_abort(prompt, exitcode=os.EX_TEMPFAIL, msg=None, **extra_args):
             sys.stderr.write(msg)
             sys.stderr.write('\n')
         sys.exit(exitcode)
+
+
+class memoize(object):
+    """
+    Cache a function's return value each time it is called within a TTL.
+
+    If called within the TTL and the same arguments, the cached value is
+    returned, If called outside the TTL or a different value, a fresh value is
+    returned (and cached for future occurrences).
+
+    .. warning::
+
+      Only works on functions that take *no keyword arguments*.
+
+    Originally taken from: http://jonebird.com/2012/02/07/python-memoize-decorator-with-ttl-argument/
+    """
+    def __init__(self, ttl):
+        self.cache = {}
+        self.ttl = ttl
+
+    def __call__(self, f):
+        @functools.wraps(f)
+        def wrapped_f(*args):
+            now = time.time()
+            try:
+                value, last_update = self.cache[args]
+                if self.ttl > 0 and now - last_update > self.ttl:
+                    raise AttributeError
+                return value
+            except (KeyError, AttributeError):
+                value = f(*args)
+                self.cache[args] = (value, now)
+                return value
+            except TypeError:
+                # uncachable -- for instance, passing a list as an argument.
+                # Better to not cache than to blow up entirely.
+                return f(*args)
+        return wrapped_f
 
 
 ## Warnings redirection
