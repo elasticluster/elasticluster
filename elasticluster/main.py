@@ -40,30 +40,36 @@ from pkg_resources import resource_filename
 
 # Elasticluster imports
 from elasticluster import log
-from elasticluster.subcommands import Start, SetupCluster
-from elasticluster.subcommands import Stop
-from elasticluster.subcommands import AbstractCommand
-from elasticluster.subcommands import ListClusters
-from elasticluster.subcommands import ListNodes
-from elasticluster.subcommands import ListTemplates
-from elasticluster.subcommands import ResizeCluster
-from elasticluster.subcommands import SshFrontend
-from elasticluster.subcommands import SftpFrontend
-from elasticluster.subcommands import GC3PieConfig
-from elasticluster.subcommands import RemoveNode
-from elasticluster.subcommands import ExportCluster
-from elasticluster.subcommands import ImportCluster
+from elasticluster.subcommands import (
+    AbstractCommand,
+    ExportCluster,
+    GC3PieConfig,
+    ImportCluster,
+    ListClusters,
+    ListNodes,
+    ListTemplates,
+    RemoveNode,
+    ResizeCluster,
+    SetupCluster,
+    SftpFrontend,
+    SshFrontend,
+    Start,
+    Stop,
+)
 from elasticluster.conf import Configurator
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.migration_tools import MigrationCommand
 
 
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
+__author__ = ', '.join([
+    'Nicolas Baer <nicolas.baer@uzh.ch>',
+    'Antonio Messina <antonio.s.messina@gmail.com>'
+])
 
 
 class ElastiCluster(cli.app.CommandLineApp):
     name = "elasticluster"
-    description = "Elasticluster will start, stop, grow, shrink clusters on an EC2 cloud."
+    description = "Elasticluster starts, stops, grows, and shrinks clusters on a cloud."
 
     default_configuration_file = os.path.expanduser(
         "~/.elasticluster/config")
