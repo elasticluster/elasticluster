@@ -18,11 +18,12 @@
 __author__ = '''
 Nicolas Baer <nicolas.baer@uzh.ch>,
 Antonio Messina <antonio.s.messina@gmail.com>,
-Riccardo Murri <riccardo.murri@uzh.ch>
+Riccardo Murri <riccardo.murri@gmail.com>
 '''
 
 # System imports
 from collections import defaultdict
+from copy import copy
 import itertools
 import operator
 import os
@@ -43,6 +44,11 @@ from elasticluster import log
 from elasticluster.exceptions import TimeoutError, NodeNotFound, \
     InstanceError, InstanceNotFoundError, ClusterError
 from elasticluster.repository import MemRepository
+from elasticluster.utils import sighandler, timeout
+
+
+def raise_timeout_error(signum, frame):
+    raise TimeoutError()
 
 
 class IgnorePolicy(paramiko.MissingHostKeyPolicy):
@@ -152,7 +158,7 @@ class Cluster(Struct):
                  nodes in this cluster
     """
     startup_timeout = 60 * 10  #: timeout in seconds to start all nodes
-
+    polling_interval = 10  #: how often to ask the cloud provider for node state
 
     def __init__(self, name, user_key_name='elasticluster-key',
                  user_key_public='~/.ssh/id_rsa.pub',
@@ -413,18 +419,134 @@ class Cluster(Struct):
                 raise NodeNotFound("Node %s not found in cluster" % node.name)
 
 
+    def start(self, min_nodes=None):
+        """
+        Starts up all the instances in the cloud.
+
+        To speed things up, all
+        instances are started in a seperate thread. To make sure
+        ElastiCluster is not stopped during creation of an instance, it will
+        overwrite the sigint handler. As soon as the last started instance
+        is returned and saved to the repository, sigint is executed as usual.
+
+        A VM instance is considered 'up and running' as soon as an SSH
+        connection can be established. If the startup timeout is reached before
+        all instances are started, ElastiCluster stops the cluster and
+        terminates all VM instances.
+
+        This method is blocking and might take some time depending on the
+        amount of instances to start.
+
+        :param min_nodes: minimum number of nodes to start in case the quota
+                          is reached before all instances are up
+        :type min_nodes: dict [node_kind] = number
+        """
+
+        nodes = self.get_all_nodes()
+
+        log.info("Starting cluster nodes ...")
+        if log.DO_NOT_FORK:
+            nodes = self._start_nodes_sequentially(nodes)
+        else:
+            nodes = self._start_nodes_parallel(nodes, self.thread_pool_max_size)
+
+        # checkpoint cluster state
+        self.repository.save_or_update(self)
+
+        not_started_nodes = self._check_starting_nodes(nodes, self.startup_timeout)
+
+        # now that all nodes are up, checkpoint cluster state again
+        self.repository.save_or_update(self)
+
+        # Try to connect to each node to gather IP addresses and SSH host keys
+        log.info("Checking SSH connection to nodes ...")
+        pending_nodes = nodes - not_started_nodes
+        unreachable_nodes = self._gather_node_ip_addresses(
+            pending_nodes, self.startup_timeout)
+
+        # It might be possible that the node.connect() call updated
+        # the `preferred_ip` attribute, so, let's save the cluster
+        # again.
+        self.repository.save_or_update(self)
+
+        # A lot of things could go wrong when starting the cluster. To
+        # ensure a stable cluster fitting the needs of the user in terms of
+        # cluster size, we check the minimum nodes within the node groups to
+        # match the current setup.
+        min_nodes = self._compute_min_nodes(min_nodes)
+        self._check_cluster_size(min_nodes)
+
+    def _start_nodes_sequentially(self, nodes):
+        """
+        Start the nodes sequentially without forking.
+
+        Return set of nodes that were actually started.
+        """
+        for node in copy(nodes):
+            started = self._start_node(node)
+            if not started:
+                nodes.remove(node)
+            # checkpoint cluster state
+            self.repository.save_or_update(self)
+        return nodes
+
+    def _start_nodes_parallel(self, nodes, max_thread_pool_size):
+        """
+        Start the nodes using a pool of multiprocessing threads for speed-up.
+
+        Return set of nodes that were actually started.
+        """
+        # Create one thread for each node to start
+        thread_pool_size = min(len(nodes), max_thread_pool_size)
+        thread_pool = Pool(processes=thread_pool_size)
+        log.debug("Created pool of %d threads", thread_pool_size)
+
+        # pressing Ctrl+C flips this flag, which in turn stops the main loop
+        # down below
+        keep_running = True
+        def sigint_handler(signal, frame):
+            """
+            Makes sure the cluster is saved, before the sigint results in
+            exiting during node startup.
+            """
+            log.error(
+                "Interrupted: will save cluster state and exit"
+                " after all nodes have started.")
+            keep_running = False
+
+        # intercept Ctrl+C
+        with sighandler(signal.SIGINT, sigint_handler):
+            result = thread_pool.map_async(self._start_node, nodes)
+            while not result.ready():
+                result.wait(1)
+                # check if Ctrl+C was pressed
+                if not keep_running:
+                    log.error("Aborting upon user interruption ...")
+                    # FIXME: `.close()` will keep the pool running until all
+                    # nodes have been started; should we use `.terminate()`
+                    # instead to interrupt node creation as soon as possible?
+                    thread_pool.close()
+                    thread_pool.join()
+                    self.repository.save_or_update(self)
+                    # FIXME: should raise an exception instead!
+                    sys.exit(1)
+
+            # keep only nodes that were successfully started
+            return set(node for node, ok
+                       in itertools.izip(nodes, result.get()) if ok)
+
+
     @staticmethod
     def _start_node(node):
-        """Static method to start a specific node on a cloud
+        """
+        Start the given node VM.
 
         :return: bool -- True on success, False otherwise
         """
-        log.debug("_start_node: working on node `%s`" % node.name)
-        # TODO: the following check is not optimal yet. When a
-        # node is still in a starting state,
-        # it will start another node here,
-        # since the `is_alive` method will only check for
-        # running nodes (see issue #13)
+        log.debug("_start_node: working on node `%s`", node.name)
+        # FIXME: the following check is not optimal yet. When a node is still
+        # in a starting state, it will start another node here, since the
+        # `is_alive` method will only check for running nodes (see issue #13)
         if node.is_alive():
             log.info("Not starting node `%s` which is "
                      "already up&running.", node.name)
@@ -437,194 +559,93 @@ class Cluster(Struct):
             except Exception as err:
                 log.error("Could not start node `%s`: %s -- %s",
                           node.name, err, err.__class__)
-                return None
+                return False
 
-    def start(self, min_nodes=None):
-        """Starts up all the instances in the cloud. To speed things up all
-        instances are started in a seperate thread. To make sure
-        elasticluster is not stopped during creation of an instance, it will
-        overwrite the sigint handler. As soon as the last started instance
-        is returned and saved to the repository, sigint is executed as usual.
-        An instance is up and running as soon as a ssh connection can be
-        established. If the startup timeout is reached before all instances
-        are started, the cluster will stop and destroy all instances.
-
-        This method is blocking and might take some time depending on the
-        amount of instances to start.
-
-        :param min_nodes: minimum number of nodes to start in case the quota
-                          is reached before all instances are up
-        :type min_nodes: dict [node_kind] = number
+    def _check_starting_nodes(self, nodes, lapse):
         """
-
-        # To not mess up the cluster management we start the nodes in a
-        # different thread. In this case the main thread receives the sigint
-        # and communicates to the `start_node` thread. The nodes to work on
-        # are passed in a managed queue.
-        self.keep_running = True
-
-        def sigint_handler(signal, frame):
-            """
-            Makes sure the cluster is stored, before the sigint results in
-            exiting during the node startup.
-            """
-            log.error("user interruption: saving cluster before exit.")
-            self.keep_running = False
-
-        nodes = self.get_all_nodes()
-
-        if log.DO_NOT_FORK:
-            # Start the nodes sequentially without forking, in order
-            # to ease the debugging
-            for node in nodes:
-                self._start_node(node)
-                self.repository.save_or_update(self)
-        else:
-            # Create one thread for each node to start
-            thread_pool = Pool(processes=min(len(nodes),
-                                             self.thread_pool_max_size))
-            log.debug("Created pool of %d threads" % len(nodes))
-            # Intercept Ctrl-c
-            signal.signal(signal.SIGINT, sigint_handler)
-
-            # This is blocking
-            result = thread_pool.map_async(self._start_node, nodes)
-
-            while not result.ready():
-                result.wait(1)
-                if not self.keep_running:
-                    # the user did abort the start of the cluster. We
-                    # finish the current start of a node and save the
-                    # status to the storage, so we don't have
-                    # unmanaged instances laying around
-                    log.error("Aborting upon Ctrl-C")
-                    thread_pool.close()
-                    thread_pool.join()
-                    self.repository.save_or_update(self)
-                    sys.exit(1)
-
-        # dump the cluster here, so we don't loose any knowledge
-        self.repository.save_or_update(self)
-
-        signal.alarm(0)
-
-        def sigint_reset(signal, frame):
-            sys.exit(1)
-        signal.signal(signal.SIGINT, sigint_reset)
-
-        # check if all nodes are running, stop all nodes if the
-        # timeout is reached
-        def timeout_handler(signum, frame):
-            raise TimeoutError("problems occured while starting the nodes, "
-                               "timeout `%i`", Cluster.startup_timeout)
-
-        signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(Cluster.startup_timeout)
-
-        starting_nodes = self.get_all_nodes()
-        try:
-            while starting_nodes:
-                starting_nodes = [n for n in starting_nodes
-                                  if not n.is_alive()]
-                if starting_nodes:
-                    time.sleep(10)
-        except TimeoutError as timeout:
-            # FIXME: this is wrong: the reason why `node.is_alive()` fails could be caused by a network error, and we shouldn't just delete the nodes.
-
-            log.error("Not all nodes were started correctly within the given"
-                      " timeout `%s`" % Cluster.startup_timeout)
-            log.error("Please check if image, keypair, and network configuration is correct and try again.")
-            # for node in starting_nodes:
-            #     log.error("Stopping node `%s`, since it could not start "
-            #               "within the given timeout" % node.name)
-            #     node.stop()
-            #     self.remove_node(node)
-
-        signal.alarm(0)
-
-        # If we reached this point, we should have IP addresses for
-        # the nodes, so update the storage file again.
-        self.repository.save_or_update(self)
-
-        # Try to connect to each node. Run the setup action only when
-        # we successfully connect to all of them.
-        signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(Cluster.startup_timeout)
-        pending_nodes = self.get_all_nodes()[:]
-
-        if not os.path.exists(self.known_hosts_file):
-            # Create the file if it's not present, otherwise the
-            # following lines will raise an error
+        Wait until all given nodes are alive, for max `lapse` seconds.
+        """
+        with timeout(lapse, raise_timeout_error):
             try:
-                fd = open(self.known_hosts_file, 'a')
-                fd.close()
-            except IOError as err:
-                log.warning("Error while opening known_hosts file `%s`: `%s`"
-                            " NOT using known_hosts_file.",
-                            self.known_hosts_file, err)
+                while nodes:
+                    nodes = set(node for node in nodes
+                                      if not node.is_alive())
+                    log.debug("Waiting for %d more nodes to come up ...", len(nodes))
+                    if nodes:
+                        time.sleep(self.polling_interval)
+            except TimeoutError:
+                log.error("Some nodes did not start correctly"
+                          " within the given %d-seconds timeout: %s",
+                          lapse, ', '.join(node.name for node in nodes))
+        # return list of not-yet-started nodes,
+        # so we can exclude them from coming rounds
+        return nodes
+
+    def _gather_node_ip_addresses(self, nodes, lapse):
+        """
+        Connect via SSH to each node.
+
+        Return set of nodes that could not be reached with `lapse` seconds.
+        """
+        # for convenience, we might set this to ``None`` if the file cannot
+        # be opened -- but we do not want to forget the cluster-wide
+        # setting in case the error is transient
+        known_hosts_path = self.known_hosts_file
+
+        # Create the file if it's not present, otherwise the
+        # following lines will raise an error
         try:
-            keys = paramiko.hostkeys.HostKeys(self.known_hosts_file)
-        except IOError:
-            keys = paramiko.hostkeys.HostKeys()
-            log.warning("Ignoring error while opening known_hosts file %s" % self.known_hosts_file)
+            fd = open(known_hosts_path, 'a')
+            fd.close()
+        except IOError as err:
+            log.warning("Error opening SSH 'known hosts' file `%s`: %s",
+                        known_hosts_path, err)
+            known_hosts_path = None
 
-        try:
-            while pending_nodes:
-                for node in pending_nodes[:]:
-                    ssh = node.connect(keyfile=self.known_hosts_file)
-                    if ssh:
-                        log.info("Connection to node %s (%s) successful.",
-                                 node.name, node.connection_ip())
-                        # Add host keys to the keys object.
-                        for host, key in ssh.get_host_keys().items():
-                            for ktype, keydata in key.items():
-                                keys.add(host, ktype, keydata)
-                        pending_nodes.remove(node)
-                    self._save_keys_to_known_hosts_file(keys)
-                if pending_nodes:
-                    time.sleep(5)
+        keys = paramiko.hostkeys.HostKeys(known_hosts_path)
 
-        except TimeoutError:
-            # remove the pending nodes from the cluster
-            log.error("Could not connect to all the nodes of the "
-                      "cluster within the given timeout `%s`."
-                      % Cluster.startup_timeout)
-            for node in pending_nodes:
-                log.error("Stopping node `%s`, since we could not connect to"
-                          " it within the timeout." % node.name)
-                self.remove_node(node, stop=True)
+        with timeout(lapse, raise_timeout_error):
+            try:
+                while nodes:
+                    for node in copy(nodes):
+                        ssh = node.connect(keyfile=known_hosts_path)
+                        if ssh:
+                            log.info("Connection to node `%s` successful,"
+                                     " using IP address %s to connect.",
+                                     node.name, node.connection_ip())
+                            # Add host keys to the keys object.
+                            for host, key in ssh.get_host_keys().items():
+                                for keytype, keydata in key.items():
+                                    keys.add(host, keytype, keydata)
+                            self._save_keys_to_known_hosts_file(keys)
+                            nodes.remove(node)
+                    if nodes:
+                        time.sleep(self.polling_interval)
 
-        signal.alarm(0)
+            except TimeoutError:
+                log.error(
+                    "Some nodes of the cluster were unreachable"
+                    " within the given %d-seconds timeout: %s",
+                    lapse, ', '.join(node.name for node in nodes))
 
-        # It might be possible that the node.connect() call updated
-        # the `preferred_ip` attribute, so, let's save the cluster
-        # again.
-        self.repository.save_or_update(self)
-
-        # Save host keys
-        self._save_keys_to_known_hosts_file(keys)
-
-        # A lot of things could go wrong when starting the cluster. To
-        # ensure a stable cluster fitting the needs of the user in terms of
-        # cluster size, we check the minimum nodes within the node groups to
-        # match the current setup.
-        if not min_nodes:
-            # the node minimum is implicit if not specified.
-            min_nodes = dict((key, len(self.nodes[key])) for key in
-                             self.nodes.iterkeys())
-        else:
-            # check that each group has a minimum value
-            for group, nodes in self.nodes.iteritems():
-                if group not in min_nodes:
-                    min_nodes[group] = len(nodes)
-
-        self._check_cluster_size(min_nodes)
+        # return list of nodes
+        return nodes
 
     def _save_keys_to_known_hosts_file(self, keys):
         try:
             keys.save(self.known_hosts_file)
         except IOError:
-            log.warning("Ignoring error while saving known_hosts file %s" % self.known_hosts_file)
+            log.warning("Ignoring error saving known_hosts file: %s",
+                        self.known_hosts_file)
+
+    def _compute_min_nodes(self, min_nodes=None):
+        if min_nodes is None:
+            min_nodes = {}
+        # check that each group has a minimum value
+        for group, nodes in self.nodes.iteritems():
+            if group not in min_nodes:
+                min_nodes[group] = len(nodes)
+        return min_nodes
 
     def _check_cluster_size(self, min_nodes):
         """Checks the size of the cluster to fit the needs of the user. It
