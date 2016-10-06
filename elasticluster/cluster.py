@@ -151,7 +151,7 @@ class Cluster(Struct):
     :ivar nodes: dict [node_type] = [:py:class:`Node`] that represents all
                  nodes in this cluster
     """
-    startup_timeout = 30 * 1  #: timeout in seconds to start all nodes
+    startup_timeout = 60 * 10  #: timeout in seconds to start all nodes
 
 
     def __init__(self, name, user_key_name='elasticluster-key',
