@@ -21,6 +21,7 @@ __author__ = str.join(', ', [
 ])
 
 # stdlib imports
+from collections import defaultdict
 import logging
 import os
 import re
@@ -256,51 +257,60 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             return False
 
     def _build_inventory(self, cluster):
-        """Builds the inventory for the given cluster and returns its path
+        """
+        Builds the inventory for the given cluster and returns its path
 
         :param cluster: cluster to build inventory for
         :type cluster: :py:class:`elasticluster.cluster.Cluster`
         """
-        inventory = dict()
+        inventory_data = defaultdict(list)
         for node in cluster.get_all_nodes():
-            if node.kind in self.groups:
-                extra_vars = ['ansible_ssh_user=%s' % node.image_user]
-                # check for nonstandard port, either IPv4 or IPv6
-                if node.preferred_ip and ':' in node.preferred_ip:
-                    match = IPV6_RE.match(node.preferred_ip)
-                    if match:
-                        host_port = match.groups()[1]
-                    else:
-                        _, _, host_port = node.preferred_ip.partition(':')
-                    if host_port:
-                        extra_vars.append('ansible_ssh_port=%s' % host_port)
+            if node.kind not in self.groups:
+                # FIXME: should this raise a `ConfigurationError` instead?
+                warn("Node kind `{0}` not defined in cluster!")
+                continue
+            extra_vars = ['ansible_ssh_user=%s' % node.image_user]
+            # check for nonstandard port, either IPv4 or IPv6
+            if node.preferred_ip and ':' in node.preferred_ip:
+                match = IPV6_RE.match(node.preferred_ip)
+                if match:
+                    host_port = match.groups()[1]
+                else:
+                    _, _, host_port = node.preferred_ip.partition(':')
+                if host_port:
+                    extra_vars.append('ansible_ssh_port=%s' % host_port)
 
-                if node.kind in self.environment:
-                    extra_vars.extend('%s=%s' % (k, v) for k, v in
-                                      self.environment[node.kind].items())
-                for group in self.groups[node.kind]:
-                    if group not in inventory:
-                        inventory[group] = []
-                    public_ip = node.preferred_ip
-                    inventory[group].append(
-                        (node.name, public_ip, str.join(' ', extra_vars)))
+            if node.kind in self.environment:
+                extra_vars.extend('%s=%s' % (k, v) for k, v in
+                                  self.environment[node.kind].items())
+            for group in self.groups[node.kind]:
+                connection_ip = node.preferred_ip
+                if connection_ip:
+                    inventory_data[group].append(
+                        (node.name, connection_ip, str.join(' ', extra_vars)))
 
-        if inventory:
-            # create a temporary file to pass to ansible, since the
-            # api is not stable yet...
-            if self._storage_path_tmp:
-                if not self._storage_path:
-                    self._storage_path = tempfile.mkdtemp()
-                elasticluster.log.warning("Writing inventory file to tmp dir "
-                                          "`%s`", self._storage_path)
-            fname = '%s.%s' % (AnsibleSetupProvider.inventory_file_ending,
-                               cluster.name)
-            inventory_path = os.path.join(self._storage_path, fname)
+        if not inventory_data:
+            elasticluster.log.info("No inventory file was created.")
+            return None
 
-            inventory_fd = open(inventory_path, 'w+')
-            for section, hosts in inventory.items():
-                inventory_fd.write("\n[" + section + "]\n")
+        # create a temporary file to pass to ansible, since the
+        # api is not stable yet...
+        if self._storage_path_tmp:
+            if not self._storage_path:
+                self._storage_path = tempfile.mkdtemp()
+            elasticluster.log.warning(
+                "Writing inventory file to tmp dir `%s`", self._storage_path)
+
+        inventory_path = os.path.join(
+            self._storage_path, (cluster.name + '.inventory'))
+        log.debug("Writing Ansible inventory to file `%s` ...", inventory_path)
+        with open(inventory_path, 'w+') as inventory_file:
+            for section, hosts in inventory_data.items():
+                # Ansible throws an error "argument of type 'NoneType' is not
+                # iterable" if a section is empty, so ensure we have something
+                # to write in there
                 if hosts:
+                    inventory_file.write("\n[" + section + "]\n")
                     for host in hosts:
                         # don't want port, makes it look like ipv6
                         if ':' in host[1]:
@@ -310,16 +320,10 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                             else:
                                 host = (host[0], host[1].partition(':')[0],
                                         host[2])
-                        hostline = "%s ansible_ssh_host=%s %s\n" \
-                                   % host
-                        inventory_fd.write(hostline)
+                        hostline = "%s ansible_ssh_host=%s %s\n" % host
+                        inventory_file.write(hostline)
+        return inventory_path
 
-            inventory_fd.close()
-
-            return inventory_path
-        else:
-            elasticluster.log.info("No inventory file was created.")
-            return None
 
     def cleanup(self, cluster):
         """Deletes the inventory file used last recently used.
