@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = str.join(', ', [
-    'Nicolas Baer <nicolas.baer@uzh.ch>'
-    'Antonio Messina <antonio.messina@s3it.uzh.ch>'
-    'Riccardo Murri <riccardo.murri@gmail.com>'
+__author__ = ', '.join([
+    'Nicolas Baer <nicolas.baer@uzh.ch>',
+    'Antonio Messina <antonio.messina@s3it.uzh.ch>',
+    'Riccardo Murri <riccardo.murri@gmail.com>',
 ])
 
 # stdlib imports
