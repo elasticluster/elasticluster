@@ -391,13 +391,17 @@ following variables in the `setup/` section:
 The following example configuration sets up a GlusterFS cluster using 8 data nodes
 and providing 2 replicas for each file::
 
-    [cluster/gluster]
+  [cluster/gluster]
     client_nodes=1
     server_nodes=8
-    setup_provider=gluster
-    ssh_to=gluster-frontend
+    ssh_to=client
 
-    [setup/gluster]
+    setup_provider=gluster
+    # ... rest of cluster params as usual ...
+
+  [setup/gluster]
+    provider=ansible
+
     client_groups=glusterfs_client
     server_groups=glusterfs_server,glusterfs_client
 
