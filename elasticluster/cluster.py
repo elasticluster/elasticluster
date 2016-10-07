@@ -486,13 +486,14 @@ class Cluster(Struct):
 
         Return set of nodes that were actually started.
         """
+        started_nodes = set()
         for node in copy(nodes):
             started = self._start_node(node)
-            if not started:
-                nodes.remove(node)
+            if started:
+                started_nodes.add(node)
             # checkpoint cluster state
             self.repository.save_or_update(self)
-        return nodes
+        return started_nodes
 
     def _start_nodes_parallel(self, nodes, max_thread_pool_size):
         """
@@ -574,8 +575,8 @@ class Cluster(Struct):
                 while nodes:
                     nodes = set(node for node in nodes
                                       if not node.is_alive())
-                    log.debug("Waiting for %d more nodes to come up ...", len(nodes))
                     if nodes:
+                        log.debug("Waiting for %d more nodes to come up ...", len(nodes))
                         time.sleep(self.polling_interval)
             except TimeoutError:
                 log.error("Some nodes did not start correctly"
