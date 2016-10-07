@@ -59,6 +59,5 @@
     - libbz2-dev
     - libncurses-dev
     - libreadline-dev
-    - libselinux-python
     - m4
   ignore_errors: True
