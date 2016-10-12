@@ -32,9 +32,3 @@ from elasticluster.providers.ec2_boto import BotoCloudProvider
 from elasticluster.providers.openstack import OpenStackCloudProvider
 from elasticluster.providers.gce import GoogleCloudProvider
 from elasticluster.providers.azure_provider import AzureCloudProvider
-
-def get_configurator(configfiles='~/.elasticluster/config',
-                     storage_path=None):
-    from elasticluster.conf import Configurator
-    conf = Configurator.fromConfig(configfiles, storage_path)
-    return conf

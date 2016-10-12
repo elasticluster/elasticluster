@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013, 2014, 2015 S3IT, University of Zurich
+# Copyright (C) 2013-2016 University of Zurich.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,55 +15,692 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = str.join(', ', [
-    'Nicolas Baer <nicolas.baer@uzh.ch>',
-    'Antonio Messina <antonio.s.messina@gmail.com>',
-    'Riccardo Murri <riccardo.murri@gmail.com>',
-])
+"""
+Turn ElastiCluster configuration into internal data structures.
 
-# System imports
+Digesting configuration files into data structures ready to be processed by the
+rest of ElastiCluster happens in three stages:
+
+1. Read configuration files and create a (nested) key/value store of all the
+   configuration items.
+
+2. Arrange the configuration items into sets of properties that are needed to
+   create ElastiCluster objects (clusters, cloud providers, etc.) -- the
+   outcome of this phase would be a set of dictionaries that can be fed as
+   `**kwargs` to class constructors.
+
+3. Instanciate the actual working objects.
+"""
+
+from __future__ import (print_function, division, absolute_import)
+
+# stdlib imports
 from collections import defaultdict
+from ConfigParser import SafeConfigParser
 import os
+from os.path import expanduser, expandvars
 import re
 import sys
-try:
-    from types import StringTypes
-except ImportError:
-    # Python 3
-    StringTypes = (str,)
-import warnings
+from urlparse import urlparse
+from warnings import warn
 
-# External modules
-from ConfigParser import RawConfigParser
-
+# 3rd-party modules
 from pkg_resources import resource_filename
 
-try:
-    # Voluptuous version >= 0.8.1
-    from voluptuous import message, MultipleInvalid, Invalid, Schema
-    from voluptuous import All, Length, Any, Url, Boolean, Optional, Required
-except ImportError:
-    # Voluptuous version <= 0.7.2
-    from voluptuous.voluptuous import message, MultipleInvalid, Invalid
-    from voluptuous import Schema, All, Length, Any, Url, Boolean, Optional, Required
+from schema import Schema, SchemaError, Optional, Or, Regex, Use
 
-# Elasticluster imports
+# ElastiCluster imports
 from elasticluster import log
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.cluster import Cluster
 from elasticluster.repository import MultiDiskRepository
+from elasticluster.validate import (
+    boolean,
+    executable_file,
+    hostname,
+    nonempty_str,
+    nova_api_version,
+    readable_file,
+    url,
+)
 
 
-class Configurator(object):
-    """The `Configurator` class is responsible for
+## defaults and built-in config
 
-    1) keeping track of the configuration and
+KEY_RENAMES = [
+    # section   from key          to key          verbose?  supported until...
+    ('cluster', 'setup_provider', 'setup',        True,     '2.0'),
+    ('cloud',   'tenant_name',    'project_name', True,     '2.0'),
+    # working on issue #279 uncovered a conflict between code and
+    # docs: the documentation referred to config keys
+    # `<class>_min_nodes` but the code actually looked for
+    # `<class>_nodes_min`.  Keep this last version as it makes the
+    # code simpler, but alert users of the change...
+    ('cluster', re.compile(r'([0-9a-z_-]+)_min_nodes'),
+                                  r'\1_nodes_min', True,    '2.0'),
+    ('setup',   'ssh_pipelining', 'ansible_ssh_pipelining',
+                                                   True,    '1.4'),
+]
 
-    2) offer factory methods to create all kind of objects that need
-    information from the configuration.
 
-    The cluster configuration dictionary is structured in the
+SCHEMA = {
+    'cloud': {
+        'provider': Or('azure', 'ec2_boto', 'google', 'openstack'),
+        # allow other keys w/out restrictions; each cloud provider has its own
+        # set of keys, which are handled separately
+        str: str,
+    },
+    'cluster': {
+        'cloud': str,
+        'setup': str,
+        'login': str,
+        'nodes': {
+            str: {
+                'flavor': nonempty_str,
+                'image_id': nonempty_str,
+                Optional('image_userdata', default=''): str,
+                'security_group': str,  ## FIXME: alphanumeric?
+                Optional('network_ids'): str,
+                # these are auto-generated but already there by the time
+                # validation is run
+                'login': nonempty_str,
+                'num': int,
+                'min_num': int,
+            },
+        },
+        # allow other keys w/out restrictions
+        str: str,
+    },
+    'login': {
+        'image_user': nonempty_str,
+        'image_sudo': boolean,
+        Optional('image_user_sudo', default="root"): nonempty_str,
+        Optional('image_userdata', default=''): str,
+        'user_key_name': str,  # FIXME: are there restrictions? (e.g., alphanumeric)
+        'user_key_private': readable_file,
+        'user_key_public': readable_file,
+    },
+    'setup': {
+        Optional('provider', default='ansible'): str,
+        Optional("playbook_path",
+                 default=os.path.join(
+                     resource_filename('elasticluster', 'share/playbooks'),
+                     'site.yml')): readable_file,
+        Optional("ansible_command"): executable_file,
+        Optional("ansible_extra_args"): str,
+        #Optional("ansible_ssh_pipelining"): boolean,
+        # allow other keys w/out restrictions
+        str: str,
+    },
+    'storage': {
+        Optional('storage_path', default=os.path.expanduser("~/.elasticluster/storage")): str,
+        Optional('storage_type'): ['yaml', 'json', 'pickle'],
+    },
+}
+
+
+CLOUD_PROVIDER_SCHEMAS = {
+    'azure': {
+        "provider": 'azure',
+        "subscription_id": nonempty_str,
+        "certificate": nonempty_str,
+    },
+
+    'ec2_boto': {
+        "provider": 'ec2_boto',
+        "ec2_url": url,
+        Optional("ec2_access_key", default=os.getenv('EC2_ACCESS_KEY', '')): nonempty_str,
+        Optional("ec2_secret_key", default=os.getenv('EC2_SECRET_KEY', '')): nonempty_str,
+        "ec2_region": nonempty_str,
+        Optional("request_floating_ip", default=False): boolean,
+        Optional("vpc"): nonempty_str,
+        Optional("price", default=0): int,
+        Optional("timeout", default=0): int,
+        Optional("instance_profile"): nonempty_str,
+    },
+
+    'google': {
+        "provider": 'google',
+        "gce_client_id": nonempty_str,
+        "gce_client_secret": nonempty_str,
+        "gce_project_id": nonempty_str,
+        Optional("noauth_local_webserver"): boolean,
+        Optional("zone", default="us-central1-a"): nonempty_str,
+        Optional("network", default="default"): nonempty_str,
+    },
+
+    'openstack': {
+        "provider": 'openstack',
+        Optional("auth_url", default=os.getenv('OS_AUTH_URL', '')): url,
+        Optional("username", default=os.getenv('OS_USERNAME', '')): nonempty_str,
+        Optional("password", default=os.getenv('OS_PASSWORD', '')): nonempty_str,
+        Optional("project_name",
+                 # if OS_PROJECT_NAME is not defined,
+                 # try legacy variable OS_TENANT_NAME as a fallback
+                 default=os.getenv('OS_PROJECT_NAME',
+                                   os.getenv('OS_TENANT_NAME', ''))): nonempty_str,
+        Optional("request_floating_ip"): boolean,
+        Optional("region_name"): nonempty_str,
+        Optional("nova_api_version"): nova_api_version,
+    },
+}
+
+
+def _make_defaults_dict():
+    """
+    Return mapping from names to be used in `%()s` expansion.
+    """
+    env = {}
+    # default location of Ansible playbooks; make it also available as
+    # `%(elasticluster_playbooks)` so one can write `%(elasticluster_playbooks)s/site.yml`
+    env['ansible_pb_dir'] = env['elasticluster_playbooks'] \
+                             = resource_filename('elasticluster', 'share/playbooks')
+    return env
+
+
+## public API entry point
+
+def make_creator(configfiles, storage_path=None):
+    """
+    Return a `Creator` instance initialized from given configuration files.
+
+    :param list configfiles: list of paths to the INI-style file(s).
+        For each path ``P`` in `configfiles`, if a directory named ``P.d``
+        exists, also reads all the `*.conf` files in that directory.
+
+    :param str storage_path:
+        path to the storage directory. If defined, a
+        :py:class:`repository.DiskRepository` class will be instantiated.
+
+    :return: :py:class:`Creator`
+    """
+    try:
+        # only strings have the `.swapcase()` method; lists and tuples don't
+        configfiles.swapcase
+        configfiles = [configfiles]
+    except AttributeError:
+        # `configfiles` is list or tuple
+        pass
+
+    # also look for ``path.d/*.conf`` files
+    configfiles = _expand_config_file_list(configfiles)
+
+    config = load_config_files(configfiles)
+
+    return Creator(config, storage_path=storage_path)
+
+
+def _expand_config_file_list(paths, ignore_nonexistent=True,
+                            expand_user_dir=True, expand_env_vars=False):
+    """
+    Return list of (existing) configuration files.
+
+    The list of configuration file is built in the following way:
+
+    - any path pointing to an existing file is included in the result;
+
+    - for any path ``P``, if directory ``P.d`` exists, any file
+      contained in it and named ``*.conf`` is included in the
+      result;
+
+    - if argument `ignore_nonexistent` is ``True`` (default), then non-existing
+      paths are silently ignored and omitted from the returned result. Else, if
+      `ignore_nonexistent` is ``False``, a `ValueError` exception is raised.
+
+    If keyword arguments `expand_user_dir` and `expand_env_vars` are ``True``
+    (default), then each path is expanded with `os.path.expanduser` (resp.
+    `os.path.expandvars`).
+    """
+    configfiles = set()
+    for path in paths:
+        if expand_user_dir:
+            path = os.path.expanduser(path)
+        if expand_env_vars:
+            path = os.path.expandvars(path)
+        if os.path.isfile(path):
+            configfiles.add(path)
+        elif not ignore_nonexistent:
+            raise ValueError(
+                "Configuration file `{0}` does not exist"
+                .format(path))
+        path_d = path + '.d'
+        if os.path.isdir(path_d):
+            for entry in os.listdir(path_d):
+                if entry.endswith('.conf'):
+                    cfgfile = os.path.join(path_d, entry)
+                    if cfgfile not in configfiles:
+                        configfiles.add(cfgfile)
+    return list(configfiles)
+
+
+## loading and parsing
+
+# validation regexps
+_CLUSTER_NAME_RE = re.compile('^[a-z0-9+_-]+$', re.I)
+
+
+def load_config_files(paths):
+    """
+    Read configuration file(s) and return corresponding data structure.
+
+    :param paths: list of file names to load.
+    """
+    # I wish there were a "pipelinine" operator in Python, so I could rewrite
+    # this as `paths *into* raw_config *into* _arrange_config_tree ...`
+    raw_config = _read_config_files(paths)
+    tree_config1 = _arrange_config_tree(raw_config)
+    tree_config2 = _perform_key_renames(tree_config1)
+    complete_config = _build_node_section(tree_config2)
+    object_tree = _validate_and_convert(complete_config)
+    deref_config = _dereference_config_tree(object_tree)
+    final_config = _cross_validate_final_config(deref_config)
+
+    return final_config
+
+
+def _read_config_files(paths):
+    """
+    Read configuration data from INI-style file(s).
+
+    Data loaded from the given files is aggregated into a nested 2-level Python
+    mapping, where 1st-level keys are config section names (as read from the
+    files), and corresponding items are again key/value mappings (configuration
+    item name and value).
+
+    :param paths: list of filesystem paths of files to read
+    """
+    # read given config files
+    configparser = SafeConfigParser()
+    configparser.read(paths)
+
+    # temporarily modify environment to allow both `${...}` and `%(...)s`
+    # variable substitution in config values
+    defaults = _make_defaults_dict()
+    added = []
+    changed = {}
+    for key, value in defaults.items():
+        if key not in os.environ:
+            added.append(key)
+        else:
+            changed[key] = os.environ[key]
+        os.environ[key] = value
+
+    # convert result to Python dict
+    config = {}
+    for section in configparser.sections():
+        config[section] = {}
+        for key in configparser.options(section):
+            # `configparser.get()` performs the `%(...)s` substitutions
+            value = configparser.get(section, key, vars=defaults)
+            # `expandvars()` performs the `${...}` substitutions
+            config[section][key] = expandvars(value)
+
+    # restore pristine process environment
+    for key in added:
+        del os.environ[key]
+    for key in changed:
+        os.environ[key] = changed[key]
+
+    return config
+
+
+def _arrange_config_tree(raw_config):
+    """
+    Group configuration data by section type.
+
+    Given the 'raw configuration data' (as returned by
+    `_read_config_files`:func:), create and return a nested mapping:
+
+    * 1st-level keys are strings naming section types (i.e., ``'cluster'``,
+      ``'cloud'``, ``'login'``, ``'setup'``);
+
+    * 2nd-level keys are then the names given to such sections. For example,
+      the contents of section ``[login/ubuntu]`` would be accessible from the
+      return value ``C`` as ``C['login']['ubuntu']``.
+
+    As an exception, subsections of a named cluster (e.g.,
+    ``[cluster/gridengine/qmaster]``) will be inserted as items in the
+    ``'nodes'`` key of the named cluster. For example, key/value pairs read
+    from section ``[cluster/gridengine/qmaster]`` will be accessible as
+    ``C['cluster']['gridengine']['nodes']['qmaster']``.
+    """
+    tree = {}
+    for sect_name, sect_items in raw_config.iteritems():
+        # skip empty sections
+        if not sect_items:
+            continue
+        path = sect_name.split('/')
+        # translate `cluster/foo/bar` -> `cluster/foo/__nodes__/bar`
+        if path[0] == 'cluster' and len(path) > 2:
+            path.insert(2, 'nodes')
+        _update_nested_item(tree, path, sect_items)
+    return tree
+
+
+def _update_nested_item(D, path, items):
+    """
+    Walk nested mapping `D` and update the last key in `path`.
+    For example::
+
+      >>> D = {'b': {'a': {}}}
+      >>> updated = _update_nested_item(D, ['b', 'a'], {'x':1, 'y':2})
+      >>> D['b']['a'] == {'x':1, 'y':2}
+      True
+
+    The 'update' operation leaves key/value pairs which are not in `items`
+    unchanged::
+
+      >>> D = {'b': {'a': {'z': 3}}}
+      >>> updated = _update_nested_item(D, ['b', 'a'], {'x':1, 'y':2})
+      >>> D['b']['a'] == {'x':1, 'y':2, 'z':3}
+      True
+
+    In fact, `_update_nested_item` can also be used in the 'degenerate' cases
+    where `path` is 1 or 0 elements long, in which case it becomes essentially
+    a more verbose syntax for `dict.update`::
+
+      >>> D = {'a': {}}
+      >>> updated = _update_nested_item(D, ['a'], {'x':1, 'y':2})
+      >>> D['a'] == {'x':1, 'y':2}
+      True
+
+      >>> D = {'z': 3}
+      >>> updated = _update_nested_item(D, [], {'x':1, 'y':2})
+      >>> D == {'x':1, 'y':2, 'z':3}
+      True
+
+    Note that the nested dictionaries corresponding to the specified `path`
+    will be created if they do not already exist::
+
+      >>> D = {}
+      >>> updated = _update_nested_item(D, ['b', 'a'], {'x':1, 'y':2})
+      >>> D == {'b': {'a': {'x':1, 'y':2}}}
+      True
+    """
+    target = D
+    while path:
+        key = path.pop(0)
+        if key not in target:
+            target[key] = {}
+        target = target[key]
+    target.update(items)
+    return target
+
+
+def _perform_key_renames(tree, changes=KEY_RENAMES):
+    """
+    Change a configuration "tree" in-place, renaming legacy keys to new names.
+
+    This function chiefly supports two distinct uses:
+
+    - allow old/legacy option names configuration files, but still warn users
+      of the new/updated name;
+    - allow alternate options names to be used in the configuration file but
+      normalize them to a "canonical" spelling before the code sees them.
+
+    Second argument `changes` is a list of items. Each item is a tuple
+    describing a single key rename:
+
+    - 1st field names the section type (e.g., ``cluster``) where the key
+      renames are going to happen;
+    - 2nd field is the old/legacy key name (can be a regular expression);
+    - 3rd field is the new/updated key name (or the substitution pattern
+      if 2nd field is a regexp);
+    - 4th field is a boolean flag: if ``True``, a warning will be emitted
+      telling users that the configuration option has been renamed; make this
+      ``False`` to just allow option key synonyms;
+    - 5th field is the ElastiCluster release until which the automatic rename
+      will be supported (only relevant if 4th field "verbose" is ``True``).
+    """
+    for section, from_key, to_key, verbose, supported in changes:
+        for stanza, pairs in tree[section].iteritems():
+            # ensure we work on a copy of the keys collection,
+            # so we can mutate the tree down below
+            for key in list(pairs.keys()):
+                substitute = False
+                try:
+                    # try regexp match
+                    match = from_key.match(key)
+                    if match:
+                        to_key = from_key.sub(key, to_key)
+                        substitute = True
+                except AttributeError:
+                    # plain old string match
+                    substitute = (key == from_key)
+                if substitute:
+                    tree[section][stanza][to_key] = tree[section][stanza][from_key]
+                    del tree[section][stanza][from_key]
+                    if verbose:
+                        warn("Configuration key `{from_key}`"
+                             " in section `{section}/{stanza}`"
+                             " should be renamed to `{to_key}`"
+                             " -- please update configuration file(s)."
+                             " Support for automatic renaming will be"
+                             " removed in {version} of ElastiCluster."
+                             .format(
+                                 from_key=from_key,
+                                 to_key=to_key,
+                                 section=section,
+                                 stanza=stanza,
+                                 version=(("release {0}".format(supported))
+                                          if supported
+                                          else "a future release")))
+    return tree
+
+
+def _dereference_config_tree(tree, evict_on_error=True):
+    """
+    Modify `tree` in-place replacing cross-references by section name with the
+    actual section content.
+
+    For example, if a cluster section lists a key/value pair
+    ``'login': 'ubuntu'``, this will be replaced with ``'login': { ... }``.
+    """
+    to_evict = []
+    for cluster_name, cluster_conf in tree['cluster'].iteritems():
+        for key in ['cloud', 'login', 'setup']:
+            refname = cluster_conf[key]
+            if refname in tree[key]:
+                # dereference
+                cluster_conf[key] = tree[key][refname]
+            else:
+                log.error(
+                    "Configuration section `cluster/%s`"
+                    " references non-existing %s section `%s`."
+                    " %s",
+                    cluster_name, key, refname,
+                    ("Dropping cluster definition." if evict_on_error else ""))
+                if evict_on_error:
+                    to_evict.append(cluster_name)
+                    break
+    for cluster_name in to_evict:
+        del tree['cluster'][cluster_name]
+    return tree
+
+
+def _build_node_section(tree):
+    """
+    Create or update nested mapping `nodes` into each cluster config.
+
+    Keys in the `nodes` mapping are node kind names (i.e., the first segment of
+    `*_nodes` configuration options), and corresponding values are
+    configuration key/value pairs that apply to nodes of that kind.
+
+    See also function `_gather_node_kind_info`:func: for more details on how
+    the kind-level configuration is built.
+    """
+    for cluster_name, cluster_conf in tree['cluster'].iteritems():
+        node_kind_config = dict((key, value)
+                                for key, value in cluster_conf.iteritems()
+                                if key.endswith('_nodes'))
+        if 'nodes' not in cluster_conf:
+            cluster_conf['nodes'] = {}
+        for key in node_kind_config.iterkeys():
+            kind_name = key[:-len('_nodes')]
+            # nodes can inherit the properties of cluster or overwrite them
+            kind_values = _gather_node_kind_info(kind_name, cluster_name, cluster_conf)
+            cluster_conf['nodes'][kind_name] = kind_values
+    return tree
+
+
+def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
+    """
+    Collect key/value configuration for nodes of a given kind.
+
+    Return a mapping of key/value configuration options; the mapping is
+    constructed by layering key/value pairs from two sources:
+
+    1. Cluster-level options;
+    2. Kind-specific attributes, as set in the ``[cluster/name/kind]`` sections.
+
+    Options from the latter override options set in the former.
+    """
+    # copy cluster-level config
+    kind_values = {}
+    for attr in (
+            'flavor',
+            'image_id',
+            #'image_user',       ## from `login/*`
+            'image_userdata',
+            'login',
+            'network_ids',
+            'security_group',
+            #'user_key_name',    ## from `login/*`
+            #'user_key_private', ## from `login/*`
+            #'user_key_public',  ## from `login/*`
+    ):
+        if attr in cluster_conf:
+            kind_values[attr] = cluster_conf[attr]
+
+    # override with node-specific attrs (if given)
+    if kind_name in cluster_conf['nodes']:
+        for key, value in cluster_conf['nodes'][kind_name].iteritems():
+            kind_values[key] = value
+
+    kind_values['num'], kind_values['min_num'] = \
+        _compute_desired_and_minimum_number_of_nodes(kind_name, cluster_name, cluster_conf)
+
+    return kind_values
+
+
+def _compute_desired_and_minimum_number_of_nodes(
+        kind_name, cluster_name, cluster_conf):
+    """
+    Compute desired and minimum number of nodes of the given kind.
+    """
+    num = int(cluster_conf[kind_name + '_nodes'])
+    if (kind_name + '_nodes_min') not in cluster_conf:
+        min_num = num
+    else:
+        min_num = int(cluster_conf[kind_name + '_nodes_min'])
+        if min_num > num:
+            raise ValueError(
+                " In cluster `{cluster_name}`:"
+                " Minimum number of '{kind}' nodes ({min_num})"
+                " is larger then the number"
+                " of '{kind}' nodes to start ({num})"
+                .format(
+                    cluster_name=cluster_name,
+                    kind=kind_name,
+                    min_num=min_num,
+                    num=num
+                ))
+    return num, min_num
+
+
+## validation and conversion
+
+def _validate_and_convert(cfgtree, evict_on_error=True):
+    objtree = {}
+    for section, model in SCHEMA.iteritems():
+        if section not in cfgtree:
+            continue
+        stanzas = cfgtree[section]
+        objtree[section] = {}
+        for name, properties in stanzas.iteritems():
+            log.debug("Checking section `%s/%s` ...", section, name)
+            try:
+                objtree[section][name] = Schema(model).validate(properties)
+                # further checks for cloud providers
+                if section == 'cloud':
+                    objtree[section][name] = _validate_cloud_section(objtree[section][name])
+                # check node name pattern in clusters conforms to RFC952
+                if section == 'cluster':
+                    _validate_node_group_names(objtree[section][name])
+            except (SchemaError, ValueError) as err:
+                log.error("In section `%s/%s`: %s", section, name, err)
+                if evict_on_error:
+                    log.error(
+                        "Dropping configuration section `%s/%s`"
+                        " because of the above errors", section, name)
+                    # `objtree[section][name]` exists if the except was raised
+                    # by the second validation (line 650)
+                    if name in objtree[section]:
+                        del objtree[section][name]
+    return objtree
+
+def _validate_cloud_section(cloud_section):
+    """
+    Run provider-specific schema validation.
+    """
+    provider = cloud_section['provider']
+    return Schema(
+        CLOUD_PROVIDER_SCHEMAS[provider]).validate(cloud_section)
+
+def _validate_node_group_names(cluster_section):
+    """
+    Check that node group names conform to RFC 952.
+    """
+    for nodename in cluster_section['nodes']:
+        hostname(nodename)  ## raises ValueError if not conformant
+    return cluster_section
+
+
+def _cross_validate_final_config(objtree, evict_on_error=True):
+    """
+    Run validation checks that require correlating values from different sections.
+    """
+    # take a copy of cluster config as we might be modifying it
+    for name, cluster in list(objtree['cluster'].items()):
+        valid = True
+        if cluster['cloud']['provider'] == 'ec2_boto':
+            cluster_uses_vpc = ('vpc' in cluster['cloud'])
+            for groupname, properties in cluster['nodes'].items():
+                if cluster_uses_vpc and 'network_ids' not in properties:
+                    log.error(
+                        "Node group `%s/%s` is being used in a VPC,"
+                        " so it must specify ``network_ids``.",
+                        cluster, groupname)
+                    if evict_on_error:
+                        valid = False
+                        break
+                if not cluster_uses_vpc and 'network_ids' in properties:
+                    log.error(
+                        "Cluster `%s` must specify a VPC"
+                        " to place `%s` instances in network `%s`",
+                        cluster, groupname, properties['network_ids'])
+                    if evict_on_error:
+                        valid = False
+                        break
+        if not valid:
+            log.error("Dropping cluster `%s` because of the above errors", name)
+            del objtree['cluster'][name]
+    return objtree
+
+
+## general factory
+
+class Creator(object):
+    """
+    The `Creator` class is responsible for:
+
+    1. keeping track of the configuration, and
+    2. offering factory methods to create all kind of objects
+       that need information from the configuration, and
+    3. loading a cluster from a valid `repository.AbstractClusterRepository`.
+
+    First argument cluster configuration is a Python mapping structured in the
     following way: (see an example @
     https://github.com/gc3-uzh-ch/elasticluster/wiki/Configuration-Module)::
 
@@ -81,163 +718,40 @@ class Configurator(object):
               }
            }
 
-
-    It is also responsible for loading a cluster from a valid
-    `repository.AbstractClusterRepository`.
-
     :param dict cluster_conf: see description above
-
     :param str storage_path: path to store data
 
     :raises MultipleInvalid: configuration validation
-
     """
 
-    setup_providers_map = {"ansible": AnsibleSetupProvider, }
+    setup_providers_map = {
+        "ansible": AnsibleSetupProvider,
+    }
 
-    default_storage_path = os.path.expanduser(
-        "~/.elasticluster/storage")
-    default_storage_type = 'yaml'
+    DEFAULT_STORAGE_PATH = os.path.expanduser("~/.elasticluster/storage")
+    DEFAULT_STORAGE_TYPE = 'yaml'
 
     def __init__(self, cluster_conf, storage_path=None, storage_type=None):
-        self.general_conf = dict()
-        self.cluster_conf = cluster_conf
+        ### DEBUG
+        #import json
+        #print("### Creating `Configurator` with the following data:")
+        #sys.stdout.write("cluster_conf = ")
+        #json.dump(cluster_conf, sys.stdout, indent=4, sort_keys=True)
+        #print()
+        ### /DEBUG
 
-        if storage_path:
-            storage_path = os.path.expanduser(storage_path)
-            storage_path = os.path.expandvars(storage_path)
-            self.general_conf['storage_path'] = storage_path
-        else:
-            self.general_conf['storage_path'] = Configurator.default_storage_path
+        self.cluster_conf = cluster_conf['cluster']
 
-        self.general_conf['storage_type'] = storage_type or Configurator.default_storage_type
+        self.storage_path = (
+            os.path.expandvars(os.path.expanduser(storage_path)) if storage_path
+            else self.DEFAULT_STORAGE_PATH)
 
-        validator = ConfigValidator(self.cluster_conf)
-        validator.validate()
+        self.storage_type = storage_type or self.DEFAULT_STORAGE_TYPE
 
-    @classmethod
-    def fromConfig(cls, configfiles, storage_path=None):
-        """
-        Helper method to initialize Configurator from a `.ini`-format file.
-
-        :param list configfiles: list of paths to the ini file(s).
-            For each path ``P`` in `configfiles`, if a directory named ``P.d``
-            exists, also reads all the `*.conf` files in that directory.
-
-        :param str storage_path:
-            path to the storage directory. If defined, a
-            :py:class:`repository.DiskRepository` class will be instantiated.
-
-        :return: :py:class:`Configurator`
-        """
-        if isinstance(configfiles, StringTypes):
-            configfiles = [configfiles]
-        config_reader = ConfigReader(configfiles)
-        (conf, storage_conf) = config_reader.read_config()
-
-        # FIXME: We shouldn't need this ugly fix
-        if storage_path:
-            storage_conf['storage_path'] = storage_path
-        return Configurator(conf, **storage_conf)
-
-    def create_cloud_provider(self, cluster_template):
-        """Creates a cloud provider by inspecting the configuration properties
-        of the given cluster template.
-
-        :param str cluster_template: template to use (if not already specified
-                                 on init)
-        :return: cloud provider that fulfills the contract of
-                 :py:class:`elasticluster.providers.AbstractSetupProvider`
-        """
-        conf = self.cluster_conf[cluster_template]['cloud']
-
-        try:
-            if conf['provider'] == 'ec2_boto':
-                from elasticluster.providers.ec2_boto import BotoCloudProvider
-                provider = BotoCloudProvider
-            elif conf['provider'] == 'openstack':
-                from elasticluster.providers.openstack import OpenStackCloudProvider
-                provider = OpenStackCloudProvider
-            elif conf['provider'] == 'google':
-                from elasticluster.providers.gce import GoogleCloudProvider
-                provider = GoogleCloudProvider
-            elif conf['provider'] == 'azure':
-                from elasticluster.providers.azure_provider import AzureCloudProvider
-                provider = AzureCloudProvider
-            else:
-                raise Invalid("Invalid provider '%s' for cluster '%s'"% (conf['provider'], cluster_template))
-        except ImportError as ex:
-            raise Invalid("Unable to load provider '%s': %s" % (conf['provider'], ex))
-
-        providerconf = conf.copy()
-        providerconf.pop('provider')
-        providerconf['storage_path'] = self.general_conf['storage_path']
-
-        return provider(**providerconf)
-
-    def create_cluster(self, template, name=None):
-        """Creates a cluster by inspecting the configuration properties of the
-        given cluster template.
-
-        :param str template: name of the cluster template
-
-        :param str name: name of the cluster. If not defined, the cluster
-                         will be named after the template.
-
-        :return: :py:class:`elasticluster.cluster.cluster` instance:
-
-        :raises ConfigurationError: cluster template not found in config
-
-        """
-        if not name:
-            name = template
-
-        if template not in self.cluster_conf:
-            raise ConfigurationError(
-                "Invalid configuration for cluster `%s`: %s"
-                "" % (template, name))
-
-        conf = self.cluster_conf[template]
-        conf_login = self.cluster_conf[template]['login']
-
-        extra = conf['cluster'].copy()
-        extra.pop('cloud')
-        extra.pop('setup_provider')
-        extra['template'] = template
-
-        cluster = Cluster(name=name,
-                          cloud_provider=self.create_cloud_provider(template),
-                          setup_provider=self.create_setup_provider(template, name=name),
-                          user_key_name=conf_login['user_key_name'],
-                          user_key_public=conf_login['user_key_public'],
-                          user_key_private=conf_login["user_key_private"],
-                          repository=self.create_repository(),
-                          **extra)
-
-        nodes = dict(
-            (k[:-6], int(v)) for k, v in conf['cluster'].iteritems() if
-            k.endswith('_nodes'))
-
-        for kind, num in nodes.iteritems():
-            conf_kind = conf['nodes'][kind]
-            extra = conf_kind.copy()
-            extra.pop('image_id', None)
-            extra.pop('flavor', None)
-            extra.pop('security_group', None)
-            extra.pop('image_userdata', None)
-            userdata = conf_kind.get('image_userdata', '')
-            cluster.add_nodes(kind,
-                              num,
-                              conf_kind['image_id'],
-                              conf_login['image_user'],
-                              conf_kind['flavor'],
-                              conf_kind['security_group'],
-                              image_userdata=userdata,
-                              **extra)
-        return cluster
 
     def load_cluster(self, cluster_name):
-        """Loads a cluster from the cluster repository.
+        """
+        Load a cluster from the configured repository.
 
         :param str cluster_name: name of the cluster
         :return: :py:class:`elasticluster.cluster.cluster` instance
@@ -249,13 +763,144 @@ class Configurator(object):
         if not cluster.cloud_provider:
             cluster.cloud_provider = self.create_cloud_provider(cluster.template)
         cluster.update_config(
-            self.cluster_conf[cluster.template]['cluster'],
+            self.cluster_conf[cluster.template],
             self.cluster_conf[cluster.template]['login']
         )
         return cluster
 
-    @staticmethod
-    def _read_node_groups(conf):
+
+    def create_cloud_provider(self, cluster_template):
+        """
+        Return cloud provider instance for the given cluster template.
+
+        :param str cluster_template: name of cluster template to use
+        :return: cloud provider instance that fulfills the contract of
+                 :py:class:`elasticluster.providers.AbstractCloudProvider`
+        """
+        cloud_conf = self.cluster_conf[cluster_template]['cloud']
+        provider = cloud_conf['provider']
+
+        try:
+            if provider == 'ec2_boto':
+                from elasticluster.providers.ec2_boto import BotoCloudProvider
+                provider = BotoCloudProvider
+            elif provider == 'openstack':
+                from elasticluster.providers.openstack import OpenStackCloudProvider
+                provider = OpenStackCloudProvider
+            elif provider == 'google':
+                from elasticluster.providers.gce import GoogleCloudProvider
+                provider = GoogleCloudProvider
+            elif provider == 'azure':
+                from elasticluster.providers.azure_provider import AzureCloudProvider
+                provider = AzureCloudProvider
+            else:
+                # this should have been caught during config validation!
+                raise ConfigurationError(
+                    "Invalid cloud provider `{0}` for cluster `{1}`"
+                    .format(provider, cluster_template))
+        except ImportError as err:
+            raise RuntimeError(
+                "Unable to load cloud provider `{0}`: {1}"
+                .format(provider, err))
+
+        provider_conf = cloud_conf.copy()
+        provider_conf.pop('provider')
+
+        return provider(storage_path=self.storage_path, **provider_conf)
+
+
+    def create_cluster(self, template, name=None):
+        """
+        Creates a ``Cluster``:class: instance by inspecting the configuration
+        properties of the given cluster template.
+
+        :param str template: name of the cluster template
+        :param str name: name of the cluster. If not defined, the cluster
+                         will be named after the template.
+
+        :return: :py:class:`elasticluster.cluster.cluster` instance:
+
+        :raises ConfigurationError: cluster template not found in config
+        """
+        if template not in self.cluster_conf:
+            raise ConfigurationError(
+                "No cluster template configuration by the name `{template}`"
+                .format(template=template))
+
+        conf = self.cluster_conf[template]
+
+        extra = conf.copy()
+        extra.pop('cloud')
+        extra.pop('nodes')
+        extra.pop('setup')
+        extra['template'] = template
+
+        cluster = Cluster(
+            name=(name or template),
+            cloud_provider=self.create_cloud_provider(template),
+            setup_provider=self.create_setup_provider(template, name=name),
+            user_key_name=conf['login']['user_key_name'],
+            user_key_public=conf['login']['user_key_public'],
+            user_key_private=conf['login']["user_key_private"],
+            repository=self.create_repository(),
+            **extra)
+
+        nodes = conf['nodes']
+        for group_name in nodes:
+            group_conf = nodes[group_name]
+            for varname in ['image_user', 'image_userdata']:
+                group_conf.setdefault(varname, conf['login'][varname])
+            cluster.add_nodes(group_name, **group_conf)
+        return cluster
+
+
+    def create_setup_provider(self, cluster_template, name=None):
+        """Creates the setup provider for the given cluster template.
+
+        :param str cluster_template: template of the cluster
+        :param str name: name of the cluster to read configuration properties
+        """
+        conf = self.cluster_conf[cluster_template]['setup']
+        if name:
+            conf['cluster_name'] = name
+        conf_login = self.cluster_conf[cluster_template]['login']
+
+        provider_name = conf.get('provider', 'ansible')
+        if provider_name not in self.setup_providers_map:
+            raise ConfigurationError(
+                "Invalid value `%s` for `setup_provider` in configuration "
+                "file." % provider_name)
+        provider = self.setup_providers_map[provider_name]
+
+        storage_path = self.storage_path
+        playbook_path = conf.pop('playbook_path', None)
+
+        groups = self._read_node_groups(conf)
+        environment = {}
+        for node_kind, grps in groups.iteritems():
+            if not isinstance(grps, list):
+                groups[node_kind] = [grps]
+
+            # Environment variables parsing
+            environment[node_kind] = {}
+            for key, value in (list(conf.items())
+                               + list(self.cluster_conf[cluster_template].items())):
+                # Set both group and global variables
+                for prefix in [(node_kind + '_var_'), "global_var_"]:
+                    if key.startswith(prefix):
+                        var = key.replace(prefix, '')
+                        environment[node_kind][var] = value
+                        log.debug("setting variable %s=%s for node kind %s",
+                                  var, value, node_kind)
+
+        return provider(groups, playbook_path=playbook_path,
+                        environment_vars=environment,
+                        storage_path=storage_path,
+                        sudo=conf_login['image_sudo'],
+                        sudo_user=conf_login['image_user_sudo'],
+                        **conf)
+
+    def _read_node_groups(self, conf):
         """
         Return mapping from node kind names to list of Ansible host group names.
         """
@@ -268,10 +913,10 @@ class Configurator(object):
                            for group_name in value.split(',')]
             for group_name in group_names:
                 # handle renames
-                if group_name in Configurator._renamed_node_groups:
+                if group_name in self._RENAMED_NODE_GROUPS:
                     old_group_name = group_name
-                    group_name, remove_at = Configurator._renamed_node_groups[group_name]
-                    warnings.warn(
+                    group_name, remove_at = self._RENAMED_NODE_GROUPS[group_name]
+                    warn(
                         "Group `{0}` was renamed to `{1}`;"
                         " please fix your configuration file."
                         " Support for automatically renaming"
@@ -284,540 +929,16 @@ class Configurator(object):
                 result[node_kind].append(group_name)
         return result
 
-    _renamed_node_groups = {
-        # old name     ->     (new name             will be removed in...
-        'gluster_data' :      ('glusterfs_server',  '2.0'),
-        'gluster_client':     ('glusterfs_client',  '2.0'),
+    _RENAMED_NODE_GROUPS = {
+        # old name     ->  (new name             will be removed in...
+        'gluster_client':  ('glusterfs_client',  '1.4'),
+        'gluster_data' :   ('glusterfs_server',  '1.4'),
         'gridengine_clients': ('gridengine_worker', '2.0'),
-        'slurm_clients':      ('slurm_worker',      '2.0'),
-        'slurm_workers':      ('slurm_worker',      '1.4'),
+        'slurm_clients':   ('slurm_worker',      '2.0'),
+        'slurm_workers':   ('slurm_worker',      '1.4'),
     }
 
-    def create_setup_provider(self, cluster_template, name=None):
-        """Creates the setup provider for the given cluster template.
-
-        :param str cluster_template: template of the cluster
-        :param str name: name of the cluster to read configuration properties
-        """
-        conf = self.cluster_conf[cluster_template]['setup']
-        conf['general_conf'] = self.general_conf.copy()
-        if name:
-            conf['cluster_name'] = name
-        conf_login = self.cluster_conf[cluster_template]['login']
-
-        provider_name = conf.get('provider', 'ansible')
-        if provider_name not in Configurator.setup_providers_map:
-            raise ConfigurationError(
-                "Invalid value `%s` for `setup_provider` in configuration "
-                "file." % provider_name)
-
-        storage_path = self.general_conf['storage_path']
-        if 'playbook_path' in conf:
-            playbook_path = conf['playbook_path']
-            del conf['playbook_path']
-        else:
-            playbook_path = None
-        groups = self._read_node_groups(conf)
-        environment = dict()
-        for nodekind, grps in groups.iteritems():
-            if not isinstance(grps, list):
-                groups[nodekind] = [grps]
-
-            # Environment variables parsing
-            environment[nodekind] = dict()
-            for key, value in list(conf.items()) + list(self.cluster_conf[cluster_template]['cluster'].items()):
-                # Set both group and global variables
-                for prefix in ["%s_var_" % nodekind,
-                               "global_var_"]:
-                    if key.startswith(prefix):
-                        var = key.replace(prefix, '')
-                        environment[nodekind][var] = value
-                        log.debug("setting variable %s=%s for node kind %s",
-                                  var, value, nodekind)
-
-        provider = Configurator.setup_providers_map[provider_name]
-        return provider(groups, playbook_path=playbook_path,
-                        environment_vars=environment,
-                        storage_path=storage_path,
-                        sudo=conf_login['image_sudo'],
-                        sudo_user=conf_login['image_user_sudo'],
-                        **conf)
 
     def create_repository(self):
-        storage_path = self.general_conf['storage_path']
-        storage_type = self.general_conf['storage_type']
-        return MultiDiskRepository(storage_path, storage_type)
-
-
-## custom validators
-@message("file could not be found")
-def file_exists(v):
-    f = os.path.expanduser(os.path.expandvars(v))
-    if os.access(f, os.F_OK):
-        return f
-    else:
-        raise Invalid("file `{v}` could not be found".format(v=v))
-
-@message("file cannot be read")
-def can_read_file(v):
-    f = os.path.expanduser(os.path.expandvars(v))
-    if os.access(f, os.R_OK):
-        return f
-    else:
-        raise Invalid("cannot read file `{v}`".format(v=v))
-
-@message("cannot execute file")
-def can_execute_file(v):
-    f = os.path.expanduser(os.path.expandvars(v))
-    if os.access(f, os.X_OK):
-        return f
-    else:
-        raise Invalid("cannot execute file `{v}`".format(v=v))
-
-@message("Unsupported nova API version")
-def nova_api_version(version):
-    try:
-        from novaclient import client,exceptions
-        client.get_client_class(version)
-        return version
-    except exceptions.UnsupportedVersion as ex:
-        raise Invalid(
-            "Invalid value for `nova_api_version`: {0}".format(ex))
-
-
-class ConfigValidator(object):
-    """Validator for the cluster configuration dictionary.
-
-    :param config: dictionary containing cluster configuration properties
-    """
-
-    def __init__(self, config):
-        self.config = config
-
-    def _pre_validate(self):
-        """Handles all pre-validation tasks, such as:
-
-        * reading environment variables
-        * interpolating configuration options
-        """
-        # read cloud provider environment variables (ec2_boto, google, openstack, or azure)
-        for cluster, props in self.config.iteritems():
-            if "cloud" in props and "provider" in props['cloud']:
-
-                for param, value in props['cloud'].iteritems():
-                    PARAM = param.upper()
-                    if not value and PARAM in os.environ:
-                        props['cloud'][param] = os.environ[PARAM]
-
-        # manually interpolate ansible path; configobj does not offer
-        # an easy way to do it
-        ansible_pb_dir = resource_filename('elasticluster', 'share/playbooks')
-        for cluster, props in self.config.iteritems():
-            if 'setup' in props and 'playbook_path' in props['setup']:
-                if props['setup']['playbook_path'].startswith(
-                        "%(ansible_pb_dir)s"):
-                    pbpath = props['setup']['playbook_path']
-                    pbpath = pbpath.replace("%(ansible_pb_dir)s",
-                                            str(ansible_pb_dir))
-                    self.config[cluster]['setup']['playbook_path'] = pbpath
-
-    def _post_validate(self):
-        """Handles all post-validation tasks, such as:
-
-        * expand file paths
-        """
-        # expand all paths
-        for cluster, values in self.config.iteritems():
-            conf = self.config[cluster]
-            if 'playbook_path' in values['setup']:
-                pbpath = os.path.expanduser(values['setup']['playbook_path'])
-                conf['setup']['playbook_path'] = pbpath
-
-            privkey = os.path.expanduser(values['login']['user_key_private'])
-            conf['login']['user_key_private'] = privkey
-
-            pubkey = os.path.expanduser(values['login']['user_key_public'])
-            conf['login']['user_key_public'] = pubkey
-
-    def validate(self):
-        """
-        Validate the given configuration,
-        converting properties to native Python types.
-
-        The configuration to check must have been given to the
-        constructor and stored in :py:attr:`self.config`.
-
-        :raises: :py:class:`voluptuous.Invalid` if one property is invalid
-        :raises: :py:class:`voluptuous.MultipleInvalid` if multiple
-                 properties are not compliant
-        """
-        self._pre_validate()
-
-        # schema to validate all cluster properties
-        schema = {"cluster": {"cloud": All(str, Length(min=1)),
-                              "setup_provider": All(str, Length(min=1)),
-                              "login": All(str, Length(min=1)),
-                          },
-                  "setup": {Optional("provider"): All(str, Length(min=1)),
-                            Optional("playbook_path"): can_read_file(),
-                            Optional("ansible_command"): All(can_read_file(), can_execute_file()),
-                            Optional("ansible_extra_args"): All(str, Length(min=1)),
-                            Optional("ssh_pipelining"): Boolean(str),
-                        },
-                  "login": {"image_user": All(str, Length(min=1)),
-                            "image_user_sudo": All(str, Length(min=1)),
-                            "image_sudo": Boolean(str),
-                            "user_key_name": All(str, Length(min=1)),
-                            "user_key_private": can_read_file(),
-                            "user_key_public": can_read_file(),
-                        },
-        }
-
-        cloud_schema_ec2 = {"provider": 'ec2_boto',
-                            "ec2_url": Url(str),
-                            Optional("ec2_access_key"): All(str, Length(min=1)),
-                            Optional("ec2_secret_key"): All(str, Length(min=1)),
-                            "ec2_region": All(str, Length(min=1)),
-                            Optional("request_floating_ip"): Boolean(str),
-                            Optional("vpc"): All(str, Length(min=1)),
-                            Optional("instance_profile"): All(str, Length(min=1)),
-        }
-        cloud_schema_gce = {"provider": 'google',
-                            "gce_client_id": All(str, Length(min=1)),
-                            "gce_client_secret": All(str, Length(min=1)),
-                            "gce_project_id": All(str, Length(min=1)),
-                            Optional("noauth_local_webserver"): Boolean(str),
-                            Optional("zone"): All(str, Length(min=1)),
-                            Optional("network"): All(str, Length(min=1)),
-        }
-
-        cloud_schema_openstack = {"provider": 'openstack',
-                                  "auth_url": All(str, Length(min=1)),
-                                  "username": All(str, Length(min=1)),
-                                  "password": All(str, Length(min=1)),
-                                  "project_name": All(str, Length(min=1)),
-                                  Optional("request_floating_ip"): Boolean(str),
-                                  Optional("region_name"): All(str, Length(min=1)),
-                                  Optional("nova_api_version"): nova_api_version(),
-        }
-        cloud_schema_azure = {"provider": 'azure',
-                              "subscription_id": All(str, Length(min=1)),
-                              "certificate": All(str, Length(min=1)),
-        }
-        node_schema = {
-            "flavor": All(str, Length(min=1)),
-            "image_id": All(str, Length(min=1)),
-            "security_group": All(str, Length(min=1)),
-            Optional("network_ids"): All(str, Length(min=1)),
-        }
-
-        # validation
-        validator = Schema(schema, required=True, extra=True)
-        node_validator = Schema(node_schema, required=True, extra=True)
-        ec2_validator = Schema(cloud_schema_ec2, required=True, extra=False)
-        gce_validator = Schema(cloud_schema_gce, required=True, extra=False)
-        openstack_validator = Schema(cloud_schema_openstack, required=True, extra=False)
-        azure_validator = Schema(cloud_schema_azure, required=True, extra=False)
-
-        if not self.config:
-            raise Invalid("No clusters found in configuration.")
-
-        for cluster, properties in self.config.iteritems():
-            self.config[cluster] = validator(properties)
-
-            if 'provider' not in properties['cloud']:
-                raise Invalid(
-                    "Missing `provider` option in cluster `%s`" % cluster)
-            try:
-                cloud_props = properties['cloud']
-                if properties['cloud']['provider'] == "ec2_boto":
-                    self.config[cluster]['cloud'] = ec2_validator(cloud_props)
-                elif properties['cloud']['provider'] == "google":
-                    self.config[cluster]['cloud'] = gce_validator(cloud_props)
-                elif properties['cloud']['provider'] == "openstack":
-                    self.config[cluster]['cloud'] = openstack_validator(cloud_props)
-                elif properties['cloud']['provider'] == "azure":
-                    self.config[cluster]['cloud'] = azure_validator(cloud_props)
-            except MultipleInvalid as ex:
-                raise Invalid("Invalid configuration for cloud section `cloud/%s`: %s" % (properties['cluster']['cloud'], str.join(", ", [str(i) for i in ex.errors])))
-
-
-            if 'nodes' not in properties or len(properties['nodes']) == 0:
-                raise Invalid(
-                    "No nodes configured for cluster `%s`" % cluster)
-
-            for node, props in properties['nodes'].iteritems():
-                # check name pattern to conform hostnames
-                match = re.search(r'^[a-zA-Z0-9-]*$', node)
-                if not match:
-                    raise Invalid(
-                        "Invalid name `%s` for node group. A valid node group"
-                        " can only consist of letters, digits or the hyphen"
-                        " character (`-`)" % (node,))
-
-                node_validator(props)
-
-                if (properties['cloud']['provider'] == 'ec2_boto'
-                    and 'vpc' in self.config[cluster]['cloud']
-                    and 'network_ids' not in props):
-                    raise Invalid(
-                        "Node group `%s/%s` is being used in"
-                        " a VPC, so it must specify network_ids."
-                        % (cluster, node))
-
-                if (properties['cloud']['provider'] == 'ec2_boto'
-                    and 'network_ids' in props
-                    and 'vpc' not in self.config[cluster]['cloud']):
-                    raise Invalid(
-                        "Cluster `%s` must specify a VPC to place"
-                        " `%s` instances in %s"
-                        % (cluster, node, props['network_ids']))
-
-        self._post_validate()
-
-
-class ConfigReader(object):
-    """Reads the configuration properties from a ini file.
-
-    :param str configfile: path to configfile
-    """
-    cluster_section = "cluster"
-    login_section = "login"
-    setup_section = "setup"
-    cloud_section = "cloud"
-    node_section = "node"
-
-    def __init__(self, paths):
-        self.configfiles = self._list_config_files(paths)
-
-        configparser = RawConfigParser()
-        config_tmp = configparser.read(self.configfiles)
-        self.conf = dict()
-        for section in configparser.sections():
-            self.conf[section] = dict(configparser.items(section))
-
-        #self.conf = ConfigObj(self.configfile, interpolation=False)
-
-        self.schemas = {
-            "storage": Schema(
-                {Optional("storage_path"): All(str),
-                 Optional("storage_type"): Any('yaml', 'json', 'pickle'),
-             }),
-            "cloud": Schema(
-                {"provider": Any('ec2_boto', 'google', 'openstack', 'azure'),
-                 "ec2_url": Url(str),
-                 Optional("ec2_access_key"): All(str, Length(min=1)),
-                 Optional("ec2_secret_key"): All(str, Length(min=1)),
-                 "ec2_region": All(str, Length(min=1)),
-                 "auth_url": All(str, Length(min=1)),
-                 "username": All(str, Length(min=1)),
-                 "password": All(str, Length(min=1)),
-                 "tenant_name": All(str, Length(min=1)),
-                 Optional("region_name"): All(str, Length(min=1)),
-                 "gce_project_id": All(str, Length(min=1)),
-                 "gce_client_id": All(str, Length(min=1)),
-                 "gce_client_secret": All(str, Length(min=1)),
-                 "nova_client_api": nova_api_version()}, extra=True),
-                 "subscription_id": All(str, Length(min=1)),
-                 "certificate": All(str, Length(min=1)),
-            "cluster": Schema(
-                {"cloud": All(str, Length(min=1)),
-                 "setup_provider": All(str, Length(min=1)),
-                 "login": All(str, Length(min=1)),
-             }, required=True, extra=True),
-            "setup": Schema(
-                {"provider": All(str, Length(min=1)),
-                    }, extra=True),
-            "login": Schema(
-                {"image_user": All(str, Length(min=1)),
-                 "image_user_sudo": All(str, Length(min=1)),
-                 "image_sudo": Boolean(str),
-                 "user_key_name": All(str, Length(min=1)),
-                 "user_key_private": can_read_file(),
-                 "user_key_public": can_read_file()}, required=True)
-        }
-
-    @staticmethod
-    def _list_config_files(paths, expand_user_dir=True):
-        """
-        Return list of (existing) configuration files.
-
-        The list of configuration file is built in the following way:
-
-        - any path pointing to an existing file is included in the result;
-
-        - for any path ``P``, if directory ``P.d`` exists, any file
-          contained in it and named ``*.conf`` is included in the
-          result;
-
-        - non-existing paths are (silently) ignored and omitted from the
-          returned result.
-
-        If keyword argument `expand_user_dir` is true (default), then
-        each path is expanded with `os.path.expanduser`.
-        """
-        configfiles = set()
-        if expand_user_dir:
-            paths = [os.path.expanduser(cfg) for cfg in paths]
-        for path in paths:
-            if os.path.isfile(path):
-                configfiles.add(path)
-            path_d = path + '.d'
-            if os.path.isdir(path_d):
-                for entry in os.listdir(path_d):
-                    if entry.endswith('.conf'):
-                        cfgfile = os.path.join(path_d, entry)
-                        if cfgfile not in configfiles:
-                            configfiles.add(cfgfile)
-        return list(configfiles)
-
-    def read_config(self):
-        """Reads the configuration properties from the ini file and links the
-        section to comply with the cluster config dictionary format.
-
-        :return: tuple of dictionaries (clusters, storage) containing
-         all configuration properties from the ini file in compliance
-         to the cluster config format, and global configuration options for the storage.
-
-        :raises: :py:class:`voluptuous.MultipleInvalid` if not all sections
-                 present or broken links between secitons
-
-        """
-        storage_section = self.conf.get('storage', {
-            'storage_path': Configurator.default_storage_path,
-            'storage_type': Configurator.default_storage_type})
-
-        clusters = dict((key, value) for key, value in self.conf.iteritems() if
-                        re.search(ConfigReader.cluster_section + "/(.*)", key)
-                        and key.count("/") == 1)
-
-        conf_values = dict()
-
-        errors = MultipleInvalid()
-        # FIXME: to be refactored:
-        # we should check independently each one of the sections, and raise errors accordingly.
-
-        for cluster in clusters:
-            # Get the name of the cluster
-            name = re.search(ConfigReader.cluster_section + "/(.*)",
-                             cluster).groups()[0]
-            if not name:
-                errors.add("Invalid section name `%s`" % cluster)
-                continue
-
-            cluster_conf = self._make_cluster_conf(self.conf[cluster])
-
-            try:
-                self.schemas['cluster'](cluster_conf)
-            except MultipleInvalid as ex:
-                for error in ex.errors:
-                    errors.add("Section `%s`: %s" % (cluster, error))
-                continue
-
-            cloud_name = ConfigReader.cloud_section + "/" + cluster_conf[
-                'cloud']
-            login_name = ConfigReader.login_section + "/" + cluster_conf[
-                'login']
-            setup_name = ConfigReader.setup_section + "/" + cluster_conf[
-                'setup_provider']
-
-            values = dict()
-            values['cluster'] = cluster_conf
-            try:
-                values['setup'] = dict(self.conf[setup_name])
-                self.schemas['setup'](values['setup'])
-            except KeyError as ex:
-                errors.add(
-                    "cluster `%s` setup section `%s` does not exists" % (
-                        cluster, setup_name))
-            except MultipleInvalid as ex:
-                for error in ex.errors:
-                    errors.add(error)
-
-            try:
-                values['login'] = dict(self.conf[login_name])
-                self.schemas['login'](values['login'])
-            except KeyError as ex:
-                errors.add(
-                    "cluster `%s` login section `%s` does not exists" % (
-                        cluster, login_name))
-            except MultipleInvalid as ex:
-                errors.add(Invalid("Error in login section `%s`: %s" % (
-                    login_name, str.join(', ', [str(e) for e in ex.errors]))))
-
-            try:
-                values['cloud'] = dict(self.conf[cloud_name])
-                self.schemas['cloud'](values['cloud'])
-            except KeyError as ex:
-                errors.add(
-                    "cluster `%s` cloud section `%s` does not exists" % (
-                        cluster, cloud_name))
-            except MultipleInvalid as ex:
-                for error in ex.errors:
-                    errors.add(Invalid("section %s: %s" % (cloud_name, error)))
-
-            try:
-                # nodes can inherit the properties of cluster or overwrite them
-                nodes = dict((key, value) for key, value in
-                             values['cluster'].items() if
-                             key.endswith('_nodes'))
-                values['nodes'] = dict()
-                for node in nodes.iterkeys():
-                    node_name = re.search("(.*)_nodes", node).groups()[0]
-                    property_name = "%s/%s/%s" % (ConfigReader.cluster_section,
-                                                  name, node_name)
-                    if property_name in self.conf:
-                        node_values = dict(
-                            (key, value.strip("'").strip('"')) for key, value
-                            in self.conf[property_name].iteritems())
-                        node_values = dict(
-                            values['cluster'].items() + node_values.items())
-                        values['nodes'][node_name] = node_values
-                    else:
-                        values['nodes'][node_name] = values['cluster']
-
-                if errors.errors:
-                    log.error("Ignoring cluster `%s`: %s" % (
-                        name, str.join(", ", [str(e) for e in errors.errors])))
-                else:
-                    conf_values[name] = values
-            except KeyError as ex:
-                errors.add("Error in section `%s`" % cluster)
-
-        # FIXME: do we really need to raise an exception if we cannot
-        # parse *part* of the configuration files? We should just
-        # ignore those with errors and return both the parsed
-        # configuration values _and_ a list of errors
-        if errors.errors:
-            raise errors
-        return (conf_values, storage_section)
-
-
-    def _make_cluster_conf(self, conf):
-        """
-        Create dictionary of cluster config keys.
-
-        Compatibility changes, renames, deprecation warnings, etc. all
-        happen here -- so that the rest of the code can always assume
-        the configuration is the latest documented format.
-        """
-        cfg = dict(conf)
-
-        # working on issue #279 uncovered a conflict between code and
-        # docs: the documentation referred to config keys
-        # `<class>_min_nodes` but the code actually looked for
-        # `<class>_nodes_min`.  Keep this last version as it makes the
-        # code simpler, but alert users of the change...
-        for k,v in cfg.items():
-            if k.endswith('_min_nodes'):
-                # replace with correct key name
-                new_k = k[:-len('_min_nodes')] + '_nodes_min'
-                cfg[new_k] = v
-                del cfg[k]
-                warnings.warn(
-                    "Configuration key '{0}' should be renamed to '{1}'."
-                    " Support for automatic renaming will be removed"
-                    " in the next major version of ElastiCluster."
-                    .format(k, new_k))
-
-        return cfg
+        return MultiDiskRepository(self.storage_path,
+                                   self.storage_type)

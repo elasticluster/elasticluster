@@ -5,6 +5,7 @@
 
 .. include:: global.inc
 
+
 =================
   Configuration
 =================
@@ -16,8 +17,8 @@ configuration file is stored in your home directory:
 from the command line with the `-c` option.
 
 If directory `~/.elasticluster/config.d` exists (or, if you run
-``easlticluster`` with option `-c <PATH>`, the directory `<PATH>.d`),
-all files named `*.conf` contained in that directory are read and
+``elasticluster`` with option `-c <PATH>`, the directory `<PATH>.d`),
+all files named `*.conf`:file: contained in that directory are read and
 parsed. In this way, you can handle multiple clusters easily by
 distributing the configuration over multiple files, and disable only
 some of them by renaming the files.
@@ -28,7 +29,7 @@ the following command::
     elasticluster list-templates
 
 If no configuration file is found, it will copy an `example
-configuration file`_ in`` ~/.elasticluster/config``. The example is
+configuration file`_ in `~/.elasticluster/config`:file:. The example is
 fully commented and self-documenting.
 
 However, the example configuration file is not complete, as it does
@@ -85,6 +86,38 @@ A valid configuration file must contain at least one section for each
 of the ``cloud``, ``login``, ``cluster``, and ``setup`` sections.
 
 
+Processing of configuration values
+==================================
+
+Within each ``key=value`` assignment, the *value* part undergoes the following
+transformations::
+
+* References to enviromental variables of the form ``$VARNAME`` or
+  ``${VARNAME}`` are replaced by the content of the named environmental
+  variable, wherever they appear in a *value*.
+
+  For instance, the following configuration snippet would set the OpenStack user
+  name equal to the Linux user name on the computer where ElastiCluster is
+  running::
+
+      [cloud/openstack]
+      username = $USER
+      # ...
+
+* The following special strings are substituted, wherever they appear in a
+  *value*:
+
+  ==============================  ====================================================
+  this string ...                 ... expands to:
+  ==============================  ====================================================
+  ``${elasticluster_playbooks}``  Path to the root directory containing
+                                  the Ansible playbooks distributed with ElastiCluster
+  ``${ansible_pb_dir}``           Deprecated alias for ``${elasticluster_playbooks}``
+  ==============================  ====================================================
+
+* Within values that name a file or path name, a ``~`` character at the
+  beginning of the path name is substituted with the path to the user's home
+  directory.  (In fact, this is a shorthand for ``$HOME/``)
 
 
 Cloud Section
@@ -364,10 +397,10 @@ Mandatory configuration keys
 
 ``image_user``
 
-    the remote user you must use to connect to the virtual machine.
-    In case you're using Google Compute Engine you have to set your username
-    here. So if your gmail address is karl.marx@gmail.com,
-    your username is karl.marx
+    the remote user you must use to connect to the virtual machine. In case
+    you're using Google Compute Engine you have to set your Google username
+    here; so if your Gmail address is karl.marx@gmail.com, your username is
+    `karl.marx`
 
 ``image_sudo``
 
@@ -377,7 +410,7 @@ Mandatory configuration keys
 ``image_user_sudo``
 
     the login name of the administrator. Use `root` unless you know
-    what you are doing...
+    what you are doing.
 
 ``user_key_name``
 
