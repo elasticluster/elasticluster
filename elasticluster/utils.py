@@ -231,8 +231,53 @@ def parse_ip_address_and_port(addr, default_port=22):
     raise netaddr.AddrFormatError(
         "Could not extract IP address and port from `{1}`"
         .format(addr))
-    
-    
+
+
+# copied over from GC3Pie's `utils.py`
+def string_to_boolean(word):
+    """
+    Convert `word` to a Python boolean value and return it.
+    The strings `true`, `yes`, `on`, `1` (with any
+    capitalization and any amount of leading and trailing
+    spaces) are recognized as meaning Python `True`::
+
+      >>> string_to_boolean('yes')
+      True
+      >>> string_to_boolean('Yes')
+      True
+      >>> string_to_boolean('YES')
+      True
+      >>> string_to_boolean(' 1 ')
+      True
+      >>> string_to_boolean('True')
+      True
+      >>> string_to_boolean('on')
+      True
+
+    Any other word is considered as boolean `False`::
+
+      >>> string_to_boolean('no')
+      False
+      >>> string_to_boolean('No')
+      False
+      >>> string_to_boolean('Nay!')
+      False
+      >>> string_to_boolean('woo-hoo')
+      False
+
+    This includes also the empty string and whitespace-only::
+
+      >>> string_to_boolean('')
+      False
+      >>> string_to_boolean('  ')
+      False
+
+    """
+    if word.strip().lower() in ['true', 'yes', 'on', '1']:
+        return True
+    else:
+        return False
+
 
 @contextmanager
 def sighandler(signum, handler):

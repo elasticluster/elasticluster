@@ -161,10 +161,9 @@ setup(
         'ansible>=2.0,!=2.1.1.0',  ## see: https://github.com/ansible/ansible/issues/16952
         'click>=4.0',  ## click.prompt() added in 4.0
         'coloredlogs',
-        'configobj',
         'netaddr',
         'paramiko',
-        'voluptuous>=0.8.2',
+        'schema',
         # EC2 clouds
         'boto',
         # GCE cloud
@@ -179,6 +178,6 @@ setup(
         'netifaces',
         #'python-novaclient' ## this needs special treatment depending on Python version, see below
     ] + version_dependent_requires),
-    tests_require=['tox', 'mock', 'pytest'],  # read right-to-left
+    tests_require=['tox', 'mock', 'pytest>=2.8'],  # read right-to-left
     cmdclass={'test': Tox},
 )

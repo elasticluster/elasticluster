@@ -16,10 +16,7 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from __future__ import absolute_import
-
-__author__ = ('Nicolas Baer <nicolas.baer@uzh.ch>,'
-              ' Riccardo Murri <riccardo.murri@gmail.com>')
+from __future__ import (absolute_import, division, print_function)
 
 
 class Configuration(object):

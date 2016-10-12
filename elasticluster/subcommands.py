@@ -35,7 +35,8 @@ import re
 
 
 # Elasticluster imports
-from elasticluster import get_configurator, log
+from elasticluster import log
+from elasticluster.conf import make_creator
 from elasticluster.exceptions import ClusterNotFound, ConfigurationError, \
     ImageError, SecurityGroupError, NodeNotFound, ClusterError
 from elasticluster.utils import confirm_or_abort
@@ -169,34 +170,33 @@ class Start(AbstractCommand):
         else:
             cluster_name = self.params.cluster
 
-        configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage)
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
 
         # overwrite configuration
+        cluster_conf = creator.cluster_conf[cluster_template]
         for option, value in self.params.extra_conf.iteritems():
-            cconf = configurator.cluster_conf[cluster_template]['cluster']
-            if option in cconf:
-                cconf[option] = value
+            if option in cluster_conf:
+                cluster_conf[option] = value
 
         # First, check if the cluster is already created.
         try:
-            cluster = configurator.load_cluster(cluster_name)
-        except ClusterNotFound as e:
+            cluster = creator.load_cluster(cluster_name)
+        except ClusterNotFound:
             try:
-                cluster = configurator.create_cluster(
+                cluster = creator.create_cluster(
                     cluster_template, cluster_name)
-            except ConfigurationError as e:
-                log.error("Starting cluster %s: %s\n" % (cluster_template, e))
+            except ConfigurationError as err:
+                log.error("Starting cluster %s: %s", cluster_template, err)
                 return
 
         try:
+            print("Starting cluster `{0}` with:".format(cluster.name))
             for cls in cluster.nodes:
-                print("Starting cluster `%s` with %d %s nodes." % (
-                    cluster.name, len(cluster.nodes[cls]), cls))
-            print("(this may take a while...)")
-            conf = configurator.cluster_conf[cluster_template]
+                print("* {0:d} {1} nodes.".format(len(cluster.nodes[cls]), cls))
+            print("(This may take a while...)")
             min_nodes = dict(
-                (k[:-len('_nodes_min')], int(v)) for k, v in conf['cluster'].iteritems() if
+                (k[:-len('_nodes_min')], int(v)) for k, v in cluster_conf.iteritems() if
                 k.endswith('_nodes_min'))
             cluster.start(min_nodes=min_nodes)
             if self.params.no_setup:
@@ -210,8 +210,8 @@ class Start(AbstractCommand):
                 else:
                     print("\nWARNING: YOUR CLUSTER IS NOT READY YET!")
             print(cluster_summary(cluster))
-        except (KeyError, ImageError, SecurityGroupError, ClusterError) as ex:
-            print("Your cluster could not start `%s`" % ex)
+        except (KeyError, ImageError, SecurityGroupError, ClusterError) as err:
+            log.error("Could not start cluster `%s`: %s", cluster.name, err)
             raise
 
 
@@ -243,10 +243,10 @@ class Stop(AbstractCommand):
         Stops the cluster if it's running.
         """
         cluster_name = self.params.cluster
-        configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage)
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
         try:
-            cluster = configurator.load_cluster(cluster_name)
+            cluster = creator.load_cluster(cluster_name)
         except (ClusterNotFound, ConfigurationError) as err:
             log.error("Cannot stop cluster `%s`: %s", cluster_name, err)
             return os.EX_NOINPUT
@@ -310,15 +310,15 @@ class ResizeCluster(AbstractCommand):
                 "Invalid syntax for argument: %s" % ex)
 
     def execute(self):
-        configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage)
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
 
         # Get current cluster configuration
         cluster_name = self.params.cluster
         template = self.params.template
 
         try:
-            cluster = configurator.load_cluster(cluster_name)
+            cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Listing nodes from cluster %s: %s\n" %
@@ -353,7 +353,7 @@ class ResizeCluster(AbstractCommand):
                                      image_userdata=sample_node.image_userdata,
                                      **sample_node.extra)
             else:
-                conf = configurator.cluster_conf[template]
+                conf = creator.cluster_conf[template]
                 conf_kind = conf['nodes'][grp]
 
                 image_user = conf['login']['image_user']
@@ -418,14 +418,14 @@ class RemoveNode(AbstractCommand):
                             help="Assume `yes` to all queries and "
                                  "do not prompt.")
     def execute(self):
-        configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage)
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
 
         # Get current cluster configuration
         cluster_name = self.params.cluster
 
         try:
-            cluster = configurator.load_cluster(cluster_name)
+            cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Error loading cluster %s: %s\n" %
@@ -468,9 +468,9 @@ class ListClusters(AbstractCommand):
         parser.set_defaults(func=self)
 
     def execute(self):
-        configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage)
-        repository = configurator.create_repository()
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
+        repository = creator.create_repository()
         clusters = repository.get_all()
 
         if not clusters:
@@ -507,9 +507,9 @@ class ListTemplates(AbstractCommand):
 
     def execute(self):
 
-        configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage)
-        config = configurator.cluster_conf
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
+        config = creator.cluster_conf
 
         print("""%d cluster templates found in configuration file.""" % len(config))
         templates = config.keys()
@@ -521,7 +521,7 @@ class ListTemplates(AbstractCommand):
 
         for template in templates:
             try:
-                cluster = configurator.create_cluster(template, template)
+                cluster = creator.create_cluster(template, template)
                 print("""
 name:     %s""" % template)
                 for nodekind in cluster.nodes:
@@ -560,11 +560,11 @@ class ListNodes(AbstractCommand):
         Lists all nodes within the specified cluster with certain
         information like id and ip.
         """
-        configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage)
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
-            cluster = configurator.load_cluster(cluster_name)
+            cluster = creator.load_cluster(cluster_name)
             if self.params.update:
                 cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
@@ -604,13 +604,13 @@ class SetupCluster(AbstractCommand):
                   " to the setup provider command-line invocation."))
 
     def execute(self):
-        configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage)
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
         cluster_name = self.params.cluster
 
         print("Updating cluster `%s`..." % cluster_name)
         try:
-            cluster = configurator.load_cluster(cluster_name)
+            cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Setting up cluster %s: %s\n" %
@@ -646,11 +646,11 @@ class SshFrontend(AbstractCommand):
                             "machine instead of opening an interactive shell.")
 
     def execute(self):
-        configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage)
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
-            cluster = configurator.load_cluster(cluster_name)
+            cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Setting up cluster %s: %s\n" %
@@ -727,11 +727,11 @@ class SftpFrontend(AbstractCommand):
                                  "opening an interactive shell.")
 
     def execute(self):
-        configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage)
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
-            cluster = configurator.load_cluster(cluster_name)
+            cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Setting up cluster %s: %s\n" %
@@ -778,11 +778,11 @@ class GC3PieConfig(AbstractCommand):
         """
         Load the cluster and build a GC3Pie configuration snippet.
         """
-        configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage)
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
-            cluster = configurator.load_cluster(cluster_name)
+            cluster = creator.load_cluster(cluster_name)
         except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Listing nodes from cluster %s: %s\n" %
                       (cluster_name, ex))
@@ -834,11 +834,11 @@ class ExportCluster(AbstractCommand):
             self.params.zipfile += '.zip'
 
     def execute(self):
-        configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage)
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
 
         try:
-            cluster = configurator.load_cluster(self.params.cluster)
+            cluster = creator.load_cluster(self.params.cluster)
         except ClusterNotFound:
             log.error("Cluster `%s` not found in storage dir %s."
                       % (self.params.cluster, self.params.storage))
@@ -942,13 +942,13 @@ class ImportCluster(AbstractCommand):
         parser.add_argument("file", help="Path to ZIP file produced by "
                             "`elasticluster export`.")
     def execute(self):
-        configurator = get_configurator(self.params.config,
-                                        storage_path=self.params.storage)
-        repo = configurator.create_repository()
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
+        repo = creator.create_repository()
         tmpdir = tempfile.mkdtemp()
         log.debug("Using temporary directory %s" % tmpdir)
-        tmpconf = get_configurator(self.params.config, storage_path=tmpdir)
-        tmprepo =tmpconf.create_repository()
+        tmpconf = make_creator(self.params.config, storage_path=tmpdir)
+        tmprepo = tmpconf.create_repository()
 
         rc=0
         # Read the zip file.

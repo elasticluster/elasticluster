@@ -56,7 +56,7 @@ from elasticluster.subcommands import (
     Start,
     Stop,
 )
-from elasticluster.conf import Configurator
+from elasticluster.conf import Creator
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.migration_tools import MigrationCommand
 
@@ -83,14 +83,14 @@ class ElastiCluster(cli.app.CommandLineApp):
                        "are given, elasticluster will create new VMs "
                        "sequentially instead of doing it in parallel.")
         self.add_param('-s', '--storage', metavar="PATH",
-                       help="Path to the storage folder. Default: `%s`" %
-                            Configurator.default_storage_path,
-                       default=Configurator.default_storage_path)
+                       help="Path to the storage folder. (Default: `%(default)s`",
+                       default=Creator.DEFAULT_STORAGE_PATH)
         self.add_param('-c', '--config', metavar='PATH',
-                       help=("Path to the configuration file; default: `%s`. "
-                             "If directory `PATH.d` exists, also all files matching"
-                             " pattern `PATH.d/*.conf` are parsed."
-                             % self.default_configuration_file),
+                       help=("Path to the configuration file;"
+                             " default: `%(default)s`."
+                             " If directory `PATH.d` exists,"
+                             " all files matching"
+                             " pattern `PATH.d/*.conf` are parsed."),
                        default=self.default_configuration_file)
         self.add_param('--version', action='store_true',
                        help="Print version information and exit.")
