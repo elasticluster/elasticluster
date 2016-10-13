@@ -232,6 +232,8 @@ class Stop(AbstractCommand):
         parser.add_argument('--force', action="store_true", default=False,
                             help="Remove the cluster even if not all the nodes"
                                  " have been terminated properly.")
+        parser.add_argument('--wait', action="store_true", default=False,
+                            help="Wait for all nodes to be properly terminated.")
         parser.add_argument('--yes', '-y', action="store_true", default=False,
                             help="Assume `yes` to all queries and "
                                  "do not prompt.")
@@ -255,7 +257,7 @@ class Stop(AbstractCommand):
                 .format(cluster_name=cluster_name),
                 msg="Aborting upon user request.")
         print("Destroying cluster `%s` ..." % cluster_name)
-        cluster.stop(force=self.params.force)
+        cluster.stop(force=self.params.force, wait=self.params.wait)
 
 
 class ResizeCluster(AbstractCommand):
