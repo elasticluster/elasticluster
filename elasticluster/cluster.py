@@ -1163,11 +1163,10 @@ class Node(Struct):
         if self.instance_id is not None:
             log.info("Shutting down instance `%s` ...", self.instance_id)
 
+            self._cloud_provider.stop_instance(self.instance_id)
             if wait:
-                while self._cloud_provider.stop_instance(self.instance_id) is 'running':
+                while self.is_alive():
                     sleep(1)
-            else:
-                self._cloud_provider.stop_instance(self.instance_id)
             # When an instance is terminated, the EC2 cloud provider will
             # basically return it as "running" state. Setting the
             # `instance_id` attribute to None will force `is_alive()`
