@@ -730,7 +730,7 @@ class Cluster(Struct):
         except KeyError:
             raise NodeNotFound("Node %s not found" % nodename)
 
-    def stop(self, force=False):
+    def stop(self, force=False, wait=False):
         """
         Terminate all VMs in this cluster and delete its repository.
 
@@ -739,7 +739,7 @@ class Cluster(Struct):
         """
         log.debug("Stopping cluster `%s` ...", self.name)
 
-        failed = self._stop_all_nodes()
+        failed = self._stop_all_nodes(wait)
 
         if failed:
             if force:
@@ -763,7 +763,7 @@ class Cluster(Struct):
         if os.path.exists(self.known_hosts_file):
             os.remove(self.known_hosts_file)
 
-    def _stop_all_nodes(self):
+    def _stop_all_nodes(self,wait=False):
         """
         Terminate all cluster nodes. Return number of failures.
         """
@@ -778,7 +778,9 @@ class Cluster(Struct):
                 continue
             # try and stop node
             try:
-                node.stop()
+                # wait and pause for and recheck.
+                node.stop(wait)
+
                 self.nodes[node.kind].remove(node)
                 log.debug(
                     "Removed node `%s` from cluster `%s`", node.name, self.name)
@@ -1154,13 +1156,17 @@ class Node(Struct):
         log.debug("Node `%s` has instance ID `%s`", self.name, self.instance_id)
 
 
-    def stop(self):
+    def stop(self, wait=False):
         """
         Terminate the VM instance launched on the cloud for this specific node.
         """
         if self.instance_id is not None:
             log.info("Shutting down instance `%s` ...", self.instance_id)
+
             self._cloud_provider.stop_instance(self.instance_id)
+            if wait:
+                while self.is_alive():
+                    sleep(1)
             # When an instance is terminated, the EC2 cloud provider will
             # basically return it as "running" state. Setting the
             # `instance_id` attribute to None will force `is_alive()`
