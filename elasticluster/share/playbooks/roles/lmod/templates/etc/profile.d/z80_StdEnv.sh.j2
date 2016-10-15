@@ -6,7 +6,7 @@
 # load the initial default set of modules,
 # see: http://lmod.readthedocs.io/en/latest/070_standard_modules.html
 if [ -z "$__Lmod_Init_Default_Modules" -o -z "$LD_LIBRARY_PATH" ]; then
-    export __Lmod_Init_Default_Modoules=1
+    export __Lmod_Init_Default_Modules=1
     export LMOD_SYSTEM_DEFAULT_MODULES="{{ LMOD_DEFAULT_MODULES|join(':') }}"
     module --initial_load restore
 else

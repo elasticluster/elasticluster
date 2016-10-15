@@ -21,6 +21,7 @@
     - gfortran
     - libatlas-dev
     - libnetcdf-dev
+    - sqlite3
   when: is_debian_or_ubuntu
 
 - name: install extra packages (Ubuntu precise)

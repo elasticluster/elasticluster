@@ -53,6 +53,43 @@ def confirm_or_abort(prompt, exitcode=os.EX_TEMPFAIL, msg=None, **extra_args):
         sys.exit(exitcode)
 
 
+def has_nested_keys(mapping, k1, *more):
+    """
+    Return ``True`` if `mapping[k1][k2]...[kN]` is valid.
+
+    Example::
+
+      >>> D = {
+      ...   'a': {
+      ...     'x':0,
+      ...     'y':{
+      ...       'z': 1,
+      ...     },
+      ...   },
+      ...   'b': 3
+      ... }
+      >>> has_nested_keys(D, 'a', 'x')
+      True
+      >>> has_nested_keys(D, 'a', 'y', 'z')
+      True
+      >>> has_nested_keys(D, 'a', 'q')
+      False
+
+    When a single key is passed, this is just another way of writing ``k1 in
+    mapping``::
+
+      >>> has_nested_keys(D, 'b')
+      True
+    """
+    if k1 in mapping:
+        if more:
+            return has_nested_keys(mapping[k1], *more)
+        else:
+            return True
+    else:
+        return False
+
+
 class memoize(object):
     """
     Cache a function's return value each time it is called within a TTL.

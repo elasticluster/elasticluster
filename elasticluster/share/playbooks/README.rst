@@ -1,25 +1,16 @@
-Ansible GC3 playbooks
-=====================
+ElastiCluster Ansible playbooks
+===============================
 
-This repository contains the modules and playbooks used by the GC3 to
-mantain the production infrastructure *and* to configure VM instances
-on the `Hobbes` cloud.
+This repository contains the modules and playbooks used by the ElastiCluster
+to configure the VMs.  They can however be used independently of ElastiCluster.
 
 The structure of the repository follow this schema::
 
     |   # Group variables
     +-- group_vars
-    |   +-- foo  # variables automatically set for group `foo`
-    |   +-- bar  # variables automatically set for group `bar`
-    |
-    |   # Host variables
-    +-- host_vars
-    |   +-- host1  # variables automatically set for host `host1`
-    |
-    |   # Private variables. All the files in this directory are
-    |   # *encrypted* with the filter specified in ``.gitattributes``
-    +-- private_vars
-    |   +-- ldap  # variables included by some playbook.
+    |   +-- all  # variables set on all hosts where playbooks run;
+    |            # currently mainly used to provide conditionals
+    |            # about OS version and features
     |
     |   # Collection of playbooks divided by *role*
     +-- roles
@@ -37,81 +28,27 @@ The structure of the repository follow this schema::
     |   # will configure only hosts in the  `ganglia_monitor` or
     |   # `ganglia_master` groups.
     |
+    +-- after.yml
+    |   # Playbook executed by `site.yml` after all the other tasks have
+    |   # successfully run.  Can be used to add local customizations.
+    |
     +-- modules
-    |   # This directory contains ansible modules developed by GC3
+    |   # This directory contains extra Ansible modules
     |
     +-- examples
     |   # directory containing examples and code snippets.
     |
     +-- README.rst
 
-
-Extra modules
--------------
+The playbooks distributed in the ``roles/`` directory are documented in section
+`"Playbooks distributed with ElastiCluster"
+<http://elasticluster.readthedocs.io/en/latest/playbooks.html>`_ of the
+`ElastiCluster manual <http://elasticluster.readthedocs.io/>`_. Some of the
+roles are also accompanied by a small "README" file that states purpose and
+customization variables.
 
 Extra modules are defined in the ``modules`` directory. In order to
 use them you need to either run ``ansible-playbook`` with option ``-M
 modules``, **or** edit your ansible configuration file and update the
 `library` option, **or** set the environment variable
-``ANSIBLE_LIBRARY``.
-
-
-SLURM configuration
--------------------
-
-In order to configure a slurm cluster, create an hosts file with::
-
-    [slurm_master]
-    hostname ansible_ssh_host=A.B.C.D
-
-    [slurm_workers]
-    node1 ansible_ssh_host=A.B.C.D
-    node2 ansible_ssh_host=A.B.C.D
-    node3 ansible_ssh_host=A.B.C.D
-
-then run::
-
-    ansible-playbook -i <hostfile> site.yml
-
-
-Jenkins
--------
-
-To configure jenkins, use a hostfile containing::
-
-    [jenkins]
-    hostname ansible_ssh_host=A.B.C.D
-
-then run::
-
-    ansible-playbook -i <hostfile> site.yml
-
-Please note that by default this will create jobs to test gc3pie. If
-you want to modify it, just check the variable `j_jobs` in
-`group_vars/jenkins``
-
-
-Ganglia
--------
-
-Hostfile to configure ganglia::
-
-    [ganglia_master]
-    ganglia-frontend
-
-    [ganglia_monitor]
-    ganglia-frontend
-    node01
-    node02
-
-
-`ganglia_master` group will install the ganglia web frontend and the
-`gmetad` daemon.
-
-The `ganglia_monitor` group will install `gmond` and will configure it
-in order to send statistics to the `ganglia_master` node.
-
-On a default ganglia installation you are supposed to install the
-`gmond` daemon on the frontend as well, but this is not done
-automatically by this playbook, therefore you have to add the frontend
-also to the `ganglia_monitor` group.
+``ANSIBLE_LIBRARY``.  The latter is what ElastiCluster main code does.
