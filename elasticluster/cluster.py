@@ -737,12 +737,19 @@ class Cluster(Struct):
         :param bool force:
           remove cluster from storage even if not all nodes could be stopped.
         """
+        failed = False
         log.debug("Stopping cluster `%s` ...", self.name)
+        nodes = self.get_all_nodes()
+        failed_nodes = self.stop_all_nodes_parallel(nodes,self.thread_pool_max_size,wait)
 
-        failed = self._stop_all_nodes(wait)
+        if (len(failed_nodes) > 0):
+           failed = True
 
         if failed:
             if force:
+                for n in  nodes:
+                    self.remove_node(n)
+
                 self._delete_saved_data()
                 log.warning(
                     "Not all cluster nodes have been terminated."
@@ -763,38 +770,91 @@ class Cluster(Struct):
         if os.path.exists(self.known_hosts_file):
             os.remove(self.known_hosts_file)
 
-    def _stop_all_nodes(self, wait=False):
-        """
-        Terminate all cluster nodes. Return number of failures.
-        """
-        failed = 0
-        for node in self.get_all_nodes():
-            if not node.instance_id:
-                log.warning(
-                    "Node `%s` has no instance ID."
-                    " Assuming it did not start correctly,"
-                    " so removing it anyway from the cluster.", node.name)
-                self.nodes[node.kind].remove(node)
-                continue
-            # try and stop node
-            try:
-                # wait and pause for and recheck.
-                node.stop(wait)
 
-                self.nodes[node.kind].remove(node)
-                log.debug(
-                    "Removed node `%s` from cluster `%s`", node.name, self.name)
+    def stop_all_nodes_parallel(self, nodes, max_thread_pool_size, wait=False):
+        """
+           Terminates  nodes in parallel
+           Calls a static _stop_node() method
+        """
+
+        # Create one thread for each node to start
+        thread_pool_size = min(len(nodes), max_thread_pool_size)
+        thread_pool = Pool(processes=thread_pool_size)
+
+        log.debug("Created pool of %d threads", thread_pool_size)
+
+        # pressing Ctrl+C flips this flag, which in turn stops the main loop
+        # down below
+        keep_running = True
+
+        #iterate a list with noes and a wait value
+        ## node_stat_list = ((node, wait) for node in nodes)
+
+        wait_list = [wait] * len(nodes)
+        node_stat_list = zip (nodes, wait_list)
+
+        def sigint_handler(signal, frame):
+            """
+            Makes sure the cluster is saved, before the sigint results in
+            exiting during node startup.
+            """
+            log.error(
+                "Interrupted: will save cluster state and exit"
+                " after all nodes have started.")
+            keep_running = False
+
+        # intercept Ctrl+C
+        with sighandler(signal.SIGINT, sigint_handler):
+            result = thread_pool.map_async(self._stop_node,node_stat_list)
+            while not result.ready():
+                result.wait(1)
+                # check if Ctrl+C was pressed
+                if not keep_running:
+                    log.error("Aborting upon user interruption ...")
+                    # FIXME: `.close()` will keep the pool running until all
+                    # nodes have been started; should we use `.terminate()`
+                    # instead to interrupt node creation as soon as possible?
+                    thread_pool.close()
+                    thread_pool.join()
+                    self.repository.save_or_update(self)
+                    # FIXME: should raise an exception instead!
+                    sys.exit(1)
+
+            # TODO: might return only failed node
+            return set(failed_node for failed_node, ok
+                        in itertools.izip(node_stat_list, result.get()) if not ok)
+
+    @staticmethod
+    def _stop_node(node_wait):
+
+        """
+        node_wait= [ node, False]  is a list with those values
+        Stop the given node VM.
+        :return: bool -- True on success, False otherwise
+
+        Terminate the VM instance launched on the cloud for this specific node.
+        """
+        is_Terminated = False
+        node,wait = node_wait
+
+        if node and node.is_alive():
+            log.info("Shutting down instance `%s` ...", node.instance_id)
+
+            try:
+                node.stop(wait)
+                is_Terminated = True
             except InstanceNotFoundError as err:
                 log.info(
                     "Node `%s` (instance ID `%s`) was not found;"
                     " assuming it has already been terminated.",
                     node.name, node.instance_id)
             except Exception as err:
-                failed += 1
                 log.error(
                     "Could not stop node `%s` (instance ID `%s`): %s %s",
-                    node.name, node.instance_id, err, err.__class__)
-        return failed
+                   node.name, node.instance_id, err, err.__class__)
+                is_Terminatd = False
+
+        return is_Terminated
 
 
     def get_frontend_node(self):
