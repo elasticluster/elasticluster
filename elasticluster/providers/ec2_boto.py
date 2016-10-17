@@ -256,7 +256,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                     request=connection.get_all_spot_instance_requests(request_ids=request.id)[-1]
             else:
 
-                if not boot_disk_size or int( boot_disk_size > 0):
+                if not boot_disk_size or int( boot_disk_size > 8):
                     dev_sda1 = ec2.blockdevicemapping.EBSBlockDeviceType()
                     dev_sda1.size = int(boot_disk_size)
                     dev_sda1.delete_on_termination = True
