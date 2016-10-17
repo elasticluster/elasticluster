@@ -222,10 +222,11 @@ class BotoCloudProvider(AbstractCloudProvider):
             if price:
                 log.info("Requesting spot instance with price `%s` ...", price)
 
-                if not boot_disk_size or int( boot_disk_size > 0):
-                    dev_sda1 = boto.ec2.blockdevicemapping.EBSBlockDeviceType()
-                    dev_sda1.size = boot_disk_size
-                    bdm = boto.ec2.blockdevicemapping.BlockDeviceMapping()
+                if not boot_disk_size or int( boot_disk_size > 8):
+                    dev_sda1 = ec2.blockdevicemapping.EBSBlockDeviceType()
+                    dev_sda1.size = int(boot_disk_size)
+                    dev_sda1.delete_on_termination = True
+                    bdm = ec2.blockdevicemapping.BlockDeviceMapping()
                     bdm['/dev/sda1'] = dev_sda1
 
                     request = connection.request_spot_instances(
@@ -256,10 +257,12 @@ class BotoCloudProvider(AbstractCloudProvider):
             else:
 
                 if not boot_disk_size or int( boot_disk_size > 0):
-                    dev_sda1 = boto.ec2.blockdevicemapping.EBSBlockDeviceType()
-                    dev_sda1.size = boot_disk_size
-                    bdm = boto.ec2.blockdevicemapping.BlockDeviceMapping()
+                    dev_sda1 = ec2.blockdevicemapping.EBSBlockDeviceType()
+                    dev_sda1.size = int(boot_disk_size)
+                    dev_sda1.delete_on_termination = True
+                    bdm = ec2.blockdevicemapping.BlockDeviceMapping()
                     bdm['/dev/sda1'] = dev_sda1
+
 
                     reservation = connection.run_instances(
                        image_id, key_name=key_name, security_groups=security_groups,
