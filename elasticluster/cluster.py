@@ -843,6 +843,9 @@ class Cluster(Struct):
             try:
                 node.stop(wait)
                 is_Terminated = True
+                log.debug(
+                    "Removed node `%s` from cluster ", node.name)
+
             except InstanceNotFoundError as err:
                 log.info(
                     "Node `%s` (instance ID `%s`) was not found;"
