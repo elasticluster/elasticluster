@@ -37,6 +37,37 @@ hosts::
    Public License version 3`_ or (at your option) any later version.
 
 
+Ansible
+=======
+
+Supported on:
+
+* Ubuntu 12.04 and later
+* RHEL/CentOS 6.x and 7.x
+
+This playbook installs the `Ansible`_ orchestration and configuration management
+system on each host.  There is not much clustering happening here; this playbook
+is provided in case you want to be able to run Ansible playbooks from inside the
+cluster (as opposed to always running them from the ElastiCluster host).
+
+To force the playbook to run, add the Ansible group ``ansible`` to any node. The
+following example configuration sets up a SLURM batch-queuing cluster using 1
+front-end and 4 execution nodes, and additionally installs `Ansible`_ on the
+front-end::
+
+    [cluster/slurm]
+    master_nodes=1
+    worker_nodes=4
+    ssh_to=master
+    setup_provider=slurm+ansible
+    # ...
+
+    [setup/slurm+ansible]
+    master_groups=slurm_master,ansible
+    worker_groups=slurm_workers
+    # ...
+
+
 SLURM
 =====
 

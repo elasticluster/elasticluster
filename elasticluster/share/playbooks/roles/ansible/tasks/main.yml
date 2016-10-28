@@ -1,0 +1,34 @@
+---
+
+# Ansible does not provide a repo for Debian, so we do not add one and users on
+# Debian "stable" will get whatever version of Ansible was released with the OS.
+# Suggestions or PRs to improve this are welcome.
+- name: Add Ansible APT repository (Ubuntu)
+  apt_repository:
+    repo='ppa:ansible/ansible'
+    state=present
+    update_cache=yes
+  when: is_ubuntu
+
+
+# Updated Ansible packages are available from EPEL for RHEL and cognates, which
+# should have already be enabled by `common/tasks/init-RedHat.yml`
+#
+# - name: Add EPEL repository (RHEL-compatible)
+#   yum:
+#     name=epel-release
+#     state=present
+#   when: is_rhel_compatible
+
+
+# finally, install Ansible
+- name: Install Ansible
+  package:
+    name="{% if ANSIBLE_VERSION == 'LATEST' %}ansible{% else %}ansible{{__at__}}{{ANSIBLE_VERSION}}{% endif %}"
+    state="{% if ANSIBLE_VERSION == 'LATEST' %}latest{% else %}present{% endif %}"
+
+- name: Create default Ansible inventory
+  template:
+    src=inventory.j2
+    dest='/etc/ansible/hosts'
+    mode=0444

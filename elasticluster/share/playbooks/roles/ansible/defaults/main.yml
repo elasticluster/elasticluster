@@ -1,0 +1,4 @@
+---
+
+# the version of Ansible to install
+ANSIBLE_VERSION: 'LATEST'
