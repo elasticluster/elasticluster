@@ -34,3 +34,8 @@
     - software-properties-common
     - python-software-properties
     - python-pycurl
+
+
+- name: Provide workaround for https://github.com/ansible/ansible-modules-core/issues/4472
+  set_fact:
+    __at__: '='

@@ -15,3 +15,8 @@
     name='https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ansible_distribution_major_version}}.noarch.rpm'
     state=present
   when: 'not epel_repo_file.stat.exists'
+
+
+- name: Provide workaround for https://github.com/ansible/ansible-modules-core/issues/4472
+  set_fact:
+    __at__: '-'
