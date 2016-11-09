@@ -275,8 +275,8 @@ class ResizeCluster(AbstractCommand):
                             help="Add N1 nodes of group GROUP1, "
                                  "N2 of group GROUP2 etc...")
         parser.add_argument('-r', '--remove', metavar='N1:GROUP1[,N2:GROUP2]',
-                            help="Remove N1 nodes of group GROUP1, "
-                                 "N2 of group GROUP2 etc...")
+                            help=("Remove the highest-numbered N1 nodes"
+                                  " of group GROUP1, N2 of group GROUP2 etc..."))
         parser.add_argument('-t', '--template', help='name of the template '
                                                      'of this cluster')
         parser.add_argument('--no-setup', action="store_true", default=False,
