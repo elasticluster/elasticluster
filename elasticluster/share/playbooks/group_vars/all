@@ -75,8 +75,8 @@ is_ubuntu_15_10_or_later: "{{is_ubuntu}} and ('{{ansible_distribution_version}}'
 
 
 # init system features
-init_is_systemd: "ansible_service_mgr == 'systemd'"
-init_is_upstart: "ansible_service_mgr == 'upstart'"
+init_is_systemd: "'{{ansible_service_mgr}}' == 'systemd'"
+init_is_upstart: "'{{ansible_service_mgr}}' == 'upstart'"
 
 
 # Local variables:
