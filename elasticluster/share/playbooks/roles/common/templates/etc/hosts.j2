@@ -3,20 +3,9 @@
 # the next time `elasticluster setup` is run!
 #
 
-127.0.0.1 localhost.localdomain localhost
+127.0.0.1  localhost.localdomain localhost localhost4 localhost4.localdomain4
 
-{% if hosts %}
-{% for host in hosts|sort %}
-{% if host != 'localhost' %}
-{{ hostvars[host].ansible_default_ipv4.address }} {{ host }}
-{% endif %}
+{% for host in hosts|default(groups['all'])|sort if not host.startswith('localhost') %}
+{%- set fqdn = hostvars[host].ansible_fqdn -%}
+{{hostvars[host].ansible_default_ipv4.address}} {% if not fqdn.startswith('localhost') %}{{fqdn}} {{fqdn.split('.')[0]}}{% endif %} {{host}}
 {% endfor -%}
-
-{% else %}
-{% for host in groups['all']|sort %}
-{% if host != 'localhost' %}
-{{ hostvars[host].ansible_default_ipv4.address }} {{ host }}
-{% endif %}
-{% endfor %}
-
-{% endif %}
