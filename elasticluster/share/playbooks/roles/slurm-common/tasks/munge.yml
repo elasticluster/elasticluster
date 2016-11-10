@@ -51,21 +51,32 @@
   when:
     is_rhel_compatible
 
-
-- block:
-  - name: Allow MUNGE to start
-    command: systemctl unmask munge.service
-    args:
-      removes: /etc/systemd/system/munge.service
-  - name: Add `--syslog` option to `munged` startup
-    lineinfile:
-      dest='/lib/systemd/system/munge.service'
-      line='ExecStart=/usr/sbin/munged --syslog'
-      regexp='^ExecStart=/usr/sbin/munged'
-      state=present
-  - name:  Reload systemd configuration
-    command: systemctl daemon-reload
-  when: init_is_systemd
+# the following three tasks could be condensed in a single `block:
+# ... when: ...` but can actually not because of
+# https://github.com/ansible/ansible/issues/16952
+- name: Allow MUNGE to start
+  command: systemctl unmask munge.service
+  args:
+    removes: /etc/systemd/system/munge.service
+  when: '{{init_is_systemd}}'
+  tags:
+    - slurm
+    - munge
+    - systemd
+- name: Add `--syslog` option to `munged` startup
+  lineinfile:
+    dest='/lib/systemd/system/munge.service'
+    line='ExecStart=/usr/sbin/munged --syslog'
+    regexp='^ExecStart=/usr/sbin/munged'
+    state=present
+  when: '{{init_is_systemd}}'
+  tags:
+    - slurm
+    - munge
+    - systemd
+- name:  Reload systemd configuration
+  command: systemctl daemon-reload
+  when: '{{init_is_systemd}}'
   tags:
     - slurm
     - munge
