@@ -25,3 +25,29 @@
         regexp='Scientific Linux'
         replace='Scientific Linux CERN SLC'
   when: 'ansible_distribution == "Scientific"'
+
+
+- name: Check for cloud-init conf file
+  stat:
+    path='/etc/cloud/cloud.cfg'
+    follow=yes
+  register: cloud_cfg
+  tags:
+    - cloud-init
+    - hostname
+    - common
+
+
+- name: Ensure changes to hostname are not overwritten by cloud-init
+  lineinfile:
+    name='/etc/cloud/cloud.cfg'
+    backup=yes
+    regexp='^preserve_hostname:.*'
+    line='preserve_hostname{{__colon__}} true'
+    insertbefore=BOF
+  when: cloud_cfg.stat.exists
+  tags:
+    - cloud-init
+    - hostname
+    - common
+

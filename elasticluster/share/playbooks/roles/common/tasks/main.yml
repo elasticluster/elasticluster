@@ -1,5 +1,12 @@
 ---
 
+- name: Provide workaround for YAML syntax error in lines containing colon+space
+  set_fact:
+    __colon__: ':'
+  tags:
+    - cloud-init
+
+
 - include: 'init-{{ansible_os_family}}.yml'
 - include: hosts.yml hosts={{groups.all}}
 - include: hostname.yml
