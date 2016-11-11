@@ -44,11 +44,10 @@ from elasticluster import log
 from elasticluster.exceptions import TimeoutError, NodeNotFound, \
     InstanceError, InstanceNotFoundError, ClusterError
 from elasticluster.repository import MemRepository
-from elasticluster.utils import sighandler, timeout
+from elasticluster.utils import parse_ip_address_and_port, sighandler, timeout
 
 
-SSH_PORT = 22
-IPV6_RE = re.compile('\[([a-f:A-F0-9]*[%[0-z]+]?)\](?::(\d+))?')
+SSH_PORT=22
 
 
 def raise_timeout_error(signum, frame):
@@ -1238,27 +1237,14 @@ class Node(Struct):
             try:
                 log.debug("Trying to connect to host %s (%s)",
                           self.name, ip)
-                # check for nonstandard port, either IPv4 or IPv6
-                addr = ip
-                port = SSH_PORT
-                if ':' in ip:
-                    match = IPV6_RE.match(ip)
-                    if match:
-                        addr = match.groups()[0]
-                        port = match.groups()[1]
-                    else:
-                        addr, _, port = ip.partition(':')
-                # if port not specified, will default to SSH_PORT (22)
-                if port:
-                    port = int(port)
-
-                ssh.connect(addr,
+                addr, port = parse_ip_address_and_port(ip, SSH_PORT)
+                ssh.connect(str(addr),
                             username=self.image_user,
                             allow_agent=True,
                             key_filename=self.user_key_private,
                             timeout=Node.connection_timeout,
                             port=port)
-                log.debug("Connection to %s succeeded!", ip)
+                log.debug("Connection to %s succeeded on port %d!", ip, port)
                 if ip != self.preferred_ip:
                     log.debug("Setting `preferred_ip` to %s", ip)
                     self.preferred_ip = ip

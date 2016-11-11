@@ -162,6 +162,7 @@ setup(
         'click>=4.0',  ## click.prompt() added in 4.0
         'coloredlogs',
         'configobj',
+        'netaddr',
         'paramiko',
         'voluptuous>=0.8.2',
         # EC2 clouds

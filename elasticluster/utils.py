@@ -24,12 +24,14 @@ __author__ = 'Riccardo Murri <riccardo.murri@gmail.com>'
 from contextlib import contextmanager
 import functools
 import os
+import re
 import signal
 import sys
 import time
 
 # 3rd party imports
 import click
+import netaddr
 
 
 def confirm_or_abort(prompt, exitcode=os.EX_TEMPFAIL, msg=None, **extra_args):
@@ -127,6 +129,110 @@ class memoize(object):
                 return f(*args)
         return wrapped_f
 
+
+# this is very liberal, in that it will accept malformed address
+# strings like `0:::1` or '0::1::2', but we are going to do validation
+# with `netaddr.IPAddress` later on so there is little advantage in
+# being strict here
+_IPV6_FRAG = r'[0-9a-z:]+'
+
+# likewise
+_IPV4_FRAG = r'[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+'
+
+# should match a network interface name (for which there is no
+# standard, so let's just assume it's alphanumeric)
+_IFACE_FRAG = r'[a-z][0-9a-z]*'
+
+# XXX: order is important! IPv4 must come before IPv6 otherwise the
+# _IPV6_FRAG will match a *part* of an IPv4 adress....
+_IP_ADDRESS_RE = [
+    # IPv4 literal, optionally with port
+    re.compile(
+        r'(?P<ip_addr>{0})(?P<port>:\d+)?'
+        .format(_IPV4_FRAG), re.I),
+
+    # the kind of IPv6 literals returned by Azure, e.g., `[fe80::dead:beef%eth0]:2222`
+    re.compile(
+        r'\[(?P<ip_addr>{0})(?P<iface>%{1})?\](?P<port>:\d+)?'
+        .format(_IPV6_FRAG, _IFACE_FRAG), re.I),
+
+    # IPv6 literal possibly with interface spec (note this cannot provide any port)
+    re.compile(
+        r'(?P<ip_addr>{0})(?P<iface>%{1})?'
+        .format(_IPV6_FRAG, _IFACE_FRAG), re.I),
+]
+
+def parse_ip_address_and_port(addr, default_port=22):
+    """
+    Return a pair (IP address, port) extracted from string `addr`.
+
+    Different formats are accepted for the address/port string:
+
+    * IPv6 literals in square brackets, with or without an optional
+      port specification, as used in URLs::
+
+        >>> parse_ip_address_and_port('[fe80::dead:beef]:1234')
+        (IPAddress('fe80::dead:beef'), 1234)
+
+        >>> parse_ip_address_and_port('[fe80::dead:beef]')
+        (IPAddress('fe80::dead:beef'), 22)
+
+    * IPv6 literals with a "local interface" specification::
+
+        >>> parse_ip_address_and_port('[fe80::dead:beef%eth0]')
+        (IPAddress('fe80::dead:beef'), 22)
+
+        >>> parse_ip_address_and_port('fe80::dead:beef%eth0')
+        (IPAddress('fe80::dead:beef'), 22)
+
+    * bare IPv6 addresses::
+
+        >>> parse_ip_address_and_port('fe80::dead:beef')
+        (IPAddress('fe80::dead:beef'), 22)
+
+        >>> parse_ip_address_and_port('2001:db8:5ca1:1f0:f816:3eff:fe05:f40f')
+        (IPAddress('2001:db8:5ca1:1f0:f816:3eff:fe05:f40f'), 22)
+
+    * IPv4 addresses, with or without an additional port specification::
+
+        >>> parse_ip_address_and_port('192.0.2.123')
+        (IPAddress('192.0.2.123'), 22)
+
+        >>> parse_ip_address_and_port('192.0.2.123:999')
+        (IPAddress('192.0.2.123'), 999)
+
+    Note that the default port can be changed by passing an additional parameter::
+
+        >>> parse_ip_address_and_port('192.0.2.123', 987)
+        (IPAddress('192.0.2.123'), 987)
+
+        >>> parse_ip_address_and_port('fe80::dead:beef', 987)
+        (IPAddress('fe80::dead:beef'), 987)
+
+    :raise netaddr.AddrFormatError: Upon parse failure, e.g., syntactically incorrect IP address.
+    """
+    # we assume one and only one of the regexps will match
+    for regexp in _IP_ADDRESS_RE:
+        match = regexp.search(addr)
+        if not match:
+            continue
+        # can raise netaddr.AddrFormatError
+        ip_addr = netaddr.IPAddress(match.group('ip_addr'))
+        try:
+            port = match.group('port')
+        except IndexError:
+            port = None
+        if port is not None:
+            port = int(port[1:])  # skip leading `:`
+        else:
+            port = default_port
+        return ip_addr, port
+    # parse failed
+    raise netaddr.AddrFormatError(
+        "Could not extract IP address and port from `{1}`"
+        .format(addr))
+    
+    
 
 @contextmanager
 def sighandler(signum, handler):
