@@ -2,20 +2,20 @@
 
 - name: reload iptables
   service:
-    name='{{service["iptables"][ansible_os_family]}}'
+    name='{{service["iptables"]}}'
     state=reloaded
 
 - name: reload ip6tables
   service:
-    name='{{service["ip6tables"][ansible_os_family]}}'
+    name='{{service["ip6tables"]}}'
     state=reloaded
 
 - name: restart iptables
   service:
-    name='{{service["iptables"][ansible_os_family]}}'
+    name='{{service["iptables"]}}'
     state=restarted
 
 - name: restart ip6tables
   service:
-    name='{{service["ip6tables"][ansible_os_family]}}'
+    name='{{service["ip6tables"]}}'
     state=restarted
