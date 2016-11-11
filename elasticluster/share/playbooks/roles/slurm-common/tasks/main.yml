@@ -1,5 +1,9 @@
 ---
 
+- name: Load distribution-specific parameters
+  include: 'init-{{ansible_os_family}}.yml'
+
+
 # Otherwise `systemctl mask $someservice` fails on RHEL/CentOS7
 - name: Temporarily disable SELinux (RHEL-family)
   selinux:

@@ -1,0 +1,9 @@
+---
+
+- name: Set SLURM worker playbook params (RHEL compatible)
+  set_fact:
+    slurmd_packages:
+      - slurm
+      - slurm-plugins
+      - slurm-sql
+  when: 'is_rhel_compatible'

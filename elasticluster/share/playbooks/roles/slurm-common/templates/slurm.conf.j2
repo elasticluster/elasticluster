@@ -131,7 +131,7 @@ Waittime=0
 ControlMachine={{SLURM_MASTER_HOST}}
 ControlAddr={{SLURM_MASTER_ADDR}}
 
-SlurmctldPidFile=/var/run/slurm/slurmctld.pid
+SlurmctldPidFile={{slurm_pid_dir}}/slurmctld.pid
 SlurmctldPort=6817
 SlurmctldTimeout=300
 
@@ -147,7 +147,7 @@ MailProg=/usr/bin/mail
 ## `slurmd` settings (compute nodes)
 #
 SlurmdPort=6818
-SlurmdPidFile=/var/run/slurm/slurmd.pid
+SlurmdPidFile={{slurm_pid_dir}}/slurmd.pid
 SlurmdSpoolDir=/var/lib/slurm/slurmd
 SlurmdTimeout=300
 

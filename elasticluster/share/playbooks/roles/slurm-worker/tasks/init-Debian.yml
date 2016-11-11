@@ -1,0 +1,19 @@
+---
+
+- name: Set SLURM worker playbook params (Debian/Ubuntu)
+  set_fact:
+    slurmd_packages:
+      - libpam-slurm
+      - slurmd
+      - slurm-wlm-basic-plugins
+  when: '{{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}'
+
+
+- name: Set SLURM worker playbook params (older Debian/Ubuntu)
+  set_fact:
+    slurmd_packages:
+      - libpam-slurm
+      - slurm-llnl
+      - slurm-llnl-basic-plugins
+  when:
+    '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'

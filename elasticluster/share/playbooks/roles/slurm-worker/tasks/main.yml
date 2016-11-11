@@ -1,53 +1,11 @@
 # slurm-worker/tasks/main.yml
 ---
 
-- name: Install SLURM worker packages (Debian/Ubuntu)
-  package:
-    pkg={{item}}
-    state=latest
-  with_items:
-    - libpam-slurm
-    - slurmd
-    - slurm-wlm-basic-plugins
-  when: '{{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}'
+- name: Load distribution-specific parameters
+  include: 'init-{{ansible_os_family}}.yml'
 
-
-- name: Install SLURM worker packages (older Debian/Ubuntu)
-  package:
-    pkg={{item}}
-    state=latest
-  with_items:
-    - libpam-slurm
-    - slurm-llnl
-    - slurm-llnl-basic-plugins
-  when:
-    '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
-
-
-- name: Install SLURM worker packages (RHEL-compatible)
+- name: Install SLURM worker packages
   package:
     name={{item}}
     state=latest
-  with_items:
-    - slurm
-    - slurm-plugins
-    - slurm-sql
-  when: 'is_rhel_compatible'
-
-
-- block:
-  - name: Replace systemd unit file for SLURM services
-    copy:
-      dest='/usr/lib/systemd/system/{{item}}.service'
-      src='usr/lib/systemd/system/{{item}}.service'
-      owner=root
-      group=root
-      mode=0444
-      backup=yes
-    with_items:
-      - slurmd
-  - name: Reload systemd unit files
-    command: |
-      systemctl daemon-reload
-    become: yes
-  when: 'is_rhel7_compatible'
+  with_items: '{{slurmd_packages}}'

@@ -1,6 +1,6 @@
 ---
 
-- name: Set SLURM playbook params (Debian/Ubuntu)
+- name: Set SLURM master playbook params (Debian/Ubuntu)
   set_fact:
     slurmctld_service_name: slurmctld
     slurmctld_packages:
@@ -13,7 +13,7 @@
     '{{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}'
 
 
-- name: Set SLURM playbook params (older Debian/Ubuntu)
+- name: Set SLURM master playbook params (older Debian/Ubuntu)
   set_fact:
     slurmctld_service_name: slurm-llnl
     slurmctld_packages:

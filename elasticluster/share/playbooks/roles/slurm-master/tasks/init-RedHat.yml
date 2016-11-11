@@ -1,6 +1,6 @@
 ---
 
-- name: Set SLURM playbook params (RHEL 7.x compatible)
+- name: Set SLURM master playbook params (RHEL 7.x compatible)
   set_fact:
     slurmctld_service_name: slurmctld
     slurmctld_packages:

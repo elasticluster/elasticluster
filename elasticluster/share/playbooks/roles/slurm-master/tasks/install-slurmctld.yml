@@ -5,21 +5,3 @@
     pkg='{{item}}'
     state=latest
   with_items: '{{ slurmctld_packages }}'
-
-
-- block:
-  - name: Replace systemd unit file for SLURM services
-    copy:
-      dest='/usr/lib/systemd/system/{{item}}.service'
-      src='usr/lib/systemd/system/{{item}}.service'
-      owner=root
-      group=root
-      mode=0444
-      backup=yes
-    with_items:
-      - '{{ slurmctld_service_name }}'
-  - name: Reload systemd unit files
-    command: |
-      systemctl daemon-reload
-    become: yes
-  when: 'is_rhel7_compatible'
