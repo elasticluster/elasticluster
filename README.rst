@@ -1,5 +1,5 @@
 ========================================================================
-    ElastiCluster |travis-ci-status|
+    ElastiCluster |travis-ci-status| |gitter|
 ========================================================================
 
 .. This file follows reStructuredText markup syntax; see
@@ -7,6 +7,9 @@
 
 .. |travis-ci-status| image:: https://travis-ci.org/gc3-uzh-ch/elasticluster.svg?branch=master
 
+.. |gitter| image:: https://badges.gitter.im/gc3pie/Lobby.svg
+   :alt: Join the chat at https://gitter.im/gc3pie/Lobby
+   :target: https://gitter.im/gc3pie/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 ElastiCluster_ aims to provide a user-friendly command line tool to
 create, manage and setup computing clusters hosted on cloud
