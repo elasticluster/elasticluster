@@ -37,9 +37,20 @@
     - iptables-persistent
 
 
-- name: Install iptables package (RHEL-family)
+- name: Install iptables package (RHEL6-family)
   tags: iptables
-  when: is_rhel_compatible
+  when: is_rhel6_compatible
+  yum:
+    name={{item}}
+    state=present
+  with_items:
+    - iptables
+    - iptables-ipv6
+
+
+- name: Install iptables package (RHEL7-family)
+  tags: iptables
+  when: is_rhel7_compatible
   yum:
     name={{item}}
     state=present
