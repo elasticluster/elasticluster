@@ -26,37 +26,12 @@
     state=permissive
 
 
-- name: Install iptables packages (Debian/Ubuntu)
+- name: Install iptables packages
   tags: iptables
-  when: is_debian_or_ubuntu
-  apt:
+  package:
     name={{item}}
     state=present
-  with_items:
-    - iptables
-    - iptables-persistent
-
-
-- name: Install iptables package (RHEL6-family)
-  tags: iptables
-  when: is_rhel6_compatible
-  yum:
-    name={{item}}
-    state=present
-  with_items:
-    - iptables
-    - iptables-ipv6
-
-
-- name: Install iptables package (RHEL7-family)
-  tags: iptables
-  when: is_rhel7_compatible
-  yum:
-    name={{item}}
-    state=present
-  with_items:
-    - iptables
-    - iptables-services
+  with_items: '{{ packages }}'
 
 
 # We cannot use `with_items:` here as that would require that the Jinja template

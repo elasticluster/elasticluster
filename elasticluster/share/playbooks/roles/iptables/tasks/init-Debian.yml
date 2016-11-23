@@ -24,3 +24,11 @@
       'iptables':  'iptables-persistent'
       'ip6tables': 'iptables-persistent'
   when: not ({{ is_ubuntu_15_10_or_later }} or {{ is_debian_8_or_later }})
+
+
+- name: Load package names (Debian/Ubuntu)
+  set_fact:
+    packages:
+      - iptables
+      - iptables-persistent
+  when: is_debian_compatible
