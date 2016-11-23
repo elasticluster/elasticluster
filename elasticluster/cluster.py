@@ -1160,7 +1160,8 @@ class Node(Struct):
         Terminate the VM instance launched on the cloud for this specific node.
         """
         if self.instance_id is not None:
-            log.info("Shutting down instance `%s` ...", self.instance_id)
+            log.info("Shutting down node `%s` (VM instance `%s`) ...",
+                     self.name, self.instance_id)
 
             self._cloud_provider.stop_instance(self.instance_id)
             if wait:
