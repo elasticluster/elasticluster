@@ -18,7 +18,7 @@
     packages:
       - iptables
       - iptables-ipv6
-    when: '{{is_rhel6_compatible}}'
+  when: '{{is_rhel6_compatible}}'
 
 
 - name: Load configuration and service names (RHEL7-compatible)
@@ -26,4 +26,4 @@
     packages:
       - iptables
       - iptables-services
-    when: '{{is_rhel7_compatible}}'
+  when: '{{is_rhel7_compatible}}'
