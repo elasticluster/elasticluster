@@ -381,7 +381,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         The returned dictionary links VM id with the actual VM object.
         """
         connection = self._connect()
-        reservations = connection.get_all_instances()
+        reservations = connection.get_all_reservations()
         cached_instances = {}
         for rs in reservations:
             for vm in rs.instances:
