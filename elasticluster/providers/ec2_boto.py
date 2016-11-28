@@ -220,7 +220,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                 request = connection.request_spot_instances(
                                 price,image_id, key_name=key_name, security_groups=security_groups,
                                 instance_type=flavor, user_data=image_userdata,
-                                network_interfaces=interfaces,
+                                network_interfaces=interfaces, placement=self._region_name,
                                 instance_profile_name=self._instance_profile)[-1]
 
                 # wait until spot request is fullfilled (will wait
