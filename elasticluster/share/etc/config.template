@@ -426,7 +426,9 @@ worker_groups=ipython_engine
 #
 # image_id: image id in `ami` format. If you are using OpenStack, you
 #           need to run `euca-describe-images` to get a valid `ami-*`
-#           id.
+#           id. With Google Compute Engine you can also use a URL of 
+#           a private image. `gcloud compute images describe 
+#           <your_image_name>` will show the selfLink URL to use.
 #
 # flavor: the image type to use. Different cloud providers call it
 #         differently, could be `instance type`, `instance size` or

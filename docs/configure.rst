@@ -628,7 +628,10 @@ Mandatory configuration keys
 ``image_id``
 
     image id in `ami` format. If you are using OpenStack, you need to
-    run `euca-describe-images` to get a valid `ami-*` id.
+    run `euca-describe-images` to get a valid `ami-*` id. With Google 
+    Compute Engine you can also use a URL of a private image. `gcloud 
+    compute images describe <your_image_name>` will show the selfLink 
+    URL to use.
 
 ``flavor``
 
