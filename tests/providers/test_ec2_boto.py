@@ -221,7 +221,7 @@ class TestBotoCloudProvider(unittest.TestCase):
         res = MagicMock()
         type(res).instances = PropertyMock(return_value=[instance_boto])
 
-        con.get_all_instances.return_value = [res]
+        con.get_all_reservations.return_value = [res]
 
         i = provider._load_instance(instance_boto_id)
         assert i == instance_boto
