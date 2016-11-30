@@ -177,6 +177,25 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 "inventory file `{inventory_path}` does not exist"
                 .format(inventory_path=inventory_path))
 
+        # build list of directories to search for roles/include files
+        ansible_roles_dirs = [
+            # include Ansible default first ...
+            '/etc/ansible/roles',
+        ]
+        for root_path in [
+                # ... then ElastiCluster's built-in defaults
+                resource_filename('elasticluster', 'share/playbooks'),
+                # ... then wherever the playbook is
+                os.path.dirname(self._playbook_path),
+        ]:
+            for path in [
+                    root_path,
+                    os.path.join(root_path, 'roles'),
+            ]:
+                if path not in ansible_roles_dirs and os.path.exists(path):
+                    ansible_roles_dirs.append(path)
+
+
         # Use env vars to configure Ansible;
         # see all values in https://github.com/ansible/ansible/blob/devel/lib/ansible/constants.py
         #
@@ -194,6 +213,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             'ANSIBLE_FORKS':             '10',
             'ANSIBLE_HOST_KEY_CHECKING': 'no',
             'ANSIBLE_PRIVATE_KEY_FILE':  cluster.user_key_private,
+            'ANSIBLE_ROLES_PATH':        ':'.join(reversed(ansible_roles_dirs)),
             'ANSIBLE_SSH_PIPELINING':    'yes',
             'ANSIBLE_TIMEOUT':           '120',
         }

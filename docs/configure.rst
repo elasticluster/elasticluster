@@ -549,10 +549,22 @@ The following configuration keys are only valid if `provider` is
       ansible_forks=20
       ansible_timeout=300
 
-    The full list of environment variables used by Ansible is available
-    from the `Ansible configuration`__ section of the Ansible online documentation.
+    The full list of environment variables used by Ansible is available from the
+    `Ansible configuration`__ section of the Ansible online documentation.
+    Invoking ``elasticluster setup`` with highest verbosity (e.g., ``-vvv``)
+    will dump the entire environment that Ansible is being called with to the
+    DEBUG-level log.
 
     .. __: http://docs.ansible.com/ansible/intro_configuration.html#environmental-configuration
+
+    .. note::
+
+       Any ``ANSIBLE_*`` variables defined in the environment take precedence
+       over what is defined in the ``[setup/*]`` section. Care must be taken
+       when overriding some variables, particularly ``ANSIBLE_ROLES_PATH``,
+       which contain paths and references to parts of ElastiCluster: if those
+       paths are missing from the replaced value, a number of fatal errors can
+       happen.
 
 
 Examples
