@@ -10,7 +10,8 @@
     service:
       'iptables':  'iptables'
       'ip6tables': 'ip6tables'
-    when: '{{is_rhel_compatible}}'
+    reload: 'reload iptables'
+  when: '{{is_rhel_compatible}}'
 
     
 - name: Load configuration and service names (RHEL6-compatible)

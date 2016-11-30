@@ -45,7 +45,7 @@
       owner=root
       group=root
       mode=0444
-    notify: reload iptables
+    notify: '{{reload}}'
   - name: Deploy IPv6 netfilter rules
     template:
       dest="{{configfile['etc/iptables/rules.v6']}}"
@@ -53,7 +53,7 @@
       owner=root
       group=root
       mode=0444
-    notify: reload iptables
+    notify: '{{reload}}'
   tags:
     - iptables
 

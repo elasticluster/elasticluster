@@ -10,6 +10,13 @@
     service:
       'iptables':  'netfilter-persistent'
       'ip6tables': 'netfilter-persistent'
+    # on Debian 8, issuing `systemctl reload netfilter-persistent`
+    # fails with error "Failed to reload netfilter-persistent.service:
+    # Job type reload is not applicable for unit
+    # netfilter-persistent.service."  However, using `restart` instead
+    # of `reload` could break existing connections (not good when
+    # resizing), so do nothing and hope for the best...
+    reload: 'no-op'
   when: ({{ is_ubuntu_15_10_or_later }} or {{ is_debian_8_or_later }}) 
 
 
@@ -23,6 +30,7 @@
     service:
       'iptables':  'iptables-persistent'
       'ip6tables': 'iptables-persistent'
+    reload: 'reload iptables'
   when: not ({{ is_ubuntu_15_10_or_later }} or {{ is_debian_8_or_later }})
 
 

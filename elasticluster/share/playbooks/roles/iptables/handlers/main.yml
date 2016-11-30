@@ -1,5 +1,9 @@
 ---
 
+- name: no-op
+  debug:
+    msg="Not reloading iptables: not supported by {{service['iptables']}} service unit"
+
 - name: reload iptables
   service:
     name='{{service["iptables"]}}'
