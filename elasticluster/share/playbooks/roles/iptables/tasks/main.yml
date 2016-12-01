@@ -17,6 +17,7 @@
 
 - name: Load distribution-specific data
   include: 'init-{{ansible_os_family}}.yml'
+  tags: iptables
 
 
 - name: Temporarily disable SELinux (RHEL-family)
