@@ -303,7 +303,7 @@ class Configurator(object):
             conf['cluster_name'] = name
         conf_login = self.cluster_conf[cluster_template]['login']
 
-        provider_name = conf.get('provider')
+        provider_name = conf.get('provider', 'ansible')
         if provider_name not in Configurator.setup_providers_map:
             raise ConfigurationError(
                 "Invalid value `%s` for `setup_provider` in configuration "
@@ -456,7 +456,7 @@ class ConfigValidator(object):
                               "setup_provider": All(str, Length(min=1)),
                               "login": All(str, Length(min=1)),
                           },
-                  "setup": {"provider": All(str, Length(min=1)),
+                  "setup": {Optional("provider"): All(str, Length(min=1)),
                             Optional("playbook_path"): can_read_file(),
                             Optional("ansible_command"): All(can_read_file(), can_execute_file()),
                             Optional("ansible_extra_args"): All(str, Length(min=1)),
@@ -625,7 +625,7 @@ class ConfigReader(object):
              }, required=True, extra=True),
             "setup": Schema(
                 {"provider": All(str, Length(min=1)),
-                    }, required=True, extra=True),
+                    }, extra=True),
             "login": Schema(
                 {"image_user": All(str, Length(min=1)),
                  "image_user_sudo": All(str, Length(min=1)),

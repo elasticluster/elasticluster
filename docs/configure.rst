@@ -435,12 +435,13 @@ This section contain information on *how to setup* a cluster. After
 the cluster is started, elasticluster will run a ``setup provider`` in
 order to configure it.
 
-Mandatory configuration keys
+General configuration keys
 ----------------------------
 
 ``provider``
 
-    the type of setup provider. So far, only `ansible` is supported.
+    Type of the setup provider. So far, ``ansible`` is the only valid value
+    (and, obviously, the default)
 
 Ansible-specific mandatory configuration keys
 ----------------------------------------------
