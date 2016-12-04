@@ -320,7 +320,8 @@ run sudo``.  Apparently RHEL and CentOS ship with a default
 configuration that requires an interactive terminal to run ``sudo``;
 this is not there when ``sudo`` is run remotely from Ansible.
 
-You can use the ``image_userdata`` key to configure ``sudo`` properly for your SSH user::
+A solution is to use the ElastiCluster configuration key ``image_userdata`` to
+alter ``sudo`` behavior to allow TTY-less operation. For example::
 
         [cluster/sge]
         image_userdata=#!/bin/bash
