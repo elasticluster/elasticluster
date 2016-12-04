@@ -67,6 +67,8 @@
 
 - name: create default queue
   action: shell bash -lc 'qconf -sq all.q &> /dev/null || qconf -Aq /root/all.q.conf'
+  register: command_result
+  changed_when: "'added' in command_result.stdout"
   tags:
     - sge
 
