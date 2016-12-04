@@ -24,7 +24,8 @@
 
 - name: add the frontend as submission host
   action: shell bash -lc 'qconf -as {{groups.gridengine_master[0]}}'
-  ignore_errors: yes
+  register: command_result
+  changed_when: "'added to submit host list' in command_result.stdout"
   tags:
     - sge
 
@@ -35,27 +36,27 @@
     - sge
 
 - name: add execution hosts
-  action: shell bash -lc 'qconf -Ae "/root/{{item}}.conf"'
+  action: shell bash -lc 'qconf -se "{{item}}" || qconf -Ae "/root/{{item}}.conf"'
   with_items: '{{groups.gridengine_clients}}'
-  ignore_errors: yes
+  register: command_result
+  changed_when: "'added' in command_result.stdout"
   tags:
     - sge
 
 - name: upload configuration file for hostgroup
   action: template src=gridengine/templates/allhosts.grp.conf.j2 dest=/root/allhosts.grp.conf
-  ignore_errors: yes
   tags:
     - sge
 
 - name: add default group
-  action: shell bash -lc 'qconf -Ahgrp /root/allhosts.grp.conf'
-  ignore_errors: yes
+  action: shell bash -lc 'qconf -shgrpl | grep -q '@allhosts' || qconf -Ahgrp /root/allhosts.grp.conf'
+  register: command_result
+  changed_when: "'added \"@allhosts\" to host group list' in command_result.stdout"
   tags:
     - sge
 
 - name: Update @allhosts group
   action: shell bash -lc 'qconf -Mhgrp /root/allhosts.grp.conf'
-  ignore_errors: yes
   tags:
     - sge
 
@@ -65,14 +66,14 @@
     - sge
 
 - name: create default queue
-  action: shell bash -lc 'qconf -Aq /root/all.q.conf'
-  ignore_errors: yes
+  action: shell bash -lc 'qconf -sq all.q &> /dev/null || qconf -Aq /root/all.q.conf'
   tags:
     - sge
 
 - name: add hosts to the default queue
   action: shell bash -lc 'qconf -aattr queue hostlist @allhosts all.q'
-  ignore_errors: yes
+  register: command_result
+  changed_when: "'added' in command_result.stdout"
   tags:
     - sge
 
