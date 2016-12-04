@@ -320,7 +320,13 @@ run sudo``.  Apparently RHEL and CentOS ship with a default
 configuration that requires an interactive terminal to run ``sudo``;
 this is not there when ``sudo`` is run remotely from Ansible.
 
-The solution is to turn `SSH pipelining`_ off.  There are two ways of
+You can use the ``image_userdata`` key to configure ``sudo`` properly for your SSH user::
+
+        [cluster/sge]
+        image_userdata=#!/bin/bash
+          echo 'Defaults:centos !requiretty' > /etc/sudoers.d/999-requiretty && chmod 440 /etc/sudoers.d/999-requiretty
+
+Another solution is to turn `SSH pipelining`_ off.  There are two ways of
 doing this:
 
 1. Add the line ``ansible_ssh_pipelining=no`` in the cluster
