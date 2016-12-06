@@ -1,0 +1,34 @@
+---
+#
+# Set variables for RHEL/CentOS variants
+#
+
+- name: Set NFS server variables (RHEL/CentOS 7.x)
+  tags:
+    - nfs
+    - nfs-server
+  set_fact:
+    nfs_server_services:
+      - nfs-server
+    nfs_server_packages:
+      - nfs-utils
+    # see `init-Debian.yml` about this one
+    _nfs_server_started_state: 'started'
+  when:
+    'is_rhel7_compatible'
+
+- name: Set NFS server variables (RHEL/CentOS 6.x)
+  tags:
+    - nfs
+    - nfs-server
+  set_fact:
+    nfs_server_services:
+      - rpcbind
+      - nfslock
+      - nfs
+    nfs_server_packages:
+      - nfs-utils
+    # see `init-Debian.yml` about this one
+    _nfs_server_started_state: 'started'
+  when:
+    'is_rhel6_compatible'

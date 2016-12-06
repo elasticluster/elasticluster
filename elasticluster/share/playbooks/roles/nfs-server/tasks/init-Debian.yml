@@ -1,0 +1,33 @@
+---
+#
+# Set variables for Debian/Ubuntu variants
+#
+
+- name: Set NFS server variables (Debian/Ubuntu)
+  tags:
+    - nfs
+    - nfs-server
+  set_fact:
+    nfs_server_services:
+      - nfs-kernel-server
+    nfs_server_packages:
+      - nfs-kernel-server
+      - nfs-common
+    # see below about this one
+    _nfs_server_started_state: 'started'
+  when:
+    'is_debian_compatible'
+
+
+# As of 2016-12-06, `systemctl status nfs-kernel-server` mistakenly reports the
+# service as "active" even if the NFS server is not running; work around it by
+# forcing a restart. For details, see:
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=847204
+- name: Work around Debian bug #847204
+  tags:
+    - nfs
+    - nfs-server
+  set_fact:
+    _nfs_server_started_state: 'restarted'
+  when:
+    'is_debian_jessie'
