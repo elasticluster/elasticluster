@@ -1,0 +1,15 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+[copr-loveshack-sge]
+name=Copr repo for SoGE owned by loveshack
+baseurl=https://copr-be.cloud.fedoraproject.org/results/loveshack/SGE/epel-{{ansible_distribution_major_version}}-$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://copr-be.cloud.fedoraproject.org/results/loveshack/SGE/pubkey.gpg
+repo_gpgcheck=0
+enabled=1
+enabled_metadata=1
