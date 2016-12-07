@@ -1,0 +1,15 @@
+---
+#
+# Set variables for RHEL/CentOS variants
+#
+
+- name: Set GridEngine variables (RHEL/CentOS)
+  tags:
+    - gridengine
+    - gridengine-common
+  set_fact:
+    # SGE packages from Dave Love use the "traditional" packaging
+    # with everything being written to subdirectories of `$SGE_ROOT`
+    SGE_ROOT: '/opt/sge'
+    SGE_VAR:  '/opt/sge'
+  when: 'is_rhel_compatible'

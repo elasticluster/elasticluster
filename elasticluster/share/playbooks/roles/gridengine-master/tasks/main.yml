@@ -1,0 +1,188 @@
+---
+#
+# GridEngine master node setup
+#
+
+- name: Load distribution-specific parameters
+  tags:
+    - gridengine
+    - gridengine-master
+  include: 'init-{{ansible_os_family}}.yml'
+
+
+- name: Install GridEngine master packages
+  tags:
+    - gridengine
+    - gridengine-master
+  package:
+    pkg='{{item}}'
+    state=present
+  with_items: '{{gridengine_master_packages}}'
+
+
+- name: deploy qmaster installer config (RHEL/CentOS)
+  tags:
+    - gridengine
+    - gridengine-master
+  template:
+    dest='{{SGE_ROOT}}/install_qmaster.conf'
+    src='install_template.conf.j2'
+  when: is_rhel_compatible
+
+- name: qmaster installation (RHEL/CentOS)
+  tags:
+    - gridengine
+    - gridengine-master
+  shell: |
+    ./inst_sge -m -auto ./install_qmaster.conf;
+  args:
+    chdir: '{{SGE_ROOT}}'
+    creates: '{{SGE_CELL}}/common/cluster_name'
+  when: is_rhel_compatible
+
+- name: Load GridEngine settings at login (RHEL/CentOS)
+  tags:
+    - gridengine
+    - gridengine-master
+  file:
+    dest='/etc/profile.d/gridengine.{{item}}'
+    src='{{SGE_VAR}}/{{SGE_CELL}}/common/settings.{{item}}'
+    state=link
+  with_items:
+    - sh
+    - csh
+  when: is_rhel_compatible
+
+- name: Create GridEngine service file (RHEL/CentOS 6.x)
+  tags:
+    - gridengine
+    - gridengine-master
+  file:
+    dest='/etc/init.d/{{gridengine_master_service}}'
+    src='{{SGE_VAR}}/{{SGE_CELL}}/common/sgemaster'
+    state=link
+  when: is_rhel6_compatible
+
+
+- name: Create GridEngine service file (RHEL/CentOS 7.x)
+  tags:
+    - gridengine
+    - gridengine-master
+  template:
+    dest='/lib/systemd/system/{{gridengine_master_service}}.service'
+    src='gridengine-master.service.j2'
+  register: create_systemd_gridengine_master_service
+  when: is_rhel7_compatible
+
+- name: Reload systemd service units (RHEL/CentOS 7.x)
+  command: systemctl daemon-reload
+  when: 'create_systemd_gridengine_master_service|changed and ({{is_rhel7_compatible}})'
+
+
+- name: upload configuration file for host
+  tags:
+    - gridengine
+    - gridengine-master
+  template:
+    dest='{{SGE_ROOT}}/{{item}}.conf'
+    src=newhost.qconf.j2
+  with_items: '{{groups.gridengine_clients}}'
+
+
+  # This is required on the nodes for SGE `ìnst_sge` script to work
+- name: add admin hosts
+  tags:
+    - gridengine
+    - gridengine-master
+  shell: |
+    bash -lc 'qconf -ah "{{item}}"'
+  with_items: '{{groups.gridengine_master + groups.gridengine_clients}}'
+  register: command_result
+  changed_when: "'added' in command_result.stdout"
+
+
+- name: add submit hosts
+  tags:
+    - gridengine
+    - gridengine-master
+  shell: |
+    bash -lc '(qconf -ss | fgrep -q "{{item}}") || qconf -as "{{item}}"'
+  with_items: '{{groups.gridengine_master + groups.gridengine_clients + groups.gridengine_submit|default([]) }}'
+  register: command_result
+  changed_when: "'added' in command_result.stdout"
+
+
+- name: add execution hosts
+  tags:
+    - gridengine
+    - gridengine-master
+  shell: |
+    bash -lc 'qconf -se "{{item}}" || qconf -Ae "{{SGE_ROOT}}/{{item}}.conf"'
+  with_items: '{{groups.gridengine_clients}}'
+  register: command_result
+  changed_when: "'added' in command_result.stdout"
+
+
+- name: upload configuration file for hostgroup
+  tags:
+    - gridengine
+    - gridengine-master
+  template:
+    dest='{{SGE_ROOT}}/allhosts.grp.conf'
+    src=allhosts.grp.conf.j2
+
+
+- name: add default group
+  tags:
+    - gridengine
+    - gridengine-master
+  shell: |
+    bash -lc '(qconf -shgrpl | grep -q "@allhosts") || qconf -Ahgrp {{SGE_ROOT}}/allhosts.grp.conf'
+  register: command_result
+  changed_when: "'added \"@allhosts\" to host group list' in command_result.stdout"
+
+
+- name: Update group @allhosts
+  tags:
+    - gridengine
+    - gridengine-master
+  shell: |
+    bash -lc 'qconf -Mhgrp {{SGE_ROOT}}/allhosts.grp.conf'
+
+
+- name: deploy default configuration for main queue
+  tags:
+    - gridengine
+    - gridengine-master
+  copy:
+    dest='{{SGE_ROOT}}/all.q.conf'
+    src=all.q.conf
+
+
+- name: create default queue
+  tags:
+    - gridengine
+    - gridengine-master
+  shell: |
+    bash -lc 'qconf -sq all.q &> /dev/null || qconf -Aq {{SGE_ROOT}}/all.q.conf'
+  register: command_result
+  changed_when: "'added' in command_result.stdout"
+
+
+- name: add hosts to the default queue
+  tags:
+    - gridengine
+    - gridengine-master
+  shell: |
+    bash -lc 'qconf -aattr queue hostlist @allhosts all.q'
+  register: command_result
+  changed_when: "'added' in command_result.stdout"
+
+
+# - name: Export gridengine cell to the clients
+#   nfsexport: path='{{SGE_VAR}}/{{SGE_CELL}}/common' dest=/etc/exports clients="{{groups.gridengine_clients}}" options=ro,no_root_squash,async
+#   notify:
+#     - ensure nfs service is running
+#     - reload exports
+#   tags:
+#     - sge

@@ -1,0 +1,95 @@
+---
+#
+# GridEngine exec node setup
+#
+
+- name: Load distribution-specific parameters
+  tags:
+    - gridengine
+    - gridengine-common
+  include: 'init-{{ansible_os_family}}.yml'
+
+
+- name: Install GridEngine execd packages
+  package:
+    pkg='{{item}}'
+    state=present
+  with_items: '{{gridengine_execd_packages}}'
+
+
+# - name: deploy execd installer config (RHEL/CentOS)
+#   tags:
+#     - gridengine
+#     - gridengine-execd
+#   template:
+#     dest='{{SGE_ROOT}}/install_execd.conf'
+#     src='install_template.conf.j2'
+#   when: is_rhel_compatible
+
+# - name: SGE execd installation (RHEL/CentOS)
+#   tags:
+#     - gridengine
+#     - gridengine-execd
+#   shell: |
+#     ./inst_sge -x -auto ./install_execd.conf;
+#   args:
+#     chdir: '{{SGE_ROOT}}'
+#     creates: '{{SGE_CELL}}/common/cluster_name'
+#   when: is_rhel_compatible
+
+- name: Load GridEngine settings at login (RHEL/CentOS)
+  tags:
+    - gridengine
+    - gridengine-execd
+  file:
+    dest='/etc/profile.d/gridengine.{{item}}'
+    src='{{SGE_VAR}}/{{SGE_CELL}}/common/settings.{{item}}'
+    state=link
+  with_items:
+    - sh
+    - csh
+  when: is_rhel_compatible
+
+
+- name: Create GridEngine service file (RHEL/CentOS 6.x)
+  tags:
+    - gridengine
+    - gridengine-execd
+  file:
+    dest='/etc/init.d/{{gridengine_execd_service}}'
+    src='{{SGE_VAR}}/{{SGE_CELL}}/common/sgeexecd'
+    state=link
+  when: is_rhel6_compatible
+
+
+- name: Create GridEngine service file (RHEL/CentOS 7.x)
+  tags:
+    - gridengine
+    - gridengine-master
+  template:
+    dest='/lib/systemd/system/{{gridengine_execd_service}}.service'
+    src='gridengine-execd.service.j2'
+  register: create_systemd_gridengine_execd_service
+  when: is_rhel7_compatible
+
+- name: Reload systemd service units (RHEL/CentOS 7.x)
+  command: systemctl daemon-reload
+  when: 'create_systemd_gridengine_execd_service|changed and ({{is_rhel7_compatible}})'
+
+
+# - name: ensure cell points to the right qmaster
+#   lineinfile:
+#     dest='{{SGE_VAR}}/{{SGE_CELL}}/common/act_qmaster'
+#     regexp='.*'
+#     line='{{groups.gridengine_master[0]}}'
+#   notify: restart execd
+
+
+- name: ensure execd daemon is running
+  tags:
+    - gridengine
+    - gridengine-execd
+  service:
+    name='{{gridengine_execd_service}}'
+    state=running
+    enabled=yes

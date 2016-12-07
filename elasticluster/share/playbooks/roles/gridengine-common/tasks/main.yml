@@ -1,0 +1,32 @@
+---
+#
+# Common setup for GridEngine roles
+#
+
+- name: Load distribution-specific parameters
+  tags:
+    - gridengine
+    - gridengine-common
+  include: 'init-{{ansible_os_family}}.yml'
+
+
+- name: Enable "backports" repo (Debian 8 "jessie")
+  tags:
+    - gridengine
+    - gridengine-common
+  apt_repository:
+    repo='deb http://ftp.debian.org/debian jessie-backports main'
+    state=present
+    update_cache=yes
+  when: 'is_debian_jessie'
+
+
+- name: Enable Copr SGE repo by loveshack
+  tags:
+    - gridengine
+    - gridengine-common
+  template:
+    src=copr-loveshack-sge.repo.j2
+    dest='/etc/yum.repos.d/copr-loveshack-sge.repo'
+    mode=0444
+  when: is_rhel_compatible
