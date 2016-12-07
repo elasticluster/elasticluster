@@ -1,0 +1,22 @@
+---
+#
+# Set variables for Debian/Ubuntu variants
+#
+
+- name: Set GridEngine variables (Ubuntu or Debian 8 "jessie" or later)
+  tags:
+    - gridengine
+    - gridengine-common
+  set_fact:
+    # where the install script resides
+    SGE_ROOT: '/usr/share/gridengine'
+    # Debian packaging uses `$SGE_ROOT/` for binaries etc,
+    # but a different location for the cell and other variable data
+    SGE_VAR:  '/var/lib/gridengine'
+  when: 'is_ubuntu or is_debian_8_or_later'
+
+
+- name: Fail if unsupported distribution
+  fail:
+    msg: "GridEngine installation only supported on Ubuntu and Debian 8 or later"
+  when: '({{is_debian_compatible}}) and not ({{is_ubuntu}}) and not ({{is_debian_8_or_later}})'

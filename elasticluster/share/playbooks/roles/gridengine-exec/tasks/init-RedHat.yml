@@ -1,0 +1,17 @@
+---
+#
+# Set variables for RHEL/CentOS variants
+#
+
+- name: Set GridEngine execd variables (RHEL/CentOS)
+  tags:
+    - gridengine
+    - gridengine-exec
+  set_fact:
+    # execd service name
+    gridengine_execd_service: 'sgeexecd_{{SGE_CELL}}'
+    # packages to install
+    gridengine_execd_packages:
+      - gridengine-execd
+  when:
+    'is_rhel_compatible'

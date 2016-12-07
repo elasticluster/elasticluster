@@ -1,0 +1,23 @@
+---
+#
+# Set variables for RHEL/CentOS variants
+#
+
+- name: Set GridEngine master variables (RHEL/CentOS)
+  tags:
+    - gridengine
+    - gridengine-master
+  set_fact:
+    # qmaster service name
+    gridengine_master_service: 'sgemaster_{{SGE_CELL}}'
+    # packages to install (the `inst_sge` script errors out unless *all* SGE
+    # binaries are installed, hence `gridengine-execd` on the master node as
+    # well)
+    gridengine_master_packages:
+      - gridengine-devel
+      - gridengine-drmaa4ruby
+      - gridengine-execd
+      - gridengine-qmaster
+      - gridengine-qmon
+  when:
+    'is_rhel_compatible'

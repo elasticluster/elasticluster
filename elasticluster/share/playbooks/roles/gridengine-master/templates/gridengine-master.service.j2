@@ -1,0 +1,22 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+[Unit]
+Documentation=https://arc.liv.ac.uk/trac/SGE
+SourcePath={{SGE_VAR}}/{{SGE_CELL}}/common/sgemaster
+Description=LSB: start Grid Engine qmaster, shadowd
+After=network-online.target remote-fs.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+Restart=no
+TimeoutSec=5min
+IgnoreSIGPIPE=no
+KillMode=process
+GuessMainPID=no
+RemainAfterExit=yes
+ExecStart={{SGE_VAR}}/{{SGE_CELL}}/common/sgemaster start
+ExecStop={{SGE_VAR}}/{{SGE_CELL}}/common/sgemaster stop

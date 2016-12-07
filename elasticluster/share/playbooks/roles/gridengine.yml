@@ -1,66 +1,37 @@
 ---
-- name: GridEngine common configuration
-  hosts: gridengine_master:gridengine_clients
-  roles:
-    - { role: iptables, default_input_policy: 'ACCEPT' }
-  tasks:
-    - include: cluster/tasks/packages.yml
-  handlers:
-    - include: common/handlers/main.yml
 
 - name: GridEngine masternode Playbook
   hosts: gridengine_master
-  pre_tasks:
-    - name: Enable "backports" repo (Debian 8 "jessie")
-      apt_repository:
-        repo='deb http://ftp.debian.org/debian jessie-backports main'
-        state=present
-        update_cache=yes
-      when: 'is_debian_jessie'
-    - include: gridengine/tasks/master.yml
-    - name: Compatibility symlink (Debian 8 "jessie")
-      tags:
-        - nfs
-        - nfs-server
-      file:
-        path='/usr/share/gridengine/default'
-        src='/var/lib/gridengine/default'
-        state=link
-        force=yes
-      when: 'is_debian_jessie'
+  tags:
+    - gridengine
+    - gridengine-master
   roles:
+    - role: gridengine-master
     - role: nfs-server
       NFS_EXPORTS:
         - path: '/home'
           clients: '{{groups.gridengine_clients}}'
           options: 'rw,no_root_squash,async,no_subtree_check'
-        - path: '/usr/share/gridengine/default/common'
+        - path: '{{SGE_VAR}}/{{SGE_CELL}}/common'
           clients: '{{groups.gridengine_clients + groups.gridengine_master}}'
           options: 'rw,no_root_squash,no_subtree_check'
-  handlers:
-    - include: common/handlers/main.yml
-    - include: gridengine/handlers/main.yml
+
 
 - name: GridEngine worker nodes Playbook
   tags:
     - gridengine
+    - gridengine-exec
   hosts: gridengine_clients
   roles:
+    # we need to explicitly run `gridengine-common` before `nfs-client` to set
+    # the `gridengine_cell_path` variable; having Ansible run the
+    # `gridengine-common` role as a dependenciy for `gridengine-exec` sets it
+    # too late and NFS mounts are not set up
+    - role: gridengine-common
     - role: nfs-client
       NFS_MOUNTS:
         - fs: '{{groups.gridengine_master[0]}}:/home'
           mountpoint: '/home'
-        - fs: '{{groups.gridengine_master[0]}}:/usr/share/gridengine/default/common'
-          mountpoint: '/usr/share/gridengine/default/common'
-  tasks: 
-    - name: Enable "backports" repo (Debian 8 "jessie")
-      apt_repository:
-        repo='deb http://ftp.debian.org/debian jessie-backports main'
-        state=present
-        update_cache=yes
-      when: 'is_debian_jessie'
-    - include: gridengine/tasks/clients.yml
-  handlers:
-    - include: common/handlers/main.yml
-    - include: gridengine/handlers/main.yml
-
+        - fs: '{{groups.gridengine_master[0]}}:{{SGE_VAR}}/{{SGE_CELL}}/common'
+          mountpoint: '{{SGE_VAR}}/{{SGE_CELL}}/common'
+    - role: gridengine-exec

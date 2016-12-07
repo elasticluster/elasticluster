@@ -1,0 +1,18 @@
+---
+#
+# Set variables for Debian/Ubuntu variants
+#
+
+- name: Set GridEngine master variables (Debian/Ubuntu)
+  tags:
+    - gridengine
+    - gridengine-master
+  set_fact:
+    # packages to install
+    gridengine_master_packages:
+      - gridengine-client
+      - gridengine-common
+      - gridengine-master
+      - gridengine-qmon
+  when:
+    'is_debian_compatible'

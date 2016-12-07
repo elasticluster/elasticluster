@@ -1,0 +1,18 @@
+---
+#
+# Set variables for Debian/Ubuntu variants
+#
+
+- name: Set GridEngine execd variables (Debian/Ubuntu)
+  tags:
+    - gridengine
+    - gridengine-exec
+  set_fact:
+    # execd service name
+    gridengine_execd_service: 'gridengine-exec'
+    # packages to install
+    gridengine_execd_packages:
+      - gridengine-client
+      - gridengine-exec
+  when:
+    'is_debian_compatible'

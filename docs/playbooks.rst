@@ -151,30 +151,29 @@ GridEngine
 
 Tested on:
 
-* Ubuntu 12.04
-* CentOS 6.3 (except for GCE images)
-* Debian 7.1 (GCE)
+* CentOS 6.x and 7.x
+* Ubuntu 14.04 ("trusty") and 16.04 ("xenial")
+* Debian 8 ("jessie")
 
-+-----------------------+--------------------------------------+
-| ansible groups        | role                                 |
-+=======================+======================================+
-|``gridengine_master``  | Act as scheduler and submission host |
-+-----------------------+--------------------------------------+
-|``gridengine_clients`` | Act as compute node                  |
-+-----------------------+--------------------------------------+
+======================== =======================================
+ ansible groups          role
+======================== =======================================
+``gridengine_master``    Scheduler, admin, and submission host
+``gridengine_worker``    Compute (exec) node and submission host
+======================== =======================================
 
-This playbook will install `GridEngine`_ using the packages
-distributed with Ubuntu or CentOS and will create a basic, working
-configuration.
+
+This playbook installs `GridEngine`_ using the packages distributed with
+Ubuntu, Debian, or CentOS, and creates a basic working configuration.
 
 You are supposed to only define one ``gridengine_master`` and multiple
-``gridengine_clients``. The first will act as login node and will run the
-scheduler, while the others will only execute the jobs.
+``gridengine_worker``. The first acts as login node, fileserver, and runs the
+master scheduler (SGE ``qmaster``), whereas the others will only execute jobs
+(SGE ``execd``).
 
-The ``/home`` filesystem is exported *from* the gridengine server to
-the compute nodes. If you are running on a CentOS, also the
-``/usr/share/gridengine/default/common`` directory is shared from the
-gridengine server to the compute nodes.
+The ``/home`` filesystem is exported *from* the gridengine "master" to the
+worker nodes. The cell directory ``$SGE_ROOT/$SGE_CELL/common`` directory is
+shared from the gridengine server to the compute nodes (via NFS).
 
 A *snippet* of a typical configuration for a gridengine cluster is::
 
@@ -187,19 +186,16 @@ A *snippet* of a typical configuration for a gridengine cluster is::
 
     [setup/ansible_gridengine]
     frontend_groups=gridengine_master
-    compute_groups=gridengine_clients
+    compute_groups=gridengine_worker
     ...
 
-You can combine the gridengine playbooks with ganglia. In this case the ``setup`` stanza will look like::
+You can combine the gridengine playbooks with ganglia. In this case the
+``setup`` configuration stanza looks like::
 
     [setup/ansible_gridengine]
     frontend_groups=gridengine_master,ganglia_master
-    compute_groups=gridengine_clients,ganglia_monitor
+    compute_groups=gridengine_worker,ganglia_monitor
     ...
-
-Please note that Google Compute Engine provides Centos 6.2 images with
-a non-standard kernel which is **unsupported** by the gridengine
-packages.
 
 
 HTCondor
