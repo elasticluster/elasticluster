@@ -81,6 +81,10 @@
     - iptables
 
 
+- name: Possibly reload iptables
+  meta: flush_handlers
+
+
 - name: Enable SELinux (RHEL-family)
   when: is_rhel_compatible
   selinux:
