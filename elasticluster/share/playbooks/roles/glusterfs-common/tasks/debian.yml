@@ -1,5 +1,15 @@
 ---
 
+- name: Ensure APT support for HTTPS is installed
+  tags:
+    - gluster
+    - glusterfs-common
+  apt:
+    name='apt-transport-https'
+    state=present
+  when: is_debian_compatible
+
+
 - block:
   - name: Download GlusterFS package signing key
     get_url:
