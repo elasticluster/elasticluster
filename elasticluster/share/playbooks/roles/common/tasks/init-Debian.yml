@@ -30,6 +30,7 @@
     name={{item}}
     state=present
   with_items:
+    - apt-transport-https
     - sysvinit-utils
     - software-properties-common
     - python-software-properties
