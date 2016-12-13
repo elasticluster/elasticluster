@@ -86,7 +86,7 @@
   template:
     dest='{{SGE_ROOT}}/{{item}}.conf'
     src=newhost.qconf.j2
-  with_items: '{{groups.gridengine_clients}}'
+  with_items: '{{groups.gridengine_worker}}'
 
 
   # This is required on the nodes for SGE `ìnst_sge` script to work
@@ -96,7 +96,7 @@
     - gridengine-master
   shell: |
     bash -lc 'qconf -ah "{{item}}"'
-  with_items: '{{groups.gridengine_master + groups.gridengine_clients}}'
+  with_items: '{{groups.gridengine_master + groups.gridengine_worker}}'
   register: command_result
   changed_when: "'added' in command_result.stdout"
 
@@ -107,7 +107,7 @@
     - gridengine-master
   shell: |
     bash -lc '(qconf -ss | fgrep -q "{{item}}") || qconf -as "{{item}}"'
-  with_items: '{{groups.gridengine_master + groups.gridengine_clients + groups.gridengine_submit|default([]) }}'
+  with_items: '{{groups.gridengine_master + groups.gridengine_worker + groups.gridengine_submit|default([]) }}'
   register: command_result
   changed_when: "'added' in command_result.stdout"
 
@@ -118,7 +118,7 @@
     - gridengine-master
   shell: |
     bash -lc 'qconf -se "{{item}}" || qconf -Ae "{{SGE_ROOT}}/{{item}}.conf"'
-  with_items: '{{groups.gridengine_clients}}'
+  with_items: '{{groups.gridengine_worker}}'
   register: command_result
   changed_when: "'added' in command_result.stdout"
 
@@ -180,7 +180,7 @@
 
 
 # - name: Export gridengine cell to the clients
-#   nfsexport: path='{{SGE_VAR}}/{{SGE_CELL}}/common' dest=/etc/exports clients="{{groups.gridengine_clients}}" options=ro,no_root_squash,async
+#   nfsexport: path='{{SGE_VAR}}/{{SGE_CELL}}/common' dest=/etc/exports clients="{{groups.gridengine_worker}}" options=ro,no_root_squash,async
 #   notify:
 #     - ensure nfs service is running
 #     - reload exports

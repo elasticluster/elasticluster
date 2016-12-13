@@ -1,4 +1,4 @@
 group_name @allhosts
-hostlist {% for host in groups['gridengine_clients'] %}
+hostlist {% for host in groups['gridengine_worker'] %}
  {{ host }}
 {%- endfor %}
