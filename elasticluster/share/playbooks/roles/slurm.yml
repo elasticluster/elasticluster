@@ -1,6 +1,6 @@
 ---
 - name: SLURM common playbook
-  hosts: slurm_master:slurm_submit:slurm_workers
+  hosts: slurm_master:slurm_submit:slurm_worker
   tasks:
     # RHEL/CentOS 6.x comes with a default "REJECT" last rule which makes NFS
     # servers and SLURM communication fail - disable it altogether until we can
@@ -19,12 +19,12 @@
     - role: 'nfs-server'
       NFS_EXPORTS:
         - path: '/home'
-          clients: "{{groups.slurm_workers + groups.slurm_submit|default([])}}"
+          clients: "{{groups.slurm_worker + groups.slurm_submit|default([])}}"
     - slurm-master
 
       
 - name: Slurm worker nodes Playbook
-  hosts: slurm_workers
+  hosts: slurm_worker
   roles:
     - role: 'nfs-client'
       NFS_MOUNTS:
@@ -44,7 +44,7 @@
 
     
 - name: Restart SLURMd after all config is done
-  hosts: slurm_workers
+  hosts: slurm_worker
   tasks:
     - service:
         name=slurmd

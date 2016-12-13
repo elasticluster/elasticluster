@@ -162,11 +162,11 @@ DisableRootJobs=NO
 
 ## Cluster nodes
 # 
-{% for host in groups.slurm_workers %}
+{% for host in groups.slurm_worker %}
 NodeName={{host}} RealMemory={{hostvars[host]['ansible_memtotal_mb']|int - 384}} CPUs={{hostvars[host]['ansible_processor_vcpus']}} Sockets={{hostvars[host]['ansible_processor_vcpus']}} CoresPerSocket=1 ThreadsPerCore=1
 {% endfor %}
 
 
 ## Cluster partitions
 #
-PartitionName=main Nodes={% for host in groups.slurm_workers %}{{host}},{%endfor%} MaxTime=INFINITE State=UP Default=YES
+PartitionName=main Nodes={% for host in groups.slurm_worker %}{{host}},{%endfor%} MaxTime=INFINITE State=UP Default=YES
