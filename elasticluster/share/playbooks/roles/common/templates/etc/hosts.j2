@@ -7,5 +7,6 @@
 
 {% for host in hosts|default(groups['all'])|sort if not host.startswith('localhost') %}
 {%- set fqdn = hostvars[host].ansible_fqdn -%}
-{{hostvars[host].ansible_default_ipv4.address}} {% if not fqdn.startswith('localhost') %}{{fqdn}} {{fqdn.split('.')[0]}}{% endif %} {{host}}
+{{hostvars[host].ansible_default_ipv4.address}} {{host}} {% if not fqdn.startswith('localhost') %}{{fqdn}} {{fqdn.split('.')[0]}}{% endif %}
+
 {% endfor -%}
