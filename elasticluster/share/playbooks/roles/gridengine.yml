@@ -10,10 +10,10 @@
     - role: nfs-server
       NFS_EXPORTS:
         - path: '/home'
-          clients: '{{groups.gridengine_clients}}'
+          clients: '{{groups.gridengine_worker}}'
           options: 'rw,no_root_squash,async,no_subtree_check'
         - path: '{{SGE_VAR}}/{{SGE_CELL}}/common'
-          clients: '{{groups.gridengine_clients + groups.gridengine_master}}'
+          clients: '{{groups.gridengine_worker + groups.gridengine_master}}'
           options: 'rw,no_root_squash,no_subtree_check'
 
 
@@ -21,12 +21,12 @@
   tags:
     - gridengine
     - gridengine-exec
-  hosts: gridengine_clients
+  hosts: gridengine_clients:gridengine_worker
   roles:
     # we need to explicitly run `gridengine-common` before `nfs-client` to set
-    # the `gridengine_cell_path` variable; having Ansible run the
-    # `gridengine-common` role as a dependenciy for `gridengine-exec` sets it
-    # too late and NFS mounts are not set up
+    # the `SGE_*` variables; having Ansible run the `gridengine-common` role as
+    # a dependenciy for `gridengine-exec` sets it too late and NFS mounts are
+    # not set up
     - role: gridengine-common
     - role: nfs-client
       NFS_MOUNTS:
