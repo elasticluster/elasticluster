@@ -285,10 +285,11 @@ class Configurator(object):
         return result
 
     _renamed_node_groups = {
-        # old name     ->  (new name             will be removed in...
-        'gluster_data' :   ('glusterfs_server',  '1.4'),
-        'gluster_client':  ('glusterfs_client',  '1.4'),
-        'slurm_clients':   ('slurm_workers',     '1.4'),
+        # old name     ->     (new name             will be removed in...
+        'gluster_data' :      ('glusterfs_server',  '2.0'),
+        'gluster_client':     ('glusterfs_client',  '2.0'),
+        'slurm_clients':      ('slurm_worker',      '2.0'),
+        'slurm_workers':      ('slurm_worker',      '1.4'),
     }
 
     def create_setup_provider(self, cluster_template, name=None):
