@@ -288,6 +288,7 @@ class Configurator(object):
         # old name     ->     (new name             will be removed in...
         'gluster_data' :      ('glusterfs_server',  '2.0'),
         'gluster_client':     ('glusterfs_client',  '2.0'),
+        'gridengine_clients': ('gridengine_worker', '2.0'),
         'slurm_clients':      ('slurm_worker',      '2.0'),
         'slurm_workers':      ('slurm_worker',      '1.4'),
     }
