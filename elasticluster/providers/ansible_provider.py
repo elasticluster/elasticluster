@@ -289,7 +289,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 # FIXME: should this raise a `ConfigurationError` instead?
                 warn("Node kind `{0}` not defined in cluster!")
                 continue
-            extra_vars = ['ansible_ssh_user=%s' % node.image_user]
+            extra_vars = ['ansible_user=%s' % node.image_user]
             # check for nonstandard port, either IPv4 or IPv6
             if node.preferred_ip and ':' in node.preferred_ip:
                 match = IPV6_RE.match(node.preferred_ip)
@@ -298,7 +298,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 else:
                     _, _, host_port = node.preferred_ip.partition(':')
                 if host_port:
-                    extra_vars.append('ansible_ssh_port=%s' % host_port)
+                    extra_vars.append('ansible_port=%s' % host_port)
 
             if node.kind in self.environment:
                 extra_vars.extend('%s=%s' % (k, v) for k, v in
@@ -340,7 +340,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                             else:
                                 host = (host[0], host[1].partition(':')[0],
                                         host[2])
-                        hostline = "%s ansible_ssh_host=%s %s\n" % host
+                        hostline = "%s ansible_host=%s %s\n" % host
                         inventory_file.write(hostline)
         return inventory_path
 
