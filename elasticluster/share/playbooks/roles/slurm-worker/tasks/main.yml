@@ -9,3 +9,8 @@
     name={{item}}
     state=latest
   with_items: '{{slurmd_packages}}'
+
+- name: Ensure SLURMd starts at boot
+  service:
+    name='{{slurmd_service}}'
+    enabled=yes
