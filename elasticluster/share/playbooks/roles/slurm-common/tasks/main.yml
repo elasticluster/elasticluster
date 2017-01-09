@@ -119,3 +119,8 @@
     policy=targeted
     state=enforcing
   when: 'is_rhel_compatible'
+
+- name: Restore SELinux labels on `/` (RHEL-family)
+  command: |
+    restorecon -r /
+  when: 'is_rhel_compatible'
