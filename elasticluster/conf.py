@@ -218,7 +218,7 @@ def make_creator(configfiles, storage_path=None):
     """
     try:
         # only strings have the `.swapcase()` method; lists and tuples don't
-        configfiles.swapcase
+        configfiles.swapcase  # pylint: disable=pointless-statement
         configfiles = [configfiles]
     except AttributeError:
         # `configfiles` is list or tuple
