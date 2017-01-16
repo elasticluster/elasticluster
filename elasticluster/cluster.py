@@ -33,7 +33,6 @@ import socket
 import sys
 import time
 from multiprocessing.dummy import Pool
-import UserDict
 
 # External modules
 import paramiko
@@ -44,7 +43,7 @@ from elasticluster import log
 from elasticluster.exceptions import TimeoutError, NodeNotFound, \
     InstanceError, InstanceNotFoundError, ClusterError
 from elasticluster.repository import MemRepository
-from elasticluster.utils import parse_ip_address_and_port, sighandler, timeout
+from elasticluster.utils import Struct, parse_ip_address_and_port, sighandler, timeout
 
 
 SSH_PORT=22
@@ -58,68 +57,6 @@ class IgnorePolicy(paramiko.MissingHostKeyPolicy):
     def missing_host_key(self, client, hostname, key):
         log.info('Ignoring unknown %s host key for %s: %s' %
                  (key.get_name(), hostname, hexlify(key.get_fingerprint())))
-
-
-class Struct(object, UserDict.DictMixin):
-    """
-    This class is a clone of gc3libs.utils.Struct class from GC3Pie project: https://code.google.com/p/gc3pie/
-
-    A `dict`-like object, whose keys can be accessed with the usual
-    '[...]' lookup syntax, or with the '.' get attribute syntax.
-
-    Examples::
-      >>> a = Struct()
-      >>> a['x'] = 1
-      >>> a.x
-      1
-      >>> a.y = 2
-      >>> a['y']
-      2
-
-    Values can also be initially set by specifying them as keyword
-    arguments to the constructor::
-
-      >>> a = Struct(z=3)
-      >>> a['z']
-      3
-      >>> a.z
-      3
-
-    Like `dict` instances, `Struct`s have a `copy` method to get a
-    shallow copy of the instance:
-
-      >>> b = a.copy()
-      >>> b.z
-      3
-    """
-
-    def __init__(self, initializer=None, **extra):
-        if initializer is not None:
-            try:
-                # initializer is `dict`-like?
-                for name, value in initializer.items():
-                    self[name] = value
-            except AttributeError:
-                # initializer is a sequence of (name,value) pairs?
-                for name, value in initializer:
-                    self[name] = value
-        for name, value in extra.items():
-            self[name] = value
-
-    def copy(self):
-        """Return a (shallow) copy of this `Struct` instance."""
-        return Struct(self)
-
-    # the `DictMixin` class defines all std `dict` methods, provided
-    # that `__getitem__`, `__setitem__` and `keys` are defined.
-    def __setitem__(self, name, val):
-        self.__dict__[name] = val
-
-    def __getitem__(self, name):
-        return self.__dict__[name]
-
-    def keys(self):
-        return self.__dict__.keys()
 
 
 class Cluster(Struct):
