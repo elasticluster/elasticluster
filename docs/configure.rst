@@ -251,11 +251,11 @@ Valid configuration keys for `google`
 
 ``zone``
 
-    The GCE zone to be used. Default is `us-central1-a`.
+    The GCE zone to be used. Default is ``us-central1-a``.
 
 ``network``
 
-    The GCE network to be used. Default is `default`.
+    The GCE network to be used. Default is ``default``.
 
 
 Valid configuration keys for *openstack*
@@ -305,19 +305,7 @@ Valid configuration keys for *openstack*
 Examples
 --------
 
-For instance, to connect to the `Hobbes private cloud
-<http://hobbes.gc3.uzh.ch>`_ of the `University of Zurich`_ you can
-use the following::
-
-    [cloud/hobbes]
-    provider=ec2_boto
-    ec2_url=http://hobbes.gc3.uzh.ch:8773/services/Cloud
-    ec2_access_key=****REPLACE WITH YOUR ACCESS ID****
-    ec2_secret_key=****REPLACE WITH YOUR SECRET KEY****
-    ec2_region=nova
-    auto_ip_assignment=True
-
-For Amazon instead (region us-east-1) you can use::
+For instance, to connect to Amazon's EC2 (region ``us-east-1``) you can use::
 
     [cloud/amazon-us-east-1]
     provider=ec2_boto
