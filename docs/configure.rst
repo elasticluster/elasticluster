@@ -719,7 +719,9 @@ Optional configuration keys
     Define the size of boot disk to use.
     Only supported when the cloud provider is `google`.
     Values are specified in gigabytes.
-    Default value is 10.
+    Default value is 10 for `google`.
+    Now supports `ec2_boto` boot_disk_size. 
+    Default value is 8 for `ec2_boto`.
 
 ``tags``
     Comma-separated list of instance tags.

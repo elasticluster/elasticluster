@@ -160,7 +160,7 @@ class BotoCloudProvider(AbstractCloudProvider):
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
                        username=None, node_name=None, network_ids=None,
-                       price=None,timeout=None,
+                       price=None,timeout=None,boot_disk_size=8,
                        **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
@@ -181,6 +181,9 @@ class BotoCloudProvider(AbstractCloudProvider):
         :param str image_id: image type (os) to use for the instance
         :param str image_userdata: command to execute after startup
         :param str username: username for the given ssh key, default None
+
+        Specific to AWS EC2
+        :param int boot_disk_size: boot_disk_size , default for EC2 is 8Gb
 
         :return: str - instance id of the started instance
         """
@@ -214,10 +217,26 @@ class BotoCloudProvider(AbstractCloudProvider):
             security_groups = [security_group]
 
         try:
+
             #start spot instance if bid is specified
             if price:
                 log.info("Requesting spot instance with price `%s` ...", price)
-                request = connection.request_spot_instances(
+
+                if not boot_disk_size or int( boot_disk_size > 8):
+                    dev_sda1 = ec2.blockdevicemapping.EBSBlockDeviceType()
+                    dev_sda1.size = int(boot_disk_size)
+                    dev_sda1.delete_on_termination = True
+                    bdm = ec2.blockdevicemapping.BlockDeviceMapping()
+                    bdm['/dev/sda1'] = dev_sda1
+
+                    request = connection.request_spot_instances(
+                                price,image_id, key_name=key_name, security_groups=security_groups,
+                                instance_type=flavor, user_data=image_userdata,
+                                network_interfaces=interfaces,
+                                block_device_map = bdm,
+                                instance_profile_name=self._instance_profile)[-1]
+                else:
+                    request = connection.request_spot_instances(
                                 price,image_id, key_name=key_name, security_groups=security_groups,
                                 instance_type=flavor, user_data=image_userdata,
                                 network_interfaces=interfaces,
@@ -236,11 +255,28 @@ class BotoCloudProvider(AbstractCloudProvider):
                     # update request status
                     request=connection.get_all_spot_instance_requests(request_ids=request.id)[-1]
             else:
-                reservation = connection.run_instances(
-                    image_id, key_name=key_name, security_groups=security_groups,
-                    instance_type=flavor, user_data=image_userdata,
-                    network_interfaces=interfaces,
-                    instance_profile_name=self._instance_profile)
+
+                if not boot_disk_size or int( boot_disk_size > 8):
+                    dev_sda1 = ec2.blockdevicemapping.EBSBlockDeviceType()
+                    dev_sda1.size = int(boot_disk_size)
+                    dev_sda1.delete_on_termination = True
+                    bdm = ec2.blockdevicemapping.BlockDeviceMapping()
+                    bdm['/dev/sda1'] = dev_sda1
+
+
+                    reservation = connection.run_instances(
+                       image_id, key_name=key_name, security_groups=security_groups,
+                       instance_type=flavor, user_data=image_userdata,
+                       network_interfaces=interfaces,
+                       block_device_map = bdm,
+                       instance_profile_name=self._instance_profile)
+                else:
+                    reservation = connection.run_instances(
+                       image_id, key_name=key_name, security_groups=security_groups,
+                       instance_type=flavor, user_data=image_userdata,
+                       network_interfaces=interfaces,
+                       instance_profile_name=self._instance_profile)
+
         except Exception as ex:
             log.error("Error starting instance: %s", ex)
             if "TooManyInstances" in ex:
