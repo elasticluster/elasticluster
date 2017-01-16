@@ -56,6 +56,35 @@ def confirm_or_abort(prompt, exitcode=os.EX_TEMPFAIL, msg=None, **extra_args):
         sys.exit(exitcode)
 
 
+@contextmanager
+def environment(**kv):
+    """
+    Context manager to run Python code with a modified UNIX process environment.
+
+    All key/value pairs in the keyword arguments are added (or changed, if the
+    key names an existing environmental variable) in the process environment
+    upon entrance into the context. Changes are undone upon exit: added
+    environmental variables are removed from the environment, and those whose
+    value was changed are reset to their pristine value.
+    """
+    added = []
+    changed = {}
+    for key, value in kv.items():
+        if key not in os.environ:
+            added.append(key)
+        else:
+            changed[key] = os.environ[key]
+        os.environ[key] = value
+
+    yield
+
+    # restore pristine process environment
+    for key in added:
+        del os.environ[key]
+    for key in changed:
+        os.environ[key] = changed[key]
+
+
 def has_nested_keys(mapping, k1, *more):
     """
     Return ``True`` if `mapping[k1][k2]...[kN]` is valid.
