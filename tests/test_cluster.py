@@ -198,7 +198,8 @@ def test_update(tmpdir):
     cluster = make_cluster(tmpdir, cloud=cloud_provider)
     cluster.repository = storage
 
-    cluster.update()
+    with patch('paramiko.SSHClient'):
+        cluster.update()
 
     for node in cluster.get_all_nodes():
         assert ip_addr == node.ips[0]
