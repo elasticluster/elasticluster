@@ -178,6 +178,6 @@ setup(
         'netifaces',
         #'python-novaclient' ## this needs special treatment depending on Python version, see below
     ] + version_dependent_requires),
-    tests_require=['tox', 'mock', 'pytest>=2.8'],  # read right-to-left
+    tests_require=['tox', 'mock', 'pytest>=2.10'],  # read right-to-left
     cmdclass={'test': Tox},
 )

@@ -25,7 +25,7 @@ from os.path import join
 
 import pytest
 
-#from elasticluster.conf import ConfigReader, ConfigValidator, Configurator
+#rom elasticluster.conf import ConfigReader, ConfigValidator, Creator
 from elasticluster.conf import (
     _read_config_files,
     _arrange_config_tree,
@@ -38,7 +38,7 @@ from elasticluster.exceptions import ClusterNotFound
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 
-from _helpers.config import Configuration
+from _helpers.config import make_config_snippet
 
 
 CONFIG_TXT = ('''
@@ -139,7 +139,6 @@ user_key_name = {keyname}
 user_key_private = {valid_path}
 user_key_public = {valid_path}
 ''')
-
 
 CONFIG_RAW = ({
     'cloud/ec2': {
@@ -472,7 +471,7 @@ def test_build_node_section():
     assert nodes_cfg['misc']['min_num'] == 10
 
 
-# class TestConfigurator(unittest.TestCase):
+# class TestCreator(unittest.TestCase):
 
 #     def setUp(self):
 #         file, path = tempfile.mkstemp()
@@ -483,7 +482,7 @@ def test_build_node_section():
 #         os.unlink(self.path)
 
 #     def test_create_cloud_provider(self):
-#         configurator = Configurator(self.config)
+#         configurator = Creator(self.config)
 #         provider = configurator.create_cloud_provider("mycluster")
 
 #         url = self.config['mycluster']['cloud']['ec2_url']
@@ -499,7 +498,7 @@ def test_build_node_section():
 #         self.assertEqual(provider._region_name, region)
 
 #     def test_create_cluster(self):
-#         configurator = Configurator(self.config)
+#         configurator = Creator(self.config)
 #         cluster = configurator.create_cluster("mycluster")
 
 #         self.assertEqual(cluster.name, "mycluster")
@@ -517,7 +516,7 @@ def test_build_node_section():
 #         cfg = self.config.copy()
 #         cfg['mycluster']['cluster']['compute_nodes_min'] = 1
 
-#         configurator = Configurator(cfg)
+#         configurator = Creator(cfg)
 #         cconf = configurator.cluster_conf['mycluster']['cluster']
 
 #         self.assertEqual(cconf['compute_nodes_min'], 1)
@@ -526,7 +525,7 @@ def test_build_node_section():
 #         cfg = self.config.copy()
 #         cfg['mycluster']['cluster']['compute_nodes_min'] = 10
 
-#         configurator = Configurator(cfg)
+#         configurator = Creator(cfg)
 
 #         values = configurator.cluster_conf['mycluster']['nodes']['compute']
 #         self.assertEqual(values['num'], 2)
@@ -535,7 +534,7 @@ def test_build_node_section():
 #     def test_load_cluster(self):
 #         # test without storage file
 #         storage_path = tempfile.mkdtemp()
-#         configurator = Configurator(self.config, storage_path=storage_path)
+#         configurator = Creator(self.config, storage_path=storage_path)
 #         self.assertRaises(ClusterNotFound,
 #                           configurator.load_cluster, "mycluster")
 
@@ -546,7 +545,7 @@ def test_build_node_section():
 #         # anywhere
 
 #     def test_create_setup_provider(self):
-#         configurator = Configurator(self.config)
+#         configurator = Creator(self.config)
 #         provider = configurator.create_setup_provider("mycluster")
 
 #         self.assertTrue(type(provider) is AnsibleSetupProvider)
@@ -571,7 +570,7 @@ def test_build_node_section():
 
 #     def test_setup_provider_using_environment(self):
 #         config = copy.deepcopy(self.config)
-#         configurator = Configurator(config)
+#         configurator = Creator(config)
 #         # Save current variable, modify it and check if it's correctly read
 #         SAVEDUSERNAME=os.getenv('OS_USERNAME')
 #         os.environ['OS_USERNAME'] = 'newusername'
@@ -587,7 +586,7 @@ def test_build_node_section():
 #             raise
 
 #     def test_storage_type(self):
-#         configurator = Configurator(self.config)
+#         configurator = Creator(self.config)
 #         repo = configurator.create_repository()
 
 
@@ -695,7 +694,7 @@ def test_build_node_section():
 #         with open(self.cfgfile, 'wb') as fd:
 #             fd.write(config)
 
-#         return Configurator.fromConfig(self.cfgfile)
+#         return Creator.fromConfig(self.cfgfile)
 #     # config_reader = ConfigReader(self.cfgfile)
 #     # return config_reader.read_config()
 
@@ -703,7 +702,7 @@ def test_build_node_section():
 #         with open(self.cfgfile, 'wb') as fd:
 #             cfgobj.write(fd)
 
-#         ret = Configurator.fromConfig(self.cfgfile)
+#         ret = Creator.fromConfig(self.cfgfile)
 #         return ret
 
 #     def test_read_valid_config(self):
@@ -927,7 +926,7 @@ def test_build_node_section():
 #                 with open(cfgfile, 'w') as fd:
 #                     tmpcfg.write(fd)
 #                 try:
-#                     config = Configurator.fromConfig(cfgfile)
+#                     config = Creator.fromConfig(cfgfile)
 #                 finally:
 #                     os.unlink(cfgfile)
 
@@ -1040,7 +1039,7 @@ def test_build_node_section():
 #                     cfgfile.write(content)
 #                     paths.append(path)
 
-#             config = Configurator.fromConfig(paths)
+#             config = Creator.fromConfig(paths)
 
 #             # check all clusters are there
 #             cfg = config.cluster_conf
@@ -1074,7 +1073,7 @@ def test_build_node_section():
 
 #         with open(self.cfgfile, 'w') as fd:
 #             cfg.write(fd)
-#             config = Configurator.fromConfig(self.cfgfile)
+#             config = Creator.fromConfig(self.cfgfile)
 
 #     def test_parsing_of_multiple_ansible_groups(self):
 #         """Fix regression causing multiple ansible groups to be incorrectly parsed
@@ -1093,7 +1092,7 @@ def test_build_node_section():
 #         cfg.set('setup/sp1', 'misc_groups', 'misc_master,misc_client')
 #         with open(self.cfgfile, 'w') as fd:
 #             cfg.write(fd)
-#             config = Configurator.fromConfig(self.cfgfile)
+#             config = Creator.fromConfig(self.cfgfile)
 #             setup = config.create_setup_provider('c1')
 #             self.assertEqual(setup.groups['misc'], ['misc_master', 'misc_client'])
 
@@ -1102,10 +1101,10 @@ def test_build_node_section():
 
 #         with open(self.cfgfile, 'w') as fd:
 #             cfg.write(fd)
-#             config = Configurator.fromConfig(self.cfgfile)
+#             config = Creator.fromConfig(self.cfgfile)
 #             repo = config.create_repository()
-#             self.assertEqual(repo.storage_path, Configurator.default_storage_path)
-#             self.assertEqual(repo.default_store.file_ending, Configurator.default_storage_type)
+#             self.assertEqual(repo.storage_path, Creator.default_storage_path)
+#             self.assertEqual(repo.default_store.file_ending, Creator.default_storage_type)
 
 
 #     def test_custom_storage_options(self):
@@ -1116,7 +1115,7 @@ def test_build_node_section():
 
 #         with open(self.cfgfile, 'w') as fd:
 #             cfg.write(fd)
-#         config = Configurator.fromConfig(self.cfgfile)
+#         config = Creator.fromConfig(self.cfgfile)
 #         repo = config.create_repository()
 #         self.assertEqual(repo.storage_path, '/foo/bar')
 #         self.assertEqual(repo.default_store.file_ending, 'json')
