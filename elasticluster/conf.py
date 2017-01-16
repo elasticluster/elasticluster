@@ -55,6 +55,7 @@ from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.cluster import Cluster
 from elasticluster.repository import MultiDiskRepository
+from elasticluster.utils import environment
 from elasticluster.validate import (
     boolean,
     executable_file,
@@ -317,30 +318,15 @@ def _read_config_files(paths):
     # temporarily modify environment to allow both `${...}` and `%(...)s`
     # variable substitution in config values
     defaults = _make_defaults_dict()
-    added = []
-    changed = {}
-    for key, value in defaults.items():
-        if key not in os.environ:
-            added.append(key)
-        else:
-            changed[key] = os.environ[key]
-        os.environ[key] = value
-
-    # convert result to Python dict
     config = {}
-    for section in configparser.sections():
-        config[section] = {}
-        for key in configparser.options(section):
-            # `configparser.get()` performs the `%(...)s` substitutions
-            value = configparser.get(section, key, vars=defaults)
-            # `expandvars()` performs the `${...}` substitutions
-            config[section][key] = expandvars(value)
-
-    # restore pristine process environment
-    for key in added:
-        del os.environ[key]
-    for key in changed:
-        os.environ[key] = changed[key]
+    with environment(**defaults):
+        for section in configparser.sections():
+            config[section] = {}
+            for key in configparser.options(section):
+                # `configparser.get()` performs the `%(...)s` substitutions
+                value = configparser.get(section, key, vars=defaults)
+                # `expandvars()` performs the `${...}` substitutions
+                config[section][key] = expandvars(value)
 
     return config
 
