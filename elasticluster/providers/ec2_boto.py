@@ -53,6 +53,10 @@ class BotoCloudProvider(AbstractCloudProvider):
                                     `True` or floating ips have to be
                                     assigned manually `False`
     :param str instance_profile: Instance profile with IAM role permissions
+    :param float price: Spot instance price (if 0, do not use spot instances);
+                        used as a default in `start_instance`:py:meth
+    :param int price: Timeout waiting for spot instances (only used if price > 0);
+                      used as a default in `start_instance`:py:meth
     """
     __node_start_lock = threading.Lock()  # lock used for node startup
 
@@ -62,7 +66,8 @@ class BotoCloudProvider(AbstractCloudProvider):
 
     def __init__(self, ec2_url, ec2_region, ec2_access_key=None,
                  ec2_secret_key=None, vpc=None, storage_path=None,
-                 request_floating_ip=False, instance_profile=None):
+                 request_floating_ip=False, instance_profile=None,
+                 price=0.0, timeout=0):
         self._url = ec2_url
         self._region_name = ec2_region
         self._access_key = ec2_access_key
@@ -70,6 +75,10 @@ class BotoCloudProvider(AbstractCloudProvider):
         self._vpc = vpc
         self._instance_profile = instance_profile
         self.request_floating_ip = request_floating_ip
+
+        # provide defaults for like-named arguments in `.start_instance`
+        self.price = price
+        self.timeout = timeout
 
         # read all parameters from url
         proto, opaqueurl = urllib.splittype(ec2_url)
@@ -160,7 +169,7 @@ class BotoCloudProvider(AbstractCloudProvider):
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
                        username=None, node_name=None, network_ids=None,
-                       price=None,timeout=None,
+                       price=None, timeout=None,
                        **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
@@ -181,6 +190,9 @@ class BotoCloudProvider(AbstractCloudProvider):
         :param str image_id: image type (os) to use for the instance
         :param str image_userdata: command to execute after startup
         :param str username: username for the given ssh key, default None
+        :param float price: Spot instance price (if 0, do not use spot instances).
+        :param int price: Timeout (in seconds) waiting for spot instances;
+                          only used if price > 0.
 
         :return: str - instance id of the started instance
         """
@@ -212,6 +224,12 @@ class BotoCloudProvider(AbstractCloudProvider):
         else:
             interfaces = None
             security_groups = [security_group]
+
+        # get defaults for `price` and `timeout` from class instance
+        if price is None:
+            price = self.price
+        if timeout is None:
+            timeout = self.timeout
 
         try:
             #start spot instance if bid is specified
