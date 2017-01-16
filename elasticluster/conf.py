@@ -731,16 +731,8 @@ class Creator(object):
     DEFAULT_STORAGE_PATH = os.path.expanduser("~/.elasticluster/storage")
     DEFAULT_STORAGE_TYPE = 'yaml'
 
-    def __init__(self, cluster_conf, storage_path=None, storage_type=None):
-        ### DEBUG
-        #import json
-        #print("### Creating `Configurator` with the following data:")
-        #sys.stdout.write("cluster_conf = ")
-        #json.dump(cluster_conf, sys.stdout, indent=4, sort_keys=True)
-        #print()
-        ### /DEBUG
-
-        self.cluster_conf = cluster_conf['cluster']
+    def __init__(self, conf, storage_path=None, storage_type=None):
+        self.cluster_conf = conf['cluster']
 
         self.storage_path = (
             os.path.expandvars(os.path.expanduser(storage_path)) if storage_path
@@ -809,7 +801,7 @@ class Creator(object):
         return provider(storage_path=self.storage_path, **provider_conf)
 
 
-    def create_cluster(self, template, name=None):
+    def create_cluster(self, template, name=None, cloud=None, setup=None):
         """
         Creates a ``Cluster``:class: instance by inspecting the configuration
         properties of the given cluster template.
@@ -817,8 +809,14 @@ class Creator(object):
         :param str template: name of the cluster template
         :param str name: name of the cluster. If not defined, the cluster
                          will be named after the template.
+        :param cloud: A `CloudProvider`:py:class: instance to use
+                      instead of the configured one. If ``None`` (default)
+                      then the configured cloud provider will be used.
+        :param setup: A `SetupProvider`:py:class: instance to use
+                      instead of the configured one. If ``None`` (default)
+                      then the configured setup provider will be used.
 
-        :return: :py:class:`elasticluster.cluster.cluster` instance:
+        :return: :py:class:`elasticluster.cluster.Cluster` instance:
 
         :raises ConfigurationError: cluster template not found in config
         """
@@ -835,10 +833,17 @@ class Creator(object):
         extra.pop('setup')
         extra['template'] = template
 
+        if cloud is None:
+            cloud = self.create_cloud_provider(template)
+        if name is None:
+            name = template
+        if setup is None:
+            setup = self.create_setup_provider(template, name=name)
+
         cluster = Cluster(
             name=(name or template),
-            cloud_provider=self.create_cloud_provider(template),
-            setup_provider=self.create_setup_provider(template, name=name),
+            cloud_provider=cloud,
+            setup_provider=setup,
             user_key_name=conf['login']['user_key_name'],
             user_key_public=conf['login']['user_key_public'],
             user_key_private=conf['login']["user_key_private"],

@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013, 2016 S3IT, University of Zurich
+#   Copyright (C) 2013-2017 University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -15,387 +15,217 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+# pylint: disable=missing-docstring
 
 from __future__ import absolute_import
 
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
+# 3rd-party imports
+from mock import MagicMock, patch
+import pytest
+from pytest import raises
 
-import json
-import os
-import shutil
-import tempfile
-import unittest
-
-from mock import Mock, MagicMock, patch
-
-from elasticluster.conf import Configurator
-from elasticluster.cluster import Cluster, Node
+# ElastiCluster imports
 from elasticluster.exceptions import ClusterError
-from elasticluster.providers.ec2_boto import BotoCloudProvider
-from elasticluster.repository import PickleRepository
-
-from _helpers.config import Configuration
-
-
-class TestCluster(unittest.TestCase):
-
-    def setUp(self):
-        self.storage_path = tempfile.mkdtemp()
-        f, path = tempfile.mkstemp()
-        self.path = path
-
-    def tearDown(self):
-        shutil.rmtree(self.storage_path)
-        os.unlink(self.path)
-
-    def get_cluster(self, cloud_provider=None, config=None, nodes=None):
-        if not cloud_provider:
-            cloud_provider = BotoCloudProvider("https://hobbes.gc3.uzh.ch/",
-                                               "nova", "a-key", "s-key")
-        if not config:
-            config = Configuration().get_config(self.path)
-
-        setup = Mock()
-        configurator = Configurator(config)
-        conf_login = configurator.cluster_conf['mycluster']['login']
-        repository = PickleRepository(self.storage_path)
-
-        cluster = Cluster(name="mycluster",
-                          cloud_provider=cloud_provider,
-                          setup_provider=setup,
-                          repository=repository,
-                          user_key_name=conf_login['user_key_name'],
-                          user_key_public=conf_login['user_key_public'],
-                          user_key_private=conf_login['user_key_private'],
-                          )
-
-        if not nodes:
-            nodes = {"compute": 2, "frontend": 1}
-
-        for kind, num in nodes.iteritems():
-            conf_kind = configurator.cluster_conf['mycluster']['nodes'][kind]
-            cluster.add_nodes(kind, num, conf_kind['image_id'],
-                              conf_login['image_user'],
-                              conf_kind['flavor'],
-                              conf_kind['security_group'])
-
-        return cluster
-
-    def test_add_node(self):
-        """
-        Add node
-        """
-        cluster = self.get_cluster()
-
-        # without name
-        size = len(cluster.nodes['compute'])
-        cluster.add_node("compute", 'image_id', 'image_user', 'flavor',
-                         'security_group')
-        self.assertEqual(size + 1, len(cluster.nodes['compute']))
-        new_node = cluster.nodes['compute'][2]
-        self.assertEqual(new_node.name, 'compute003')
-        self.assertEqual(new_node.kind, 'compute')
-
-        # with custom name
-        name = "test-node"
-        size = len(cluster.nodes['compute'])
-        cluster.add_node("compute", 'image_id', 'image_user', 'flavor',
-                         'security_group', image_userdata="", name=name)
-        self.assertEqual(size + 1, len(cluster.nodes['compute']))
-        self.assertEqual(cluster.nodes['compute'][3].name, name)
-
-    def test_remove_node(self):
-        """
-        Remove node
-        """
-        cluster = self.get_cluster()
-
-        size = len(cluster.nodes['compute'])
-        cluster.remove_node(cluster.nodes['compute'][1])
-        self.assertEqual(size - 1, len(cluster.nodes['compute']))
-
-    def test_start(self):
-        """
-        Start cluster
-        """
-        cloud_provider = MagicMock()
-        cloud_provider.start_instance.return_value = u'test-id'
-        cloud_provider.get_ips.return_value = ['127.0.0.1']
-        cloud_provider.is_instance_running.return_value = True
-
-        cluster = self.get_cluster(cloud_provider=cloud_provider)
-        cluster.repository = MagicMock()
-        cluster.repository.storage_path = '/foo/bar'
-
-        ssh_mock = MagicMock()
-        with patch('paramiko.SSHClient') as ssh_mock:
-            cluster.start()
-
-        cluster.repository.save_or_update.assert_called_with(cluster)
 
-        for node in cluster.get_all_nodes():
-            assert node.instance_id == u'test-id'
-            assert node.ips == ['127.0.0.1']
+# local test imports
+from _helpers.config import make_cluster
 
-    def test_check_cluster_size(self):
-        nodes = {"compute": 3, "frontend": 1}
-        nodes_min = {"compute": 1, "frontend": 3}
-        cluster = self.get_cluster(nodes=nodes)
 
-        cluster._check_cluster_size(nodes_min)
+__author__ = (', '.join([
+    'Nicolas Baer <nicolas.baer@uzh.ch>',
+    'Riccardo Murri <riccardo.murri@gmail.com>',
+]))
 
-        self.assertEqual(len(cluster.nodes["frontend"]), 3)
-        self.assertTrue(len(cluster.nodes["compute"]) >= 1)
 
-        # not satisfiable cluster setup
-        nodes = {"compute": 3, "frontend": 1}
-        nodes_min = {"compute": 5, "frontend": 3}
-        cluster = self.get_cluster(nodes=nodes)
 
-        self.failUnlessRaises(ClusterError, cluster._check_cluster_size,
-                              min_nodes=nodes_min)
+def test_add_node(tmpdir):
+    """
+    Add node and let ElastiCluster choose the name.
+    """
+    cluster = make_cluster(tmpdir)
+    size = len(cluster.nodes['compute'])
+    cluster.add_node("compute", 'image_id', 'image_user', 'flavor',
+                     'security_group')
+    assert (size + 1) == len(cluster.nodes['compute'])
+    new_node = cluster.nodes['compute'][2]
+    assert new_node.kind == 'compute'
+    assert new_node.name == 'compute003'
+
+
+def test_add_node_with_custom_name(tmpdir):
+    """
+    Add node with a given name.
+    """
+    cluster = make_cluster(tmpdir)
+    name = "test-node"
+    size = len(cluster.nodes['compute'])
+    cluster.add_node("compute", 'image_id', 'image_user', 'flavor',
+                     'security_group', image_userdata="", name=name)
+    assert (size + 1) == len(cluster.nodes['compute'])
+    assert (cluster.nodes['compute'][-1].name) == name
 
-    def test_get_all_nodes(self):
-        """
-        Get all nodes
-        """
-        cluster = self.get_cluster()
-        self.assertEqual(len(cluster.get_all_nodes()), 3)
 
-    def test_stop(self):
-        cloud_provider = MagicMock()
-        cloud_provider.start_instance.return_value = u'test-id'
-        cloud_provider.get_ips.return_value = ('127.0.0.1', '127.0.0.1')
-        states = [True, True, True, True, True, False, False, False, False,
-                  False]
+def test_remove_node(tmpdir):
+    """
+    Remove node
+    """
+    cluster = make_cluster(tmpdir)
+    size = len(cluster.nodes['compute'])
+    cluster.remove_node(cluster.nodes['compute'][1])
+    assert (size - 1) == len(cluster.nodes['compute'])
 
-        def is_running(instance_id):
-            return states.pop()
 
-        cloud_provider.is_instance_running.side_effect = is_running
-        cluster = self.get_cluster(cloud_provider=cloud_provider)
+def test_start(tmpdir):
+    """
+    Start cluster
+    """
+    cloud_provider = MagicMock()
+    cloud_provider.start_instance.return_value = u'test-id'
+    cloud_provider.get_ips.return_value = ['127.0.0.1']
+    cloud_provider.is_instance_running.return_value = True
+
+    cluster = make_cluster(tmpdir, template='example_ec2', cloud=cloud_provider)
+    cluster.repository = MagicMock()
+    cluster.repository.storage_path = '/unused/path'
 
-        for node in cluster.get_all_nodes():
-            node.instance_id = u'test-id'
+    with patch('paramiko.SSHClient'):
+        cluster.start()
 
-        cluster.repository = MagicMock()
-        cluster.repository.storage_path = '/foo/bar'
+    cluster.repository.save_or_update.assert_called_with(cluster)
 
-        cluster.stop()
+    for node in cluster.get_all_nodes():
+        assert node.instance_id == u'test-id'
+        assert node.ips == ['127.0.0.1']
 
-        cloud_provider.stop_instance.assert_called_with(u'test-id')
-        cluster.repository.delete.assert_called_once_with(cluster)
-
-    def test_get_frontend_node(self):
-        """
-        Get frontend node
-        """
-        config = Configuration().get_config(self.path)
-        ssh_to = "frontend"
-        config["mycluster"]["cluster"]["ssh_to"] = ssh_to
 
-        cluster = self.get_cluster(config=config)
-        cluster.ssh_to = ssh_to
-        frontend = cluster.get_frontend_node()
+def test_check_cluster_size_ok(tmpdir):
+    cluster = make_cluster(tmpdir)
 
-        self.assertEqual(cluster.nodes['frontend'][0], frontend)
+    assert len(cluster.nodes["frontend"]) == 1
+    assert len(cluster.nodes["compute"]) == 2
 
-    def test_setup(self):
-        """
-        Setup the nodes of a cluster
-        """
-        setup_provider = MagicMock()
-        setup_provider.setup_cluster.return_value = True
+    # pylint: disable=protected-access
+    cluster._check_cluster_size({'frontend':1, 'compute':1})
 
-        cluster = self.get_cluster()
-        cluster._setup_provider = setup_provider
 
-        cluster.setup()
+def test_check_cluster_size_fail(tmpdir):
+    cluster = make_cluster(tmpdir)
 
-        setup_provider.setup_cluster.assert_called_once_with(cluster, tuple())
+    assert len(cluster.nodes["frontend"]) == 1
+    assert len(cluster.nodes["compute"]) == 2
 
-    def test_update(self):
-        storage = MagicMock()
-        cloud_provider = MagicMock()
-        ip = '127.0.0.1'
-        cloud_provider.get_ips.return_value = (ip, ip)
+    # pylint: disable=protected-access
+    with raises(ClusterError):
+        cluster._check_cluster_size({'frontend':1, 'compute':5})
 
-        cluster = self.get_cluster(cloud_provider=cloud_provider)
-        cluster.repository = storage
+    with raises(ClusterError):
+        cluster._check_cluster_size({'frontend':3, 'compute':1})
 
-        cluster.update()
 
-        for node in cluster.get_all_nodes():
-            self.assertEqual(node.ips[0], ip)
-
-
-    def test_dict_mixin(self):
-        """Check that the node class can be seen as dictionary"""
-        config = Configuration().get_config(self.path)
-        ssh_to = "frontend"
-        config["mycluster"]["cluster"]["ssh_to"] = ssh_to
-
-        cluster = self.get_cluster(config=config)
-        cluster.ssh_to = ssh_to
-        frontend = cluster.get_frontend_node()
-
-
-        dcluster = dict(cluster)
-        self.assertEqual(dcluster['ssh_to'], ssh_to)
-        self.assertEqual(dcluster['nodes'].keys(), cluster.nodes.keys())
-
-        self.failUnlessRaises(KeyError, lambda x: x['_cloud_provider'], dcluster)
-        self.assertEqual(cluster['_cloud_provider'], cluster._cloud_provider)
-
-class TestNode(unittest.TestCase):
-
-    def setUp(self):
-        f, path = tempfile.mkstemp()
-        self.path = path
-
-        self.cluster_name = "cluster"
-        self.name = "test"
-        self.node_kind = "frontend"
-        self.user_key_public = self.path
-        self.user_key_private = self.path
-        self.user_key_name = "key"
-        self.image_user = "gc3-user"
-        self.security_group = "security"
-        self.image = "ami-000000"
-        self.flavor = "m1.tiny"
-        self.image_userdata = None
-
-    def tearDown(self):
-        os.unlink(self.path)
-
-    def get_node(self):
-        cloud_provider = MagicMock()
-        node = Node(self.name, self.cluster_name, self.node_kind,
-                    cloud_provider, self.user_key_public,
-                    self.user_key_private, self.user_key_name,
-                    self.image_user, self.security_group,
-                    self.image, self.flavor,
-                    self.image_userdata)
-
-        return node
-
-    def test_start(self):
-        """
-        Start node
-        """
-        node = self.get_node()
-        instance_id = "test-id"
-
-        cloud_provider = node._cloud_provider
-
-        cloud_provider.start_instance.return_value = instance_id
-
-        node.start()
-
-
-        node_name = "%s-%s" % (self.cluster_name, node.name)
-        cloud_provider.start_instance.assert_called_once_with(
-            self.user_key_name, self.user_key_public, self.user_key_private,
-            self.security_group, self.flavor, self.image,
-            self.image_userdata, username=self.image_user, node_name=node_name)
-        self.assertEqual(node.instance_id, instance_id)
-
-    def test_stop(self):
-        """
-        Stop Node
-        """
-        node = self.get_node()
-        instance_id = "test-id"
-        node.instance_id = instance_id
-
-        node.stop()
-
-        cloud_provider = node._cloud_provider
-        cloud_provider.stop_instance.assert_called_once_with(instance_id)
-
-    def test_stop_with_no_id(self):
-        """
-        Stop Node with ID ``None``
-        """
-        node = self.get_node()
-        node.instance_id = None
-
-        node.stop()
-
-        assert node._cloud_provider.stop_instance.call_count == 0
-
-    def test_is_alive(self):
-        """
-        Node is alive
-        """
-        # check without having any knowlegde of the node (e.g. instance id)
-        node = self.get_node()
-        self.assertFalse(node.is_alive())
-
-        # check with knowledge and cloud provider and mock ip update
-        instance_id = "test-id"
-        node.instance_id = instance_id
-
-        provider = node._cloud_provider
-        provider.is_instance_running.return_value = True
-        provider.get_ips.return_value = ['127.0.0.1', '127.0.0.1']
-
-        node.is_alive()
-
-        provider.is_instance_running.assert_called_once_with(instance_id)
-
-    def test_connect(self):
-        """
-        Connect to node
-        """
-        node = self.get_node()
-
-        # check without any ips set on the host
-        self.assertEqual(node.connect(), None)
-
-        # check with mocking the ssh connection
-        ssh_mock = MagicMock()
-        with patch('elasticluster.cluster.paramiko.SSHClient') as ssh_mock:
-            ssh_mock.connect.return_value = True
-            node.connect()
-
-    def test_update_ips(self):
-        """
-        Update node ip address
-        """
-        # check without any ip addresses set
-        node = self.get_node()
-        instance_id = "test-id"
-        node.instance_id = instance_id
-        provider = node._cloud_provider
-
-        ips = ['127.0.0.1', '127.0.0.2']
-        node.ips = ips
-        provider.get_ips.return_value = ips
-
-        node.update_ips()
-
-        self.assertEqual(node.ips, ips)
-        provider.get_ips.assert_called_once_with(instance_id)
-
-    def test_dict_mixin(self):
-        """Check that the node class can be seen as dictionary"""
-        node = self.get_node()
-
-        # Setup node with dummy values
-        instance_id = "test-id"
-        node.instance_id = instance_id
-        ips = ['127.0.0.1', '127.0.0.2']
-        node.ips = ips
-
-
-        dnode = dict(node)
-
-        self.assertEqual(node['instance_id'], instance_id)
-        self.assertEqual(node['ips'], ips)
-
-        self.failUnlessRaises(KeyError, lambda x: x['_cloud_provider'], dnode)
-        self.assertEqual(node['_cloud_provider'], node._cloud_provider)
+def test_get_all_nodes(tmpdir):
+    """
+    Check that `Cluster.get_all_nodes()` returns all nodes in the cluster.
+    """
+    cluster = make_cluster(tmpdir)
+    all_nodes = cluster.get_all_nodes()
+    assert len(all_nodes) == 3
+    assert len([node for node in all_nodes if node.name.startswith('frontend')]) == 1
+    assert len([node for node in all_nodes if node.name.startswith('compute')]) == 2
+
+
+def test_stop(tmpdir):
+    """
+    Test `Cluster.stop()`
+    """
+    cloud_provider = MagicMock()
+    cloud_provider.start_instance.return_value = u'test-id'
+    cloud_provider.get_ips.return_value = ('127.0.0.1', '127.0.0.1')
+    states = [
+        # pylint: disable=bad-whitespace
+        True,  True,  True,  True,  True,
+        False, False, False, False, False
+    ]
+    def is_running(instance_id):  # pylint: disable=unused-argument,missing-docstring
+        return states.pop()
+    cloud_provider.is_instance_running.side_effect = is_running
+
+    cluster = make_cluster(tmpdir, cloud=cloud_provider)
+
+    for node in cluster.get_all_nodes():
+        node.instance_id = u'test-id'
+
+    cluster.repository = MagicMock()
+    cluster.repository.storage_path = '/unused/path'
+
+    cluster.stop()
+
+    cloud_provider.stop_instance.assert_called_with(u'test-id')
+    cluster.repository.delete.assert_called_once_with(cluster)
+
+
+def test_get_frontend_node(tmpdir):
+    """
+    Get frontend node
+    """
+    cluster = make_cluster(tmpdir)
+    cluster.ssh_to = 'frontend'
+    frontend = cluster.get_frontend_node()
+    assert cluster.nodes['frontend'][0] == frontend
+
+
+def test_setup(tmpdir):
+    """
+    Setup the nodes of a cluster
+    """
+    # pylint: disable=protected-access
+    cluster = make_cluster(tmpdir)
+    setup_provider = MagicMock()
+    setup_provider.setup_cluster.return_value = True
+    cluster._setup_provider = setup_provider
+
+    cluster.setup()
+
+    setup_provider.setup_cluster.assert_called_once_with(cluster, tuple())
+
+
+def test_update(tmpdir):
+    cloud_provider = MagicMock()
+    ip_addr = '127.0.0.1'
+    cloud_provider.get_ips.return_value = (ip_addr, ip_addr)
+
+    storage = MagicMock()
+
+    cluster = make_cluster(tmpdir, cloud=cloud_provider)
+    cluster.repository = storage
+
+    cluster.update()
+
+    for node in cluster.get_all_nodes():
+        assert ip_addr == node.ips[0]
+
+
+def test_dict_mixin(tmpdir):
+    """Check that instances of the `Cluster` class can be recast as Python dictionary."""
+    cluster = make_cluster(tmpdir, template='example_ec2')
+
+    # add an attribute and test later if it's exported
+    cluster.ssh_to = "misc"
+
+    cluster_as_dict = dict(cluster)
+    assert cluster_as_dict['template'] == 'example_ec2'
+    assert cluster_as_dict['template'] == cluster_as_dict['name']
+    assert 'misc_nodes' in cluster_as_dict['extra']
+    # FIXME: why on earth are node numbers converted to string?
+    assert cluster_as_dict['extra']['misc_nodes'] == '10'
+    assert cluster_as_dict['ssh_to'] == 'misc'
+    assert cluster_as_dict['nodes'].keys() == cluster.nodes.keys()
+
+    # non-public attrs should not be exported
+    with raises(KeyError):
+        # pylint: disable=pointless-statement
+        cluster_as_dict['_cloud_provider']
+    # pylint: disable=protected-access
+    assert cluster['_cloud_provider'] == cluster._cloud_provider
 
 
 if __name__ == "__main__":
