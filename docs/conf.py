@@ -67,8 +67,6 @@ MOCK_MODULES = [
     'oauth2client.tools',
     'paramiko',
     'paramiko.ssh_exception',
-    'voluptuous',
-    'voluptuous.voluptuous',
     ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()

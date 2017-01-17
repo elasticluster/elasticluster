@@ -24,7 +24,6 @@ __author__ = ', '.join([
 # stdlib imports
 from abc import ABCMeta, abstractmethod
 from fnmatch import fnmatch
-from voluptuous import Invalid
 from zipfile import ZipFile
 import json
 import os
@@ -662,7 +661,7 @@ class SshFrontend(AbstractCommand):
                 nodes = dict((n.name,n) for n in cluster.get_all_nodes())
                 frontend = nodes[self.params.ssh_to]
             except KeyError:
-                raise Invalid(
+                raise ValueError(
                     "Hostname %s not found in cluster %s" % (self.params.ssh_to, cluster_name))
         else:
             frontend = cluster.get_frontend_node()
@@ -743,7 +742,7 @@ class SftpFrontend(AbstractCommand):
                 nodes = dict((n.name,n) for n in cluster.get_all_nodes())
                 frontend = nodes[self.params.ssh_to]
             except KeyError:
-                raise Invalid(
+                raise ValueError(
                     "Hostname %s not found in cluster %s" % (self.params.ssh_to, cluster_name))
         else:
             frontend = cluster.get_frontend_node()

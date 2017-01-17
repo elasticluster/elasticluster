@@ -26,13 +26,6 @@ import warnings
 
 # External modules
 import cli.app
-try:
-    # Voluptuous version >= 0.8.1
-    from voluptuous import MultipleInvalid, Invalid
-except ImportError:
-    # Voluptuous version <= 0.7.2
-    # noinspection PyUnresolvedReferences
-    from voluptuous.voluptuous import MultipleInvalid, Invalid
 
 import coloredlogs
 
@@ -200,13 +193,9 @@ class ElastiCluster(cli.app.CommandLineApp):
         assert self.params.func, "No subcommand defined in `ElastiCluster.main()"
         try:
             return self.params.func()
-        except MultipleInvalid as ex:
-            print("Multiple errors: %s" % str.join(', ', [str(e) for e in ex.errors]))
-            print("Exiting.")
-            sys.exit(1)
-        except Invalid as ex:
-            print("Error: %s" % ex)
-            print("Exiting.")
+        except Exception as err:
+            log.error("Error: %s", err)
+            print("Aborting because of errors: {err}.".format(err=err))
             sys.exit(1)
 
 
