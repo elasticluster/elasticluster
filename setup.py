@@ -109,7 +109,7 @@ if python_version == (2, 6):
     ]
 elif python_version == (2, 7):
     version_dependent_requires = [
-        'python-novaclient!=7.0.0',
+        'python-novaclient',
     ]
 else:
     raise RuntimeError("ElastiCluster requires Python 2.6 or 2.7")
