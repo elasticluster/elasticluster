@@ -29,6 +29,8 @@ import threading
 from warnings import warn
 
 # External modules
+from keystoneauth1 import loading
+from keystoneauth1 import session
 from novaclient import client
 from novaclient.exceptions import NotFound
 from paramiko import DSSKey, RSAKey, PasswordRequiredException
@@ -84,9 +86,17 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._instances = {}
         self._cached_instances = {}
 
-        self.client = client.Client(self.nova_api_version,
-                                    self._os_username, self._os_password, self._os_tenant_name,
-                                    self._os_auth_url, region_name=self._os_region_name)
+        loader = loading.get_plugin_loader('password')
+        auth = loader.load_from_options(auth_url=self._os_auth_url,
+                                        username=self._os_username,
+                                        password=self._os_password,
+                                        project_name=self._os_tenant_name)
+        sess = session.Session(auth=auth)
+        self.client = client.Client(self.nova_api_version, session=sess)
+
+        # self.client = client.Client(self.nova_api_version,
+        #                             self._os_username, self._os_password, self._os_tenant_name,
+        #                             self._os_auth_url, region_name=self._os_region_name)
 
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
