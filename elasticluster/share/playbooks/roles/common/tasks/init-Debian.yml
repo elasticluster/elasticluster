@@ -31,10 +31,6 @@
     state=present
   with_items:
     - apt-transport-https
-    - sysvinit-utils
-    - software-properties-common
-    - python-software-properties
-    - python-pycurl
 
 
 - name: Provide workaround for https://github.com/ansible/ansible-modules-core/issues/4472
