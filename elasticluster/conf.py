@@ -108,10 +108,12 @@ SCHEMA = {
                 'login': nonempty_str,
                 'num': int,
                 'min_num': int,
+                # allow other keys w/out restrictions
+                Optional(str): str,
             },
         },
         # allow other keys w/out restrictions
-        str: str,
+        Optional(str): str,
     },
     'login': {
         'image_user': nonempty_str,

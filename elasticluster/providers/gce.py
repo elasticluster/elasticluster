@@ -248,7 +248,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
                            % (project_url, self._zone, flavor)
         boot_disk_type_url = '%s/zones/%s/diskTypes/%s' \
                            % (project_url, self._zone, boot_disk_type)
-        boot_disk_size_gb = boot_disk_size
+        # FIXME: `conf.py` should ensure that `boot_disk_size` has the right
+        # type, so there would be no need to convert here
+        boot_disk_size_gb = int(boot_disk_size)
         network_url = '%s/global/networks/%s' % (project_url, self._network)
         if image_id.startswith('http://') or image_id.startswith('https://'):
             image_url = image_id
