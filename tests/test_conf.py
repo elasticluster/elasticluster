@@ -27,6 +27,7 @@ import pytest
 
 #rom elasticluster.conf import ConfigReader, ConfigValidator, Creator
 from elasticluster.conf import (
+    make_creator,
     _read_config_files,
     _arrange_config_tree,
     _perform_key_renames,
@@ -469,6 +470,52 @@ def test_build_node_section():
     assert nodes_cfg['misc']['image_id'] == 'i-12345'
     assert nodes_cfg['misc']['num'] == 10
     assert nodes_cfg['misc']['min_num'] == 10
+
+
+def test_issue_376(tmpdir):
+    wd = tmpdir.strpath
+    ssh_key_path = os.path.join(wd, 'id_rsa.pem')
+    with open(ssh_key_path, 'w+') as ssh_key_file:
+        # don't really care about SSH key, just that the file exists
+        ssh_key_file.write('')
+        ssh_key_file.flush()
+    config_path = os.path.join(wd, 'config.ini')
+    with open(config_path, 'w+') as config_file:
+        config_file.write(
+            # reported by @marcbrisson in issue #376
+            """
+[cluster/slurm]
+cloud=google
+login=ubuntu
+setup=slurm_setup
+security_group=default
+image_id=https://www.googleapis.com/compute/v1/projects/jda-labs---decision-science-01/global/images/image-python-ubuntu
+flavor=n1-standard-1
+master_nodes=1
+worker_nodes=4
+ssh_to=master
+image_userdata=
+boot_disk_size=20
+
+[cluster/slurm/master]
+flavor=n1-standard-2
+boot_disk_size=100
+    """
+            + make_config_snippet("cloud", "google")
+            + make_config_snippet("login", "ubuntu", keyname='test_issue_376', valid_path=ssh_key_path)
+            + make_config_snippet("setup", "slurm_setup")
+        )
+        config_file.flush()
+    creator = make_creator(config_path)
+    cluster = creator.create_cluster('slurm')
+    # "master" nodes take values from their specific config section
+    assert cluster.nodes['master'][0].flavor == 'n1-standard-2'
+    assert cluster.nodes['master'][0].extra['boot_disk_size'] == '100'
+    # "worker" nodes take values from the cluster defaults
+    assert cluster.nodes['worker'][0].flavor == 'n1-standard-1'
+    # FIXME: Actually, does this imply that the `boot_disk_size` value
+    # defined at cluster level is not propagated to "worker" nodes?
+    assert 'boot_disk_size' not in cluster.nodes['worker'][0].extra
 
 
 # class TestCreator(unittest.TestCase):
