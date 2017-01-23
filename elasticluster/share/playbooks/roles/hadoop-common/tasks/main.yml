@@ -1,11 +1,11 @@
 # hadoop-common/tasks/main.yml
 ---
 
-- name: Install Java 7 JRE
+- name: Install Java JRE
   tags:
     - hadoop
   package:
-    name=openjdk-7-jre-headless
+    name=default-jre-headless
     state=present
 
     
