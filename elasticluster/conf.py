@@ -228,6 +228,8 @@ def make_creator(configfiles, storage_path=None):
 
     # also look for ``path.d/*.conf`` files
     configfiles = _expand_config_file_list(configfiles)
+    if not configfiles:
+        raise ValueError('Empty list of config files')
 
     config = load_config_files(configfiles)
 
