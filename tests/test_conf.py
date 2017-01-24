@@ -23,6 +23,8 @@ from copy import copy, deepcopy
 import os
 from os.path import join
 
+# 3rd-party imports
+from mock import patch
 import pytest
 
 #rom elasticluster.conf import ConfigReader, ConfigValidator, Creator
@@ -516,6 +518,48 @@ boot_disk_size=100
     # FIXME: Actually, does this imply that the `boot_disk_size` value
     # defined at cluster level is not propagated to "worker" nodes?
     assert 'boot_disk_size' not in cluster.nodes['worker'][0].extra
+
+
+def test_pr_378(tmpdir):
+    wd = tmpdir.strpath
+    config_path = os.path.join(wd, 'config.ini')
+    with open(config_path, 'w+') as config_file:
+        config_file.write(
+            make_config_snippet("cloud", "google")
+            # reported by @ikhaja in PR #378
+            + """
+[login/google]
+image_user=my_username
+image_user_sudo=root
+image_sudo=True
+user_key_name=elasticluster
+user_key_private=~/.ssh/google_compute_engine
+user_key_public=~/.ssh/google_compute_engine.pub
+            """
+            # FIXME: the std `cluster/*` snippet cannot set `login=` and `cloud=`
+            + """
+[cluster/slurm]
+cloud=google
+login=google
+setup=slurm_setup
+security_group=default
+image_id=https://www.googleapis.com/compute/v1/projects/jda-labs---decision-science-01/global/images/image-python-ubuntu
+flavor=n1-standard-1
+master_nodes=1
+worker_nodes=4
+ssh_to=master
+    """
+            + make_config_snippet("setup", "slurm_setup")
+        )
+        config_file.flush()
+    with patch('os.path.expanduser') as expanduser:
+        # since `os.path.expanduser` is called from within
+        # `_expand_config_file_list()` we need to provide the right return
+        # value for it, as non-existent files will be removed from the list
+        expanduser.return_value = config_path
+        _ = make_creator(config_path)
+        expanduser.assert_any_call('~/.ssh/google_compute_engine.pub')
+        expanduser.assert_any_call('~/.ssh/google_compute_engine')
 
 
 # class TestCreator(unittest.TestCase):
