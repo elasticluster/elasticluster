@@ -323,7 +323,7 @@ Hadoop + Spark
 
 Supported on:
 
-* Ubuntu 14.04
+* Ubuntu 16.04, 14.04
 * Debian 8 ("jessie")
 
 This playbook installs a Hadoop_ 2.x cluster with Spark_ and Hive_,
