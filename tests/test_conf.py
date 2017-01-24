@@ -557,10 +557,14 @@ ssh_to=master
         # `_expand_config_file_list()` we need to provide the right return
         # value for it, as non-existent files will be removed from the list
         expanduser.return_value = config_path
-        _ = make_creator(config_path)
+        creator = make_creator(config_path)
+        # check that `os.expanduser` has been called on the `user_key_*` values
         expanduser.assert_any_call('~/.ssh/google_compute_engine.pub')
         expanduser.assert_any_call('~/.ssh/google_compute_engine')
-
+        # check that actual configured values have been expanded
+        cluster = creator.create_cluster("slurm")
+        assert os.path.isabs(cluster.user_key_public)
+        assert os.path.isabs(cluster.user_key_private)
 
 # class TestCreator(unittest.TestCase):
 
