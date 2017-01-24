@@ -64,7 +64,7 @@ front-end::
 
     [setup/slurm+ansible]
     master_groups=slurm_master,ansible
-    worker_groups=slurm_workers
+    worker_groups=slurm_worker
     # ...
 
 
@@ -80,7 +80,7 @@ Supported on:
 This playbook installs the `SLURM`_ batch-queueing system.
 
 You are supposed to only define one ``slurm_master`` and multiple
-``slurm_workers``. The first will act as login node, NFS server for
+``slurm_worker``. The first will act as login node, NFS server for
 the ``/home`` filesystem, and runs the SLURM scheduler and accounting
 database; the workers will only execute the jobs.  A ``slurm_submit``
 role allows you to optionally install "SLURM client" nodes, i.e.,
@@ -93,7 +93,7 @@ Ansible group      Action
 ``slurm_master``   SLURM controller/scheduler node; also runs the
                    accounting storage daemon `slurmdbd` and its
                    MySQL/MariaDB backend.
-``slurm_workers``  SLURM execution node: runs the `slurmd` daemon.
+``slurm_worker``   SLURM execution node: runs the `slurmd` daemon.
 ``slurm_submit``   SLURM client: has all the submission and query
                    commands installed, but runs no daemon.
 =================  ==================================================
@@ -110,7 +110,7 @@ cluster using 1 front-end and 4 execution nodes::
 
     [setup/slurm]
     master_groups=slurm_master
-    worker_groups=slurm_workers
+    worker_groups=slurm_worker
     # ...
 
 You can combine the SLURM playbook with the Ganglia one; in this case
@@ -118,7 +118,7 @@ the ``setup`` stanza will look like::
 
     [setup/ansible_slurm]
     frontend_groups=slurm_master,ganglia_master
-    compute_groups=slurm_workers,ganglia_monitor
+    compute_groups=slurm_worker,ganglia_monitor
     ...
 
 Extra variables can be set by editing the `setup/` section:
@@ -480,7 +480,7 @@ You can combine, for instance, a SLURM cluster with a PVFS2 cluster::
 
     [setup/ansible_slurm+orangefs]
     frontend_groups=slurm_master,pvfs2_client
-    compute_groups=slurm_workers,pvfs2_client
+    compute_groups=slurm_worker,pvfs2_client
     orangefs_groups=pvfs2_meta,pvfs2_data
     ...
 
