@@ -35,37 +35,49 @@ from elasticluster.utils import string_to_boolean
 
 ## custom validators
 
+def validator(fn):
+    """
+    Decorate a function for use as a validator with `schema`_
+
+    .. _schema: https://github.com/keleshev/schema
+    """
+    return schema.Use(fn)
+
+
 alphanumeric = schema.Regex(r'[0-9A-Za-z_]+')
 
 
 boolean = schema.Use(string_to_boolean)
 
 
-def file_name(v):
+def _file_name(v):
     try:
         return os.path.expanduser(v)
     except Exception as err:
         raise ValueError("invalid file name `{0}`: {1}".format(v, err))
 
 
+@validator
 def existing_file(v):
-    f = file_name(v)
+    f = _file_name(v)
     if os.access(f, os.F_OK):
         return f
     else:
         raise ValueError("file `{v}` could not be found".format(v=v))
 
 
+@validator
 def readable_file(v):
-    f = file_name(v)
+    f = _file_name(v)
     if os.access(f, os.R_OK):
         return f
     else:
         raise ValueError("cannot read file `{v}`".format(v=v))
 
 
+@validator
 def executable_file(v):
-    f = file_name(v)
+    f = _file_name(v)
     if os.access(f, os.R_OK|os.X_OK):
         return f
     else:
@@ -95,6 +107,7 @@ def hostname(value):
 _ALLOWED_HOSTNAME_CHARS = set(string.letters + string.digits + '-')
 
 
+@validator
 def nonempty_str(v):
     converted = str(v)
     if not converted:
@@ -102,6 +115,7 @@ def nonempty_str(v):
     return converted
 
 
+@validator
 def nova_api_version(version):
     try:
         from novaclient import client, exceptions
@@ -112,6 +126,7 @@ def nova_api_version(version):
             "Unsupported Nova API version: {0}".format(err))
 
 
+@validator
 def url(value):
     try:
         url_str = str(value)
