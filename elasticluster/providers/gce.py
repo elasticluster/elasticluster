@@ -307,7 +307,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
         else:
             instance_id = 'elasticluster-%s' % uuid.uuid4()
 
-        public_key_content = file(public_key_path).read()
+        with open(public_key_path, 'r') as f:
+            public_key_content = f.read()
 
         instance = {
             'name': instance_id,
