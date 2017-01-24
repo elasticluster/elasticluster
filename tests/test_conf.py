@@ -848,7 +848,7 @@ ssh_to=master
 # [setup/ansible-slurm]
 # provider=ansible
 # frontend_groups=slurm_master
-# compute_groups=slurm_workers
+# compute_groups=slurm_worker
 
 # [setup/ansible-gridengine]
 # provider=ansible
@@ -993,7 +993,7 @@ ssh_to=master
 # [setup/ansible-slurm]
 # provider=ansible
 # frontend_groups=slurm_master
-# compute_groups=slurm_workers
+# compute_groups=slurm_worker
 
 # [cluster/slurm]
 # cloud=hobbes-new
@@ -1064,7 +1064,7 @@ ssh_to=master
 # [setup/ansible-slurm]
 # provider=ansible
 # frontend_groups=slurm_master
-# compute_groups=slurm_workers
+# compute_groups=slurm_worker
 #     '''
 
 #     def test_read_multiple_config1(self):

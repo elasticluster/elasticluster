@@ -486,7 +486,7 @@ The following configuration keys are only valid if `provider` is
     ``slurm_master``
         configure this machine as slurm masternode
 
-    ``slurm_workers``
+    ``slurm_worker``
         compute nodes of a slurm cluster
 
     ``ganglia_master``
@@ -500,7 +500,7 @@ The following configuration keys are only valid if `provider` is
     combinations make sense. A common setup is, for instance::
 
         frontend_groups=slurm_master,ganglia_master,ganglia_monitor
-        compute_groups=slurm_workers,ganglia_monitor
+        compute_groups=slurm_worker,ganglia_monitor
 
     This will configure the frontend node as slurm master and ganglia
     frontend, and the compute nodes as clients for both slurm and
@@ -597,7 +597,7 @@ Some (working) examples::
     [setup/ansible-slurm]
     provider=ansible
     frontend_groups=slurm_master
-    compute_groups=slurm_workers
+    compute_groups=slurm_worker
 
     [setup/ansible-gridengine]
     provider=ansible
