@@ -307,7 +307,13 @@ class GoogleCloudProvider(AbstractCloudProvider):
         else:
             instance_id = 'elasticluster-%s' % uuid.uuid4()
 
-        public_key_content = file(public_key_path).read()
+        # Use the with keyword so that the file is properly closed.
+        # For os.path.expanduser, if the expansion fails or if the path does
+        # not begin with a tilde, the path is returned unchanged. If the
+        # returned path is a relative path, determine the absolute path and use
+        # that to open the file.
+        with open(os.path.abspath(os.path.expanduser(public_key_path)), 'r') as f:
+            public_key_content = f.read()
 
         instance = {
             'name': instance_id,
