@@ -1,0 +1,8 @@
+---
+
+- name: Set NTPd common playbook params (RHEL/CentOS)
+  set_fact:
+    ntpd_service: ntpd
+    ntpd_package: ntp
+  when:
+    '{{is_rhel_compatible}}'

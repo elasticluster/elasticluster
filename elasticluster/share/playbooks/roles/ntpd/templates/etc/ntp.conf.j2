@@ -1,0 +1,84 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# any local modifications will be overwritten!
+#
+
+
+# listen on all interfaces
+interface listen all
+
+## Servers to be used for time synchronization
+#
+{% if ntp_server != [] and ansible_nodename not in ntp_server %}
+# get time from hosts of class `ntp_server`
+#
+{% for server in ntp_server %}
+server {{server}} iburst
+{% endfor %}
+{% else %}
+# use public NTP servers
+#
+server 0.pool.ntp.org iburst
+server 1.pool.ntp.org iburst
+server 2.pool.ntp.org iburst
+server 3.pool.ntp.org iburst
+{% endif %}
+
+## Peer with every host in the cluster
+#
+{% for host in ntp_peers|default(groups.all) %}
+{% if host not in (ntp_server + [ansible_nodename, ansible_hostname, ansible_fqdn]) %}
+peer {{host}} iburst
+{% endif %}
+{% endfor %}
+
+# In case of temporarily lost Internet connectivity, avoid serving
+# "authoritative" time to clients.
+server 127.127.1.0
+fudge 127.127.1.0 stratum 10
+
+# /etc/ntp.conf, configuration for ntpd; see ntp.conf(5) for help
+driftfile /var/lib/ntp/ntp.drift
+
+
+## Access control configuration
+# ----------------------------
+#
+# For more details and information, see:
+# - <http://www.team-cymru.org/ReadingRoom/Templates/secure-ntp-template.html>
+# - <http://support.ntp.org/bin/view/Support/AccessRestrictions>
+#
+# Note that "restrict" applies to both servers and clients, so a
+# configuration that might be intended to block requests from certain
+# clients could also end up blocking replies from your own upstream
+# servers.
+
+# By default, exchange time with everybody, but don't allow configuration.
+restrict -4 default kod notrap nomodify nopeer noquery
+restrict -6 default kod notrap nomodify nopeer noquery
+
+# Allow all the client hosts in the cluster to interrogate the NTP
+# daemon for time synchronization.
+{% for host in groups.all %}
+{% if host not in [ansible_nodename, ansible_hostname, ansible_fqdn] %}
+restrict {{host}} mask 255.255.0.0   nomodify notrap
+{% endif %}
+{% endfor %}
+
+# No restriction for local users
+restrict 127.0.0.1
+restrict ::1
+
+
+## Statistics
+# ----------------------------
+#
+# Prob not terribly useful to keep NTP statistics on cloud-based VMs...
+#
+disable stats
+
+#statsdir /var/log/ntpstats/
+#
+#statistics loopstats peerstats clockstats
+#filegen loopstats file loopstats type day enable
+#filegen peerstats file peerstats type day enable
+#filegen clockstats file clockstats type day enable

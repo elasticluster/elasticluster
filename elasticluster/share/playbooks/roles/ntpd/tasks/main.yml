@@ -1,0 +1,50 @@
+---
+
+- name: Load distribution-specific parameters
+  include: 'init-{{ansible_os_family}}.yml'
+
+
+- name: Deploy NTP configuration file
+  tags:
+    - ntp
+    - time
+    - common
+  template:
+    dest: /etc/ntp.conf
+    src: etc/ntp.conf.j2
+    mode: 0444
+  notify: restart ntpd
+
+
+- name: Install NTP packages
+  tags:
+    - ntp
+    - time
+    - common
+  package:
+    name='{{ntpd_package}}'
+    state=present
+
+
+# - name: Allow incoming NTP traffic (CentOS7)
+#   tags:
+#     - ntp
+#     - time
+#     - centos7
+#     - firewall
+#     - common
+#   shell:
+#     firewall-cmd --add-service=ntp --permanent
+#     firewall-cmd --reload
+#   when: is_rhel7_compatible
+
+
+- name: Enable NTP service at boot
+  tags:
+    - ntp
+    - time
+    - common
+  service:
+    name='{{ntpd_service}}'
+    enabled=yes
+    state=started
