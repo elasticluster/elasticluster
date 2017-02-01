@@ -1,0 +1,7 @@
+---
+
+# by default, no NTP server in the cluster, sync time with public NTP hosts
+ntp_server: "{{groups.ntp_server|default([])}}"
+
+# by default, peer with every other host in the cluster
+ntp_peers: "{{groups.all}}"

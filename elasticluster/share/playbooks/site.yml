@@ -4,6 +4,8 @@
   gather_facts: yes
   roles:
     - common
+    - role: ntpd
+      ntp_server: '{{groups.ntp_master|default([])}}'
     - pdsh
 
 # Run all other playbooks one by one, so they get a chance of doing

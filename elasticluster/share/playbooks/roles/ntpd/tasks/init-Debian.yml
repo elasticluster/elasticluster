@@ -1,0 +1,8 @@
+---
+
+- name: Set NTPd common playbook params (Debian/Ubuntu)
+  set_fact:
+    ntpd_service: ntp
+    ntpd_package: ntp
+  when:
+    '{{is_debian_compatible}}'
