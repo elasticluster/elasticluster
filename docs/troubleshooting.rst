@@ -228,17 +228,17 @@ long error report that ends with lines like these::
     compilation terminated.
   error: command 'gcc' failed with exit status 1
 
-To fix the issue on Debian/Ubuntu computers, please install package
-``gcc`` and ``libc6-dev`` prior to attempting to install ElastiCluster::
+To fix the issue on Debian/Ubuntu computers, please install packages
+``libc6-dev`` and ``python-dev`` prior to attempting to install ElastiCluster::
 
-        sudo apt-get install gcc libc6-dev
+        sudo apt-get install libc6-dev python-dev
 
-To fix the issue on RHEL/CentOS computers, please install package
-``gcc``::
+To fix the issue on RHEL/CentOS computers, please install packages
+``glibc-devel`` and ``python-devel``::
 
-        yum install gcc # run this as root
+        yum install glibc-devel python-devel # run this as root
 
-After installing the GCC packages, repeat the installation steps for ElastiCluster.
+After installing the packages, repeat the installation steps for ElastiCluster.
 
 (*Note:* this error comes from missing or badly installed dependency software
 for ElastiCluster; you might want to repeat the steps in section `Install
@@ -270,7 +270,7 @@ To fix the issue on Debian/Ubuntu computers, please install package
 To fix the issue on RHEL/CentOS computers, please install package
 ``gcc``::
 
-        yum install gcc # run this as root
+        yum install gcc glibc-devel # run this as root
 
 After installing the GCC packages, repeat the installation steps for ElastiCluster.
 
@@ -377,6 +377,7 @@ Additional support will be required in ElastiCluster to automate these steps,
 see `issue #304 <https://github.com/gc3-uzh-ch/elasticluster/issues/304>`_
 
 .. __: http://summit.ubuntu.com/uos-1511/meeting/22568/python3-only-on-the-images/
+
 
 Issues when installing from source on MacOSX
 --------------------------------------------
