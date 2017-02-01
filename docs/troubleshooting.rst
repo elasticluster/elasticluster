@@ -78,9 +78,9 @@ install``, you get a long error report that goes along these lines::
   Command python setup.py egg_info failed with error code 2 in /.../elasticluster/src
   Storing complete log in /home/hydra/rmurri/.pip/pip.log
 
-To fix the issue, please run this command instead::
+To fix the issue, please run these commands instead::
 
-  pip install --upgrade setuptools
+  pip install six packaging appdirs; pip install --upgrade setuptools
 
 Then resume the installation procedure of ElastiCluster from where you left off
 and run the ``pip`` step again.
@@ -112,7 +112,7 @@ traceback similar to this one (some parts omitted for clarity)::
 
 To fix the issue, run this command instead::
 
-  pip install --upgrade setuptools
+  pip install six packaging appdirs; pip install --upgrade setuptools
 
 Then resume the installation procedure of ElastiCluster from where you left off
 and run the ``pip`` step again.
@@ -147,7 +147,7 @@ traceback like the one below::
 
 To fix the issue, run this command instead::
 
-  pip install --upgrade setuptools
+  pip install six packaging appdirs; pip install --upgrade setuptools
 
 Then resume the installation procedure of ElastiCluster from where you left off
 and run the ``pip`` step again.
