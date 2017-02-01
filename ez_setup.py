@@ -186,7 +186,7 @@ def _conflict_bail(VC_err, version):
         The required version of setuptools (>={version}) is not available,
         and can't be installed while this script is running. Please
         install a more recent version first, using
-        'pip install --upgrade setuptools'.
+        'pip install six packaging appdirs; pip install --upgrade setuptools'.
 
         (Currently using {VC_err.args[0]!r})
         """)
