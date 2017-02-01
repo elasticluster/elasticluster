@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-#
-# @(#)setup.py
 #
 #
-# Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich. All rights reserved.
+# Copyright (C) 2013-2017 University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
