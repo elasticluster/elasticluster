@@ -690,23 +690,30 @@ class Creator(object):
        that need information from the configuration, and
     3. loading a cluster from a valid `repository.AbstractClusterRepository`.
 
-    First argument cluster configuration is a Python mapping structured in the
-    following way: (see an example @
-    https://github.com/gc3-uzh-ch/elasticluster/wiki/Configuration-Module)::
+    First argument cluster configuration is a nested Python mapping structured
+    in the following way::
 
-          { "<cluster_template>" : {
-              "setup" : { properties of the setup section },
-              "cloud" : { properties of the cloud section },
-              "login" : { properties of the login section },
-              "cluster" : { properties of the cluster section },
-              "nodes": {  "<node_kind>" : { properties of the node},
-                          "<node_kind>" : { properties of the node},
-                      },
-              },
-           "<cluster_template>" : {
-              (see above)
-              }
-           }
+      'cluster': {  ## this must be literally `cluster`
+         { "<cluster_template>" : {
+             "setup" : { properties of the setup section },
+             "cloud" : { properties of the cloud section },
+             "login" : { properties of the login section },
+             "cluster" : { properties of the cluster section },
+             "nodes": {  "<node_kind>" : { properties of the node},
+                         "<node_kind>" : { properties of the node},
+                     },
+             },
+          "<cluster_template>" : {
+             (see above)
+             }
+          }
+      }
+
+    The actual "property" parameters follow the names and types described in the
+    `Configuration` section of the manual. This is indeed nothing more than a
+    dereferenced un-dump of the configuration file; use
+    `load_config_files`:func: to load a set of configuration files into a data
+    structure like the above.
 
     :param dict cluster_conf: see description above
     :param str storage_path: path to store data
