@@ -903,20 +903,20 @@ class Creator(object):
         playbook_path = conf.pop('playbook_path', None)
 
         groups = self._read_node_groups(conf)
-        environment = {}
+        environment_vars = {}
         for node_kind, grps in groups.iteritems():
             if not isinstance(grps, list):
                 groups[node_kind] = [grps]
 
             # Environment variables parsing
-            environment[node_kind] = {}
+            environment_vars[node_kind] = {}
             for key, value in (list(conf.items())
                                + list(self.cluster_conf[cluster_template].items())):
                 # Set both group and global variables
                 for prefix in [(node_kind + '_var_'), "global_var_"]:
                     if key.startswith(prefix):
                         var = key.replace(prefix, '')
-                        environment[node_kind][var] = value
+                        environment_vars[node_kind][var] = value
                         log.debug("setting variable %s=%s for node kind %s",
                                   var, value, node_kind)
 
