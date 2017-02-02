@@ -190,6 +190,46 @@ CLOUD_PROVIDER_SCHEMAS = {
 }
 
 
+CLOUD_PROVIDERS = {
+    # pylint: disable=bad-whitespace
+    'ec2_boto':  ('elasticluster.providers.ec2_boto',       'BotoCloudProvider'),
+    'openstack': ('elasticluster.providers.openstack',      'OpenStackCloudProvider'),
+    'google':    ('elasticluster.providers.gce',            'GoogleCloudProvider'),
+    'azure':     ('elasticluster.providers.azure_provider', 'AzureCloudProvider'),
+}
+
+
+SETUP_PROVIDERS = {
+    # pylint: disable=bad-whitespace
+    "ansible": ('elasticluster.providers.ansible_provider', 'AnsibleSetupProvider'),
+}
+
+
+
+def _get_provider(name, provider_map):
+    """
+    Return the constructor for provider `name` in mapping `provider_map`.
+
+    Second argument `provider_map` is a Python mapping that translates a
+    provider kind name (e.g., ``ec2``) into a pair *(module, class)*;
+    `_get_provider` will attempt to import the named module (using Python's
+    standard import mechanisms) and return the `class` attribute from that
+    module.
+
+    :raise KeyError: If the given `name` is not a valid key in `provider_map`
+    :raise ImportError: If the module corresponding to `name`
+      in `provider_map` cannot be loaded.
+    :raise AttributeError: If the class name corresponding to `name`
+      in `provider_map` does not exist in the module.
+    """
+    modname, clsname = provider_map[name]
+    mod = __import__(modname, globals(), locals(), [clsname], -1)
+    cls = getattr(mod, clsname)
+    log.debug("Using class %r from module %r to instanciate provider '%s'",
+              cls, mod, name)
+    return cls
+
+
 def _make_defaults_dict():
     """
     Return mapping from names to be used in `%()s` expansion.
@@ -721,10 +761,6 @@ class Creator(object):
     :raises MultipleInvalid: configuration validation
     """
 
-    setup_providers_map = {
-        "ansible": AnsibleSetupProvider,
-    }
-
     DEFAULT_STORAGE_PATH = os.path.expanduser("~/.elasticluster/storage")
     DEFAULT_STORAGE_TYPE = 'yaml'
 
@@ -770,32 +806,21 @@ class Creator(object):
         provider = cloud_conf['provider']
 
         try:
-            if provider == 'ec2_boto':
-                from elasticluster.providers.ec2_boto import BotoCloudProvider
-                provider = BotoCloudProvider
-            elif provider == 'openstack':
-                from elasticluster.providers.openstack import OpenStackCloudProvider
-                provider = OpenStackCloudProvider
-            elif provider == 'google':
-                from elasticluster.providers.gce import GoogleCloudProvider
-                provider = GoogleCloudProvider
-            elif provider == 'azure':
-                from elasticluster.providers.azure_provider import AzureCloudProvider
-                provider = AzureCloudProvider
-            else:
-                # this should have been caught during config validation!
-                raise ConfigurationError(
-                    "Invalid cloud provider `{0}` for cluster `{1}`"
-                    .format(provider, cluster_template))
-        except ImportError as err:
+            ctor = _get_provider(provider, CLOUD_PROVIDERS)
+        except KeyError:
+            # this should have been caught during config validation!
+            raise ConfigurationError(
+                "Unknown cloud provider `{0}` for cluster `{1}`"
+                .format(provider, cluster_template))
+        except (ImportError, AttributeError) as err:
             raise RuntimeError(
-                "Unable to load cloud provider `{0}`: {1}"
-                .format(provider, err))
+                "Unable to load cloud provider `{0}`: {1}: {2}"
+                .format(provider, err.__class__.__name__, err))
 
         provider_conf = cloud_conf.copy()
         provider_conf.pop('provider')
 
-        return provider(storage_path=self.storage_path, **provider_conf)
+        return ctor(storage_path=self.storage_path, **provider_conf)
 
 
     def create_cluster(self, template, name=None, cloud=None, setup=None):
@@ -868,11 +893,11 @@ class Creator(object):
         conf_login = self.cluster_conf[cluster_template]['login']
 
         provider_name = conf.get('provider', 'ansible')
-        if provider_name not in self.setup_providers_map:
+        if provider_name not in SETUP_PROVIDERS:
             raise ConfigurationError(
                 "Invalid value `%s` for `setup_provider` in configuration "
                 "file." % provider_name)
-        provider = self.setup_providers_map[provider_name]
+        provider = _get_provider(provider_name, SETUP_PROVIDERS)
 
         storage_path = self.storage_path
         playbook_path = conf.pop('playbook_path', None)

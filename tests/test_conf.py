@@ -26,9 +26,11 @@ from os.path import join
 # 3rd-party imports
 from mock import patch
 import pytest
+from pytest import raises
 
 #rom elasticluster.conf import ConfigReader, ConfigValidator, Creator
 from elasticluster.conf import (
+    load_config_files,
     make_creator,
     _read_config_files,
     _arrange_config_tree,
@@ -565,6 +567,63 @@ ssh_to=master
         cluster = creator.create_cluster("slurm")
         assert os.path.isabs(cluster.user_key_public)
         assert os.path.isabs(cluster.user_key_private)
+
+
+def test_get_cloud_provider_openstack(tmpdir):
+    wd = tmpdir.strpath
+    ssh_key_path = os.path.join(wd, 'id_rsa.pem')
+    with open(ssh_key_path, 'w+') as ssh_key_file:
+        # don't really care about SSH key, just that the file exists
+        ssh_key_file.write('')
+        ssh_key_file.flush()
+    config_path = os.path.join(wd, 'config.ini')
+    with open(config_path, 'w+') as config_file:
+        config_file.write(
+            """
+[cloud/openstack]
+provider = openstack
+auth_url = http://openstack.example.com:5000/v2.0
+username = ${USER}
+password = XXXXXX
+project_name = test
+    """
+            + make_config_snippet("cluster", "example_openstack")
+            + make_config_snippet("login", "ubuntu", keyname='test', valid_path=ssh_key_path)
+            + make_config_snippet("setup", "slurm_setup")
+        )
+    creator = make_creator(config_path)
+    cloud = creator.create_cloud_provider('example_openstack')
+    from elasticluster.providers.openstack import OpenStackCloudProvider
+    assert isinstance(cloud, OpenStackCloudProvider)
+
+
+def test_get_cloud_provider_invalid(tmpdir):
+    wd = tmpdir.strpath
+    ssh_key_path = os.path.join(wd, 'id_rsa.pem')
+    with open(ssh_key_path, 'w+') as ssh_key_file:
+        # don't really care about SSH key, just that the file exists
+        ssh_key_file.write('')
+        ssh_key_file.flush()
+    config_path = os.path.join(wd, 'config.ini')
+    with open(config_path, 'w+') as config_file:
+        config_file.write(
+            """
+# needs to be called `cloud/openstack` because
+# that's what the example cluster below requires
+[cloud/openstack]
+provider = invalid
+auth_url = http://openstack.example.com:5000/v2.0
+username = ${USER}
+password = XXXXXX
+project_name = test
+    """
+            + make_config_snippet("cluster", "example_openstack")
+            + make_config_snippet("login", "ubuntu", keyname='test', valid_path=ssh_key_path)
+            + make_config_snippet("setup", "slurm_setup")
+        )
+    conf = load_config_files(config_path)
+    assert 'invalid' not in conf['cloud']
+
 
 # class TestCreator(unittest.TestCase):
 
