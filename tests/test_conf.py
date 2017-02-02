@@ -625,6 +625,32 @@ project_name = test
     assert 'invalid' not in conf['cloud']
 
 
+def test_default_setup_provider_is_ansible(tmpdir):
+    wd = tmpdir.strpath
+    ssh_key_path = os.path.join(wd, 'id_rsa.pem')
+    with open(ssh_key_path, 'w+') as ssh_key_file:
+        # don't really care about SSH key, just that the file exists
+        ssh_key_file.write('')
+        ssh_key_file.flush()
+    config_path = os.path.join(wd, 'config.ini')
+    with open(config_path, 'w+') as config_file:
+        config_file.write(
+            make_config_snippet("cloud", "openstack")
+            + make_config_snippet("cluster", "example_openstack")
+            + make_config_snippet("login", "ubuntu", keyname='test', valid_path=ssh_key_path)
+            # *note:* no `provider=` line here
+            + """
+[setup/slurm_setup]
+frontend_groups = slurm_master
+compute_groups = slurm_worker
+    """
+        )
+    creator = make_creator(config_path)
+    setup = creator.create_setup_provider('example_openstack')
+    from elasticluster.providers.ansible_provider import AnsibleSetupProvider
+    assert isinstance(setup, AnsibleSetupProvider)
+
+
 # class TestCreator(unittest.TestCase):
 
 #     def setUp(self):
