@@ -921,7 +921,7 @@ class Creator(object):
                                   var, value, node_kind)
 
         return provider(groups, playbook_path=playbook_path,
-                        environment_vars=environment,
+                        environment_vars=environment_vars,
                         storage_path=storage_path,
                         sudo=conf_login['image_sudo'],
                         sudo_user=conf_login['image_user_sudo'],
