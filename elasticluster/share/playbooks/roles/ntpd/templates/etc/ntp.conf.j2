@@ -23,7 +23,7 @@ server 2.pool.ntp.org iburst
 server 3.pool.ntp.org iburst
 {% endif %}
 
-## Peer with every host in the cluster
+## Peer with other hosts in the cluster (if any)
 #
 {% for host in ntp_peers|default(groups.all) %}
 {% if host not in (ntp_server + [ansible_nodename, ansible_hostname, ansible_fqdn]) %}
