@@ -59,7 +59,7 @@
 
   <property>
     <name>yarn.scheduler.maximum-allocation-mb</name>
-    <value>13000</value>{# FIXME: should depend on host memory #}
+    <value>{{ groups.hadoop_worker|map('extract', hostvars, ['ansible_memory_mb', 'nocache', 'free'])|list|max }}</value>
     <description>
       Maximum limit of memory to allocate to each container request
       at the Resource Manager. In MBs.
@@ -77,7 +77,7 @@
 
   <property>
     <name>yarn.scheduler.maximum-allocation-vcores</name>
-    <value>4</value>{# FIXME: should depend on host CPUs #}
+    <value>{{ groups.hadoop_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|max }}</value>
     <description>
       Maximum number of cores to allocate to each container request
       at the Resource Manager.
@@ -92,8 +92,8 @@
 
   <property>
     <name>yarn.nodemanager.resource.memory-mb</name>
-    <!-- recommended: keep 20% of total memory for OS + JVM overhead -->
-    <value>{{ (ansible_memory_mb.nocache.free * 0.80) | int }}</value>
+    <!-- keep 3GB of total memory for OS + JVM overhead -->
+    <value>{{ ansible_memory_mb.nocache.free - 3000 }}</value>
   </property>
 
   <!-- log aggregation is necessary for correct Spark/YARN integration -->
