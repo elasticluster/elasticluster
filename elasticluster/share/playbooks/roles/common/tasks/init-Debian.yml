@@ -32,7 +32,18 @@
   with_items:
     - apt-transport-https
 
-
 - name: Provide workaround for https://github.com/ansible/ansible-modules-core/issues/4472
   set_fact:
     __at__: '='
+
+- block:
+    - name: Install policy package for service autostart
+      apt:
+        name: 'policyrcd-script-zg2'
+        state: present
+    - name: Install policy script for service autostart
+      copy:
+        dest: '/etc/policy-rc.d'
+        src: 'etc/policy-rc.d'
+        mode: 0555
+  when: 'not {{init_is_systemd}}'
