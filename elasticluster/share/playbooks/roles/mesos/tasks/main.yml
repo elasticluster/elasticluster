@@ -1,0 +1,103 @@
+---
+
+- debug: msg="Install Mode is {{mesos_install_mode}}"
+
+- name: Add apt-key
+  apt_key: id=E56151BF keyserver=keyserver.ubuntu.com state=present
+
+- name: Add mesosphere repo
+  apt_repository:
+    repo='deb http://repos.mesosphere.com/{{ ansible_distribution | lower }} {{ ansible_distribution_release | lower }} main'
+    state=present
+    update_cache=yes
+
+- name: Install Mesos and dependencies
+  apt: pkg={{ item }} state=present update_cache=yes cache_valid_time=3600
+  with_items:
+    - wget
+    - curl
+    - unzip
+    - python-setuptools
+    - python-dev
+    - mesos
+
+# == Work Dir for replicated log
+- name: create work dir
+  file: path={{ mesos_work_dir }} state=directory
+
+# == Remove default configs
+- name: Remove Default Mesos Configs
+  file: state=absent path=/etc/mesos/
+
+- name: Remove Mesos ZK File
+  file: state=absent path=/etc/mesos/zk
+
+- name: Remove Default Mesos-Master Config
+  file: state=absent path=/etc/mesos-master/
+
+- name: Remove Default Mesos-Slave Config
+  file: state=absent path=/etc/mesos-slave/
+
+# == Configure and recreate
+- name: Mesos default config file
+  template: src=conf-mesos.j2 dest=/etc/default/mesos
+  notify:
+    - Restart mesos-master
+    - Restart mesos-slave
+    - Cleanup meta/slaves/latest
+
+- name: Mesos Master config file
+  template: src=conf-mesos-master.j2 dest=/etc/default/mesos-master
+  when: mesos_install_mode == "master" or mesos_install_mode == "master-slave"
+  notify:
+    - Restart mesos-master
+
+- name: Mesos Slave config file
+  template: src=conf-mesos-slave.j2 dest=/etc/default/mesos-slave
+  when: mesos_install_mode == "slave" or mesos_install_mode == "master-slave"
+  notify:
+    - Restart mesos-slave
+    - Cleanup meta/slaves/latest
+
+- name: Mesos master upstart script
+  template: src=init-mesos-master.j2 dest=/etc/init/mesos-master.conf
+  when:
+    - (mesos_install_mode == "master" or mesos_install_mode == "master-slave")
+    - ansible_service_mgr != 'systemd'
+  notify:
+    - Restart mesos-master
+
+- name: Mesos slave upstart script
+  template: src=init-mesos-slave.j2 dest=/etc/init/mesos-slave.conf
+  when:
+    - (mesos_install_mode == "slave" or mesos_install_mode == "master-slave")
+    - ansible_service_mgr != 'systemd'
+  notify:
+    - Restart mesos-slave
+
+- name: Check if systemd exists
+  stat: path=/lib/systemd/system/
+  register: systemd_check
+
+- name: Mesos master systemd script
+  template: src=mesos-master.service.j2 dest=/lib/systemd/system/mesos-master.service
+  when: (mesos_install_mode == "master" or mesos_install_mode == "master-slave") and systemd_check.stat.exists == true
+  notify:
+    - Reload daemon
+    - Restart mesos-master
+
+- name: Mesos slave systemd script
+  template: src=mesos-slave.service.j2 dest=/lib/systemd/system/mesos-slave.service
+  when: (mesos_install_mode == "slave" or mesos_install_mode == "master-slave") and systemd_check.stat.exists == true
+  notify:
+    - Reload daemon
+    - Restart mesos-slave
+
+- name: Enable/Disable mesos-master service
+  service: name=mesos-master enabled="{{ (mesos_install_mode == 'slave') | ternary('no', 'yes') }}"
+  when: systemd_check.stat.exists == true
+
+- name: Enable/Disable mesos-slave service
+  service: name=mesos-slave enabled="{{ (mesos_install_mode == 'master') | ternary('no', 'yes') }}"
+  when: systemd_check.stat.exists == true
+

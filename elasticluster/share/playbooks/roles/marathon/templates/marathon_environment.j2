@@ -1,0 +1,4 @@
+[Service]
+{% for var in marathon_env_vars %}
+Environment={{ var }}
+{% endfor %}

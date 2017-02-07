@@ -1,0 +1,17 @@
+description "ZooKeeper"
+
+limit nofile 32768 32768
+
+start on runlevel [2345]
+stop on [!12345]
+
+respawn
+respawn limit 2 5
+
+umask 007
+
+kill timeout 300
+
+script
+    exec sudo -u zookeeper -g zookeeper {{zookeeper_dir}}/bin/zkServer.sh start-foreground > /var/log/zookeeper/init-zookeeper.log 2>&1
+end script

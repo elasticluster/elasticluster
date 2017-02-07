@@ -1,0 +1,27 @@
+---
+
+- name: Install add-apt-repostory
+  become: yes
+  apt: name=software-properties-common state=latest
+
+- name: Add Oracle Java Repository
+  become: yes
+  apt_repository: repo='ppa:webupd8team/java'
+
+- name: Accept Java {{oracle_java_version}} License
+  become: yes
+  debconf: name='oracle-java{{oracle_java_version}}-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+
+- name: Install Oracle Java {{oracle_java_version}}
+  become: yes
+  apt: name={{item}} state=latest
+  with_items:
+    - oracle-java{{oracle_java_version}}-installer
+    - ca-certificates
+
+- name: Set Oracle Java {{oracle_java_version}} as default
+  become: yes
+  apt: name={{item}} state=latest
+  with_items:
+    - oracle-java8-set-default
+  when: oracle_java_set_as_default

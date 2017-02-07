@@ -1,0 +1,24 @@
+---
+
+- name: Install Mesos master node
+  hosts: mesos_master
+  tags:
+    - zookeeper
+    - mesos
+    - marathon
+    - master
+  roles:
+    - zookeeper
+    - mesos
+    - marathon
+
+
+- name: Install Mesos slave nodes
+  hosts: mesos_slave
+  tags:
+    - docker
+    - mesos
+    - slave
+  roles:
+    - docker
+    - { role: mesos, mesos_install_mode: "slave" }
