@@ -1,0 +1,12 @@
+
+---
+
+- name: Install Jupyter/IPython kernel for bash (module)
+  pip:
+    name: 'bash_kernel'
+    state: present
+    executable: '{{anaconda_home}}/bin/pip'
+
+- name: Install Jupyter/IPython kernel for bash (kernel spec)
+  command:
+    '{{anaconda_home}}/bin/python -m bash_kernel.install'
