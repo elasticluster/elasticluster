@@ -1,0 +1,55 @@
+---
+
+- name: Check that MATLAB_EXE can run MATLAB
+  command: |
+    {{MATLAB_EXE}} -n
+  ignore_errors: yes
+  register: matlab_run
+
+
+# The following code is an attempt at getting MathWorks' official "MATLAB Engine
+# API for Python" to work, instead of the `pymatbridge` Python package (which is
+# still labeled as status "3 - Alpha" on PyPI).
+#
+# Unfortunately, as of MATLAB 2016a, the MATLAB Engine API only supports Python
+# 2.7, 3.3, and 3.4. Since the provided Python module is a *binary* one
+# (`libmatlabforpython3_4.so`), we cannot play any diff/patch/symlink tricks.
+#
+# So here you go, code that only works for Python 2 and little chances of
+# ever working with the *current* Python 3.
+
+# - name: Is the MATLAB Engine API for Python already installed?
+#   command: |
+#     {{PYTHON2_EXE}} -c "import matlab"
+#   ignore_errors: yes
+#   register: matlab_for_python_available
+
+# - name: Find MATLAB root directory
+#   shell: |
+#     {{MATLAB_EXE}} -nojvm -nodesktop -nodisplay -nosplash -r "dir = matlabroot; fprintf('MATLABROOT=%s\n', dir); exit" | grep "^MATLABROOT=" | cut -d= -f2
+#   register: matlabroot
+#   when: matlab_for_python_available|failed
+
+# - name: Install MATLAB engine for Python
+#   command: |
+#     {{PYTHON2_EXE}} setup.py install
+#   args:
+#     chdir: {{matlabroot.stdout}}/extern/engines/python/
+#   when: matlab_for_python_available|failed
+
+
+- name: Install Jupyter/IPython kernel for MATLAB (module)
+  pip:
+    name: '{{item}}'
+    state: present
+    executable: '{{jupyter_python|dirname}}/pip'
+  with_items:
+    - matlab_kernel
+    - pymatbridge
+  when: matlab_run|success
+
+
+- name: Install Jupyter/IPython kernel for MATLAB (kernel spec)
+  command:
+    'env PATH={{jupyter_python|dirname}}:$PATH {{jupyter_python}} -m matlab_kernel install'
+  when: matlab_run|success
