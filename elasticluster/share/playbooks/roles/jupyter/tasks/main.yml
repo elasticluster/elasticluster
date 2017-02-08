@@ -16,8 +16,9 @@
 - include: python.yml python_exe='{{PYTHON2_EXE}}'
 - include: python.yml python_exe='{{PYTHON3_EXE}}'
 
-
 # install PySpark kernels (for Python version 2 and 3)
 - include: pyspark.yml python_exe='{{PYTHON2_EXE}}'
 - include: pyspark.yml python_exe='{{PYTHON3_EXE}}'
 
+# install R kernel
+- include: irkernel.yml
