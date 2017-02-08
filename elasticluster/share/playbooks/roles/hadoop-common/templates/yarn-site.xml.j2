@@ -5,6 +5,9 @@
   the next time `elasticluster setup` is run!
 -->
 
+{%- set hadoop_workers_max_memory = groups.hadoop_worker|map('extract', hostvars, ['ansible_memory_mb', 'nocache', 'free'])|list|max -%}
+{%- set hadoop_workers_max_vcpus = groups.hadoop_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|max -%}
+
 <configuration>
 
   <!--
@@ -62,7 +65,7 @@
 
   <property>
     <name>yarn.scheduler.maximum-allocation-mb</name>
-    <value>{{ groups.hadoop_worker|map('extract', hostvars, ['ansible_memory_mb', 'nocache', 'free'])|list|max }}</value>
+    <value>{{ hadoop_workers_max_memory }}</value>
     <description>
       Maximum limit of memory to allocate to each container request
       at the Resource Manager. In MBs.
@@ -80,7 +83,7 @@
 
   <property>
     <name>yarn.scheduler.maximum-allocation-vcores</name>
-    <value>{{ groups.hadoop_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|max }}</value>
+    <value>{{ hadoop_workers_max_vcpus }}</value>
     <description>
       Maximum number of cores to allocate to each container request
       at the Resource Manager.
