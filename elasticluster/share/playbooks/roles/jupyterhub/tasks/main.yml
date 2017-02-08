@@ -1,0 +1,95 @@
+---
+#
+# Install JupyterHub and run it on port 443
+#
+# Follows installation instructions at:
+# - https://github.com/jupyterhub/jupyterhub/blob/master/README.md#installation
+#
+
+- name: Fail if not Debian/Ubuntu compatible
+  fail:
+    msg: The JupyterHub role currently only supports Debian/Ubuntu
+  when: 'not {{is_debian_compatible}}'
+
+
+- name: Create directories
+  file:
+    path: '{{item}}'
+    state: directory
+    mode: 0755
+  with_items:
+    - /etc/jupyterhub
+    - /var/lib/jupyterhub
+
+
+- name: Install SW dependencies
+  apt:
+    name='{{item}}'
+    state=present
+  with_items:
+    - nodejs-legacy
+    - npm
+    - supervisor
+
+
+# FIXME: Could this be replaced by Ansible's `npm` module?
+- name: Install HTTP proxy service
+  command: |
+    npm install -g configurable-http-proxy
+  args:
+    creates: /usr/local/lib/node_modules/configurable-http-proxy/bin/configurable-http-proxy
+
+
+- name: Install JupyterHub SW
+  pip:
+    name: 'jupyterhub'
+    state: present
+    executable: '/opt/anaconda3/bin/pip'
+
+
+- name: Create cookie secret file
+  shell: |
+    openssl rand -base64 2048 | tr -d '\n' > /var/lib/jupyterhub/jupyterhub_cookie_secret
+  args:
+    creates: /var/lib/jupyterhub/jupyterhub_cookie_secret
+
+
+- name: Create proxy auth token file
+  shell: |
+    openssl rand -hex 32 | tr -d '\n' > /var/lib/jupyterhub/jupyterhub_proxy_auth_token
+  args:
+    creates: /var/lib/jupyterhub/jupyterhub_proxy_auth_token
+
+
+- name: Deploy configuration file
+  copy:
+    dest: '/etc/jupyterhub/jupyterhub_config.py'
+    src:  'etc/jupyterhub/jupyterhub_config.py'
+    mode: 0400
+
+
+# see: https://serialized.net/2013/04/simply-generating-self-signed-ssl-certs-with-ansible/
+- name: Create self-signed SSL cert
+  command: |
+    openssl req -x509 -new -batch -days 3650 -subj "/O=ElastiCluster/OU=JupyterHub/CN=${ansible_fqdn}"  -newkey rsa:2048 -nodes -outform PEM -keyout /etc/jupyterhub/jupyterhub.key.pem -out /etc/jupyterhub/jupyterhub.crt.pem -extensions usr_cert
+  args:
+    creates: /etc/jupyterhub/jupyterhub.key.pem
+
+# FIXME: should the following be reworked into an independent `supervisord` role?
+- name: Manage JupyterHub with `supervisord`
+  copy:
+    dest: '/etc/supervisor/conf.d/jupyterhub.conf'
+    src: 'etc/supervisor/conf.d/jupyterhub.conf'
+    mode: 0444
+  notify:
+    - reread supervisord configuration
+
+- name: Ensure supervisord is running and starts again at boot
+  service:
+    name: supervisor
+    enabled: yes
+    state: started
+
+- name: Ensure JupyterHub has been started by supervisord
+  command: |
+    supervisorctl start jupyterhub

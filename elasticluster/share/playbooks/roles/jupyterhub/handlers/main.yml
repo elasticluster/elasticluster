@@ -1,0 +1,6 @@
+---
+
+# see: http://www.onurguzel.com/supervisord-restarting-and-reloading/
+- name: reread supervisord configuration
+  command: |
+    supervisorctl reread
