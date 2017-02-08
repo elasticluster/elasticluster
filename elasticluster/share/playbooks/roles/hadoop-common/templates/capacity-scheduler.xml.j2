@@ -44,11 +44,16 @@
 
   <property>
     <name>yarn.scheduler.capacity.node-locality-delay</name>
-    <value>{{groups.hadoop_worker|length}}</value>
+    <value>0</value>
     <description>
-      Number of missed scheduling opportunities after which the CapacityScheduler
-      attempts to schedule rack-local containers.
-      Typically this should be set to number of nodes in the cluster.
+      Number of heartbeats / scheduling opportunities to wait before relaxing
+      the request to schedule a container on a specific node. Lower values
+      improve scheduling latency. For more details, see:
+      https://community.hortonworks.com/answers/36437/view.html
+
+      Since ElastiCluster runs on virtualized infrastructures, there is
+      typically little advantage in honoring locality requests, so this value is
+      set to 0.
     </description>
   </property>
 
