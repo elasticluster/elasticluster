@@ -3,10 +3,10 @@
   hosts: all
   gather_facts: yes
   roles:
-    - common
+    - role: common
     - role: ntpd
       ntp_server: '{{groups.ntp_master|default([])}}'
-    - pdsh
+    - role: pdsh
 
 # Run all other playbooks one by one, so they get a chance of doing
 # their setup depending on configured host groups
