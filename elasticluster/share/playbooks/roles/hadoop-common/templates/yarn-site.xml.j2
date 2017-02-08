@@ -95,8 +95,8 @@
 
   <property>
     <name>yarn.nodemanager.resource.memory-mb</name>
-    <!-- keep 3GB of total memory for OS + JVM overhead -->
-    <value>{{ ansible_memory_mb.nocache.free - 3000 }}</value>
+    <!-- keep 500MB of total memory for OS + JVM overhead -->
+    <value>{{ ansible_memory_mb.nocache.free - 500 }}</value>
   </property>
 
   <!-- log aggregation is necessary for correct Spark/YARN integration -->
