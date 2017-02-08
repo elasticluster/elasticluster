@@ -12,7 +12,6 @@
 # their setup depending on configured host groups
 - include: roles/ansible.yml
 - include: roles/slurm.yml
-- include: roles/jupyterhub.yml
 - include: roles/jenkins.yml
 - include: roles/ganglia.yml
 - include: roles/pbs+maui.yml
@@ -23,6 +22,10 @@
 - include: roles/glusterfs.yml
 - include: roles/ipython.yml
 - include: roles/htcondor.yml
+
+# Jupyter installation comes last, to allow it to pick up any SW that's been
+# installed so far (e.g., for kernels, or for ipyparallel)
+- include: roles/jupyterhub.yml
 
 # for local customizations
 - include: after.yml
