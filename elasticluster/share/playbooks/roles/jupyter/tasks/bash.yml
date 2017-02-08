@@ -3,7 +3,9 @@
 
 - name: Install Jupyter/IPython kernel for bash (module)
   pip:
-    name: 'bash_kernel'
+    # bash_kernel < 0.6 is not compatible with JupyterHub
+    # (see issues #58 and #59 on the `bash_kernel` GitHub)
+    name: 'bash_kernel>=0.6'
     state: present
     executable: '{{anaconda_home}}/bin/pip'
 
