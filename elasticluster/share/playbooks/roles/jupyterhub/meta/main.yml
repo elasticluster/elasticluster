@@ -1,0 +1,5 @@
+# jupyterhub/meta/main.yml
+---
+
+dependencies:
+  - jupyter
