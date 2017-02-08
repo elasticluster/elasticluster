@@ -1,0 +1,19 @@
+# r/tasks/main.yml
+---
+
+- name: Load distribution-specific parameters
+  include: 'init-{{ansible_os_family}}.yml'
+
+
+- name: Install R packages
+  package:
+    name='{{item}}'
+    state=present
+  with_items: '{{r_packages}}'
+
+
+- name: Set default CRAN repository
+  template:
+    dest: '/etc/R/Rprofile.site'
+    src: 'etc/R/Rprofile.site.j2'
+    mode: 0444

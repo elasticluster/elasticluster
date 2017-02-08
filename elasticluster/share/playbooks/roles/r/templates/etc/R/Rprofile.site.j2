@@ -1,0 +1,11 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+# see: https://www.r-bloggers.com/permanently-setting-the-cran-repository/
+local({
+  r <- getOption("repos")
+  r["CRAN"] <- "http://{{r_cran_mirror}}"
+  options(repos = r)
+})
