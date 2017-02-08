@@ -50,10 +50,13 @@
 
   <property>
     <name>yarn.scheduler.minimum-allocation-mb</name>
-    <value>500</value>
+    <value>128</value>
     <description>
-      Minimum limit of memory to allocate to each container request
-      at the Resource Manager. In MBs.
+      RM can only allocate memory to containers in increments of
+      "yarn.scheduler.minimum-allocation-mb".
+
+      Since one primary use case of ElastiCluster is for allocating small
+      clusters for testing, keep this low.
     </description>
   </property>
 
