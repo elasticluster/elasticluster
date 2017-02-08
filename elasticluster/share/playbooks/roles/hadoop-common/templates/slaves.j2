@@ -7,6 +7,6 @@
 # All hosts below will run the HDFS DataNode and YARN NodeManager
 # services.
 #
-{% for fqdn in groups['hadoop_worker'] %}
+{% for fqdn in groups.hadoop_worker %}
 {{fqdn}}
 {% endfor %}
