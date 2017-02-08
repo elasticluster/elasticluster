@@ -1,6 +1,9 @@
 # jupyter/defaults/main.yml
 ---
 
+# executable to run MATLAB (if not found, the MATLAB kernel will not be installed)
+MATLAB_EXE: 'matlab'
+
 # path to the executable to run the Python 2 kernel
 PYTHON2_EXE: '/opt/anaconda2/bin/python'
 
@@ -9,3 +12,6 @@ PYTHON3_EXE: '/opt/anaconda3/bin/python3'
 
 # path to the executable to run the R kernel
 R_EXE: '/usr/bin/R'
+
+# the Python interpreter used to rune Jupyter/JupyterHub
+jupyter_python: '{{PYTHON3_EXE}}'

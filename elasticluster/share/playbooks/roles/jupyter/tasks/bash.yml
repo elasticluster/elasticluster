@@ -7,8 +7,8 @@
     # (see issues #58 and #59 on the `bash_kernel` GitHub)
     name: 'bash_kernel>=0.6'
     state: present
-    executable: '{{anaconda_home}}/bin/pip'
+    executable: '{{jupyter_python|dirname}}/pip'
 
 - name: Install Jupyter/IPython kernel for bash (kernel spec)
   command:
-    '{{anaconda_home}}/bin/python -m bash_kernel.install'
+    '{{jupyter_python}} -m bash_kernel.install'
