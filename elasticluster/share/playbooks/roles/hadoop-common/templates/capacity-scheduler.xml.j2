@@ -4,6 +4,9 @@
   the next time `elasticluster setup` is run!
 -->
 
+{%- set hadoop_workers_total_memory = groups.hadoop_worker|map('extract', hostvars, ['ansible_memory_mb', 'nocache', 'free'])|list|sum -%}
+
+
 <configuration>
 
   <!-- global config of the "capacity" scheduler -->
@@ -18,11 +21,14 @@
 
   <property>
     <name>yarn.scheduler.capacity.maximum-am-resource-percent</name>
-    <value>10.0</value>{# FIXME: should be set by user! #}
+    <value>{{ [10.0, (100.0 * 2600 / hadoop_workers_total_memory)]|max }}</value>
     <description>
       Maximum percent of resources in the cluster which can be used to run
       application masters i.e. controls number of concurrent running
       applications.
+
+      Hadoop's default value (10.0) may be corrected here to allow a container of
+      2600MB to run on a potentially small cluster.
     </description>
   </property>
 
