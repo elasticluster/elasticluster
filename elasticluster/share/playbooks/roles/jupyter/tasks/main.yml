@@ -12,6 +12,9 @@
 # install BASH kernel
 - include: bash.yml
 
+# install MATLAB kernel
+- include: matlab.yml
+
 # install Python kernels (for Python version 2 and 3)
 - include: python.yml python_exe='{{PYTHON2_EXE}}'
 - include: python.yml python_exe='{{PYTHON3_EXE}}'
