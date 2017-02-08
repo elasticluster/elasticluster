@@ -10,7 +10,7 @@
   # `$HOME/.local/jupyter/...`) so be sure that it does not do that with root
   # privileges in a users' directory!
   command: |
-    env HOME=/root PATH={{anaconda_home}}/bin:$PATH {{R_EXE}} --no-save --no-restore -e "install.packages(c('crayon', 'pbdZMQ', 'devtools')); devtools::install_github(paste0('IRkernel/', c('repr', 'IRdisplay', 'IRkernel')))"
+    env HOME=/root PATH={{jupyter_python|dirname}}:$PATH {{R_EXE}} --no-save --no-restore -e "install.packages(c('crayon', 'pbdZMQ', 'devtools')); devtools::install_github(paste0('IRkernel/', c('repr', 'IRdisplay', 'IRkernel')))"
   args:
     chdir: '/root'
     creates: '/usr/local/lib/R/site-library/IRkernel'
@@ -20,7 +20,7 @@
   # `$HOME/.local/jupyter/...`) so be sure that it does not do that with root
   # privileges in a users' directory!
   command: |
-    env HOME=/root PATH={{anaconda_home}}/bin:$PATH {{R_EXE}} --no-save --no-restore -e "IRkernel::installspec(user = FALSE)"
+    env HOME=/root PATH={{jupyter_python|dirname}}:$PATH {{R_EXE}} --no-save --no-restore -e "IRkernel::installspec(user = FALSE)"
   args:
     chdir: '/root'
     creates: '/usr/local/share/jupyter/kernels/ir'

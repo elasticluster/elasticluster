@@ -7,7 +7,7 @@
   conda:
     name=jupyter
     state=present
-    executable='{{anaconda_home}}/bin/conda'
+    executable='{{jupyter_python|dirname}}/conda'
 
 # install BASH kernel
 - include: bash.yml
