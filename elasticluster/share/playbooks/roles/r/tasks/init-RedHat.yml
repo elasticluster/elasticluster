@@ -1,0 +1,13 @@
+---
+
+- name: Set R common playbook params (CentOS/RHEL)
+  set_fact:
+    r_packages:
+      - R
+      # dependency packages for Jupyter's IRkernel,
+      # see: https://irkernel.github.io/installation/#source-panel
+      - czmq-devel
+      # more dependencies, as appear in R pkg compile logs
+      - libssh2-devel
+  when:
+    '{{is_rhel_compatible}}'

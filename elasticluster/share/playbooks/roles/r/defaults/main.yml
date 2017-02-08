@@ -1,0 +1,5 @@
+# r/defaults/main.yml
+---
+
+# preferred CRAN mirror (just the host name)
+r_cran_mirror: 'stat.ethz.ch/CRAN'

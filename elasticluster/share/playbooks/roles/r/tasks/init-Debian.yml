@@ -1,0 +1,65 @@
+---
+
+- name: Set R common playbook params (Ubuntu)
+  set_fact:
+    r_packages:
+      - r-base
+      - r-base-dev
+      - r-recommended
+      # dependency packages for Jupyter's IRkernel,
+      # see: https://irkernel.github.io/installation/#source-panel
+      - libzmq3-dev
+      # more dependencies, as appear in R pkg compile logs
+      - libssh2-1-dev
+      # more dependency packages, notes from CSCS' workshop on Spark
+      - libssl-dev
+      - libcurl4-openssl-dev
+    r_packages_repo: 'deb http://{{r_cran_mirror}}/bin/linux/ubuntu {{ansible_distribution_release}}/'
+    r_packages_keyserver: keyserver.ubuntu.com
+    r_packages_signing_key: 'E084DAB9'
+  when:
+    '{{is_ubuntu}}'
+
+
+- name: Set R common playbook params (Debian)
+  set_fact:
+    r_packages:
+      - r-base
+      - r-base-dev
+      - r-recommended
+      # dependency packages for Jupyter's IRkernel,
+      # see: https://irkernel.github.io/installation/#source-panel
+      - libzmq3-dev
+      # more dependencies, as appear in R pkg compile logs
+      - libssh2-1-dev
+      # more dependency packages, notes from CSCS' workshop on Spark
+      - libssl-dev
+      - libcurl4-openssl-dev
+    r_packages_repo: 'deb http://{{r_cran_mirror}}/bin/linux/debian {{ansible_distribution_release}}-cran3/'
+    r_packages_keyserver: keys.gnupg.net
+    r_packages_signing_key: '6212B7B7931C4BB16280BA1306F90DE5381BA480'
+  when:
+    '{{is_debian}}'
+
+
+- name: add signing key for R/CRAN repository
+  apt_key:
+    keyserver='{{r_packages_keyserver}}'
+    id='{{r_packages_signing_key}}'
+
+
+- name: add R/CRAN repository
+  apt_repository:
+    repo='{{r_packages_repo}}'
+    state=present
+
+
+# this is run as task and not as a handler, since handlers are all
+# executed after *all* tasks in the play have run, and we need the
+# package cache to be up-to-date immediately for subsequent install
+# tasks to succeed...
+- name: update APT cache
+  apt:
+    update_cache=yes
+    cache_valid_time=86400
+  when: is_debian_compatible
