@@ -4,3 +4,4 @@
 dependencies:
   - { role: anaconda }
   - { role: bigtop }
+  - { role: r }
