@@ -1,5 +1,5 @@
 # r/defaults/main.yml
 ---
 
-# preferred CRAN mirror (just the host name)
-r_cran_mirror: 'stat.ethz.ch/CRAN'
+# preferred CRAN mirror, see: https://cran.r-project.org/mirrors.html
+r_cran_mirror_url: 'http://cloud.r-project.org/'
