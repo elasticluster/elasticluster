@@ -14,7 +14,7 @@
       # more dependency packages, notes from CSCS' workshop on Spark
       - libssl-dev
       - libcurl4-openssl-dev
-    r_packages_repo: 'deb http://{{r_cran_mirror}}/bin/linux/ubuntu {{ansible_distribution_release}}/'
+    r_packages_repo: 'deb {{r_cran_mirror_url}}/bin/linux/ubuntu {{ansible_distribution_release}}/'
     r_packages_keyserver: keyserver.ubuntu.com
     r_packages_signing_key: 'E084DAB9'
   when:
@@ -35,20 +35,20 @@
       # more dependency packages, notes from CSCS' workshop on Spark
       - libssl-dev
       - libcurl4-openssl-dev
-    r_packages_repo: 'deb http://{{r_cran_mirror}}/bin/linux/debian {{ansible_distribution_release}}-cran3/'
+    r_packages_repo: 'deb {{r_cran_mirror_url}}/bin/linux/debian {{ansible_distribution_release}}-cran3/'
     r_packages_keyserver: keys.gnupg.net
     r_packages_signing_key: '6212B7B7931C4BB16280BA1306F90DE5381BA480'
   when:
     '{{is_debian}}'
 
 
-- name: add signing key for R/CRAN repository
+- name: add signing key for CRAN repository
   apt_key:
     keyserver='{{r_packages_keyserver}}'
     id='{{r_packages_signing_key}}'
 
 
-- name: add R/CRAN repository
+- name: add CRAN repository
   apt_repository:
     repo='{{r_packages_repo}}'
     state=present
@@ -62,4 +62,3 @@
   apt:
     update_cache=yes
     cache_valid_time=86400
-  when: is_debian_compatible

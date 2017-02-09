@@ -4,6 +4,7 @@
   set_fact:
     r_packages:
       - R
+      - R-devel
       # dependency packages for Jupyter's IRkernel,
       # see: https://irkernel.github.io/installation/#source-panel
       - czmq-devel
