@@ -6,6 +6,6 @@
 # see: https://www.r-bloggers.com/permanently-setting-the-cran-repository/
 local({
   r <- getOption("repos")
-  r["CRAN"] <- "http://{{r_cran_mirror}}"
+  r["CRAN"] <- "{{r_cran_mirror_url}}"
   options(repos = r)
 })
