@@ -1,4 +1,7 @@
 ---
+# for local customizations
+- include: before.yml
+
 - name: Common setup for all hosts
   hosts: all
   gather_facts: yes
