@@ -31,6 +31,9 @@
     state=present
   with_items:
     - apt-transport-https
+    # these are required by Ansible's `debconf` module
+    - debconf
+    - debconf-utils
 
 - name: Provide workaround for https://github.com/ansible/ansible-modules-core/issues/4472
   set_fact:
