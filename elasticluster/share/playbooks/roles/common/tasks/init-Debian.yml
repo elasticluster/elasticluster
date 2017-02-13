@@ -35,6 +35,19 @@
     - debconf
     - debconf-utils
 
+
+# Apparently some systemd commands (e.g., `hostnamectl` -- possibly others)
+# *require* D-Bus but the Debian 8 cloud VM image does not have it installed
+# (see issues #392, #393).  So, ensure it is installed.
+- name: Ensure additional packages are installed (Debian 8 "jessie")
+  apt:
+    name: '{{item}}'
+    state: present
+  with_items:
+    - dbus
+  when: 'is_debian_8'
+
+
 - name: Provide workaround for https://github.com/ansible/ansible-modules-core/issues/4472
   set_fact:
     __at__: '='
