@@ -1,17 +1,4 @@
 ---
-- name: SLURM common playbook
-  hosts: slurm_master:slurm_submit:slurm_worker
-  tasks:
-    # RHEL/CentOS 6.x comes with a default "REJECT" last rule which makes NFS
-    # servers and SLURM communication fail - disable it altogether until we can
-    # configure the entire NFS stack with fixed ports
-    - name: Disable firewall (RHEL/CentOS 6.x)
-      service:
-        name=iptables
-        enabled=no
-        state=stopped
-      when: 'is_rhel6_compatible'
-
 
 - name: Slurm master Playbook
   hosts: slurm_master

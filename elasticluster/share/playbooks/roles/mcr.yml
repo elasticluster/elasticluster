@@ -10,9 +10,6 @@
     # licensefile: "~/matlab/license.dat"
     # installkey: xxxxx-xxxxx-xxxxx-xxxxx.....
 
-  roles:
-    - { role: iptables, default_input_policy: 'ACCEPT' }
-
   tasks:
     - name: make temp directory
       action: file dest={{tmpdir}}/MCRInstaller state=directory

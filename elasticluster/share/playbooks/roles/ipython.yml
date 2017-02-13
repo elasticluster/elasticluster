@@ -3,8 +3,6 @@
   hosts: ipython_controller:ipython_engine
   handlers:
     - include: common/handlers/main.yml
-  roles:
-    - { role: iptables, default_input_policy: 'ACCEPT' }
   tasks:
     - name: Install PIP (Ubuntu)
       action: apt name={{item}}

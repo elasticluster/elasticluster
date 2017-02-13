@@ -1,9 +1,7 @@
 ---
 - name: HTCondor common Playbook
   hosts: condor_master:condor_workers
-  roles:
-    - { role: iptables, default_input_policy: 'ACCEPT' }
-  tasks: 
+  tasks:
     - include: cluster/tasks/packages.yml
     - include: htcondor/tasks/common.yml
 

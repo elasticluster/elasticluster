@@ -2,24 +2,22 @@
 
 - name: no-op
   debug:
-    msg="Not reloading iptables -- not supported by {{service['iptables']}} service unit"
+    msg: "Not reloading iptables -- not supported by {{service['iptables']}} service unit"
+
 
 - name: reload iptables
   service:
-    name='{{service["iptables"]}}'
-    state=reloaded
+    name: '{{service[item]}}'
+    state: reloaded
+  with_items:
+    - 'iptables'
+    - 'ip6tables'
 
-- name: reload ip6tables
-  service:
-    name='{{service["ip6tables"]}}'
-    state=reloaded
 
 - name: restart iptables
   service:
-    name='{{service["iptables"]}}'
-    state=restarted
-
-- name: restart ip6tables
-  service:
-    name='{{service["ip6tables"]}}'
-    state=restarted
+    name: '{{service[item]}}'
+    state: restarted
+  with_items:
+    - 'iptables'
+    - 'ip6tables'
