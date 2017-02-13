@@ -1,8 +1,20 @@
 # Default system properties included when running spark-submit.
 # This is useful for setting default environmental settings.
 
-spark.driver.memory              {{ansible_memory_mb.nocache.free}}m
-spark.executor.memory            {{ansible_memory_mb.nocache.free}}m
+{%- set hadoop_workers_max_vcpus = groups.hadoop_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|max -%}
+{%- set hadoop_workers_min_vcpus = groups.hadoop_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|min -%}
+{%- set hadoop_workers_max_free_memory_mb = groups.hadoop_worker|map('extract', hostvars, ['ansible_memory_mb', 'nocache', 'free'])|list|max -%}
+
+# this is local to the master node, so use its memory and vcpu values for computing
+spark.driver.memory              {{ (ansible_memory_mb.nocache.free / ansible_processor_vcpus)|int }}m
+
+# This value depends more on the intended usage of the cluster than on its
+features; still, ElastiCluster has to provide a default. Ideally one woulda use
+# the *minimum* RAM-per-core ratio (as that would give the largest compatibility)
+# but Ansible and Jinja currently lack filters to allow us to compute the RAM/core
+# quotient across all nodes. So use the (max memory) / (average nr. of cores) as a
+# "reasonable" approximation...
+spark.executor.memory            {{ (2 * hadoop_workers_max_free_memory_mb / (hadoop_workers_max_vcpus + hadoop_workers_min_vcpus))|int }}m
 
 # Limit of total size of serialized results of all partitions for each Spark action (e.g. collect)
 spark.driver.maxResultSize       {{(ansible_memory_mb.nocache.free * 0.8)|int}}m
