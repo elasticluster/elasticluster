@@ -12,6 +12,8 @@
 - name: HTCondor master Playbook
   hosts: condor_master
   roles:
+    - role: 'nis'
+      NIS_MASTER: '{{groups.condor_master[0]}}'
     - role: nfs-server
       NFS_EXPORTS:
         path: '/home'
@@ -25,6 +27,8 @@
 - name: HTCondor worker nodes Playbook
   hosts: condor_workers
   roles:
+    - role: 'nis'
+      NIS_MASTER: '{{groups.condor_master[0]}}'
     - role: nfs-client
       NFS_MOUNTS:
         fs: '{{groups.condor_master[0]}}:/home'

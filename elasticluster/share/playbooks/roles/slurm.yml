@@ -3,6 +3,8 @@
 - name: Slurm master Playbook
   hosts: slurm_master
   roles:
+    - role: 'nis'
+      NIS_MASTER: "{{groups.slurm_master[0]}}"
     - role: 'nfs-server'
       NFS_EXPORTS:
         - path: '/home'
@@ -13,6 +15,8 @@
 - name: Slurm worker nodes Playbook
   hosts: slurm_worker
   roles:
+    - role: 'nis'
+      NIS_MASTER: "{{groups.slurm_master[0]}}"
     - role: 'nfs-client'
       NFS_MOUNTS:
         - fs: '{{groups.slurm_master[0]}}:/home'
@@ -23,6 +27,8 @@
 - name: Slurm submit nodes Playbook
   hosts: slurm_submit:slurm_client
   roles:
+    - role: 'nis'
+      NIS_MASTER: "{{groups.slurm_master[0]}}"
     - role: 'nfs-client'
       NFS_MOUNTS:
         - fs: '{{groups.slurm_master[0]}}:/home'

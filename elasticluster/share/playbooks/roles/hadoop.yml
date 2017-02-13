@@ -6,6 +6,8 @@
     - hadoop
     - master
   roles:
+    - role: 'nis'
+      NIS_MASTER: '{{groups.hadoop_master[0]}}'
     - hdfs-namenode
     - role: hive-server
       HIVE_METASTORE_HOST: '{{groups.hadoop_master[0]}}'
@@ -20,6 +22,8 @@
     - hadoop
     - worker
   roles:
+    - role: 'nis'
+      NIS_MASTER: '{{groups.hadoop_master[0]}}'
     - hdfs-datanode
     - role: hive
       HIVE_METASTORE_HOST: '{{groups.hadoop_master[0]}}'
