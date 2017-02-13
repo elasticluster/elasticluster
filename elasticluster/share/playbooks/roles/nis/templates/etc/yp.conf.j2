@@ -1,0 +1,24 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+#
+# yp.conf	Configuration file for the ypbind process. You can define
+#		NIS servers manually here if they can't be found by
+#		broadcasting on the local net (which is the default).
+#
+#		See the manual page of ypbind for the syntax of this file.
+#
+# IMPORTANT:	For the "ypserver", use IP addresses, or make sure that
+#		the host is in /etc/hosts. This file is only interpreted
+#		once, and if DNS isn't reachable yet the ypserver cannot
+#		be resolved and ypbind won't ever bind to the server.
+
+# NIS/YP master server
+domain {{NIS_DOMAIN}} server {{NIS_MASTER}}
+
+# NIS/YP slave servers (if any)
+{% for server in groups.nis_slave|default([]) %}
+domain {{NIS_DOMAIN}} server {{server}}
+{% endfor %}

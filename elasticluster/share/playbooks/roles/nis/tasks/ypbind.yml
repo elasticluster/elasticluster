@@ -1,0 +1,46 @@
+---
+
+- name: Deploy `ypbind` configuration files
+  template:
+    dest: '/etc/yp.conf'
+    src: 'etc/yp.conf.j2'
+    mode: 0400
+  notify:
+    - restart ypbind
+
+
+- name: Ensure NIS/YP is used as a name service
+  lineinfile:
+    dest: '/etc/nsswitch.conf'
+    regexp: '(?x) ^{{item}}: \s* (?P<pre>(\w+\s+)*) files (?!\s+ nis) (?P<post>.*)$'
+    line: '{{item}}: \g<pre>files nis\g<post>'
+    state: present
+    backrefs: yes
+    create: no
+  with_items:
+    - passwd
+    - group
+    - shadow
+
+
+- name: Replace `compat` in `/etc/nsswitch.conf` with `files nis`
+  replace:
+    dest: '/etc/nsswitch.conf'
+    regexp: '(?x) ^{{item}}: \s* (?P<pre>(\w+\s+)*) compat (?P<post>.*)$'
+    replace: '{{item}}: \g<pre>files nis\g<post>'
+  with_items:
+    - passwd
+    - group
+    - shadow
+
+
+- name: Ensure `ypbind` starts at boot
+  service:
+    name: '{{item}}'
+    state: started
+    enabled: yes
+  with_items: '{{nis_client_services}}'
+
+
+- name: Ensure `ypbind` is restarted if config files changed
+  meta: flush_handlers

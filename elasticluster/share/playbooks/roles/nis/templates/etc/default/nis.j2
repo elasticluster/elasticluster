@@ -1,0 +1,43 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+
+#
+# /etc/defaults/nis	Configuration settings for the NIS daemons.
+#
+
+# Are we a NIS server and if so what kind (values: false, slave, master)?
+NISSERVER={% if is_nis_master_server %}master{% elif is_nis_slave_server %}slave{% else %}false{% endif %}
+
+
+# Are we a NIS client?
+NISCLIENT={% if is_nis_client %}true{% else %}false{% endif %}
+
+
+# Location of the master NIS password file (for yppasswdd).
+# If you change this make sure it matches with /var/yp/Makefile.
+YPPWDDIR=/etc
+
+# Do we allow the user to use ypchsh and/or ypchfn ? The YPCHANGEOK
+# fields are passed with -e to yppasswdd, see it's manpage.
+# Possible values: "chsh", "chfn", "chsh,chfn"
+YPCHANGEOK=chsh
+
+# NIS master server.  If this is configured on a slave server then ypinit
+# will be run each time NIS is started.
+NISMASTER='{% if is_nis_slave_server %}{{NIS_MASTER}}{% endif %}'
+
+# Additional options to be given to ypbind when it is started.
+YPBINDARGS='-p 833 -no-dbus'
+
+# Additional options to be given to ypserv when it is started.
+YPSERVARGS='-p 834'
+
+# Additional options to be given to yppasswdd when it is started.  Note
+# that if -p is set then the YPPWDDIR above should be empty.
+YPPASSWDDARGS='-p 835'
+
+# Additional options to be given to ypxfrd when it is started.
+YPXFRDARGS='-p 836'

@@ -1,0 +1,9 @@
+---
+
+NIS_DOMAIN: elasticluster
+
+NIS_MASTER: "{{(groups.nis_master|default(['ypserv']))[0]}}"
+
+NIS_SLAVES: "{{groups.nis_slaves|default([])}}"
+
+NIS_CLIENTS: "{{groups.nis_clients|default(groups.all)}}"

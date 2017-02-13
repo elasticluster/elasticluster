@@ -1,0 +1,31 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+#
+# securenets	This file defines the access rights to your NIS server
+#		for NIS clients (and slave servers - ypxfrd uses this
+#		file too). This file contains netmask/network pairs.
+#		A clients IP address needs to match with at least one
+#		of those.
+#
+#		One can use the word "host" instead of a netmask of
+#		255.255.255.255. Only IP addresses are allowed in this
+#		file, not hostnames.
+#
+
+# Always allow access for localhost
+255.0.0.0	127.0.0.0
+
+# every host in the cluster is a NIS client
+{% for host in NIS_CLIENTS %}
+host        {{hostvars[host].ansible_default_ipv4.address}}
+{% endfor %}
+
+{% if NIS_SLAVES %}
+# NIS slave servers (if any) need access too
+{% for host in NIS_SLAVES %}
+host        {{hostvars[host].ansible_default_ipv4.address}}
+{% endfor %}
+{% endif %}
