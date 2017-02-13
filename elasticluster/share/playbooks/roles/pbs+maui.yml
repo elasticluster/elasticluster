@@ -1,8 +1,4 @@
 ---
-- name: Common configuration
-  hosts: pbs_master:pbs_clients:maui_master
-  roles:
-    - { role: iptables, default_input_policy: 'ACCEPT' }
 
 - name: PBS masternode Playbook
   hosts: pbs_master

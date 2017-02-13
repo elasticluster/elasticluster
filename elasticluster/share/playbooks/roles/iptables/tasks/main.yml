@@ -35,50 +35,35 @@
   with_items: '{{ packages }}'
 
 
-# We cannot use `with_items:` here as that would require that the Jinja template
-# in `dest=...` be expanded twice (recursively) and I cannot find any way of
-# triggering this in Ansible.  So here, we go, copy+paste+edit ...
-- block:
-  - name: Deploy IPv4 netfilter rules
-    template:
-      dest="{{configfile['etc/iptables/rules.v4']}}"
-      src="etc/iptables/rules.v4.j2"
-      owner=root
-      group=root
-      mode=0444
-    notify: '{{reload}}'
-  - name: Deploy IPv6 netfilter rules
-    template:
-      dest="{{configfile['etc/iptables/rules.v6']}}"
-      src="etc/iptables/rules.v6.j2"
-      owner=root
-      group=root
-      mode=0444
-    notify: '{{reload}}'
+- name: Deploy netfilter rules
   tags:
     - iptables
+  template:
+    dest: "{{configfile[item]}}"
+    src: "{{item}}.j2"
+    owner: root
+    group: root
+    mode: 0444
+  become: yes
+  become_user: root
+  notify: '{{reload}}'
+  with_items:
+    - 'etc/iptables/rules.v4'
+    - 'etc/iptables/rules.v6'
 
 
-# See the above comment as to why these two blocks cannot be shortened into one
-# `with_items:` loop
-- block:
-  - name: Ensure IPv4 netfilter rules are loaded at boot
-    tags: iptables
-    service:
-      name='{{service['iptables']}}'
-      enabled=yes
-      state=started
-    become: yes
-    become_user: root
-  - name: Ensure IPv6 netfilter rules are loaded at boot
-    service:
-      name='{{service['ip6tables']}}'
-      enabled=yes
-      state=started
-    become: yes
-    become_user: root
+- name: Ensure netfilter rules are loaded at boot
   tags:
     - iptables
+  service:
+    name: '{{service[item]}}'
+    enabled: yes
+    state: started
+  become: yes
+  become_user: root
+  with_items:
+    - 'iptables'
+    - 'ip6tables'
 
 
 - name: Possibly reload iptables
@@ -90,6 +75,7 @@
   selinux:
     policy=targeted
     state=enforcing
+
 
 - name: Restore SELinux labels on `/` (RHEL-family)
   command: |
