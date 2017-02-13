@@ -30,3 +30,34 @@
     '{{python_exe}} -m ipykernel install'
   become: yes
   when: python_exe_path.stat.exists
+
+
+- name: Load additional package names
+  set_fact:
+    jupyter_additional_os_packages:
+      Debian:
+        # PostGreSQL
+        - libpq-dev
+        # MySQL compatible
+        - libmysqlclient-dev
+      RedHat:
+        - postgresql-devel
+    jupyter_additional_python_packages:
+      - ipython-sql
+      - psycopg2
+      - mysqlclient
+
+
+- name: Install additional %-magic modules and plugins (OS dependencies)
+  package:
+    name: '{{item}}'
+    state: present
+  with_items: '{{jupyter_additional_os_packages[ansible_os_family]}}'
+
+
+- name: Install additional %-magic modules and plugins (Python package)
+  pip:
+    name: '{{item}}'
+    state: present
+    executable: '{{python_exe|dirname}}/pip'
+  with_items: '{{jupyter_additional_python_packages}}'
