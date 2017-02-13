@@ -1,0 +1,14 @@
+---
+
+- name: restart NIS master services
+  service:
+    name: '{{item}}'
+    state: restarted
+  with_items: '{{nis_master_services}}'
+
+
+- name: restart ypbind
+  service:
+    name: '{{item}}'
+    state: restarted
+  with_items: '{{nis_client_services}}'

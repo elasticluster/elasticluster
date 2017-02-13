@@ -1,0 +1,44 @@
+---
+
+- name: Deploy `ypserv` configuration files
+  template:
+    dest: '{{nis_securenets_path}}'
+    src: 'etc/ypserv.securenets.j2'
+    mode: 0400
+  notify:
+    - restart NIS master services
+
+
+- name: Deploy `yppasswdd` configuration file (CentOS/RHEL)
+  copy:
+    dest: '/etc/sysconfig/yppasswdd'
+    src: 'etc/sysconfig/yppasswdd'
+    mode: 0444
+  when: 'is_rhel_compatible'
+
+
+- name: Install NIS master server packages
+  package:
+    name: '{{item}}'
+    state: present
+  with_items: '{{nis_master_packages}}'
+
+
+- name: Ensure `ypserv` starts at boot
+  service:
+    name: '{{item}}'
+    state: started
+    enabled: yes
+  with_items: '{{nis_master_services}}'
+
+
+- name: Ensure `ypserv` is restarted if config files changed
+  meta: flush_handlers
+
+
+- name: Update NIS/YP databases (NIS master server)
+  command: |
+    make
+  args:
+    chdir: /var/yp
+  when: 'is_nis_master_server'

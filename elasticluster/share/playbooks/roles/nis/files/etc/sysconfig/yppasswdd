@@ -1,0 +1,23 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+
+# The passwd and shadow files are located under the specified
+# directory path. rpc.yppasswdd will use these files, not /etc/passwd
+# and /etc/shadow.
+#ETCDIR=/etc
+
+# This option tells rpc.yppasswdd to use a different source file
+# instead of /etc/passwd
+# You can't mix usage of this with ETCDIR
+#PASSWDFILE=/etc/passwd
+
+# This option tells rpc.yppasswdd to use a different source file
+# instead of /etc/passwd.
+# You can't mix usage of this with ETCDIR
+#SHADOWFILE=/etc/shadow
+
+# Additional arguments passed to yppasswd
+YPPASSWDD_ARGS="-p 835"

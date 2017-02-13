@@ -1,0 +1,32 @@
+---
+
+- name: Set NIS common playbook params (Debian)
+  set_fact:
+    nis_common_packages:
+      - nis
+    # no additional packages, all is provided by `nis`
+    nis_client_packages: []
+    nis_client_services:
+      - rpcbind
+      - nis
+    # no additional packages for `ypserv`, it's all included in `nis`
+    nis_master_packages: []
+    nis_master_services:
+      - rpcbind
+      - nis
+    nis_securenets_path: '/etc/ypserv.securenets'
+
+
+# Ubuntu 14.04 seems to use different service names for its "upstart" init
+# system; Ubuntu 16.04 seems back to use Debian's defaults...
+- name: Set NIS common playbook params (Ubuntu 14.04)
+  set_fact:
+    nis_client_services:
+      - rpcbind
+      - ypbind
+    nis_master_services:
+      - rpcbind
+      - ypserv
+      - yppasswdd
+      - ypxfrd
+  when: 'is_ubuntu_trusty'

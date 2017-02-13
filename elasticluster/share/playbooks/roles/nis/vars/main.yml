@@ -1,0 +1,9 @@
+---
+
+is_nis_master_server: '(ansible_hostname == NIS_MASTER)'
+
+is_nis_slave_server:  '(ansible_hostname in NIS_SLAVES)'
+
+is_nis_server: '(({{is_nis_master_server}}) or ({{is_nis_slave_server}}))'
+
+is_nis_client: '((ansible_hostname in (NIS_CLIENTS + NIS_SLAVES)) and not ({{is_nis_master_server}}))'
