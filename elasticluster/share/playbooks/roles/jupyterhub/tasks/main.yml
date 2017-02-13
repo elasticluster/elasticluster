@@ -93,3 +93,13 @@
 - name: Ensure JupyterHub has been started by supervisord
   command: |
     supervisorctl start jupyterhub
+
+- name: Allow inbound HTTPS connections
+  iptables:
+    action: insert
+    chain: INPUT
+    protocol: tcp
+    destination_port: 443
+    jump: ACCEPT
+    state: present
+  become: yes
