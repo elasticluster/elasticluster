@@ -9,5 +9,5 @@ dependencies:
   # ...but also install Anaconda Python2 because Py2 is still more widely used
   - role: anaconda
     anaconda_python_version: '2'
-    anaconda_in_path: true
+    anaconda_in_path: false
   - role: r
