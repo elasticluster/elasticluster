@@ -3,6 +3,8 @@
 - name: PBS masternode Playbook
   hosts: pbs_master
   roles:
+    - role: 'nis'
+      NIS_MASTER: '{{groups.pbs_master[0]}}'
     - role: nfs-server
       NFS_EXPORTS:
       - path: '/home'
@@ -25,6 +27,8 @@
 - name: PBS worker nodes Playbook
   hosts: pbs_clients
   roles:
+    - role: 'nis'
+      NIS_MASTER: '{{groups.pbs_master[0]}}'
     - role: nfs-client
       NFS_MOUNTS:
       - fs: '{{groups.pbs_master[0]}}:/home'
