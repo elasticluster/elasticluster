@@ -71,7 +71,7 @@
 # see: https://serialized.net/2013/04/simply-generating-self-signed-ssl-certs-with-ansible/
 - name: Create self-signed SSL cert
   command: |
-    openssl req -x509 -new -batch -days 3650 -subj "/O=ElastiCluster/OU=JupyterHub/CN=${ansible_fqdn}"  -newkey rsa:2048 -nodes -outform PEM -keyout /etc/jupyterhub/jupyterhub.key.pem -out /etc/jupyterhub/jupyterhub.crt.pem -extensions usr_cert
+    openssl req -x509 -new -batch -days 3650 -subj "/O=ElastiCluster/OU=JupyterHub/CN={{ansible_fqdn}}"  -newkey rsa:2048 -nodes -outform PEM -keyout /etc/jupyterhub/jupyterhub.key.pem -out /etc/jupyterhub/jupyterhub.crt.pem -extensions usr_cert
   args:
     creates: /etc/jupyterhub/jupyterhub.key.pem
 
