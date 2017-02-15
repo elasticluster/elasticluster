@@ -27,29 +27,40 @@
     - nfs
     - nfs-server
   nfsexport:
-    path='{{item.path}}'
-    clients='{{item.clients}}'
-    options='{{item.options|default("rw,no_root_squash,async,no_subtree_check,crossmnt")}}'
-    dest='/etc/exports'
-    state=exported
+    path: '{{item.path}}'
+    clients: '{{item.clients}}'
+    options: '{{item.options|default("rw,no_root_squash,async,no_subtree_check,crossmnt")}}'
+    dest: '/etc/exports'
+    state: exported
   with_items: '{{NFS_EXPORTS}}'
 
 
-# RHEL does not (auto)start needed services after installation
-- name: ensure NFS server is running
+- name: Ensure NFS server is running (Debian 8 "jessie")
+  tags:
+    - nfs
+    - nfs-server
+  command: |
+     env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin _SYSTEMCTL_SKIP_REDIRECT=true /etc/init.d/nfs-kernel-server start
+  args:
+    chdir: '/'
+  when: 'is_debian_8'
+
+
+- name: Ensure NFS server is running
   tags:
     - nfs
     - nfs-server
   service:
-    name={{item}}
-    enabled=yes
-    state='{{_nfs_server_started_state}}'
+    name: '{{item}}'
+    enabled: yes
+    state: '{{_nfs_server_started_state}}'
   with_items: '{{nfs_server_services}}'
+  when: 'not is_debian_8'
 
 
 - name: Reload NFS exports file
   tags:
     - nfs
     - nfs-server
-  shell:
+  command:
     exportfs -r
