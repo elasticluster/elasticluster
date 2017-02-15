@@ -5,18 +5,19 @@
     msg="PySpark/Hadoop installation only works on Debian/Ubuntu presently."
   when: not is_debian_or_ubuntu
 
-  
-- name: add signing key for Apache Bigtop repository
-  apt_key:
-    keyserver=keys.gnupg.net
-    id='{{item}}'
-  with_items: '{{bigtop_signing_key}}'
+- name: download signing key for Apache Bigtop repository
+  get_url:
+    url: https://cloud.s3it.uzh.ch:8080/v1/AUTH_6169dd64a7ed498581cee5abff0c6cd7/bigtop/debs/bigtop.asc
+    dest: /tmp/bigtop.asc
 
+  # Ansible apt module cannot work with local files, and uri doesn't support https
+- name: add signing key for Apache Bigtop repository
+  command: sudo apt-key add /tmp/bigtop.asc
   
 - name: add Apache Bigtop repository
   apt_repository:
     # download from: http://www.apache.org/dist/bigtop/bigtop-1.0.0/repos/trusty/bigtop.list
-    repo='deb http://bigtop-repos.s3.amazonaws.com/releases/{{bigtop_release}}/ubuntu/trusty/x86_64 bigtop contrib'
+    repo='deb https://cloud.s3it.uzh.ch:8080/v1/AUTH_6169dd64a7ed498581cee5abff0c6cd7/bigtop/debs/{{ansible_distribution_release}} ./'
     state=present
 
 

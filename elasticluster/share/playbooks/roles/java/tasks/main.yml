@@ -1,27 +1,97 @@
 ---
 
-- name: Install add-apt-repostory
-  become: yes
-  apt: name=software-properties-common state=latest
+- name: check for version
+  fail: msg="ERROR - 'java_version' is required."
+  when: java_version is not defined
 
-- name: Add Oracle Java Repository
-  become: yes
-  apt_repository: repo='ppa:webupd8team/java'
+- name: download Java
+  get_url:
+    url:     "{{ java_versions[java_version].java_download_url }}"
+    headers: 'Cookie:oraclelicense=accept-securebackup-cookie'
+    dest:    "{{ java_tar_file }}"
 
-- name: Accept Java {{oracle_java_version}} License
-  become: yes
-  debconf: name='oracle-java{{oracle_java_version}}-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+- name: ensure the install dir _is_
+  file:
+    path: "{{ java_install_dir }}"
+    mode: 0755
+    owner: root
+    group: root
+    state: directory
 
-- name: Install Oracle Java {{oracle_java_version}}
-  become: yes
-  apt: name={{item}} state=latest
+- name: check if the java_home exists
+  stat: path="{{ java_real_home }}"
+  register: java_real_home_check
+
+- name: unarchive the tarball
+  unarchive:
+    src: "{{ java_tar_file }}"
+    dest: "{{ java_install_dir }}"
+    owner: root
+    group: root
+    copy: no
+  when: java_real_home_check.stat.isdir is not defined or not java_real_home_check.stat.isdir
+
+- block:
+
+  - name: fix weird file not found error
+    file: path="/var/lib/alternatives/{{ item }}" state=absent
+    with_items:
+      - java
+      - keytool
+      - javac
+      - javadoc
+
+  - name: set alternatives
+    alternatives:
+      name="{{ item.exe }}"
+      link="/usr/bin/{{ item.exe }}"
+      path="{{ item.path }}/{{ item.exe }}"
+    with_items:
+      - { path: "{{ java_real_home }}/jre/bin", exe: 'java' }
+      - { path: "{{ java_real_home }}/jre/bin", exe: 'keytool' }
+      - { path: "{{ java_real_home }}/bin", exe: 'javac' }
+      - { path: "{{ java_real_home }}/bin", exe: 'javadoc' }
+
+  - name: ensure link is gone
+    file: path="/usr/java/default" state=absent
+
+  - name: set default
+    file:
+      path: "/usr/java/default"
+      src: "{{ java_real_home }}"
+      state: link
+
+  when: "{{ java_set_as_default }}"
+
+- block:
+  - name: ensure link is gone
+    file: path="/usr/java/latest" state=absent
+
+  - name: set latest
+    file:
+      path: "/usr/java/latest"
+      src: "{{ java_real_home }}"
+      state: link
+  when: "{{ java_set_as_latest }}"
+
+- name: configure Java to use /dev/urandom.
+  lineinfile:
+    dest="{{ java_real_home }}/jre/lib/security/java.security"
+    regexp="^securerandom.source="
+    line="securerandom.source=file:/dev/./urandom"
+  when: "{{ java_entropy_fix }}"
+
+- name: install crypto extensions
+  include: jce.yml
+  when: "{{ java_install_jce }}"
+
+- name: clean up
+  file:
+    path: "{{ java_download_path }}/{{ item }}"
+    state: absent
   with_items:
-    - oracle-java{{oracle_java_version}}-installer
-    - ca-certificates
+    - "jdk-{{ java_version }}-linux-x64.tar.gz"
+  when: "{{ java_remove_download }}"
 
-- name: Set Oracle Java {{oracle_java_version}} as default
-  become: yes
-  apt: name={{item}} state=latest
-  with_items:
-    - oracle-java8-set-default
-  when: oracle_java_set_as_default
+- include: certificates.yml jdk_cert_var="{{ item }}"
+  with_items: "{{ java_extra_certs }}"

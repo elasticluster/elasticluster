@@ -1,0 +1,12 @@
+---
+
+java_artifact_name: "jdk-{{ java_version }}-linux-x64.tar.gz"
+java_tar_file: "{{ java_download_path }}/{{ java_artifact_name }}"
+java_real_home: "{{ java_install_dir }}/jdk{{ java_versions[java_version].java_long_version }}"
+java_keystore: "{{ java_real_home }}/jre/lib/security/cacerts"
+
+jce_artifact_base: "{{ jce_versions[java_version[0:1]].jce_file_base }}"
+jce_artifact_name: "{{ jce_artifact_base }}.zip"
+jce_temp_dir: "/tmp/jce{{ java_version[0:1] }}"
+jce_download_file: "{{ java_download_path }}/{{ jce_artifact_name }}"
+jce_zip_file: "{{ jce_temp_dir }}/{{ jce_artifact_name }}"
