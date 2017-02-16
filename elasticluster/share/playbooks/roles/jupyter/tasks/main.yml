@@ -12,9 +12,6 @@
 # install BASH kernel
 - include: bash.yml
 
-# install MATLAB kernel
-- include: matlab.yml
-
 # install Python kernels (for Python version 2 and 3)
 - include: python.yml python_exe='{{PYTHON2_EXE}}'
 - include: python.yml python_exe='{{PYTHON3_EXE}}'
@@ -25,3 +22,13 @@
 
 # install R kernel
 - include: irkernel.yml
+
+
+# install MATLAB kernel (if MATLAB available)
+- name: Check that MATLAB_EXE can run MATLAB
+  command: |
+    {{MATLAB_EXE}} -n
+  ignore_errors: yes
+  register: matlab_run
+- include: matlab.yml
+  when: matlab_run|success
