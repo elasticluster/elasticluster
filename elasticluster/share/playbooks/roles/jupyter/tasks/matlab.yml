@@ -44,8 +44,8 @@
     state: present
     executable: '{{jupyter_python|dirname}}/pip'
   with_items:
-    - matlab_kernel
     - pymatbridge
+    - matlab_kernel
   when: matlab_run|success
 
 
