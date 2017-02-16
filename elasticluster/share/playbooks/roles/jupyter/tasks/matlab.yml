@@ -29,7 +29,7 @@
   command: |
     {{PYTHON2_EXE}} setup.py install
   args:
-    chdir: {{matlabroot.stdout}}/extern/engines/python/
+    chdir: '{{matlabroot.stdout}}/extern/engines/python/'
   when: matlab_for_python_available|failed
 
 
