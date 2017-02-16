@@ -2,7 +2,7 @@
 
 java_install_jce: false
 java_entropy_fix: false
-java_install_dir: /usr/java
+java_install_dir: /usr/lib/jvm
 java_remove_download: yes
 java_download_path: /usr/local/src
 java_version: 7u80

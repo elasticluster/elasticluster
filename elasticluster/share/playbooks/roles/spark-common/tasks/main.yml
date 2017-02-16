@@ -1,6 +1,12 @@
 # spark-common/tasks/main.yml
 ---
 
+
+- name: Mask the thriftserver service
+  command: systemctl mask spark-thriftserver
+  when: init_is_systemd
+
+
 - name: Install Spark packages (common)
   tags:
     - hadoop
@@ -84,3 +90,10 @@
     dest='/{{item}}'
   with_items:
     - etc/profile.d/pyspark.sh
+
+
+- name: Unmask the thriftserver service
+  command: systemctl unmask spark-thriftserver
+  when: init_is_systemd
+
+

@@ -4,7 +4,7 @@
   fail: msg="ERROR - 'java_version' is required."
   when: java_version is not defined
 
-- name: download Java
+- name: download Java {{java_version}}
   get_url:
     url:     "{{ java_versions[java_version].java_download_url }}"
     headers: 'Cookie:oraclelicense=accept-securebackup-cookie'
@@ -52,12 +52,21 @@
       - { path: "{{ java_real_home }}/bin", exe: 'javac' }
       - { path: "{{ java_real_home }}/bin", exe: 'javadoc' }
 
-  - name: ensure link is gone
-    file: path="/usr/java/default" state=absent
+  - name: ensure default link is gone
+    file: path="{{java_install_dir}}/default" state=absent
+
+  - name: ensure default-java link is gone
+    file: path="{{java_install_dir}}/default-java" state=absent
 
   - name: set default
     file:
-      path: "/usr/java/default"
+      path: "{{java_install_dir}}/default"
+      src: "{{ java_real_home }}"
+      state: link
+
+  - name: set default-java
+    file:
+      path: "{{java_install_dir}}/default-java"
       src: "{{ java_real_home }}"
       state: link
 
@@ -65,11 +74,11 @@
 
 - block:
   - name: ensure link is gone
-    file: path="/usr/java/latest" state=absent
+    file: path="{{java_install_dir}}/latest" state=absent
 
   - name: set latest
     file:
-      path: "/usr/java/latest"
+      path: "{{java_install_dir}}/latest"
       src: "{{ java_real_home }}"
       state: link
   when: "{{ java_set_as_latest }}"

@@ -1,12 +1,12 @@
 # hadoop-common/tasks/main.yml
 ---
 
-- name: Install Java JRE
-  tags:
-    - hadoop
-  package:
-    name=default-jre-headless
-    state=present
+#- name: Install Java JRE
+#  tags:
+#    - hadoop
+#  package:
+#    name=default-jre-headless
+#    state=present
 
     
 - name: Install Hadoop packages (common)
