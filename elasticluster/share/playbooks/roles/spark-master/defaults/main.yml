@@ -1,3 +1,0 @@
----
-
-spark_history_storage_uri: 'file:////var/log/spark/apps'

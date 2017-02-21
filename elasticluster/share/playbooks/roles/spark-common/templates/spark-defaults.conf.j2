@@ -60,4 +60,8 @@ spark.scheduler.minRegisteredResourcesRatio 0.5
 
 # Max out message size for those who do not care much about slowing
 # down computation due to too much communication
+{% if '{{ spark_major_version }}' == '{{ 1 }}' %}
 spark.akka.frameSize	2000
+{% else %}
+spark.rpc.message.maxSize  2000
+{% endif %}

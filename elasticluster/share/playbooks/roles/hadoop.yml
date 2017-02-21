@@ -5,11 +5,11 @@
   tags:
     - hadoop
     - master
-  vars:
-    # PySpark won't currently work with Python 3.6 (see:
-    # https://issues.apache.org/jira/browse/SPARK-19019) so force an older
-    # version of Anaconda Python to be installed: with Python 3.5 all looks OK
-    anaconda_version: '4.2.0'
+#  vars:
+#    # PySpark won't currently work with Python 3.6 (see:
+#    # https://issues.apache.org/jira/browse/SPARK-19019) so force an older
+#    # version of Anaconda Python to be installed: with Python 3.5 all looks OK
+#    anaconda_version: '4.2.0'
   roles:
     - role: 'nis'
       NIS_MASTER: '{{groups.hadoop_master[0]}}'
@@ -18,7 +18,8 @@
       HIVE_METASTORE_HOST: '{{groups.hadoop_master[0]}}'
       HIVE_CLIENTS: '{{groups.hadoop_master + groups.hadoop_worker}}'
     - yarn-master
-    - spark-master
+    - spark-common
+    - jupyterhub
 
 
 - name: Install Hadoop worker nodes
@@ -26,6 +27,9 @@
   tags:
     - hadoop
     - worker
+#  vars:
+#    # Python versions should never differ between master and workers, otherwise pyspark won't work
+#    anaconda_version: '4.2.0'
   roles:
     - role: 'nis'
       NIS_MASTER: '{{groups.hadoop_master[0]}}'
@@ -33,5 +37,5 @@
     - role: hive
       HIVE_METASTORE_HOST: '{{groups.hadoop_master[0]}}'
     - yarn-worker
-    - spark-worker
+    - spark-common
 

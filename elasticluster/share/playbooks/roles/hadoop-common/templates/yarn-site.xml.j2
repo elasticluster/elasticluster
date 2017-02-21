@@ -128,5 +128,15 @@
       this too small and you will spam the name node.
     </description>
   </property>
+{% if '{{ java_version }}' > '{{ 1.7 }}' %}
+  <property>
+    <name>yarn.nodemanager.pmem-check-enabled</name>
+    <value>false</value>
+  </property>
 
+  <property>
+    <name>yarn.nodemanager.vmem-check-enabled</name>
+    <value>false</value>
+  </property>
+{% endif %}
 </configuration>

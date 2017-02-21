@@ -1,12 +1,10 @@
 # hadoop-common/tasks/main.yml
 ---
 
-#- name: Install Java JRE
-#  tags:
-#    - hadoop
-#  package:
-#    name=default-jre-headless
-#    state=present
+
+- name: Fetch Java version
+  shell: java -version 2>&1 | grep version | awk '{print $3}' | sed 's/"//g'
+  register: java_version
 
     
 - name: Install Hadoop packages (common)

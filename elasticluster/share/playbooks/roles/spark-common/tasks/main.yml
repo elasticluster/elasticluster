@@ -2,7 +2,8 @@
 ---
 
 
-- name: Mask the thriftserver service
+# do not start spark-thriftserver until the spark config has been updated, driver refs in config (auto-starts after install)
+- name: Mask Spark thriftserver
   command: systemctl mask spark-thriftserver
   when: init_is_systemd
 
@@ -92,8 +93,27 @@
     - etc/profile.d/pyspark.sh
 
 
-- name: Unmask the thriftserver service
+- name: Install findspark pip package
+  command: '{{anaconda_home}}/bin/pip install findspark'
+
+
+- name: Unmask Spark thriftserver
   command: systemctl unmask spark-thriftserver
   when: init_is_systemd
 
+- name: Start Spark thriftserver
+  tags:
+    - hadoop
+    - spark
+  service:
+    name="{{item}}"
+    state=started
+    enabled=yes
+  with_items:
+    - spark-thriftserver
+
+
+- name: Fetch Spark major version
+  shell: spark-shell --version 2>&1 | grep version | grep -v Scala | awk '{print $5}' | head -c 1
+  register: spark_major_version
 

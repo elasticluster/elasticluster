@@ -1,5 +1,0 @@
-# spark-worker/meta/main.yml
----
-
-dependencies:
-  - { role: spark-common }
