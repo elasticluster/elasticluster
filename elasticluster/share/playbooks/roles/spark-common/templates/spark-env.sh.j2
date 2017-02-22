@@ -17,3 +17,6 @@ export SCALA_LIBRARY_PATH=${SCALA_LIBRARY_PATH:-${SPARK_HOME}/lib}
 export CLASSPATH="$CLASSPATH:$HADOOP_HOME/*:$HADOOP_HDFS_HOME/*:$HADOOP_YARN_HOME/*:$HADOOP_MAPRED_HOME/*"
 export SPARK_LIBRARY_PATH=$SPARK_LIBRARY_PATH:${HADOOP_HOME}/lib/native
 
+# configure history server (use default ports: 18088 for communication, 18080 for UI
+export SPARK_HISTORY_OPTS="$SPARK_HISTORY_OPTS -Dspark.history.fs.logDirectory=hdfs:///user/spark/applicationHistory"
+

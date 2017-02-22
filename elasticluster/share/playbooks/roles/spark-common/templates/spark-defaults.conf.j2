@@ -55,13 +55,16 @@ spark.scheduler.maxRegisteredResourcesWaitingTime 5s
 # time it will wait before scheduling begins is controlled by config
 # spark.scheduler.maxRegisteredResourcesWaitingTime. 
 #
-spark.scheduler.minRegisteredResourcesRatio 0.5 
+spark.scheduler.minRegisteredResourcesRatio 0.5
 
+spark.yarn.historyServer.address    ${hadoopconf-yarn.resourcemanager.hostname}:18080
+spark.eventLog.dir                  hdfs:///user/spark/applicationHistory
+spark.eventLog.enabled              true
 
 # Max out message size for those who do not care much about slowing
 # down computation due to too much communication
 {% if '{{ spark_major_version }}' == '{{ 1 }}' %}
-spark.akka.frameSize	2000
+spark.akka.frameSize	    2000
 {% else %}
-spark.rpc.message.maxSize  2000
+spark.rpc.message.maxSize   2000
 {% endif %}

@@ -1,0 +1,4 @@
+---
+
+history_dir: '/user/spark/applicationHistory'
+eventlog_dir: '/user/spark/eventLog'

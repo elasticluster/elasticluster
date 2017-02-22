@@ -128,8 +128,11 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         with OpenStackCloudProvider.__node_start_lock:
             self._check_keypair(key_name, public_key_path, private_key_path)
 
-        log.debug("Checking security group `%s` ...", security_group)
-        self._check_security_group(security_group)
+        security_groups = []
+        for g in security_group.split(','):
+            log.debug("Checking security group `%s` ...", g)
+            self._check_security_group(g)
+            security_groups.append(g)
 
         # Check if the image id is present.
         images = self._get_images()
@@ -155,7 +158,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         vm = self.client.servers.create(
             node_name, image_id, flavor, key_name=key_name,
-            security_groups=[security_group], userdata=image_userdata,
+            security_groups=security_groups, userdata=image_userdata,
             nics=nics)
 
         self._instances[vm.id] = vm

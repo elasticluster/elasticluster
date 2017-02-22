@@ -25,6 +25,13 @@
     - spark-yarn-shuffle # Spark YARN Shuffle Service
 
 
+- name: Copy Spark shuffle for YARN (dynamic resource allocation)
+  tags:
+    - hadoop
+    - spark
+  command: cp /usr/lib/spark/yarn/*.jar /usr/lib/hadoop-yarn/lib/
+
+
 - name: Check if Py4J version-independent `.zip` archive exist
   stat:
     path='/usr/lib/spark/python/lib/py4j-src.zip'
@@ -72,7 +79,7 @@
     dest='{{SPARK_CONF_DIR}}/{{item}}'
   with_items:
     - spark-defaults.conf
-    #- spark-env.sh
+    - spark-env.sh
 
 
 - name: Activate Spark/ElastiCluster configuration
