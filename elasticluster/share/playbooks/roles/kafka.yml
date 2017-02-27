@@ -1,0 +1,15 @@
+---
+
+- name: Install Streaming (Kafka) node(s)
+  hosts: stream_master
+  vars:
+    zk_key: "stream_master"
+  tags:
+    - zookeeper
+    - kafka
+    - streaming
+    - master
+  roles:
+    - bigtop
+    - zookeeper
+    - kafka

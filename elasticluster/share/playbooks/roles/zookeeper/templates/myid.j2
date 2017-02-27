@@ -1,11 +1,5 @@
-{% for server in zookeeper_hosts %}
-{% if server.host is defined %}
-{% if server.host == inventory_hostname %}
-{{ server.id }}
-{% endif %}
-{% else %}
+{% for server in groups[zk_key] %}
 {% if server == inventory_hostname %}
 {{ loop.index }}
-{% endif %}
 {% endif %}
 {% endfor %}

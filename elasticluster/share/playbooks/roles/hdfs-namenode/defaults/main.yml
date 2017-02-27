@@ -1,0 +1,3 @@
+---
+
+YARN_NM_LOG_DIR: "groups['hadoop-common']['YARN_NM_LOG_DIR']"

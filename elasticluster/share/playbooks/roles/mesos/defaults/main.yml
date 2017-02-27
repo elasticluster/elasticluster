@@ -14,9 +14,6 @@ mesos_work_dir: "/var/mesos"
 quorum_size: "{{groups['mesos_master']|length}}"
 mesos_quorum: "{% if quorum_size == '1' %}{{quorum_size}}{% else %}{{((quorum_size|int/3)*2)|round|int}}{% endif %}"
 
-# Assuming all Mesos masters will be Zookeepers as well
-mesos_zookeeper_masters: "zk://{{(groups['mesos_master']+[','])|join(':2181/mesos')}}"
-
 mesos_owner: root
 mesos_group: root
 

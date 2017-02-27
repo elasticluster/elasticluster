@@ -24,6 +24,7 @@
 - include: roles/gridengine.yml
 - include: roles/hadoop.yml
 - include: roles/mesos.yml
+- include: roles/kafka.yml
 - include: roles/pvfs2.yml
 - include: roles/ceph.yml
 - include: roles/glusterfs.yml

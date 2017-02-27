@@ -12,17 +12,11 @@ zookeeper_autopurge_snapRetainCount: 10
 
 data_dir: /var/lib/zookeeper
 log_dir: /var/log/zookeeper
-zookeeper_dir: /usr/share/zookeeper
 zookeeper_conf_dir: /etc/zookeeper
 
 # Rolling file appender setttings
 zookeeper_rolling_log_file_max_size: 10MB
 zookeeper_max_rolling_log_file_count: 10
-
-# List of dict (i.e. {zookeeper_hosts:[{host:,id:},{host:,id:},...]})
-zookeeper_hosts:
-  - host: "{{inventory_hostname}}" # the machine running
-    id: "{{ inventory_hostname[-3:] | int }}"
 
 # Dict of ENV settings to be written into the (optional) conf/zookeeper-env.sh
 zookeeper_env: {}

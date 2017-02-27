@@ -1,37 +1,35 @@
 ---
 
-- name: Apt install required system packages.
-  apt: pkg={{item}} state=installed
-  tags: bootstrap
+
+- name: Install Zookeeper packages
+  tags:
+    - zookeeper
+  package:
+    name='{{item}}'
+    state=present
   with_items:
     - zookeeper
     - zookeeperd
 
-- name: Overwrite myid file.
-  template: src=myid.j2 dest={{zookeeper_conf_dir}}/conf/myid force="{{ zookeeper_force_myid }}"
-  tags: deploy
-  notify:
-    - Restart zookeeper
 
-- name: Overwrite default config file
-  template: src=zoo.cfg.j2 dest={{zookeeper_conf_dir}}/conf/zoo.cfg
-  tags: deploy
-  notify:
-    - Restart zookeeper
+- name: Deploy Zookeeper/ElastiCluster configuration files
+  tags:
+    - zookeeper
+  template:
+    src='{{item}}.j2'
+    dest='{{zookeeper_conf_dir}}/{{item}}'
+  with_items:
+    - log4j.properties
+    - zoo.cfg
+    - myid
 
-- name: Configure zookeeper-env.sh
-  template: src=zookeeper-env.sh.j2 dest={{ zookeeper_conf_dir }}/conf/zookeeper-env.sh owner=zookeeper group=zookeeper
-  tags: deploy
-  notify:
-    - Restart zookeeper
-  when: zookeeper_env is defined and zookeeper_env|length > 0
 
-- name: Update the log4j config with saner production values
-  template: src=log4j.properties.j2 dest={{ zookeeper_conf_dir }}/conf/log4j.properties
-  tags: deploy
-  notify:
-    - Restart zookeeper
-
-- name: Enable zookeeper service
-  service: name=zookeeper enabled=yes
-  tags: deploy
+- name: Start Zookeeper services
+  tags:
+    - zookeeper
+  service:
+    name="{{item}}"
+    state=started
+    enabled=yes
+  with_items:
+    - zookeeper

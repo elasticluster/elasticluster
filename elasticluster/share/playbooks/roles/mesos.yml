@@ -2,6 +2,8 @@
 
 - name: Install Mesos master node
   hosts: mesos_master
+  vars:
+    zk_key: "mesos_master"
   tags:
     - zookeeper
     - mesos

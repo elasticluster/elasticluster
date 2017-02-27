@@ -1,0 +1,43 @@
+---
+
+- name: Install Kafka packages
+  tags:
+    - kafka
+    - streaming
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - kafka-server
+
+
+- name: Deploy Kafka/ElastiCluster configuration files
+  tags:
+    - kafka
+    - streaming
+  template:
+    src='{{item}}.j2'
+    dest='{{kafka_conf_dir}}/{{item}}'
+  with_items:
+    - log4j.properties
+    - server.properties
+
+
+- name: Remove faulty zookeeper.jar symlink
+  file: path="/usr/lib/kafka/libs/zookeeper.jar" state=absent
+
+
+- name: Recreate zookeeper.jar symlink
+  file: src="/usr/share/java/zookeeper.jar" dest="/usr/lib/kafka/libs/zookeeper.jar" state=link
+
+
+- name: Start Kafka services
+  tags:
+    - kafka
+    - streaming
+  service:
+    name="{{item}}"
+    state=started
+    enabled=yes
+  with_items:
+    - kafka-server

@@ -118,6 +118,11 @@
     <value>{{ ansible_memory_mb.nocache.free - 500 }}</value>
   </property>
 
+  <property>
+    <name>yarn.nodemanager.log-dirs</name>
+   <value>{{ YARN_NM_LOG_DIR }}</value>
+  </property>
+
   <!-- log aggregation is necessary for correct Spark/YARN integration -->
   <property>
     <name>yarn.log-aggregation-enable</name>

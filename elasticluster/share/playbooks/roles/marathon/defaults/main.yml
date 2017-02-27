@@ -6,10 +6,6 @@ marathon_env_java_opts: '-Xmx512m'
 marathon_env_vars:
   - "JAVA_OPTS={{ marathon_env_java_opts }}"
 
-# Assuming all Mesos masters will be Zookeepers as well
-mesos_zookeeper_masters: "zk://{{(groups['mesos_master']+[','])|join(':2181/mesos')}}"
-marathon_zookeeper_state: "zk://{{(groups['mesos_master']+[','])|join(':2181/marathon')}}"
-
 # The path to install the haproxy configuration script. If this is an empty string ```""``` haproxy configuration will be disabled.
 haproxy_script_location: "/usr/local/bin"
 
