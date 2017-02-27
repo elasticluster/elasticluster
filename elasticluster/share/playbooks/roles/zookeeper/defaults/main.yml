@@ -1,5 +1,7 @@
 ---
 
+zookeeper_hosts: "zookeeper"
+
 apt_cache_timeout: 3600
 zookeeper_register_path_env: false
 

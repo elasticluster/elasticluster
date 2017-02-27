@@ -1,5 +1,12 @@
 # bigtop/tasks/main.yml
 ---
+
+
+- name: Set JAVA8 on experimental
+  set_fact: java_version=8
+  when: experimental
+
+
 - name: Check playbook compatibility with host platform
   fail:
     msg="PySpark/Hadoop installation only works on Debian/Ubuntu presently."

@@ -1,4 +1,4 @@
-{% for server in groups[zk_key] %}
+{% for server in groups[zookeeper_hosts] %}
 {% if server == inventory_hostname %}
 {{ loop.index }}
 {% endif %}
