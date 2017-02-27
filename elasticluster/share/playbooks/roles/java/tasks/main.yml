@@ -30,21 +30,21 @@
 - name: Select java version
   alternatives:
     name: java
-    path: /usr/lib/jvm/latest/bin/java
+    path: /usr/lib/jvm/java-{{ java_version }}-openjdk-amd64/bin/java
 
 
 - name: Select javac version
   alternatives:
     name: javac
-    path: /usr/lib/jvm/latest/bin/javac
+    path: /usr/lib/jvm/java-{{ java_version }}-openjdk-amd64/bin/javac
 
 
 - name: Select jar version
   alternatives:
     name: jar
-    path: /usr/lib/jvm/latest/bin/jar
+    path: /usr/lib/jvm/java-{{ java_version }}-openjdk-amd64/bin/jar
 
 - name: Select jps version
   alternatives:
     name: jps
-    path: /usr/lib/jvm/latest/bin/jps
+    path: /usr/lib/jvm/java-{{ java_version }}-openjdk-amd64/bin/jps

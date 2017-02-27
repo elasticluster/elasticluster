@@ -1,5 +1,12 @@
 ---
 
+
+- name: Restart Zookeeper services
+  service:
+    name: zookeeper
+    state: restarted
+
+
 - name: Install Kafka packages
   tags:
     - kafka

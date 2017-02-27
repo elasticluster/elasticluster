@@ -2,6 +2,12 @@
 
 - debug: msg="Install Mode is {{mesos_install_mode}}"
 
+- name: Restart Zookeeper services
+  service:
+    name: zookeeper
+    state: restarted
+  when: mesos_install_mode == 'master'
+
 - name: Add apt-key
   apt_key: id=E56151BF keyserver=keyserver.ubuntu.com state=present
 

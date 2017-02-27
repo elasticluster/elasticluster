@@ -10,6 +10,7 @@ marathon_env_vars:
 haproxy_script_location: "/usr/local/bin"
 
 # optional
+marathon_zookeeper_state: "true"
 artifact_store: ""
 checkpoint: "true"
 marathon_mesos_role: ""

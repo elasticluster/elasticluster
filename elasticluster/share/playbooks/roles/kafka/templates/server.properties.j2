@@ -93,7 +93,7 @@ log.cleaner.enable=false
 
 ############################# Zookeeper #############################
 
-zookeeper.connect={% for server in groups['stream_master'] -%}{{ server }}:2181/kafka{%- if not loop.last %},{% endif -%}{%- endfor %}
+zookeeper.connect={% for server in groups['stream_master'] -%}{{ server }}:2181{%- if not loop.last %},{% endif -%}{%- endfor %}
 
 # Timeout in ms for connecting to zookeeper
 zookeeper.connection.timeout.ms={{zookeeper_connection_timeout_ms}}

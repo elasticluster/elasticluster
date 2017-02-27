@@ -1,42 +1,31 @@
 ---
 
-- name: Ensure that APT works with the https method
+- name: Ensure that APT works with the https method (Debian/Ubuntu)
   apt: name={{ item }} state=present
   with_items:
     - apt-transport-https
     - ca-certificates
+  when: is_debian_or_ubuntu
 
-- name: Install docker GPG key
+- name: Install docker GPG key (Debian/Ubuntu)
   apt_key: keyserver=hkp://p80.pool.sks-keyservers.net:80 id=58118E89F3A912897C070ADBF76221572C52609D state=present
-  tags:
-    - docker
-    - gpg_key
+  when: is_debian_or_ubuntu
 
-- name: Add docker apt repository
+- name: Add docker apt repository (Debian/Ubuntu)
   apt_repository: repo="deb https://apt.dockerproject.org/repo {{ ansible_distribution|lower }}-{{ ansible_distribution_release }} main" state=present
-  tags:
-    - docker
-    - apt_repository
+  when: is_debian_or_ubuntu
 
-- name: Update apt-cache
-  apt: update_cache=yes
-  tags:
-    - docker
-    - apt_cache
+- name: Add docker repository (Redhat/Centos)
+  yum_repository:
+    name: docker
+    description: Docker YUM repo
+    baseurl: ttps://docs.docker.com/engine/installation/linux/repo_files/centos/docker.repo
+  when: not is_debian_or_ubuntu
 
-- name: Purge the old repo if it exists
-  apt: name={{ item }} purge=yes
-  with_items:
-    - "lxc-docker*"
-    - "docker.io*"
-  ignore_errors: yes
-  tags:
-    - docker
-    - apt_purge
-
-- name: Install docker package
+- name: Install docker package (Debian/Ubuntu)
   apt: name=docker-engine state=present
-  notify: Start Docker
-  tags:
-    - docker
-    - install
+  when: is_debian_or_ubuntu
+
+- name: Install docker package (Redhat/Centos)
+  yum: name=docker-engine state=present
+  when: not is_debian_or_ubuntu
