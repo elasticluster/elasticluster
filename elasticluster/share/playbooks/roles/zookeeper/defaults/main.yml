@@ -23,4 +23,3 @@ zookeeper_env: {}
 
 # Controls Zookeeper myid generation
 zookeeper_force_myid: yes
-e
