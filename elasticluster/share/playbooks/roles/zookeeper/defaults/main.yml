@@ -12,7 +12,7 @@ zookeeper_autopurge_snapRetainCount: 10
 
 data_dir: /var/lib/zookeeper
 log_dir: /var/log/zookeeper
-zookeeper_conf_dir: /etc/zookeeper
+zookeeper_conf_dir: /etc/zookeeper/conf
 
 # Rolling file appender setttings
 zookeeper_rolling_log_file_max_size: 10MB
@@ -23,3 +23,4 @@ zookeeper_env: {}
 
 # Controls Zookeeper myid generation
 zookeeper_force_myid: yes
+e

@@ -4,12 +4,10 @@ dataLogDir={{ log_dir }}
 clientPort={{ client_port }}
 initLimit={{ init_limit }}
 syncLimit={{ sync_limit }}
-
 {% if zookeeper_autopurge_purgeInterval > 0 %}
 autopurge.purgeInterval={{ zookeeper_autopurge_purgeInterval }}
 autopurge.snapRetainCount={{ zookeeper_autopurge_snapRetainCount }}
 {% endif %}
-
 {% for server in groups[zk_key] %}
 server.{{server[-3:] | int}}={{server}}:2888:3888
 {% endfor %}
