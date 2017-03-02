@@ -145,6 +145,8 @@ available:
 * `slurm-master <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-master>`_
 * `slurm-worker <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-worker>`_
 
+In order for the NFS exported home directory to be mountable from the cluster's compute nodes,
+security groups on OpenStack need to permit all UDP traffic between all cluster nodes.
 
 GridEngine
 ==========
