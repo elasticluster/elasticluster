@@ -55,7 +55,7 @@
     enabled: yes
     state: '{{_nfs_server_started_state}}'
   with_items: '{{nfs_server_services}}'
-  when: 'not is_debian_8'
+  when: 'not {{is_debian_8}}'
 
 
 - name: Reload NFS exports file
