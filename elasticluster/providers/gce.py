@@ -34,6 +34,7 @@ import threading
 import time
 import types
 import uuid
+import sys 
 
 # External modules
 from apiclient.discovery import build
@@ -54,7 +55,7 @@ from elasticluster.exceptions import ImageError, InstanceError, InstanceNotFound
 #: the OAuth scope for the GCE web API
 GCE_SCOPE = 'https://www.googleapis.com/auth/compute'
 GCE_API_NAME = 'compute'
-GCE_API_VERSION = 'v1'
+GCE_API_VERSION = 'beta'
 GCE_URL = 'https://www.googleapis.com/compute/%s/projects/' % GCE_API_VERSION
 GCE_DEFAULT_ZONE = 'us-central1-a'
 GCE_DEFAULT_SERVICE_EMAIL = 'default'
@@ -94,13 +95,17 @@ class GoogleCloudProvider(AbstractCloudProvider):
                  noauth_local_webserver=False,
                  zone=GCE_DEFAULT_ZONE,
                  network='default',
+                 subnetwork=None,
+                 region=None,
                  email=GCE_DEFAULT_SERVICE_EMAIL,
                  storage_path=None):
         self._client_id = gce_client_id
         self._client_secret = gce_client_secret
         self._project_id = gce_project_id
         self._zone = zone
+        self._region = region 
         self._network = network
+        self._subnetwork = subnetwork 
         self._email = email
         self._storage_path = storage_path
         self._noauth_local_webserver = noauth_local_webserver
@@ -242,15 +247,43 @@ class GoogleCloudProvider(AbstractCloudProvider):
 
         :return: str - instance id of the started instance
         """
+
         # construct URLs
         project_url = '%s%s' % (GCE_URL, self._project_id)
         machine_type_url = '%s/zones/%s/machineTypes/%s' \
                            % (project_url, self._zone, flavor)
+        
         boot_disk_type_url = '%s/zones/%s/diskTypes/%s' \
                            % (project_url, self._zone, boot_disk_type)
+
+        for key in kwargs:
+            if key == 'accelerator':
+                accelerator=kwargs[key] 
+                accelerator_url = '%s/zones/%s/acceleratorTypes/%s'  % (project_url, self._zone, accelerator)
+                sys.stdout.write("DEBUG:  accelerator_url is %s\n"%(accelerator_url))
+            elif key == 'accelerator_count':
+                accelerator_count=kwargs[key] 
+                sys.stdout.write("DEBUG:  assigning %s value of %s\n"%(key, kwargs[key]))
+            elif key == 'accelerator_script':
+                if kwargs[key] == 'centos7-cuda8':
+		    accelerator_script = "#!/bin/bash\n"\
+                       "if ! rpm -q  cuda; then\n"\
+                       "  curl -O http://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-repo-rhel7-8.0.61-1.x86_64.rpm\n"\
+                       "  rpm -i --force ./cuda-repo-rhel7-8.0.61-1.x86_64.rpm\n"\
+                       "  yum clean all\n"\
+                       "  yum install epel-release -y\n"\
+                       "  yum update -y\n"\
+                       "  yum install cuda -y\n"\
+                       "fi\n"\
+                       "sleep 60\n"\
+                       "modprobe nvidia-uvm\n"
+                    sys.stdout.write("DEBUG:  assigning %s %s\n"%(key, accelerator_script))
+
+
         # FIXME: `conf.py` should ensure that `boot_disk_size` has the right
         # type, so there would be no need to convert here
         boot_disk_size_gb = int(boot_disk_size)
+        subnetwork_url = '%s/regions/%s/subnetworks/%s' % (project_url, self._region, self._subnetwork)
         network_url = '%s/global/networks/%s' % (project_url, self._network)
         if image_id.startswith('http://') or image_id.startswith('https://'):
             image_url = image_id
@@ -333,7 +366,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
                     {'type': 'ONE_TO_ONE_NAT',
                      'name': 'External NAT'
                     }],
-                 'network': network_url
+                 'network': network_url,
+                 'subnetwork': subnetwork_url
                 }],
             'serviceAccounts': [
                 {'email': self._email,
@@ -349,9 +383,26 @@ class GoogleCloudProvider(AbstractCloudProvider):
                 ]
             }
         }
+        if 'accelerator' in locals(): 
+            instance["guestAccelerators"] = [
+                { "acceleratorCount": accelerator_count,
+                  "acceleratorType": accelerator_url, 
+                }]
+            instance["scheduling"] = {
+                "onHostMaintenance": "terminate",
+                "automaticRestart": "true"
+                }
+
+        if 'accelerator_script' in locals(): 
+            instance["metadata"]["items"] += [{
+                        "key": "startup-script",
+                        "value": accelerator_script 
+                    }]
+            sys.stdout.write("DEBUG: Accelerator setup:\n%s\n"%str(accelerator_script)) 
 
         # create the instance
         gce = self._connect()
+        sys.stdout.write("DEBUG: %s\n\n"%str(instance)) 
         request = gce.instances().insert(
             project=self._project_id, body=instance, zone=self._zone)
         try:
@@ -448,9 +499,10 @@ class GoogleCloudProvider(AbstractCloudProvider):
                 if interfaces:
                     if "accessConfigs" in interfaces[0]:
                         ip_public = interfaces[0]['accessConfigs'][0]['natIP']
+                        ip_private = interfaces[0]['networkIP']
 
-            if ip_public:
-                return [ip_public]
+            if ip_public and ip_private:
+                return [ip_public, ip_private]
             else:
                 raise InstanceError("could not retrieve the ip address for "
                                     "node `%s`, please check the node "

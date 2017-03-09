@@ -159,12 +159,21 @@ CryptoType=crypto/munge
 
 DisableRootJobs=NO
 
+## Power options
+SuspendProgram=/etc/slurm/slurm.suspend.sh
+ResumeProgram=/etc/slurm/slurm.resume.sh
+SuspendTime=180
+SuspendRate=0
+SuspendTimeout=60
+ResumeRate=0
+ResumeTimeout=60
 
 ## Cluster nodes
 # 
 {% for host in groups.slurm_worker %}
 NodeName={{host}} RealMemory={{hostvars[host]['ansible_memtotal_mb']|int - 384}} CPUs={{hostvars[host]['ansible_processor_vcpus']}} Sockets={{hostvars[host]['ansible_processor_vcpus']}} CoresPerSocket=1 ThreadsPerCore=1
 {% endfor %}
+
 
 
 ## Cluster partitions

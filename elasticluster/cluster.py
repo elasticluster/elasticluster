@@ -1169,6 +1169,7 @@ class Node(Struct):
                 log.debug("IP %s does not seem to belong to %s anymore. Ignoring!", self.preferred_ip, self.name)
                 self.preferred_ip = ips[0]
 
+   
         for ip in itertools.chain([self.preferred_ip], ips):
             if not ip:
                 continue

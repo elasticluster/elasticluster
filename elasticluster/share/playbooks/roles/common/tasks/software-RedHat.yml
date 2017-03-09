@@ -43,6 +43,12 @@
     - screen
     - tmux
     - vim
+    # AD authentication related
+    - samba-winbind
+    - samba-winbind-clients 
+    - pam_krb5 
+    - samba
+    - krb5-workstation
 
 
 - name: Install commonly needed software (RHEL7-family)
