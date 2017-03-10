@@ -275,8 +275,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        "  yum update -y\n"\
                        "  yum install cuda -y\n"\
                        "fi\n"\
-                       "sleep 60\n"\
-                       "modprobe nvidia-uvm\n"
+                       "sleep 30\n"\
+                       "sudo modprobe nvidia-uvm\n"
                     sys.stdout.write("DEBUG:  assigning %s %s\n"%(key, accelerator_script))
 
 

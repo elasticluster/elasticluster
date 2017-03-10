@@ -9,13 +9,13 @@
       NFS_EXPORTS:
         - path: '/home'
           clients: "{{groups.slurm_worker + groups.slurm_submit|default([])}}"
-#      NFS_MOUNTS:
-#        - fs: 'zfs-east:/cluster_home'
-#          mountpoint: '/cluster_home'
-#          options: 'rw,defaults'
-#        - fs: 'zfs-east:/opt'
-#          mountpoint: '/opt'
-#          options: 'rw,defaults'
+      NFS_MOUNTS:
+        - fs: 'zfs-east:/cluster_home'
+          mountpoint: '/cluster_home'
+          options: 'rw,defaults'
+        - fs: 'zfs-east:/opt'
+          mountpoint: '/opt'
+          options: 'rw,defaults'
     - slurm-master
 
       
@@ -28,12 +28,12 @@
       NFS_MOUNTS:
         - fs: '{{groups.slurm_master[0]}}:/home'
           mountpoint: '/home'
-#        - fs: 'zfs-east:/cluster_home'
-#          mountpoint: '/cluster_home'
-#          options: 'rw,defaults'
-#        - fs: 'zfs-east:/opt'
-#          mountpoint: '/opt'
-#          options: 'rw,defaults'
+        - fs: 'zfs-east:/cluster_home'
+          mountpoint: '/cluster_home'
+          options: 'rw,defaults'
+        - fs: 'zfs-east:/opt'
+          mountpoint: '/opt'
+          options: 'rw,defaults'
     - slurm-worker
 
 

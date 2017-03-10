@@ -813,10 +813,12 @@ class Cluster(Struct):
                 if node.ips and \
                    not (node.preferred_ip and \
                         node.preferred_ip in node.ips):
+                  node.preferred_ip = node.ips
                   node.connect()
             except InstanceError as ex:
                 log.warning("Ignoring error updating information on node %s: %s",
                           node, str(ex))
+
         self.repository.save_or_update(self)
 
 
@@ -1229,8 +1231,7 @@ connection IP: %s
 IPs:    %s
 instance id:   %s
 instance flavor: %s""" % (self.name, self.preferred_ip, ips,
-                          self.instance_id, self.flavor)
-
+                self.instance_id, self.flavor)
 
     def keys(self):
         """Only expose some of the attributes when using as a dictionary"""
