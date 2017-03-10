@@ -1,0 +1,10 @@
+#!/bin/bash
+# Example ResumeProgram
+sudo sh -c 'echo "`date` Resume invoked $0 $*" >>/var/log/power_save.log'
+hosts=`scontrol show hostnames $1`
+for host in $hosts
+do
+   sudo scontrol update NodeName=$host state=resume
+   sudo gcloud compute instances start --zone=us-east1-d slurm-$host
+   sudo gcloud compute instances start --zone=us-west1-a slurm-$host
+done
