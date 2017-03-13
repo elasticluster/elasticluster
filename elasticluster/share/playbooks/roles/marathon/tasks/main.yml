@@ -1,112 +1,48 @@
 ---
 
-- name: Add apt-key
+- name: Add apt-key (Debain/Ubuntu)
   apt_key: id=E56151BF keyserver=keyserver.ubuntu.com state=present
+  when: is_debian_or_ubuntu
 
-- name: Add Mesosphere repo
+- name: Add Mesosphere repo (Debain/Ubuntu)
   apt_repository:
     repo='deb http://repos.mesosphere.com/{{ansible_distribution|lower}} {{ansible_distribution_release|lower}} main'
     state=present
     update_cache=yes
+  when: is_debian_or_ubuntu
 
-- name: Install Marathon package
-  apt: pkg=marathon state=present
-  notify: Restart marathon
+- name: Add mesosphere repository (Redhat/Centos)
+  yum_repository:
+    name: mesosphere
+    description: Mesospere YUM repo
+    baseurl: http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm
+  when: not is_debian_or_ubuntu
+
+- name: Install Marathon package (Debain/Ubuntu)
+  apt: name=marathon state=present
+  when: is_debian_or_ubuntu
+
+- name: Install Marathon package (Redhat/Centos)
+  yum: name={marathon state=present
+  when: not is_debian_or_ubuntu
 
 - name: Create Marathon conf directory
   file: path=/etc/marathon/conf state=directory
 
-- name: Set required --master option
+- name: Marathon Master file
   template: src=master.j2 dest=/etc/marathon/conf/master
-  notify: Restart marathon
 
-- name: Remove optional --artifact_store option
-  file: path=/etc/marathon/conf/artifact_store state=absent
-  when: artifact_store == ""
-  notify: Restart marathon
-
-- name: Set optional --artifact_store option
-  template: src=artifact_store.j2 dest=/etc/marathon/conf/artifact_store
-  when: artifact_store != ""
-  notify: Restart marathon
-
-- name: Remove optional --checkpoint option
-  file: path=/etc/marathon/conf/?checkpoint state=absent
-  when: checkpoint == ""
-  notify: Restart marathon
-
-- name: Set optional --checkpoint option
-  copy: content="" dest=/etc/marathon/conf/?checkpoint
-  when: checkpoint != ""
-  notify: Restart marathon
-
-- name: Remove optional --zk option
-  file: path=/etc/marathon/conf/zk state=absent
-  when: marathon_zookeeper_state == ""
-  notify: Restart marathon
-
-- name: Set optional --zk option
+- name: Marathon ZK file
   template: src=zk.j2 dest=/etc/marathon/conf/zk
-  when: marathon_zookeeper_state != ""
-  notify: Restart marathon
-
-- name: Remove optional --mesos_role option
-  file: path=/etc/marathon/conf/mesos_role state=absent
-  when: marathon_mesos_role == ""
-  notify: Restart marathon
-
-- name: Set optional --mesos_role option
-  template: src=mesos_role.j2 dest=/etc/marathon/conf/mesos_role
-  when: marathon_mesos_role != ""
-  notify: Restart marathon
-
-- name: Set --hostname option
-  template: src=hostname.j2 dest=/etc/marathon/conf/hostname
-  notify: Restart marathon
-
-- name: Set --http-port option
-  template: src=http_port.j2 dest=/etc/marathon/conf/http_port
-  notify: Restart marathon
-
-- name: Set additional options
-  copy:
-    content: "{{ item.value }}"
-    dest: "/etc/marathon/conf/{{ item.name }}"
-  with_items: "{{ marathon_additional_configs }}"
-  notify: Restart marathon
-  tags:
-    - config-additional
-
-- name: Upstart environment variables
-  lineinfile: dest=/etc/init/marathon.conf backup=yes state=present create=true insertbefore='exec.*' line="env {{ item }}"
-  with_items: "{{ marathon_env_vars }}"
-  when:
-    - ansible_service_mgr != 'systemd'
-  notify: Restart marathon
-
-- name: Create /usr/lib/systemd/system/marathon.service.d directory
-  file: path=/usr/lib/systemd/system/marathon.service.d state=directory owner=root group=root mode=0755
-
-- name: Systemd environment variables
-  template: src=marathon_environment.j2 dest=/usr/lib/systemd/system/marathon.service.d/marathon-environment.conf
-  when:
-    - ansible_service_mgr == 'systemd'
-  notify:
-    - Reload daemon
-    - Restart marathon
-
-- name: Check HAProxy
-  stat: path=/etc/haproxy
-  register: haproxy_dir
-
-- name: Setup HAProxy script
-  template: src=haproxy_reload.sh.j2 dest="{{ haproxy_script_location }}/haproxy_reload.sh"
-    owner="root" group="root" mode=755
-  when: haproxy_dir.stat.exists
-
-- name: Setup cron job for HAProxy
-  cron: name="reload marathon haproxy" minute="*/1" job="{{ haproxy_script_location }}/haproxy_reload.sh"
-  when: haproxy_dir.stat.exists
 
 - name: Enable Marathon service
   service: name=marathon enabled=yes
+
+- name: Restart all of our master services
+  service:
+    name: "{{item}}"
+    state: restarted
+  with_items:
+    - zookeeper
+    - mesos-master
+    - marathon

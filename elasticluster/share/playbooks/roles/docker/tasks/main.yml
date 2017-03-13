@@ -19,7 +19,7 @@
   yum_repository:
     name: docker
     description: Docker YUM repo
-    baseurl: ttps://docs.docker.com/engine/installation/linux/repo_files/centos/docker.repo
+    baseurl: https://docs.docker.com/engine/installation/linux/repo_files/centos/docker.repo
   when: not is_debian_or_ubuntu
 
 - name: Install docker package (Debian/Ubuntu)

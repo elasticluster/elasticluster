@@ -3,8 +3,8 @@
 - name: Install Mesos master node
   hosts: mesos_master
   vars:
-   java_version: 8
-   zookeeper_hosts: "mesos_master"
+    java_version: 8
+    zookeeper_hosts: "mesos_master"
   tags:
     - zookeeper
     - mesos
@@ -12,7 +12,7 @@
     - master
   roles:
     - zookeeper
-    - mesos
+    - {role: mesos, mesos_install_mode: "master" }
     - marathon
 
 

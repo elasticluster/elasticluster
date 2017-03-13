@@ -1,0 +1,3 @@
+{% for server in groups['mesos_slave'] %}
+{{ hostvars[server]['ansible_eth0']['ipv4']['address'] }}
+{% endfor %}

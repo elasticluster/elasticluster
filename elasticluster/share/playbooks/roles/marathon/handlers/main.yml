@@ -1,7 +1,0 @@
----
-- name: Restart marathon
-  service: name=marathon state=restarted
-
-- name: Reload daemon
-  command: systemctl daemon-reload
-  when: ansible_service_mgr == 'systemd'
