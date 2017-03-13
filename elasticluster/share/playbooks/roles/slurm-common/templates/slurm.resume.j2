@@ -7,4 +7,5 @@ do
    sudo scontrol update NodeName=$host state=resume
    sudo gcloud compute instances start --zone=us-east1-d slurm-$host
    sudo gcloud compute instances start --zone=us-west1-a slurm-$host
+   sudo ssh $host sudo modprobe nvidia 
 done
