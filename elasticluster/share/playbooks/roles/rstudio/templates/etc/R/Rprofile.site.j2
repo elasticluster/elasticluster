@@ -1,0 +1,18 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+# see: https://www.r-bloggers.com/permanently-setting-the-cran-repository/
+local({
+  r <- getOption("repos")
+  r["CRAN"] <- "{{r_cran_mirror_url}}"
+  options(repos = r)
+})
+
+SPARK_HOME=/usr/lib/spark
+
+library(sparklyr)
+sc <- spark_connect(master = "yarn-client")
+
+message("\n*** Initialized, spark context available as sc ***\n")

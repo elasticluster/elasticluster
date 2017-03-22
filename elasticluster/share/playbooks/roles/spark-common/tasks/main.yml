@@ -29,7 +29,7 @@
   tags:
     - hadoop
     - spark
-  command: cp /usr/lib/spark/yarn/*.jar /usr/lib/hadoop-yarn/lib/
+  shell: cp /usr/lib/spark/yarn/*.jar /usr/lib/hadoop-yarn/lib/
 
 
 - name: Check if Py4J version-independent `.zip` archive exist
@@ -104,9 +104,14 @@
   command: '{{anaconda_home}}/bin/pip install findspark'
 
 
+- name: Create Thriftserver folder on hdfs
+  command: hdfs dfs -mkdir -p /user/spark/applicationHistory
+
+
 - name: Unmask Spark thriftserver
   command: systemctl unmask spark-thriftserver
   when: init_is_systemd
+
 
 - name: Start Spark thriftserver
   tags:

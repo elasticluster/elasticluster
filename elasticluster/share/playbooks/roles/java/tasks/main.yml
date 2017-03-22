@@ -48,3 +48,9 @@
   alternatives:
     name: jps
     path: /usr/lib/jvm/java-{{ java_version }}-openjdk-amd64/bin/jps
+
+- name: Set default-java symlink
+  file: src=/usr/lib/jvm/java-{{ java_version }}-openjdk-amd64 dest=/usr/lib/jvm/default-java state=link
+
+- name: Set JAVA_HOME in environment
+  lineinfile: dest=/etc/environment line='export JAVA_HOME=/usr/lib/jvm/default-java' insertafter='EOF' state=present

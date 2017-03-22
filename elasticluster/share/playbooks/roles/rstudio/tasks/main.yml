@@ -1,0 +1,74 @@
+---
+
+
+- name: Check playbook compatibility with host platform
+  fail:
+    msg="R Studio Server installation only works on Debian/Ubuntu presently."
+  when: not is_debian_or_ubuntu and not {{experimental}}
+
+
+- name: create download directory
+  file:
+    path: "r-studio-server"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+
+- name: download R Studio Server package
+  command: >
+    curl -sSL
+    https://download2.rstudio.org/rstudio-server-{{ rstudio_server_version }}-amd64.deb
+    -o r-studio-server/{{ rstudio_server_version }}_amd64.deb
+  args:
+    creates: "r-studio-server/{{ rstudio_server_version }}_amd64.deb"
+
+
+- name: install R Studio Server
+  apt:
+    deb: "r-studio-server/{{ rstudio_server_version }}_amd64.deb"
+
+
+- name: update server configuration file
+  template:
+    src: etc/rstudio/rserver.conf.j2
+    dest: /etc/rstudio/rserver.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart rstudio-server
+
+
+- name: update session configuration file
+  template:
+    src: etc/rstudio/rsession.conf.j2
+    dest: /etc/rstudio/rsession.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart rstudio-server
+
+
+- name: update site configuration file
+  template:
+    src: etc/R/Rprofile.site.j2
+    dest: /etc/R/Rprofile.site
+    mode: 0444
+  notify: restart rstudio-server
+
+
+- name: install supplimentary r-packages
+  apt:
+    name: "{{ item }}"
+    state: "{{ apt_install_state | default('latest') }}"
+    update_cache: true
+    cache_valid_time: "{{ apt_update_cache_valid_time | default(3600) }}"
+  with_items:
+    - r-cran-sparklyr
+
+- name: add default user rstudio with password uzh-r
+  user:
+    name: rstudio
+    password: uzh-r
+    comment: "R Studio web user"

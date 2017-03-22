@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+
+# Server Configuration File
+
+www-port={{ rstudio_server_www_port }}
+www-address={{ rstudio_server_www_address }}
+{% if rstudio_server_auth_required_user_group is defined %}
+auth-required-user-group={{ rstudio_server_auth_required_user_group }}
+{% endif %}

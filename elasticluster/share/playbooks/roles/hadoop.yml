@@ -12,6 +12,8 @@
     # version of Anaconda Python to be installed: with Python 3.5 all looks OK
     # fixed in Spark > 2.1.1
     anaconda_version: '4.2.0'
+    install_jupyter: False
+    install_r_server: False
   roles:
     - role: 'nis'
       NIS_MASTER: '{{groups.hadoop_master[0]}}'
@@ -22,7 +24,8 @@
     - yarn-master
     - spark-common
     - spark-history
-    - jupyterhub
+    - { role: jupyterhub, when: install_jupyter == True }
+    - { role: rstudio, when: install_r_server == True }
 
 
 - name: Install Hadoop worker nodes
