@@ -10,7 +10,11 @@ local({
   options(repos = r)
 })
 
-SPARK_HOME=/usr/lib/spark
+# install our needed packages
+install.packages("devtools")
+install.packages("dplyr")
+
+devtools::install_github("sparklyr")
 
 library(sparklyr)
 sc <- spark_connect(master = "yarn-client")

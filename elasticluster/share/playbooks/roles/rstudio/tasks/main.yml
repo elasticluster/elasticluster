@@ -37,7 +37,6 @@
     owner: root
     group: root
     mode: 0644
-  notify: restart rstudio-server
 
 
 - name: update session configuration file
@@ -47,7 +46,6 @@
     owner: root
     group: root
     mode: 0644
-  notify: restart rstudio-server
 
 
 - name: update site configuration file
@@ -55,20 +53,15 @@
     src: etc/R/Rprofile.site.j2
     dest: /etc/R/Rprofile.site
     mode: 0444
-  notify: restart rstudio-server
 
-
-- name: install supplimentary r-packages
-  apt:
-    name: "{{ item }}"
-    state: "{{ apt_install_state | default('latest') }}"
-    update_cache: true
-    cache_valid_time: "{{ apt_update_cache_valid_time | default(3600) }}"
-  with_items:
-    - r-cran-sparklyr
 
 - name: add default user rstudio with password uzh-r
   user:
     name: rstudio
-    password: uzh-r
+    password: "{{ 'uzh-r' | password_hash('sha512') }}"
     comment: "R Studio web user"
+
+
+- service:
+    name: rstudio-server
+    state: restarted

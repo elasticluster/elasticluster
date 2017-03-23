@@ -4,3 +4,5 @@
 # Apache BigTop uses `/etc/spark/conf.*` directories and then
 # symlinks `/etc/spark/conf` to the actual configuration
 SPARK_CONF_DIR: '/etc/spark/conf.elasticluster'
+
+master: True
