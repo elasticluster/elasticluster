@@ -119,8 +119,12 @@
   </property>
 
   <property>
-    <name>yarn.nodemanager.log-dirs</name>
+    <name>yarn.nodemanager.remote-app-log-dir</name>
    <value>{{ YARN_NM_LOG_DIR }}</value>
+  </property>
+  <property>
+      <name>yarn.nodemanager.remote-app-log-dir-suffix</name>
+      <value>logs</value>
   </property>
 
   <!-- log aggregation is necessary for correct Spark/YARN integration -->
