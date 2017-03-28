@@ -11,7 +11,11 @@ globals {
   debug_level = 0               
   max_udp_msg_len = 1472        
   mute = no             
-  deaf = no             
+  {% if inventory_hostname in groups.ganglia_master|default([]) %}
+  deaf = no
+  {% else %}
+  deaf = yes
+  {% endif %}             
   host_dmax = 0 /*secs */ 
   cleanup_threshold = 300 /*secs */ 
   gexec = no             
