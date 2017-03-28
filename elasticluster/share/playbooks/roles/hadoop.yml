@@ -22,8 +22,6 @@
     - yarn-master
     - spark-common
     - spark-history
-    - {role: jupyterhub, when: jupyter is defined}
-    - {role: rstudio, when: rserver is defined}
 
 
 - name: Install Hadoop worker nodes

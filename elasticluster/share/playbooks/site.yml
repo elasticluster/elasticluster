@@ -34,6 +34,7 @@
 # Jupyter installation comes last, to allow it to pick up any SW that's been
 # installed so far (e.g., for kernels, or for ipyparallel)
 - include: roles/jupyterhub.yml
+- include: roles/rstudio.yml
 
 # for local customizations
 - include: after.yml
