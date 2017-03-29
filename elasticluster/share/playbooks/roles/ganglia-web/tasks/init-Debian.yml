@@ -1,0 +1,15 @@
+---
+
+- name: Set distribution-specific variables (Debian/Ubuntu)
+  tags:
+    - ganglia
+    - ganglia-webfrontend
+    - apache
+    - apache2
+    - http
+    - web
+  set_fact:
+    ganglia_web_packages:
+      - ganglia-webfrontend
+    ganglia_web_services:
+      - apache2

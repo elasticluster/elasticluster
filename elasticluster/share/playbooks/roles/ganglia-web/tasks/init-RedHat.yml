@@ -1,0 +1,16 @@
+---
+
+- name: Set distribution-specific variables (RHEL/CentOS)
+  tags:
+    - ganglia
+    - ganglia-webfrontend
+    - ganglia-web
+    - apache
+    - apache2
+    - http
+    - web
+  set_facts:
+    ganglia_web_packages:
+      - ganglia-web
+    ganglia_web_services:
+      - httpd
