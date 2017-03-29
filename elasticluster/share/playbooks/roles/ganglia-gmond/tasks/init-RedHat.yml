@@ -1,0 +1,13 @@
+---
+
+- name: Set distribution-specific variables (RHEL/CentOS)
+  tags:
+    - ganglia
+    - ganglia-monitor
+    - gmond
+  set_fact:
+    ganglia_gmond_packages:
+      - ganglia-gmond
+    ganglia_gmond_services:
+      - gmond
+    ganglia_gmond_modules_dir: '/usr/lib64/ganglia'

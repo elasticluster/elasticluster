@@ -1,0 +1,41 @@
+---
+
+- name: Load distribution-specific parameters
+  tags:
+    - ganglia
+    - ganglia-gmetad
+    - gmetad
+  include: 'init-{{ansible_os_family}}.yml'
+
+
+- name: Install `gmetad`
+  tags:
+    - ganglia
+    - ganglia-gmetad
+    - gmetad
+  package:
+    pkg: '{{item}}'
+    state: installed
+  with_items: '{{ ganglia_gmetad_packages }}'
+
+
+- name: Configure `gmetad`
+  tags:
+    - ganglia
+    - ganglia-gmetad
+    - gmetad
+  template:
+    src: gmetad.conf.j2
+    dest: /etc/ganglia/gmetad.conf
+  notify: restart gmetad
+
+
+- name: Ensure ganglia daemons are running
+  tags:
+    - ganglia
+    - ganglia-gmetad
+    - gmetad
+  service:
+    name: '{{ ganglia_gmetad_service }}'
+    state: started
+    enabled: yes

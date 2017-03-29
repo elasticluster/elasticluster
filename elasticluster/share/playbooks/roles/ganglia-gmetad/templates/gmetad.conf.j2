@@ -1,16 +1,15 @@
-# THIS FILE IS CONTROLLED BY ANSIBLE
-# any local modifications will be overwritten!
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
 #
-# This is an example of a Ganglia Meta Daemon configuration file
-#                http://ganglia.sourceforge.net/#
-#
+
 #-------------------------------------------------------------------------------
 # Setting the debug_level to 1 will keep daemon in the forground and
 # show only error messages. Setting this value higher than 1 will make 
 # gmetad output debugging information and stay in the foreground.
 # default: 0
 # debug_level 10
-#
+
 #-------------------------------------------------------------------------------
 # What to monitor. The most important section of this file. 
 #
@@ -43,9 +42,9 @@
 # data_source "my grid" 50 1.3.4.7:8655 grid.org:8651 grid-backup.org:8651
 # data_source "another source" 1.3.4.7:8655  1.3.4.8
 
-data_source "GC3_Cloud_Cluster" {{hostvars[groups['ganglia_master'][0]].ansible_default_ipv4.address}}
+data_source "ElastiCluster" {% for master in groups.ganglia_master %}{{ hostvars[master].ansible_default_ipv4.address }}{% endfor %}
 
-#
+
 # Round-Robin Archives
 # You can specify custom Round-Robin archives here (defaults are listed below)
 #
@@ -57,7 +56,7 @@ data_source "GC3_Cloud_Cluster" {{hostvars[groups['ganglia_master'][0]].ansible_
 # Two weeks of data points at 1 minute resolution (average)
 #RRAs "RRA:AVERAGE:0.5:1:5856" "RRA:AVERAGE:0.5:4:20160" "RRA:AVERAGE:0.5:40:52704"
 
-#
+
 #-------------------------------------------------------------------------------
 # Scalability mode. If on, we summarize over downstream grids, and respect
 # authority tags. If off, we take on 2.5.0-era behavior: we do not wrap our output
@@ -66,13 +65,15 @@ data_source "GC3_Cloud_Cluster" {{hostvars[groups['ganglia_master'][0]].ansible_
 # large groups of clusters, but is provided for backwards compatibility.
 # default: on
 # scalable off
-#
+
+
 #-------------------------------------------------------------------------------
 # The name of this Grid. All the data sources above will be wrapped in a GRID
 # tag with this name.
 # default: unspecified
-# gridname "MyGrid"
-#
+#gridname "ElastiCluster"
+
+
 #-------------------------------------------------------------------------------
 # The authority URL for this grid. Used by other gmetads to locate graphs
 # for our data sources. Generally points to a ganglia/
@@ -80,60 +81,71 @@ data_source "GC3_Cloud_Cluster" {{hostvars[groups['ganglia_master'][0]].ansible_
 # default: "http://hostname/ganglia/",
 #   where hostname is the name of this machine, as defined by gethostname().
 # authority "http://mycluster.org/newprefix/"
-#
+
+
 #-------------------------------------------------------------------------------
 # List of machines this gmetad will share XML with. Localhost
 # is always trusted. 
 # default: There is no default value
-# trusted_hosts 127.0.0.1 169.229.50.165 my.gmetad.org
-#
+trusted_hosts 127.0.0.1 {% for host in groups.all %}{{ hostvars[host].ansible_default_ipv4.address }}{% endfor %}
+
+
 #-------------------------------------------------------------------------------
 # If you want any host which connects to the gmetad XML to receive
 # data, then set this value to "on"
 # default: off
 # all_trusted on
-#
+
+
 #-------------------------------------------------------------------------------
 # If you don't want gmetad to setuid then set this to off
 # default: on
 # setuid off
-#
+
+
 #-------------------------------------------------------------------------------
 # User gmetad will setuid to (defaults to "nobody")
 # default: "nobody"
 # setuid_username "nobody"
-#
+
+
 #-------------------------------------------------------------------------------
 # Umask to apply to created rrd files and grid directory structure
 # default: 0 (files are public)
 # umask 022
-#
+
+
 #-------------------------------------------------------------------------------
 # The port gmetad will answer requests for XML
 # default: 8651
 # xml_port 8651
-#
+
+
 #-------------------------------------------------------------------------------
 # The port gmetad will answer queries for XML. This facility allows
 # simple subtree and summation views of the XML tree.
 # default: 8652
 # interactive_port 8652
-#
+
+
 #-------------------------------------------------------------------------------
 # The number of threads answering XML requests
 # default: 4
-# server_threads 10
-#
+server_threads {{ ansible_processor_vcpus }}
+
+
 #-------------------------------------------------------------------------------
 # Where gmetad stores its round-robin databases
 # default: "/var/lib/ganglia/rrds"
 # rrd_rootdir "/some/other/place"
-#
+
+
 #-------------------------------------------------------------------------------
 # List of metric prefixes this gmetad will not summarize at cluster or grid level.
 # default: There is no default value
 # unsummarized_metrics diskstat CPU
-#
+
+
 #-------------------------------------------------------------------------------
 # In earlier versions of gmetad, hostnames were handled in a case
 # sensitive manner
@@ -143,6 +155,7 @@ data_source "GC3_Cloud_Cluster" {{hostvars[groups['ganglia_master'][0]].ansible_
 # default: 1   (for gmetad < 3.2)
 # default: 0   (for gmetad >= 3.2)
 case_sensitive_hostnames 0
+
 
 #-------------------------------------------------------------------------------
 # It is now possible to export all the metrics collected by gmetad directly to
@@ -164,5 +177,3 @@ case_sensitive_hostnames 0
 # Number of milliseconds gmetad will wait for a response from the graphite server 
 # default: 500
 # carbon_timeout 500
-#
-

@@ -1,0 +1,43 @@
+---
+
+- name: Load distribution-specific parameters
+  tags:
+    - ganglia
+    - ganglia-gmond
+    - gmond
+  include: 'init-{{ansible_os_family}}.yml'
+
+
+- name: Install Ganglia `gmond` software
+  tags:
+    - ganglia
+    - ganglia-gmond
+    - gmond
+  package:
+    pkg: '{{item}}'
+    state: present
+  with_items: '{{ ganglia_gmond_packages }}'
+
+
+- name: Configure `gmond`
+  tags:
+    - ganglia
+    - ganglia-gmond
+    - gmond
+  template:
+    src: 'gmond.conf.j2'
+    dest: '/etc/ganglia/gmond.conf'
+  notify:
+    - restart gmond
+
+
+- name: Ensure `gmond` is running
+  tags:
+    - ganglia
+    - ganglia-gmond
+    - gmond
+  service:
+    name: '{{ item }}'
+    state: started
+    enabled: yes
+  with_items: '{{ ganglia_gmond_services }}'

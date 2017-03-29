@@ -1,0 +1,13 @@
+---
+
+- name: Set distribution-specific variables (Debian/Ubuntu)
+  tags:
+    - ganglia
+    - ganglia-monitor
+    - gmond
+  set_fact:
+    ganglia_gmond_packages:
+      - ganglia-monitor
+    ganglia_gmond_services:
+      - ganglia-monitor
+    ganglia_gmond_modules_dir: '/usr/lib/ganglia'

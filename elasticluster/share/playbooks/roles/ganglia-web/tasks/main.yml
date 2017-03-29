@@ -1,0 +1,105 @@
+---
+
+- name: Load distribution-specific parameters
+  tags:
+    - ganglia
+    - ganglia-webfrontend
+    - ganglia-web
+    - apache
+    - apache2
+    - http
+    - web
+  include: 'init-{{ansible_os_family}}.yml'
+
+
+- name: Install Ganglia web frontend software
+  tags:
+    - ganglia
+    - ganglia-webfrontend
+    - ganglia-web
+    - apache
+    - apache2
+    - http
+    - web
+  package:
+    pkg: '{{item}}'
+    state: installed
+  with_items: '{{ ganglia_web_packages }}'
+
+
+- block:
+
+  - name: Does `/etc/apache/conf-available` exist? (Debian/Ubuntu)
+    stat:
+      path: '/etc/apache2/conf-available'
+      follow: no
+    register: apache_conf_available_d
+
+  - name: Configure Ganglia web endpoint in /etc/apache2/conf-available (Debian/Ubuntu)
+    file:
+      src: /etc/ganglia-webfrontend/apache.conf
+      dest: /etc/apache2/conf-available/ganglia.conf
+      state: link
+    when: apache_conf_available_d.stat.exists
+
+  - name: Configure Ganglia web endpoint in /etc/apache2/conf-enabled (Debian/Ubuntu)
+    command: |
+      a2enconf ganglia
+    notify: restart apache
+    when: apache_conf_available_d.stat.exists
+
+  - name: Does `/etc/apache/conf.d` exist? (Debian/Ubuntu)
+    stat:
+      path: '/etc/apache2/conf.d'
+      follow: no
+    register: apache_conf_d
+
+  - name: Configure Ganglia web endpoint in /etc/apache2/conf.d (Debian/Ubuntu)
+    file:
+      src: /etc/ganglia-webfrontend/apache.conf
+      dest: /etc/apache2/conf.d/ganglia.conf
+      state: link
+    notify: restart apache
+    when: apache_conf_d.stat.exists
+
+  tags:
+    - ganglia
+    - ganglia-webfrontend
+    - ganglia-web
+    - apache
+    - apache2
+    - http
+    - web
+  when: is_debian_compatible
+
+
+- name: Configure Ganglia web endpoint (RHEL/CentOS)
+  tags:
+    - ganglia
+    - ganglia-webfrontend
+    - ganglia-web
+    - apache
+    - apache2
+    - http
+    - web
+  copy:
+    src: etc/httpd/conf.d/ganglia.conf
+    dest: /etc/httpd/conf.d/ganglia.conf
+  notify: restart apache
+  when: is_rhel_compatible
+
+
+- name: Ensure ganglia daemons are running
+  tags:
+    - ganglia
+    - ganglia-webfrontend
+    - ganglia-web
+    - apache
+    - apache2
+    - http
+    - web
+  service:
+    name: '{{item}}'
+    state: started
+    enabled: yes
+  with_items: '{{ ganglia_web_services }}'
