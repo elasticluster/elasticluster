@@ -18,6 +18,10 @@
 
 from __future__ import (absolute_import, division, print_function)
 
+# this is needed to get logging info in `py.test` when something fails
+import logging
+logging.basicConfig()
+
 import collections
 from copy import copy, deepcopy
 import os

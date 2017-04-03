@@ -22,6 +22,10 @@ Test the `Node` class from the `elasticluster.cluster` module.
 
 from __future__ import absolute_import
 
+# this is needed to get logging info in `py.test` when something fails
+import logging
+logging.basicConfig()
+
 # stdlib imports
 from tempfile import NamedTemporaryFile
 
