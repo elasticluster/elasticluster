@@ -70,6 +70,8 @@ from elasticluster.validate import (
 ## defaults and built-in config
 
 KEY_RENAMES = [
+    # pylint: disable=bad-whitespace,bad-continuation
+
     # section   from key          to key          verbose?  supported until...
     ('cluster', 'setup_provider', 'setup',        True,     '2.0'),
     ('cloud',   'tenant_name',    'project_name', True,     '2.0'),
@@ -277,7 +279,7 @@ def make_creator(configfiles, storage_path=None):
 
 
 def _expand_config_file_list(paths, ignore_nonexistent=True,
-                            expand_user_dir=True, expand_env_vars=False):
+                             expand_user_dir=True, expand_env_vars=False):
     """
     Return list of (existing) configuration files.
 
@@ -458,6 +460,7 @@ def _update_nested_item(D, path, items):
     return target
 
 
+# pylint: disable=dangerous-default-value
 def _perform_key_renames(tree, changes=KEY_RENAMES):
     """
     Change a configuration "tree" in-place, renaming legacy keys to new names.
@@ -614,8 +617,8 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
     return kind_values
 
 
-def _compute_desired_and_minimum_number_of_nodes(
-        kind_name, cluster_name, cluster_conf):
+# pylint: disable=invalid-name
+def _compute_desired_and_minimum_number_of_nodes(kind_name, cluster_name, cluster_conf):
     """
     Compute desired and minimum number of nodes of the given kind.
     """
