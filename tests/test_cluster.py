@@ -19,6 +19,10 @@
 
 from __future__ import absolute_import
 
+# this is needed to get logging info in `py.test` when something fails
+import logging
+logging.basicConfig()
+
 # 3rd-party imports
 from mock import MagicMock, patch
 import pytest
