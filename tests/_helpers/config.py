@@ -95,7 +95,7 @@ network_ids = subnet-deadbeef
         'example_openstack':"""
 cloud = openstack
 login = ubuntu
-setup = slurm_setup
+setup = slurm_setup_old
 frontend_nodes = 1
 compute_nodes = 2
 
@@ -106,7 +106,7 @@ security_group = default
         """,
 
         'example_google':"""
-cloud = google1
+cloud = google
 setup = misc_setup
 misc_nodes = 10
 
@@ -137,6 +137,12 @@ misc_groups = whatever
         """,
 
         'slurm_setup':"""
+provider = ansible
+master_groups = slurm_master
+worker_groups = slurm_worker
+        """,
+
+        'slurm_setup_old':"""
 provider = ansible
 frontend_groups = slurm_master
 compute_groups = slurm_worker

@@ -697,6 +697,25 @@ def _cross_validate_final_config(objtree, evict_on_error=True):
     # take a copy of cluster config as we might be modifying it
     for name, cluster in list(objtree['cluster'].items()):
         valid = True
+        # ensure all cluster node kinds are defined in the `setup/*` section
+        setup_sect = cluster['setup']
+        for groupname, properties in cluster['nodes'].items():
+            if (groupname + '_groups') not in setup_sect:
+                log.error("Cluster `%s` requires nodes of kind `%s`,"
+                          " but no such group is defined"
+                          " in the referenced setup section.",
+                          name, groupname)
+                valid = False
+                break
+
+        # ensure `ssh_to` has a valid value
+        if 'ssh_to' in cluster and cluster['ssh_to'] not in cluster['nodes']:
+            log.error("Cluster `%s` is configured to SSH into nodes of kind `%s`,"
+                      " but no such kind is defined.",
+                      name, cluster['ssh_to'])
+            valid = False
+
+        # EC2-specific checks
         if cluster['cloud']['provider'] == 'ec2_boto':
             cluster_uses_vpc = ('vpc' in cluster['cloud'])
             for groupname, properties in cluster['nodes'].items():
