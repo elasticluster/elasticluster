@@ -599,6 +599,11 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'login',
             'network_ids',
             'security_group',
+            'node_name',
+            'boot_disk_size',
+            'boot_disk_type',
+            'scheduling',
+            'tags'
             #'user_key_name',    ## from `login/*`
             #'user_key_private', ## from `login/*`
             #'user_key_public',  ## from `login/*`
