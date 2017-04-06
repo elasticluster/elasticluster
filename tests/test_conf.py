@@ -87,9 +87,8 @@ boot_disk_size=100
     assert cluster.nodes['master'][0].extra['boot_disk_size'] == '100'
     # "worker" nodes take values from the cluster defaults
     assert cluster.nodes['worker'][0].flavor == 'n1-standard-1'
-    # FIXME: Actually, does this imply that the `boot_disk_size` value
-    # defined at cluster level is not propagated to "worker" nodes?
-    assert 'boot_disk_size' not in cluster.nodes['worker'][0].extra
+    assert 'boot_disk_size' in cluster.nodes['worker'][0].extra
+    assert cluster.nodes['worker'][0].extra['boot_disk_size'] == '20'
 
 
 def test_issue_415(tmpdir):
