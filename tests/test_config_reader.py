@@ -128,6 +128,11 @@ image_id = i-12345
 login = ubuntu
 flavor = m1.tiny
 security_group = default
+boot_disk_size = 15
+boot_disk_type = pd-standard
+node_name = my-node
+scheduling = preemptible
+tags = tag1,tag2,tag3
 
 
 [cluster/wrong_example_google]
@@ -229,6 +234,11 @@ CONFIG_RAW = ({
         'login': 'ubuntu',
         'flavor': 'm1.tiny',
         'security_group': 'default',
+        'boot_disk_size': '15',
+        'boot_disk_type' : 'pd-standard',
+        'node_name' : 'my-node',
+        'scheduling' : 'preemptible',
+        'tags' : 'tag1,tag2,tag3'
     },
 
     'cluster/wrong_example_google': {
@@ -325,6 +335,11 @@ CONFIG_TREE = ({
             'login': 'ubuntu',
             'flavor': 'm1.tiny',
             'security_group': 'default',
+            'boot_disk_size': '15',
+            'boot_disk_type': 'pd-standard',
+            'node_name': 'my-node',
+            'scheduling': 'preemptible',
+            'tags': 'tag1,tag2,tag3'
         },
         'wrong_example_google': {
             'cloud': 'wrongle',
@@ -423,6 +438,11 @@ CONFIG_TREE_WITH_RENAMES = ({
             'login': 'ubuntu',
             'flavor': 'm1.tiny',
             'security_group': 'default',
+            'boot_disk_size': '15',
+            'boot_disk_type': 'pd-standard',
+            'node_name': 'my-node',
+            'scheduling': 'preemptible',
+            'tags': 'tag1,tag2,tag3'
         },
         'wrong_example_google': {
             'cloud': 'wrongle',
@@ -459,7 +479,6 @@ def test_read_config_file(tmpdir):
         cfgfile.flush()
         raw_config = _read_config_files([cfgfile.name])
     assert raw_config == CONFIG_RAW
-
 
 def test_arrange_config_tree():
     tree = _arrange_config_tree(copy(CONFIG_RAW))
@@ -515,3 +534,17 @@ def test_build_node_section():
     assert nodes_cfg['misc']['image_id'] == 'i-12345'
     assert nodes_cfg['misc']['num'] == 10
     assert nodes_cfg['misc']['min_num'] == 10
+
+
+def test_build_node_section_google():
+    deref_tree = _dereference_config_tree(deepcopy(CONFIG_TREE_WITH_RENAMES))
+    cfg = _build_node_section(deref_tree)['cluster']
+    cluster_cfg = cfg['example_google']
+    assert 'nodes' in cluster_cfg
+    nodes_cfg = cluster_cfg['nodes']
+    assert 'misc' in nodes_cfg
+    assert nodes_cfg['misc']['boot_disk_size'] == '15'
+    assert nodes_cfg['misc']['boot_disk_type'] == 'pd-standard'
+    assert nodes_cfg['misc']['scheduling'] == "preemptible"
+    assert nodes_cfg['misc']['node_name'] == "my-node"
+    assert nodes_cfg['misc']['tags'] == "tag1,tag2,tag3"
