@@ -58,7 +58,7 @@ spark.scheduler.maxRegisteredResourcesWaitingTime 5s
 spark.scheduler.minRegisteredResourcesRatio 0.5
 
 spark.yarn.historyServer.address    ${hadoopconf-yarn.resourcemanager.hostname}:18080
-spark.eventLog.dir                  hdfs:///user/spark/applicationHistory
+spark.eventLog.dir                  hdfs://{{ eventlog_dir }}
 spark.eventLog.enabled              true
 
 # Max out message size for those who do not care much about slowing

@@ -10,15 +10,15 @@
 - name: Check playbook compatibility with host platform
   fail:
     msg="PySpark/Hadoop installation only works on Debian/Ubuntu presently."
-  when: not is_debian_or_ubuntu and not {{experimental}}
+  when: not is_debian_compatible
 
 
 - name: add signing key for Apache Bigtop repository
   apt_key:
-    keyserver=keys.gnupg.net
-    id='{{item}}'
+    keyserver: keys.gnupg.net
+    id: '{{item}}'
   with_items: '{{bigtop_signing_key}}'
-  when: is_debian_or_ubuntu and not {{experimental}}
+  when: is_debian_compatible and not {{experimental}}
 
 
 - name: add Apache Bigtop repository
@@ -26,7 +26,7 @@
     # download from: http://www.apache.org/dist/bigtop/bigtop-1.0.0/repos/trusty/bigtop.list
     repo='deb http://bigtop-repos.s3.amazonaws.com/releases/{{bigtop_release}}/ubuntu/trusty/x86_64 bigtop contrib'
     state=present
-  when: is_debian_or_ubuntu and not {{experimental}}
+  when: is_debian_compatible and not {{experimental}}
 
 # when we want to use trunk build packages
 
@@ -34,14 +34,14 @@
   apt_key:
     keyserver: keys.gnupg.net
     id: '{{bigtop_signing_key_trunk}}'
-  when: is_debian_or_ubuntu and {{experimental}}
+  when: is_debian_compatible and {{experimental}}
 
 
 - name: add Apache Bigtop experimental repository (Debian/Ubuntu)
   apt_repository:
     repo='deb {{bigtop_uri}}/debs/{{ansible_distribution_release}} ./'
     state=present
-  when: is_debian_or_ubuntu and {{experimental}}
+  when: is_debian_compatible and {{experimental}}
 
 
 # this is run as task and not as a handler, since handlers are all
@@ -52,7 +52,7 @@
   apt:
     update_cache=yes
     cache_valid_time=86400
-  when: is_debian_or_ubuntu
+  when: is_debian_compatible
 
 
 - name: add Apache Bigtop experimental repository (CentOS/RHEL)
@@ -62,4 +62,4 @@
     baseurl: '{{bigtop_uri}}/rpms/{{ansible_distribution_release}}'
     gpgkey: '{{bigtop_uri}}{{bigtop_pubkey}}'
     gpgcheck: yes
-  when: not is_debian_or_ubuntu and {{experimental}}
+  when: not is_debian_compatible and {{experimental}}

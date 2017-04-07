@@ -29,7 +29,7 @@
   tags:
     - hadoop
     - spark
-  shell: cp /usr/lib/spark/yarn/*.jar /usr/lib/hadoop-yarn/lib/
+  shell: rsync -ax --update --backup /usr/lib/spark/yarn/*.jar /usr/lib/hadoop-yarn/lib/
 
 
 - name: Check if Py4J version-independent `.zip` archive exist
@@ -104,12 +104,12 @@
   command: '{{anaconda_home}}/bin/pip install findspark'
 
 
-- shell: hdfs dfs -test -d /user/spark/applicationHistory
-  register: thrift_storage
+- name: Create Spark History folder on hdfs
+  command: hdfs dfs -mkdir -p {{ history_dir }}
 
-- name: Create Thriftserver folder on hdfs
-  command: hdfs dfs -mkdir -p /user/spark/applicationHistory
-  when: thrift_storage != 0
+
+- name: Create Spark eventlog dir on HDFS
+  command: hdfs dfs -mkdir -p {{eventlog_dir}}
 
 
 - name: Unmask Spark thriftserver
@@ -133,5 +133,32 @@
   shell: spark-shell --version 2>&1 | grep version | grep -v Scala | awk '{print $5}' | head -c 1
   register: spark_major_version
 
+
 - name: Set SPARK_HOME in environment
   lineinfile: dest=/etc/environment line='export SPARK_HOME=/usr/lib/spark' insertafter='EOF' state=present
+
+
+- name: Install Spark History Server
+  tags:
+    - hadoop
+    - spark
+    - hsitory
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - spark-history-server
+  when: inventory_hostname in groups['hadoop_master']
+
+
+- name: Start Spark History Server
+  tags:
+    - hadoop
+    - spark
+  service:
+    name="{{item}}"
+    state=started
+    enabled=yes
+  with_items:
+    - spark-history-server
+  when: inventory_hostname in groups['hadoop_master']

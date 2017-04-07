@@ -19,7 +19,6 @@
     src='{{item}}.j2'
     dest='{{zookeeper_conf_dir}}/{{item}}'
   with_items:
-    - log4j.properties
     - zoo.cfg
     - myid
 

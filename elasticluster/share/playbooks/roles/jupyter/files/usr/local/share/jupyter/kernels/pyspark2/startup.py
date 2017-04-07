@@ -23,6 +23,9 @@ os.environ.setdefault('SPARK_YARN_APP_JAR', '/dev/null')
 
 # make `pyspark` and `py4j` available to this process
 spark_home_python = join(spark_home, "python")
+sys.path.insert(0, spark_home_python)
+sys.path.insert(0, join(spark_home_python, 'pyspark'))
+sys.path.insert(0, join(spark_home_python, 'lib/py4j-0.8.2.1-src.zip'))
 
 # make `pyspark` and `py4j` available on PYTHONPATH so it's read by children processes
 spark_pythonpath = ('{spark_home_python}:{spark_home_python}/pyspark:{spark_home_python}/lib/py4j-src.zip'.format(**locals()))

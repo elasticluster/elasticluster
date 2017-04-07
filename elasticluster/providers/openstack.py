@@ -130,6 +130,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         security_groups = []
         for g in security_group.split(','):
+            g = g.strip()
             log.debug("Checking security group `%s` ...", g)
             self._check_security_group(g)
             security_groups.append(g)

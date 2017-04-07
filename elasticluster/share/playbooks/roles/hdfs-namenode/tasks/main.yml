@@ -45,13 +45,3 @@
     hdfs dfs -chmod 0777 /
   become: yes
   become_user: hdfs
-
-
-- name: Create YARN log dir
-  tags:
-    - hadoop
-  command:
-    hdfs dfs -mkdir -p {{ YARN_NM_LOG_DIR }}
-  become: yes
-  become_user: hdfs
-

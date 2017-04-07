@@ -1,8 +1,6 @@
 ---
 
 zookeeper_hosts: "zookeeper"
-
-apt_cache_timeout: 3600
 zookeeper_register_path_env: false
 
 client_port: 2181
@@ -15,10 +13,6 @@ zookeeper_autopurge_snapRetainCount: 10
 data_dir: /var/lib/zookeeper
 log_dir: /var/log/zookeeper
 zookeeper_conf_dir: /etc/zookeeper/conf
-
-# Rolling file appender setttings
-zookeeper_rolling_log_file_max_size: 10MB
-zookeeper_max_rolling_log_file_count: 10
 
 # Dict of ENV settings to be written into the (optional) conf/zookeeper-env.sh
 zookeeper_env: {}

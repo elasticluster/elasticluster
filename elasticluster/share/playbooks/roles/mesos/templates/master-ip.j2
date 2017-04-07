@@ -1,3 +1,3 @@
 {% for server in groups['mesos_master'] %}
-{{ hostvars[server]['ansible_eth0']['ipv4']['address'] }}
+{{ hostvars[server].ansible_default_ipv4.address }}
 {% endfor %}

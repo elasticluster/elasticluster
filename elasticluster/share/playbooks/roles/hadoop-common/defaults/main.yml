@@ -5,4 +5,4 @@
 # symlinks `/etc/hadoop/conf` to the actual configuration
 HADOOP_CONF_DIR: '/etc/hadoop/conf.elasticluster'
 
-YARN_NM_LOG_DIR: '/yarn/apps'
+REPLICATION_FACTOR: 3

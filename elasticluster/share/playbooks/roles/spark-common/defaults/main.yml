@@ -5,4 +5,5 @@
 # symlinks `/etc/spark/conf` to the actual configuration
 SPARK_CONF_DIR: '/etc/spark/conf.elasticluster'
 
-master: True
+history_dir: '/user/spark/applicationHistory'
+eventlog_dir: '/user/spark/eventLog'
