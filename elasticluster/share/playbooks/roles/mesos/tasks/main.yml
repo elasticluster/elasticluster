@@ -1,16 +1,13 @@
 ---
 
+
 - debug: msg="Install Mode is {{mesos_install_mode}}"
 
-- name: Restart Zookeeper services
-  service:
-    name: zookeeper
-    state: restarted
-  when: mesos_install_mode == "master"
 
 - name: Add apt-key (Debian/Ubuntu)
   apt_key: id=E56151BF keyserver=keyserver.ubuntu.com state=present
   when: is_debian_or_ubuntu
+
 
 - name: Add mesosphere repo (Debian/Ubuntu)
   apt_repository:
@@ -19,15 +16,17 @@
     update_cache=yes
   when: is_debian_or_ubuntu
 
+
 - name: Add mesosphere repository (Redhat/Centos)
   yum_repository:
     name: mesosphere
     description: Mesospere YUM repo
     baseurl: http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm
-  when: not is_debian_or_ubuntu
+  when: is_rhel_compatible
 
-- name: Install Mesos and dependencies (Debian/Ubuntu)
-  apt: name={{ item }} state=present
+
+- name: Install Mesos and dependencies
+  package: name={{ item }} state=present
   with_items:
     - wget
     - curl
@@ -35,50 +34,15 @@
     - python-setuptools
     - python-dev
     - mesos
-  when: is_debian_or_ubuntu
 
-- name: Install Mesos and dependencies (Redhat/Centos)
-  yum: name={{ item }} state=present
-  with_items:
-    - wget
-    - curl
-    - unzip
-    - python-setuptools
-    - python-dev
-    - mesos
-  when: not is_debian_or_ubuntu
-
-- name: Install Mesosphere on master nodes (Debian/Ubuntu)
-  apt: name={{ item }} state=present
-  with_items:
-    - mesosphere
-  when: is_debian_or_ubuntu and mesos_install_mode == "master"
-
-- name: Install Mesosphere on master nodes (Redhat/Centos)
-  yum: name={{ item }} state=present
-  with_items:
-    - mesosphere
-  when: not is_debian_or_ubuntu and mesos_install_mode == "master"
 
 - name: Mesos ZK config file
   template: src=zk.j2 dest=/etc/mesos/zk
 
-- name: Mesos master quorum file
-  template: src=quorum.j2 dest=/etc/mesos-master/quorum
+
+- include: master.yml
   when: mesos_install_mode == "master"
 
-- name: Mesos master IP file
-  template: src=master-ip.j2 dest=/etc/mesos-master/ip
-  when: mesos_install_mode == "master"
 
-- name: Mesos master hostname file
-  template: src=master-hostname.j2 dest=/etc/mesos-master/hostname
-  when: mesos_install_mode == "master"
-
-- name: Mesos slave IP file
-  template: src=slave-ip.j2 dest=/etc/mesos-slave/ip
-  when: mesos_install_mode == "slave"
-
-- name: Mesos slave hostname file
-  template: src=slave-hostname.j2 dest=/etc/mesos-slave/hostname
+- include: slave.yml
   when: mesos_install_mode == "slave"

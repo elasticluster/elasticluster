@@ -5,4 +5,4 @@
 # symlinks `/etc/hadoop/conf` to the actual configuration
 HADOOP_CONF_DIR: '/etc/hadoop/conf.elasticluster'
 
-REPLICATION_FACTOR: 3
+HADOOP_REPLICATION_FACTOR: 3

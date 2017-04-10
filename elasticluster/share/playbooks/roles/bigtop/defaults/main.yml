@@ -1,7 +1,7 @@
 # bigtop/defaults/main.yml
 ---
 
-experimental: False
+bigtop_experimental: False
 
 # What release of Apache Bigtop to get packages from
 bigtop_release: '1.1.0'

@@ -105,11 +105,11 @@
 
 
 - name: Create Spark History folder on hdfs
-  command: hdfs dfs -mkdir -p {{ history_dir }}
+  command: hdfs dfs -mkdir -p {{ SPARK_HISTORY_DIR }}
 
 
 - name: Create Spark eventlog dir on HDFS
-  command: hdfs dfs -mkdir -p {{eventlog_dir}}
+  command: hdfs dfs -mkdir -p {{ SPARK_EVENTLOG_DIR }}
 
 
 - name: Unmask Spark thriftserver

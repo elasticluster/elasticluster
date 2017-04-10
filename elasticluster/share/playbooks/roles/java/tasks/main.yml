@@ -5,7 +5,7 @@
   apt_repository:
     repo: ppa:openjdk-r/ppa
     state: present
-  when: is_debian_compatible and "java_version == 8"
+  when: is_debian_compatible and java_version|int == 8
 
 
 - name: Installing openjdk-jdk (Debian/Ubuntu)

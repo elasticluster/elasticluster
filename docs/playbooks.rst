@@ -377,6 +377,37 @@ storage+execution nodes::
     master_groups=hadoop_master
     worker_groups=hadoop_worker
 
+Kafka
+==============
+
+Supported on:
+
+* Ubuntu 16.04, 14.04
+* Debian 8 ("jessie")
+
+This playbook installs a Kafka_ node/cluster,
+using the packages provided by the Apache Bigtop_ project.
+Kafka is a stream provider often used in conjunction with Spark Streaming or Storm.
+
+=================  ==================================================
+Ansible group      Action
+=================  ==================================================
+``stream_master``  Install the Kafka node: run Kafka and Zookeeper on
+                   the server. Zookeeper is the microservice manager.
+=================  ==================================================
+
+The following example configuration sets up a Kafka cluster using 3
+streaming nodes (note that the bigtop_experimental flag installs the latest trunk version of Kafka)::
+
+
+   [cluster/pstream]
+   master_nodes=3
+   ssh_to=master
+
+   [setup/kafka]
+   provider=ansible
+   master_groups=stream_master
+   global_var_bigtop_experimental=True
 
 GlusterFS
 =========
@@ -487,3 +518,35 @@ You can combine, for instance, a SLURM cluster with a PVFS2 cluster::
 This configuration will create a SLURM cluster with 10 compute nodes,
 10 data nodes and a frontend, and will mount the ``/pvfs2`` directory
 from the data nodes to both the compute nodes and the frontend.
+
+Mesos + Marathon
+==============
+
+Supported on:
+
+* Ubuntu 14.04
+
+This playbook installs a Mesos_ cluster with Marathon_.  The
+cluster comprises a Zookeeper quorum, Mesos master and slave nodes and
+Marathon masters. The cluster runs docker containers by default.
+
+=================  ==================================================
+Ansible group      Action
+=================  ==================================================
+``mesos_master``   Install the Mesos cluster master node: run Mesos,
+                   Zookeeper and Marathon server.
+``mesos_slave``    Install a mesos slave node and docker.
+=================  ==================================================
+
+The following example configuration sets up a Mesos cluster using 1 master node and 3
+slave nodes::
+
+    [cluster/pmesos]
+    master_nodes=1
+    slave_nodes=3
+    ssh_to=master
+
+    [setup/mesos]
+    provider=ansible
+    master_groups=mesos_master
+    slave_groups=mesos_slave
