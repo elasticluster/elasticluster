@@ -100,16 +100,14 @@
     - etc/profile.d/pyspark.sh
 
 
-- name: Install findspark pip package
-  command: '{{anaconda_home}}/bin/pip install findspark'
-
-
 - name: Create Spark History folder on hdfs
   command: hdfs dfs -mkdir -p {{ SPARK_HISTORY_DIR }}
+  when: inventory_hostname in groups['hadoop_master']
 
 
 - name: Create Spark eventlog dir on HDFS
   command: hdfs dfs -mkdir -p {{ SPARK_EVENTLOG_DIR }}
+  when: inventory_hostname in groups['hadoop_master']
 
 
 - name: Unmask Spark thriftserver

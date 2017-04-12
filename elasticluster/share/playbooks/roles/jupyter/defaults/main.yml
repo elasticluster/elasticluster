@@ -14,4 +14,4 @@ PYTHON3_EXE: '/opt/anaconda3/bin/python3'
 R_EXE: '/usr/bin/R'
 
 # the Python interpreter used to rune Jupyter/JupyterHub
-jupyter_python: '{{PYTHON2_EXE}}'
+jupyter_python: '{{PYTHON3_EXE}}'

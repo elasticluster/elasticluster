@@ -20,14 +20,14 @@
   command: >
     curl -sSL
     https://download2.rstudio.org/rstudio-server-{{ rstudio_server_version }}-amd64.deb
-    -o r-studio-server/{{ rstudio_server_version }}_amd64.deb
+    -o /tmp/r-studio-server/{{ rstudio_server_version }}_amd64.deb
   args:
-    creates: "r-studio-server/{{ rstudio_server_version }}_amd64.deb"
+    creates: "/tmp/r-studio-server/{{ rstudio_server_version }}_amd64.deb"
 
 
 - name: install R Studio Server
   apt:
-    deb: "r-studio-server/{{ rstudio_server_version }}_amd64.deb"
+    deb: "/tmp/r-studio-server/{{ rstudio_server_version }}_amd64.deb"
 
 
 - name: update server configuration file
@@ -48,7 +48,7 @@
     mode: 0444
 
 
-- name: add default user rstudio with password uzh-r
+- name: add default user with password
   user:
     name: "{{ rstudio_default_user }}"
     password: "{{ rstudio_default_pass | password_hash('sha512') }}"
