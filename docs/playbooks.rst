@@ -524,7 +524,7 @@ Mesos + Marathon
 
 Supported on:
 
-* Ubuntu 14.04
+* Ubuntu 14.04 (marathon not packages for Ubuntu 16.04 at this time)
 
 This playbook installs a Mesos_ cluster with Marathon_.  The
 cluster comprises a Zookeeper quorum, Mesos master and slave nodes and

@@ -1,3 +1,5 @@
 {% for server in groups['mesos_master'] %}
+{% if server == inventory_hostname %}
 {{ server }}
+{% endif %}
 {% endfor %}

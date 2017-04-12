@@ -1,3 +1,5 @@
 {% for server in groups['mesos_master'] %}
+{% if server == inventory_hostname %}
 {{ hostvars[server].ansible_default_ipv4.address }}
+{% endif %}
 {% endfor %}

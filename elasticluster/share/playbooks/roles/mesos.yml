@@ -4,7 +4,6 @@
   hosts: mesos_master
   vars:
     java_version: 8
-    zookeeper_hosts: "mesos_master"
   tags:
     - zookeeper
     - mesos
@@ -12,7 +11,7 @@
     - master
   roles:
     - zookeeper
-    - {role: mesos, mesos_install_mode: "master" }
+    - mesos-master
     - marathon
 
 
@@ -26,4 +25,4 @@
     - slave
   roles:
     - docker
-    - { role: mesos, mesos_install_mode: "slave" }
+    - mesos-slave

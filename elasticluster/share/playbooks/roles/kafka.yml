@@ -2,8 +2,6 @@
 
 - name: Install Streaming (Kafka) node(s)
   hosts: stream_master
-  vars:
-    zookeeper_hosts: "stream_master"
   tags:
     - zookeeper
     - kafka

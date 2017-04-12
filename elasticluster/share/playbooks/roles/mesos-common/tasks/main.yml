@@ -1,9 +1,6 @@
 ---
 
 
-- debug: msg="Install Mode is {{mesos_install_mode}}"
-
-
 - name: Add apt-key (Debian/Ubuntu)
   apt_key: id=E56151BF keyserver=keyserver.ubuntu.com state=present
   when: is_debian_or_ubuntu
@@ -38,11 +35,3 @@
 
 - name: Mesos ZK config file
   template: src=zk.j2 dest=/etc/mesos/zk
-
-
-- include: master.yml
-  when: mesos_install_mode == "master"
-
-
-- include: slave.yml
-  when: mesos_install_mode == "slave"

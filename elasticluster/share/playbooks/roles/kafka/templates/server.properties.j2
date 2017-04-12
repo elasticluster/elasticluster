@@ -1,11 +1,12 @@
 ############################# Server Basics #############################
 
-{% for server in groups['stream_master'] %}
+{% for server in groups.stream_master %}
 {% if server == inventory_hostname %}
-broker.id={{ server[-3:] | int }}
-port={{ kafka_port + (server[-3:] | int) }}
+broker.id={{ loop.index }}
+port={{ kafka_port + loop.index }}
 {% endif %}
 {% endfor %}
+
 
 # Hostname the broker will bind to. If not set, the server will bind to all interfaces
 {% if kafka_listen_address is defined %}

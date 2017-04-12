@@ -1,6 +1,7 @@
 ---
 
-zookeeper_hosts: "zookeeper"
+zookeeper_hosts:
+  - "zookeeper"
 zookeeper_register_path_env: false
 
 client_port: 2181

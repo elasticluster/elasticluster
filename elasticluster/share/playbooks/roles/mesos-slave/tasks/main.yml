@@ -1,0 +1,21 @@
+---
+
+
+- name: Mesos slave configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/etc/mesos-slave/{{item}}'
+  with_items:
+    - hostname
+    - ip
+    - containerizers
+    - image_providers
+    - isolation
+
+- name: Restart mesos slave services
+  service:
+    name="{{item}}"
+    state=restarted
+    enabled=yes
+  with_items:
+    - mesos-slave

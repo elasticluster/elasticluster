@@ -1,9 +1,0 @@
----
-
-
-- name: Mesos slave IP file
-  template: src=slave-ip.j2 dest=/etc/mesos-slave/ip
-
-
-- name: Mesos slave hostname file
-  template: src=slave-hostname.j2 dest=/etc/mesos-slave/hostname

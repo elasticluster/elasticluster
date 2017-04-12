@@ -1,4 +1,5 @@
 ---
 dependencies:
   - { role: bigtop }
-  - { role: zookeeper }
+  - role: zookeeper
+    zookeeper_hosts: '{{ groups.stream_master }}'

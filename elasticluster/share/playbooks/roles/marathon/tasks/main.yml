@@ -22,8 +22,10 @@
   when: is_rhel_compatible
 
 
-- name: Install Marathon package (Debain/Ubuntu)
-  pacakge: name=marathon state=present
+- name: Install Marathon package
+  package:
+    name: marathon
+    state: present
 
 
 - name: Create Marathon conf directory

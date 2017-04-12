@@ -1,0 +1,34 @@
+---
+
+
+- name: Restart Zookeeper services
+  service:
+    name: zookeeper
+    state: restarted
+
+
+- name: Install Mesosphere on master nodes
+  package:
+    name: mesosphere
+    state: present
+
+
+- name: Mesos master configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/etc/mesos-master/{{item}}'
+  with_items:
+    - quorum
+    - hostname
+    - ip
+
+
+- name: Restart mesos master services
+  service:
+    name="{{item}}"
+    state=restarted
+    enabled=yes
+  with_items:
+    - zookeeper
+    - mesos-master
+    - marathon

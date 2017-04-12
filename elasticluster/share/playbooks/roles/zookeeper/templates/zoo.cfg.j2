@@ -8,6 +8,6 @@ syncLimit={{ sync_limit }}
 autopurge.purgeInterval={{ zookeeper_autopurge_purgeInterval }}
 autopurge.snapRetainCount={{ zookeeper_autopurge_snapRetainCount }}
 {% endif %}
-{% for server in groups[zookeeper_hosts] %}
-server.{{server[-3:] | int}}={{server}}:2888:3888
+{% for server in zookeeper_hosts %}
+server.{{ loop.index }}={{server}}:2888:3888
 {% endfor %}
