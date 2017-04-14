@@ -4,8 +4,8 @@
 # `status` action, which makes Ansible's `service:` module fail.
 - name: restart gmond
   command: |
-    service {{ item }} restart
-  with_items: '{{ ganglia_monitor_services }}'
+    service {{item}} restart
+  with_items: '{{ ganglia_gmond_services }}'
   when: '{{is_debian_compatible}} and not {{init_is_systemd}}'
 
 
@@ -13,5 +13,5 @@
   service:
     name: '{{ item }}'
     state: restarted
-  with_items: '{{ ganglia_monitor_services }}'
+  with_items: '{{ ganglia_gmond_services }}'
   when: is_rhel_compatible
