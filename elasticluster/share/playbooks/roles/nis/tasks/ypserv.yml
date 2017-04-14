@@ -26,16 +26,18 @@
   with_items: '{{nis_master_packages}}'
 
 
+- name: Ensure `ypserv` is restarted if config files changed
+  meta: flush_handlers
+
+
 - name: Ensure `ypserv` starts at boot
   service:
     name: '{{item}}'
     state: started
     enabled: yes
+  notify:
+    - restart ypbind
   with_items: '{{nis_master_services}}'
-
-
-- name: Ensure `ypserv` is restarted if config files changed
-  meta: flush_handlers
 
 
 - name: Update NIS/YP databases (NIS master server)
