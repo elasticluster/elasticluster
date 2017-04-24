@@ -34,7 +34,7 @@
         cloud infrastructures like <a href="http://aws.amazon.com/ec2/" target="_blank">Amazon's Elastic Compute
             Cloud EC2</a>,
         <a href="https://cloud.google.com/products/compute-engine"
-        target="_blank">Google Compute Engine</a> or a private <a href="http://www.openstack.org/" target="_blank">OpenStack</a> cloud.
+        target="_blank">Google Compute Engine</a>, or a private <a href="http://www.openstack.org/" target="_blank">OpenStack</a> cloud.
         Its main goal is to get your compute cluster up and running with just a few commands.</p>
 
     <div class="pull-right">
@@ -53,53 +53,58 @@
             configurations and information on how to access a specific cloud webservice.</p>
 
         <p>Using the command line (or, very soon, a simple API), you can start a cluster. ElastiCluster will connect
-            to the desired cloud, start the virtual machines and wait until they are accessible via ssh.</p>
+            to the desired cloud, start the virtual machines and wait until they are accessible via SSH.</p>
 
-        <p>After all the virtual machines are up and running, ElastiCluster will use ansible to configure them.</p>
+        <p>After all the virtual machines are up and running, ElastiCluster
+            will use <a href="http://www.ansible.com" target="_blank">Ansible</a> to configure them.</p>
 
         <h3>Features</h3>
 
-        <p>ElastiCluster offers the following features at the current state:
-        <ul>
-            <li>Simple configuration file to define cluster templates</li>
-            <li>Can start and manage multiple independent clusters at the same time</li>
-            <li>
-                Automated setup
-                <ul>
-                    <li>use <a href="http://www.debian.org/" target="_blank">Debian GNU/Linux</a>, <a
-                            href="http://www.ubuntu.com/" target="_blank">Ubuntu</a>, or <a
-                            href="http://www.centos.org/" target="_blank">CentOS</a> as a base operating system
-                    </li>
-                    <li>choose <a href="https://computing.llnl.gov/linux/slurm/" target="_blank">SLURM</a>, <a
-                            href="http://www.gridengine.info/" target="_blank">Grid Engine</a> or <a
-                            href="http://www.adaptivecomputing.com/products/open-source/torque/" target="_blank">TORQUE+MAUI</a>
-                        as a batch-queueing system
-                    </li>
-                    <li>setup your <a href="http://hadoop.apache.org/" target="_blank">hadoop</a> cluster to start
-                        your favorite map/reduce job
-                    </li>
-                    <li>or create your
-                    <a href="http://ipython.org/ipython-doc/dev/parallel/"
-                    target="_blank">IPython cluster</a> to run your
-                    python code in parallel over multiple virtual
-                    machines.
-                    </li>
-                    <li>add useful tools like <a href="http://ganglia.info/" target="_blank">Ganglia</a> for
-                        monitoring...
-                    </li>
-                    <li>configure a distributed storage like
-                    <a href="http://www.gluster.org/"
-                    target="_blank">GlusterFS</a> or
-                    <a href="http://ceph.com/"
-                    target="_blank">Ceph</a>, or a parallel filesystem
-                    like <a href="http://orangefs.org/"
-                    target="_blank">OrangeFS</a> (formerly known as PVFS2)
-                    <li>...or anything that you can install with an <a href="http://www.ansible.com/">Ansible</a>
-                        playbook!
-                    </li>
-                </ul>
-            </li>
-        </ul>
+        <p>
+            ElastiClusters provides automated setup of:
+            <ul>
+                <li>
+                    HPC batch-queuing clusters running
+                    <a href="https://computing.llnl.gov/linux/slurm/" target="_blank">SLURM</a>,
+                    <a href="http://www.gridengine.info/" target="_blank">Grid Engine</a>,
+                    or <a href="http://www.adaptivecomputing.com/products/open-source/torque/" target="_blank">TORQUE+MAUI</a>;
+                </li>
+                <li>
+                    <a href="http://spark.apache.org/">Spark</a> / <a href="http://hadoop.apache.org/" target="_blank">Hadoop</a>
+                    clusters with HDFS and Hive/SQL;
+                </li>
+                <li>
+                    distributed storage clusters using
+                    <a href="http://www.gluster.org/" target="_blank">GlusterFS</a>,
+                    <a href="http://ceph.com/" target="_blank">Ceph</a>,
+                    or <a href="http://orangefs.org/" target="_blank">OrangeFS</a>
+                </li>
+                <li>
+                    Useful add-on tools like <a href="http://ganglia.info/" target="_blank">Ganglia</a> for
+                    monitoring or <a href="http://jupyterhub.readthedocs.io/en/latest/index.html" target="_blank">Jupyter/IPython</a>
+                    for teaching or interactive programming use.
+                </li>
+                <li>
+                    ... or anything that you can install with an
+                    <a href="http://www.ansible.com" target="_blank">Ansible</a> playbook!
+                </li>
+            </ul>
+        </p>
+
+        <p>
+            ElastiCluster is in active development, and offers the following
+            features at the moment:
+            <ul>
+                <li>
+                    Simple configuration file to define cluster templates.
+                </li>
+                <li>
+                    Grow and shrink a running cluster.
+                </li>
+                <li>
+                    Start and manage multiple independent clusters at the same time.
+                </li>
+            </ul>
         </p>
     </div>
 
