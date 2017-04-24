@@ -125,21 +125,32 @@
             interact with ElastiCluster through the command line interface. For a full description of the
             configuration and command line interface see the <a
                     href="http://elasticluster.readthedocs.org/en/latest/" target="_blank">documentation</a>. It's also
-            possible to specify the examples below in one configuration file.</p>
+            possible to bundle all the examples below in a single configuration file.</p>
         <ul class="nav nav-tabs" id="configTab">
             <li class="active"><a href="#os-slurm" data-toggle="tab">SLURM on OpenStack</a></li>
-            <li><a href="#amazon-hadoop" data-toggle="tab">Hadoop on Amazon</a></li>
-            <li><a href="#gce-ipython" data-toggle="tab">IPython
-            cluster on Google Compute Engine</a></li>
+            <li><a href="#amazon-hadoop" data-toggle="tab">Spark/Hadoop on Amazon</a></li>
+            <li><a href="#gce-ipython" data-toggle="tab">JupyterHub server on Google Compute Engine</a></li>
         </ul>
         <div class="tab-content">
             <div class="tab-pane active" id="os-slurm">
                 <div class="row-fluid">
                     <div class="span6">
-                            <pre class="prettyprint languague-ini">
-[cloud/hobbes]
+                            <pre class="prettyprint language-ini">
+[cluster/slurm]
+cloud=openstack
+login=ubuntu
+setup_provider=slurm
+security_group=default
+# Ubuntu image
+image_id=16618a82-92fd-4615-86e6-d354f9f66af5
+flavor=4cpu-16ram-hpc
+frontend_nodes=1
+compute_nodes=4
+ssh_to=frontend
+
+[cloud/openstack]
 provider=openstack
-auth_url=http://hobbes.gc3.uzh.ch:5000/v2.0
+auth_url=http://openstack.example.org:5000/v2.0
 username=****REPLACE WITH YOUR USERNAME****
 password=****REPLACE WITH YOUR PASSWORD****
 project_name=****REPLACE WITH YOUR PROJECT/TENANT NAME****
@@ -152,23 +163,11 @@ user_key_name=elasticluster
 user_key_private=~/.ssh/id_rsa
 user_key_public=~/.ssh/id_rsa.pub
 
-[setup/ansible-slurm]
+[setup/slurm]
 provider=ansible
 frontend_groups=slurm_master
-compute_groups=slurm_clients
-
-[cluster/slurm]
-cloud=hobbes
-login=ubuntu
-setup_provider=ansible-slurm
-security_group=default
-# Ubuntu image
-image_id=16618a82-92fd-4615-86e6-d354f9f66af5
-flavor=m1.small
-frontend_nodes=1
-compute_nodes=2
-ssh_to=frontend
-                            </pre>
+compute_groups=slurm_worker
+                      </pre>
                     </div>
                     <div class="span6 commands">
                         <h5>Start slurm cluster with the name `mycluster`</h5>
@@ -191,7 +190,7 @@ ssh_to=frontend
                             $ elasticluster ssh mycluster
                         </code>
 
-                        <h5>SFTP connect</h5>
+                        <h5>SFTP shell to front-end node</h5>
                         <code>
                             $ elasticluster sftp mycluster
                         </code>
@@ -206,7 +205,18 @@ ssh_to=frontend
             <div class="tab-pane" id="amazon-hadoop">
                 <div class="row-fluid">
                     <div class="span6">
-                            <pre class="prettyprint languague-ini">
+                            <pre class="prettyprint language-ini">
+[cluster/hadoop]
+cloud=amazon-us-east-1
+login=ubuntu
+setup=hadoop
+security_group=all_tcp_ports
+image_id=ami-00000048
+flavor=m1.small
+master_nodes=1
+worker_nodes=4
+ssh_to=hadoop-name
+
 [cloud/amazon-us-east-1]
 provider=ec2_boto
 ec2_url=https://ec2.us-east-1.amazonaws.com
@@ -217,35 +227,20 @@ ec2_region=us-east-1
 [login/ubuntu]
 image_user=ubuntu
 
-[setup/ansible]
+[setup/hadoop]
 provider=ansible
-hadoop-name_groups=hadoop_namenode
-hadoop-jobtracker_groups=hadoop_jobtracker
-hadoop-task-data_groups=hadoop_tasktracker,hadoop_datanode
-
-[cluster/hadoop]
-cloud=amazon-us-east-1
-login=ubuntu
-setup_provider=ansible
-security_group=all_tcp_ports
-image_id=ami-00000048
-flavor=m1.small
-hadoop-name_nodes=1
-hadoop-jobtracker_nodes=1
-hadoop-task-data_nodes=4
-ssh_to=hadoop-name
-
-
+master_groups=hadoop_master
+worker_groups=hadoop_worker
                             </pre>
                     </div>
                     <div class="span6 commands">
-                        <h5>Start hadoop cluster with the name `mycluster`</h5>
+                        <h5>Start a Hadoop+Spark cluster with the name `cluster1`</h5>
                         <code>
-                            $ elasticluster start hadoop -n mycluster
+                            $ elasticluster start hadoop -n cluster1
                         </code>
-                        <h5>Start another hadoop cluster just for the fun of it</h5>
+                        <h5>Start another cluster just for the fun of it</h5>
                         <code>
-                            $ elasticluster start hadoop -n mysecondcluster
+                            $ elasticluster start hadoop -n cluster2
                         </code>
                         <h5>List all clusters</h5>
                         <code>
@@ -254,32 +249,46 @@ ssh_to=hadoop-name
 
                         <h5>List nodes</h5>
                         <code>
-                            $ elasticluster list-nodes mycluster
+                            $ elasticluster list-nodes cluster1
                         </code>
 
-                        <h5>Grow cluster by 10 data nodes</h5>
+                        <h5>Grow cluster by 10 worker nodes</h5>
                         <code>
-                            $ elasticluster resize mycluster -a 10:hadoop-task-data
+                            $ elasticluster resize cluster1 -a 10:worker
                         </code>
 
-                        <h5>SSH into frontend node</h5>
+                        <h5>SSH into master node</h5>
                         <code>
-                            $ elasticluster ssh mycluster
+                            $ elasticluster ssh cluster1
                         </code>
 
-                        <h5>SFTP connect</h5>
+                        <h5>SFTP shell to master node</h5>
                         <code>
-                            $ elasticluster sftp mycluster
+                            $ elasticluster sftp cluster1
                         </code>
 
-                        <h5>Destroy cluster</h5>
+                        <h5>Destroy both clusters</h5>
+                        <code>
+                            $ elasticluster stop cluster1 cluster2
+                        </code>
                     </div>
                 </div>
             </div>
             <div class="tab-pane" id="gce-ipython">
                 <div class="row-fluid">
                     <div class="span6">
-                            <pre class="prettyprint languague-ini">
+                            <pre class="prettyprint language-ini">
+[cluster/jupyterhub]
+cloud=google
+login=google
+setup=jupyterhub
+security_group=all_tcp_ports
+image_id=debian-7-wheezy-v20130723
+flavor=n1-standard-1
+server_nodes=1
+ssh_to=server
+image_userdata=
+
 [cloud/google]
 provider=google
 gce_project_id=****REPLACE WITH YOUR PROJECT ID****
@@ -294,98 +303,31 @@ user_key_name=elasticluster
 user_key_private=~/.ssh/id_rsa
 user_key_public=~/.ssh/id_rsa.pub
 
-[setup/ipython]
+[setup/jupyterhub]
 provider=ansible
-controller_groups=ipython_controller,ipython_engine
-worker_groups=ipython_engine
-
-[cluster/ipython]
-cloud=google
-login=google
-setup_provider=ansible_ipython
-security_group=all_tcp_ports
-image_id=debian-7-wheezy-v20130723
-flavor=n1-standard-1
-controller_nodes=1
-worker_nodes=10
-ssh_to=controller
-image_userdata=
-
-
-                            </pre>
+server_groups=jupyterhub
+                      </pre>
                     </div>
                     <div class="span6 commands">
-                        <h5>Start ipython cluster with the name `mycluster`</h5>
+                        <h5>Start JupyterHub server</h5>
                         <code>
-                            $ elasticluster start ipython -n mycluster
+                            $ elasticluster start jupyterhub
                         </code>
 
-                        <h5>SSH into controller node</h5>
+                        <h5>SSH into server</h5>
                         <code>
-                            $ elasticluster ssh mycluster
+                            $ elasticluster ssh jupyterhub
                         </code>
 
-                        <h5>Run some python code in parallel</h5>
-                        <pre>
-In [1]: import os
+                        <h5>Open JupyterHub login page</h5>
+                        <em>
+                            Open <em>https://server.vm/</em> in your browser.
+                            Accept the self-signed TLS/SSL certificate.
+                        </em>
 
-In [2]: from IPython.parallel import Client
-
-In [3]: rc = Client()
-
-In [4]: rc.ids
-Out[4]: [0, 1, 2, 3, 4]
-
-In [5]: dview = rc[:]
-
-In [6]: dview.apply_sync(os.getpid)
-Out[6]: [18988, 19583, 19003, 20128, 20444]
-
-In [7]: dview.map_sync(lambda x: x**10, range(32))
-Out[7]: 
-[0,
- 1,
- 1024,
- 59049,
- 1048576,
- 9765625,
- 60466176,
- 282475249,
- 1073741824,
- 3486784401,
- 10000000000,
- 25937424601,
- 61917364224,
- 137858491849,
- 289254654976,
- 576650390625,
- 1099511627776,
- 2015993900449,
- 3570467226624,
- 6131066257801,
- 10240000000000,
- 16679880978201,
- 26559922791424,
- 41426511213649,
- 63403380965376,
- 95367431640625,
- 141167095653376,
- 205891132094649,
- 296196766695424,
- 420707233300201,
- 590490000000000,
- 819628286980801]
-
-                        </pre>
-
-                        <h5>Grow cluster by 10 new nodes</h5>
+                        <h5>Destroy server</h5>
                         <code>
-                            $ elasticluster resize mycluster -a 10:worker
-                        </code>
-
-                        <h5>Destroy cluster</h5>
-                        <code>
-                            $ elasticluster stop mycluster
+                            $ elasticluster stop jupyterhub
                         </code>
                     </div>
                 </div>
