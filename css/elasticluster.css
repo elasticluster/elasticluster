@@ -23,7 +23,9 @@ div.license {
     margin-top: 50px;
 }
 
-
+div.hr {
+     border-top: 1px solid #ddd;
+}
 
 /* fonts */
 h1, h2, h3, h4, h5, h6, div.hero-unit h1 {
