@@ -73,7 +73,8 @@ class Tox(TestCommand):
 # conditional dependencies in Python packages, support for it is inconsistent
 # (at best) among the PyPA tools. An attempt to use the conditional syntax has
 # already caused issues #308, #249, #227, and many more headaches to me while
-# trying to find a combination of `pip`, `setuptools`, `wheel`, and dependency
+# trying to find a combination of
+`pip`, `setuptools`, `wheel`, and dependency
 # specification syntax that would work reliably across all supported Linux
 # distributions. I give up, and revert to computing the dependencies via
 # explicit Python code in `setup.py`; this will possibly break wheels but it's
@@ -108,7 +109,9 @@ if python_version == (2, 6):
     ]
 elif python_version == (2, 7):
     version_dependent_requires = [
-        'python-novaclient',
+        # Novaclient 8.0.0 changed some API again, see issue #425
+        # FIXME: need to fix this at source level rather than blacklisting
+        'python-novaclient<8.0.0',
     ]
 else:
     raise RuntimeError("ElastiCluster requires Python 2.6 or 2.7")
