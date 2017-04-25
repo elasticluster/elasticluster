@@ -148,11 +148,13 @@ class Start(AbstractCommand):
                 nodes = self.params.nodes.split(',')
                 for nspec in nodes:
                     n, group = nspec.split(':')
-                    if not n.isdigit():
+                    try:
+                        n = int(n)
+                    except (ValueError, TypeError) as err:
                         raise ConfigurationError(
                             "Invalid syntax for option `--nodes`: "
-                            "`%s` is not an integer." % n)
-                    n = int(n)
+                            "cannot convert `{n}` to integer: {err}"
+                            .format(n=n, err=err))
                     self.params.extra_conf[group + '_nodes'] = n
         except ValueError:
             raise ConfigurationError(
@@ -746,7 +748,8 @@ class SftpFrontend(AbstractCommand):
                     "Hostname %s not found in cluster %s" % (self.params.ssh_to, cluster_name))
         else:
             frontend = cluster.get_frontend_node()
-        host = frontend.connection_ip()
+        host = f
+        rontend.connection_ip()
         username = frontend.image_user
         knownhostsfile = cluster.known_hosts_file if cluster.known_hosts_file \
                          else '/dev/null'
