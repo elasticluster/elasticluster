@@ -67,6 +67,16 @@ report on any bugs you find!
 **Note:** ElastiCluster_ is a Python_ program; Python version 2.6 or 2.7 is
 required to run it. Python 3 is not (yet) supported.
 
+After ElastiCluster is installed, run this command to deploy an `example
+configuration file`_::
+
+  elasticluster list-templates
+
+The configuration file is located in `.elasticluster/config`; adjust it
+to your liking using the `configuration reference`__.
+
+.. __: http://elasticluster.readthedocs.io/en/master/configure.html
+
 
 .. References
 
