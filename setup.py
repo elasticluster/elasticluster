@@ -74,7 +74,7 @@ class Tox(TestCommand):
 # (at best) among the PyPA tools. An attempt to use the conditional syntax has
 # already caused issues #308, #249, #227, and many more headaches to me while
 # trying to find a combination of
-`pip`, `setuptools`, `wheel`, and dependency
+# `pip`, `setuptools`, `wheel`, and dependency
 # specification syntax that would work reliably across all supported Linux
 # distributions. I give up, and revert to computing the dependencies via
 # explicit Python code in `setup.py`; this will possibly break wheels but it's
