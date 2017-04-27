@@ -2,6 +2,12 @@
 /* structure */
 body{
     padding-bottom:30px;
+    margin:0;
+    font-family:"Palatino Linotype",Palatino,"Book Antiqua","URW Palladio L",serif;
+    font-size:14px;
+    line-height:20px;
+    color:#333333;
+    background-color:#ffffff;
 }
 div.container {
     margin-top: 50px;
