@@ -74,6 +74,7 @@ class Tox(TestCommand):
 # (at best) among the PyPA tools. An attempt to use the conditional syntax has
 # already caused issues #308, #249, #227, and many more headaches to me while
 # trying to find a combination of
+
 # `pip`, `setuptools`, `wheel`, and dependency
 # specification syntax that would work reliably across all supported Linux
 # distributions. I give up, and revert to computing the dependencies via
@@ -179,6 +180,7 @@ setup(
         'azure',
         # OpenStack clouds
         'netifaces',
+        'requests!=2.13.0,!=2.12.2,>=2.10.0',  ## see issue #414
         #'python-novaclient' ## this needs special treatment depending on Python version, see below
     ] + version_dependent_requires),
     tests_require=['tox', 'mock', 'pytest>=2.10'],  # read right-to-left
