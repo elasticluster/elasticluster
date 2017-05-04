@@ -64,8 +64,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     :param str username: username of the keystone user
     :param str password: password of the keystone user
     :param str project_name: name of the project to use
-    :param str user_domain_id: name of the user domain to use
-    :param str project_domain_id: name of the project domain to use
+    :param str user_domain_name: name of the user domain to use
+    :param str project_domain_name: name of the project domain to use
     :param str auth_url: url of keystone endpoint
     :param str region: OpenStack region to use
     :param str storage_path: path to store temporary data
@@ -77,7 +77,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     __node_start_lock = threading.Lock()  # lock used for node startup
 
     def __init__(self, username, password, project_name, auth_url,
-                 user_domain_id, project_domain_id,
+                 user_domain_name, project_domain_name,
                  region_name=None, storage_path=None,
                  request_floating_ip=False,
                  nova_api_version=DEFAULT_OS_NOVA_API_VERSION):
@@ -85,8 +85,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._os_username = os.getenv('OS_USERNAME', username)
         self._os_password = os.getenv('OS_PASSWORD', password)
         self._os_tenant_name = os.getenv('OS_TENANT_NAME', project_name)
-        self._os_project_domain_id = os.getenv('OS_PROJECT_DOMAIN_NAME', project_domain_id)
-        self._os_user_domain_id = os.getenv('OS_USER_DOMAIN_NAME', user_domain_id)
+        self._os_project_domain_name = os.getenv('OS_PROJECT_DOMAIN_NAME', project_domain_name)
+        self._os_user_domain_name = os.getenv('OS_USER_DOMAIN_NAME', user_domain_name)
         self._os_region_name = region_name
         self.request_floating_ip = request_floating_ip
         self.nova_api_version = nova_api_version
@@ -97,8 +97,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         auth = loader.load_from_options(auth_url=self._os_auth_url,
                                         username=self._os_username,
                                         password=self._os_password,
-                                        user_domain_id=self._os_user_domain_id,
-                                        project_domain_id=self._os_project_domain_id,
+                                        user_domain_name=self._os_user_domain_name,
+                                        project_domain_name=self._os_project_domain_name,
                                         project_name=self._os_tenant_name)
         sess = session.Session(auth=auth)
         self.client = client.Client(self.nova_api_version, session=sess)
@@ -391,8 +391,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 'username': self._os_username,
                 'password': self._os_password,
                 'project_name': self._os_tenant_name,
-                'project_domain_id': self._os_project_domain_id,
-                'user_domain_id': self._os_user_domain_id,
+                'project_domain_name': self._os_project_domain_name,
+                'user_domain_name': self._os_user_domain_name,
                 'region_name': self._os_region_name,
                 'request_floating_ip': self.request_floating_ip,
                 'instance_ids': self._instances.keys(),
@@ -404,14 +404,14 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._os_username = state['username']
         self._os_password = state['password']
         self._os_tenant_name = state['project_name']
-        self._os_user_domain_id = state['user_domain_id']
-        self._os_project_domain_id = state['project)domain_id']
+        self._os_user_domain_name = state['user_domain_name']
+        self._os_project_domain_name = state['project)domain_name']
         self._os_region_name = state['region_name']
         self.request_floating_ip = state['request_floating_ip']
         self.nova_api_version = state.get('nova_api_version', DEFAULT_OS_NOVA_API_VERSION)
         self.client = client.Client(self.nova_api_version,
                                     self._os_username, self._os_password, self._os_tenant_name,
-                                    self._os_user_domain_id, self._os_project_domain_id,
+                                    self._os_user_domain_name, self._os_project_domain_name,
                                     self._os_auth_url, region_name=self._os_region_name)
         self._instances = {}
         self._cached_instances = {}
