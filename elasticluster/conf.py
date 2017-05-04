@@ -180,6 +180,8 @@ CLOUD_PROVIDER_SCHEMAS = {
         Optional("auth_url", default=os.getenv('OS_AUTH_URL', '')): url,
         Optional("username", default=os.getenv('OS_USERNAME', '')): nonempty_str,
         Optional("password", default=os.getenv('OS_PASSWORD', '')): nonempty_str,
+        Optional("user_domain_id", default=os.getenv('OS_USER_DOMAIN_NAME', '')): nonempty_str,
+        Optional("project_domain_id", default=os.getenv('OS_PROJECT_DOMAIN_NAME', '')): nonempty_str,
         Optional("project_name",
                  # if OS_PROJECT_NAME is not defined,
                  # try legacy variable OS_TENANT_NAME as a fallback

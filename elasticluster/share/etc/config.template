@@ -132,6 +132,14 @@
 #                    command. If an environment variable
 #                    `OS_TENANT_NAME` is set, this option is ignored.
 #
+# user_domain_id:    OpenStack user domain to use,
+#                    If an environment variable
+#                    `OS_USER_DOMAIN_NAME` is set, this option is ignored.
+#
+# project_domain_id: OpenStack project domain to use,
+#                    If an environment variable
+#                    `OS_PROJECT_DOMAIN_NAME` is set, this option is ignored.
+#
 # region_name:       OpenStack region (optional) 
 # request_floating_ip: request assignment of a floating IP when the
 #                      instance is started.
@@ -178,9 +186,10 @@ ec2_region=nova
 # request_floating_ip=False
 
 # Hobbes cloud, using the `openstack` provider
-[cloud/hobbes]
-provider=openstack
-auth_url=http://hobbes.gc3.uzh.ch:5000/v2.0
+#[cloud/hobbes]
+#provider=openstack
+#auth_url=http://hobbes.gc3.uzh.ch:5000/v2.0
+#domain_name=Default
 # username=***REPLACE WITH YOUR USERNAME (OS_USERNAME)***
 # password=***REPLACE WITH YOUR PASSWORD (OS_PASSWORD)***
 # project_name=***REPLACE WITH YOUR PROJECT NAME (OS_TENANT_NAME)***
