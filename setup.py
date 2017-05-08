@@ -113,6 +113,7 @@ elif python_version == (2, 7):
         # Novaclient 8.0.0 changed some API again, see issue #425
         # FIXME: need to fix this at source level rather than blacklisting
         'python-novaclient<8.0.0',
+        'python-keystoneclient<3.10.0',
     ]
 else:
     raise RuntimeError("ElastiCluster requires Python 2.6 or 2.7")
