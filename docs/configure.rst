@@ -287,6 +287,20 @@ Valid configuration keys for *openstack*
     starts, the config option will be ignored and the value of the
     variable will be used instead.
 
+``project_domain_name``
+
+    OpenStack project domain. If an
+    environment variable `OS_PROJECT_DOMAIN_NAME` is set when
+    elasticluster starts, the config option will be ignored and the
+    value of the variable will be used instead.
+
+``user_domain_name``
+
+    OpenStack user domain. If an environment variable 
+    `OS_USER_DOMAIN_NAME` is set when elasticluster starts, the
+    config option will be ignored and the value of the variable will
+    be used instead.
+
 ``region_name``
 
     OpenStack region (optional)
