@@ -186,9 +186,9 @@ ec2_region=nova
 # request_floating_ip=False
 
 # Hobbes cloud, using the `openstack` provider
-# [cloud/hobbes]
-# provider=openstack
-# auth_url=http://hobbes.gc3.uzh.ch:5000/v2.0
+[cloud/hobbes]
+provider=openstack
+auth_url=http://hobbes.gc3.uzh.ch:5000/v2.0
 # domain_name=Default
 # username=***REPLACE WITH YOUR USERNAME (OS_USERNAME)***
 # password=***REPLACE WITH YOUR PASSWORD (OS_PASSWORD)***
