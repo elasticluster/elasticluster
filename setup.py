@@ -110,8 +110,9 @@ if python_version == (2, 6):
     ]
 elif python_version == (2, 7):
     version_dependent_requires = [
-        'python-novaclient',
+        'python-glanceclient',
         'python-neutronclient',
+        'python-novaclient',
         # fix dependency conflict among OpenStack libraries:
         # `osc-lib` has a more strict dependency specifier
         # which is not picked up by `pip` because it's not

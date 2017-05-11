@@ -32,28 +32,42 @@ import threading
 from warnings import warn
 
 # External modules
+
+# handle missing OpenStack libraries in Python 2.6: delay ImportError until actually
+# used but raise a warning in the meantime; since we pinned the 2.6 dependencies
+# to the pre-3.0.0 release, everything *should* work with just the "nova" API.
+class _Unavailable(object):
+    def __init__(self, missing):
+        self.__missing = missing
+    def Client(self, *args, **kwargs):
+        warn("Trying to initialize `{module}` which is not available."
+             " A placeholder object will be used instead, but it will raise"
+             " `ImportError` later if there is any actual attempt at using it."
+             .format(module=self.__missing),
+             ImportWarning)
+        class _Unavailable(object):
+            def __init__(self, missing):
+                self.__missing = missing
+            def __getattr__(self, name):
+                return self
+            def __call__(self, *args, **kwargs):
+                raise ImportError(
+                    "Trying to actually use client class from module `{module}`"
+                    " which could not be imported. Aborting."
+                    .format(module=self.__missing))
+        return _Unavailable(self.__missing)
+
 from keystoneauth1 import loading
 from keystoneauth1 import session
+try:
+    from glanceclient import client as glance_client
+except ImportError:
+    glance_client = _Unavailable('python-glanceclient')
 try:
     from neutronclient.v2_0 import client as neutron_client
     from neutronclient.common.exceptions import BadRequest as BadNeutronRequest
 except ImportError:
-    # there's no such thing on Python 2.6, delay ImportError until actually
-    # used but raise a warning in the meantime
-    class _UnavailableNeutronClient(object):
-        def Client(self, *args, **kwargs):
-            warn("Trying to initialize `python-neutronclient` which is not available."
-                 " A placeholder object will be used instead, but it will error out"
-                 " if there is any actual attempt at using it.", ImportWarning)
-            class _Unavailable(object):
-                def __getattr__(self, name):
-                    return self
-                def __call__(self, *args, **kwargs):
-                    raise ImportError(
-                        "Trying to actually use `neutronclient`"
-                        " class which could not be imported.")
-            return _Unavailable()
-    neutron_client = _UnavailableNeutronClient()
+    neutron_client = _Unavailable('python-neutronclient')
     class BadNeutronRequest(Exception):
         """Placeholder to avoid syntax errors."""
         pass
@@ -128,6 +142,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         sess = session.Session(auth=auth)
         self.nova_client = nova_client.Client(self.nova_api_version, session=sess)
         self.neutron_client = neutron_client.Client(session=sess)
+        self.glance_client = glance_client.Client('2', session=sess)
 
         # self.nova_client = client.Client(self.nova_api_version,
         #                             self._os_username, self._os_password, self._os_tenant_name,
@@ -167,8 +182,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._check_security_group(security_group)
 
         # Check if the image id is present.
-        images = self._get_images()
-        if image_id not in [img.id for img in images]:
+        if image_id not in [img.id for img in self._get_images()]:
             raise ImageError(
                 "No image found with ID `{0}` in project `{1}` of cloud {2}"
                 .format(image_id, self._os_tenant_name, self._os_auth_url))
@@ -342,7 +356,13 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         network usage.
 
         """
-        return self.nova_client.images.list()
+        try:
+            # python-novaclient < 8.0.0
+            return self.nova_client.images.list()
+        except AttributeError:
+            # ``glance_client.images.list()`` returns a generator, but callers
+            # of `._get_images()` expect a Python list
+            return list(self.glance_client.images.list())
 
     @memoize(120)
     def _get_flavors(self):
