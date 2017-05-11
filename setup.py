@@ -112,6 +112,11 @@ elif python_version == (2, 7):
     version_dependent_requires = [
         'python-novaclient',
         'python-neutronclient',
+        # fix dependency conflict among OpenStack libraries:
+        # `osc-lib` has a more strict dependency specifier
+        # which is not picked up by `pip` because it's not
+        # a top-level dependency of ElastiCluster
+        'Babel>=2.3.4,!=2.4.0',
     ]
 else:
     raise RuntimeError("ElastiCluster requires Python 2.6 or 2.7")
