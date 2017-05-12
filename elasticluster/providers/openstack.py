@@ -21,7 +21,10 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 __docformat__ = 'reStructuredText'
-__author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
+__author__ = ', '.join([
+    'Antonio Messina <antonio.s.messina@gmail.com>',
+    'Riccardo Murri <riccardo.murri@gmail.com>'
+    ])
 
 # System imports
 import os
@@ -29,9 +32,46 @@ import threading
 from warnings import warn
 
 # External modules
+
+# handle missing OpenStack libraries in Python 2.6: delay ImportError until actually
+# used but raise a warning in the meantime; since we pinned the 2.6 dependencies
+# to the pre-3.0.0 release, everything *should* work with just the "nova" API.
+class _Unavailable(object):
+    def __init__(self, missing):
+        self.__missing = missing
+    def Client(self, *args, **kwargs):
+        warn("Trying to initialize `{module}` which is not available."
+             " A placeholder object will be used instead, but it will raise"
+             " `ImportError` later if there is any actual attempt at using it."
+             .format(module=self.__missing),
+             ImportWarning)
+        class _Unavailable(object):
+            def __init__(self, missing):
+                self.__missing = missing
+            def __getattr__(self, name):
+                return self
+            def __call__(self, *args, **kwargs):
+                raise ImportError(
+                    "Trying to actually use client class from module `{module}`"
+                    " which could not be imported. Aborting."
+                    .format(module=self.__missing))
+        return _Unavailable(self.__missing)
+
 from keystoneauth1 import loading
 from keystoneauth1 import session
-from novaclient import client
+try:
+    from glanceclient import client as glance_client
+except ImportError:
+    glance_client = _Unavailable('python-glanceclient')
+try:
+    from neutronclient.v2_0 import client as neutron_client
+    from neutronclient.common.exceptions import BadRequest as BadNeutronRequest
+except ImportError:
+    neutron_client = _Unavailable('python-neutronclient')
+    class BadNeutronRequest(Exception):
+        """Placeholder to avoid syntax errors."""
+        pass
+from novaclient import client as nova_client
 from novaclient.exceptions import NotFound
 from paramiko import DSSKey, RSAKey, PasswordRequiredException
 from paramiko.ssh_exception import SSHException
@@ -85,16 +125,26 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self.nova_api_version = nova_api_version
         self._instances = {}
         self._cached_instances = {}
+        self.__init_os_api()
 
+    def __init_os_api(self):
+        """
+        Initialise client objects for talking to OpenStack API.
+
+        This is in a separate function so to be called by ``__init__`` and
+        ``__setstate__``.
+        """
         loader = loading.get_plugin_loader('password')
         auth = loader.load_from_options(auth_url=self._os_auth_url,
                                         username=self._os_username,
                                         password=self._os_password,
                                         project_name=self._os_tenant_name)
         sess = session.Session(auth=auth)
-        self.client = client.Client(self.nova_api_version, session=sess)
+        self.nova_client = nova_client.Client(self.nova_api_version, session=sess)
+        self.neutron_client = neutron_client.Client(session=sess)
+        self.glance_client = glance_client.Client('2', session=sess)
 
-        # self.client = client.Client(self.nova_api_version,
+        # self.nova_client = client.Client(self.nova_api_version,
         #                             self._os_username, self._os_password, self._os_tenant_name,
         #                             self._os_auth_url, region_name=self._os_region_name)
 
@@ -132,8 +182,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._check_security_group(security_group)
 
         # Check if the image id is present.
-        images = self._get_images()
-        if image_id not in [img.id for img in images]:
+        if image_id not in [img.id for img in self._get_images()]:
             raise ImageError(
                 "No image found with ID `{0}` in project `{1}` of cloud {2}"
                 .format(image_id, self._os_tenant_name, self._os_auth_url))
@@ -146,17 +195,33 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 .format(flavor, self._os_tenant_name, self._os_auth_url))
         flavor = flavors[0]
 
-        nics = None
-        if 'network_ids' in kwargs:
-            nics=[{'net-id': netid.strip(), 'v4-fixed-ip': ''}
-                  for netid in kwargs['network_ids'].split(',') ]
+        network_ids = [net_id.strip()
+                       for net_id in kwargs.pop('network_ids', '').split(',')]
+        if network_ids:
+            nics = [{'net-id': net_id, 'v4-fixed-ip': ''}
+                    for net_id in network_ids ]
             log.debug("Specifying networks for node %s: %s",
                       node_name, ', '.join([nic['net-id'] for nic in nics]))
+        else:
+            nics = None
 
-        vm = self.client.servers.create(
+        vm = self.nova_client.servers.create(
             node_name, image_id, flavor, key_name=key_name,
             security_groups=[security_group], userdata=image_userdata,
             nics=nics)
+
+        # allocate and attach a floating IP, if requested
+        if self.request_floating_ip:
+            # We need to list the floating IPs for this instance
+            try:
+                # python-novaclient <8.0.0
+                floating_ips = [ip for ip in self.nova_client.floating_ips.list()
+                                if ip.instance_id == vm.id]
+            except AttributeError:
+                floating_ips = self.neutron_client.list_floatingips(id=vm.id)
+            # allocate new floating IP if none given
+            if not floating_ips:
+                self._allocate_address(vm, network_ids)
 
         self._instances[vm.id] = vm
 
@@ -172,25 +237,12 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         del self._instances[instance_id]
 
     def get_ips(self, instance_id):
-        """Retrieves the private and public ip addresses for a given instance.
+        """Retrieves all IP addresses associated to a given instance.
 
         :return: tuple (IPs)
         """
-        self._load_instance(instance_id)
         instance = self._load_instance(instance_id)
-
         IPs = sum(instance.networks.values(), [])
-
-        # We also need to check if there is any floating IP associated
-        if self.request_floating_ip:
-            # We need to list the floating IPs for this instance
-            floating_ips = [ip for ip in self.client.floating_ips.list() if ip.instance_id == instance.id]
-            if not floating_ips:
-                log.debug("Public ip address has to be assigned through "
-                          "elasticluster.")
-                ip = self._allocate_address(instance)
-                # This is probably the preferred IP we want to use
-                IPs.insert(0, ip)
         return IPs
 
     def is_instance_running(self, instance_id):
@@ -246,7 +298,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         try:
             # Check if a keypair `name` exists on the cloud.
-            keypair = self.client.keypairs.get(name)
+            keypair = self.nova_client.keypairs.get(name)
 
             # Check if it has the correct keypair, but only if we can read the local key
             if pkey:
@@ -267,7 +319,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             with open(os.path.expanduser(public_key_path)) as f:
                 key_material = f.read()
                 try:
-                    self.client.keypairs.create(name, key_material)
+                    self.nova_client.keypairs.create(name, key_material)
                 except Exception as ex:
                     log.error(
                         "Could not import key `%s` with name `%s` to `%s`",
@@ -282,13 +334,19 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         :param str name: name of the security group
         :raises: `SecurityGroupError` if group does not exist
         """
-        security_groups = self.client.security_groups.list()
+        try:
+            # python-novaclient < 8.0.0
+            security_groups = self.nova_client.security_groups.list()
+            names = [sg.name for sg in security_groups]
+        except AttributeError:
+            security_groups = self.neutron_client.list_security_groups()['security_groups']
+            names = [sg[u'name'] for sg in security_groups]
 
         # TODO: We should be able to create the security group if it
         # doesn't exist and at least add a rule to accept ssh access.
         # Also, we should be able to add new rules to a security group
         # if needed.
-        if name not in [sg.name for sg in security_groups ]:
+        if name not in names:
             raise SecurityGroupError(
                 "the specified security group %s does not exist" % name)
 
@@ -298,7 +356,13 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         network usage.
 
         """
-        return self.client.images.list()
+        try:
+            # python-novaclient < 8.0.0
+            return self.nova_client.images.list()
+        except AttributeError:
+            # ``glance_client.images.list()`` returns a generator, but callers
+            # of `._get_images()` expect a Python list
+            return list(self.glance_client.images.list())
 
     @memoize(120)
     def _get_flavors(self):
@@ -306,7 +370,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         network usage.
 
         """
-        return self.client.flavors.list()
+        return self.nova_client.flavors.list()
 
     def _load_instance(self, instance_id, force_reload=True):
         """
@@ -330,7 +394,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         if force_reload:
             try:
                 # Remove from cache and get from server again
-                vm = self.client.servers.get(instance_id)
+                vm = self.nova_client.servers.get(instance_id)
             except NotFound:
                 raise InstanceNotFoundError(
                     "Instance `{instance_id}` not found"
@@ -347,7 +411,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         if instance_id not in self._cached_instances:
             # Refresh the cache, just in case
             self._cached_instances = dict(
-                (vm.id, vm) for vm in self.client.servers.list())
+                (vm.id, vm) for vm in self.nova_client.servers.list())
 
         if instance_id in self._cached_instances:
             inst = self._cached_instances[instance_id]
@@ -360,19 +424,68 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             "Instance `{instance_id}` not found"
             .format(instance_id=instance_id))
 
-    def _allocate_address(self, instance):
-        """Allocates a free public ip address to the given instance
+    def _allocate_address(self, instance, network_ids):
+        """
+        Allocates a floating/public ip address to the given instance.
 
         :param instance: instance to assign address to
-        :type instance: py:class:`novaclient.v1_1.servers.Server`
+
+        :param list network_id: List of IDs (as strings) of networks where to
+        request allocation the floating IP.
 
         :return: public ip address
         """
         with OpenStackCloudProvider.__node_start_lock:
-            free_ips = [i for i in self.client.floating_ips.list() if not i.fixed_ip]
-            if not free_ips:
-                free_ips.append(self.client.floating_ips.create())
-            ip = free_ips.pop()
+            try:
+                # Use the `novaclient` API (works with python-novaclient <8.0.0)
+                free_ips = [ip for ip in self.nova_client.floating_ips.list() if not ip.fixed_ip]
+                if not free_ips:
+                    free_ips.append(self.nova_client.floating_ips.create())
+            except AttributeError:
+                # Use the `neutronclient` API
+                #
+                # for some obscure reason, using `fixed_ip_address=None` in the
+                # call to `list_floatingips()` returns *no* results (not even,
+                # in fact, those with `fixed_ip_address: None`) whereas
+                # `fixed_ip_address=''` acts as a wildcard and lists *all* the
+                # addresses... so filter them out with a list comprehension
+                free_ips = [ip for ip in
+                            self.neutron_client.list_floatingips(fixed_ip_address='')['floatingips']
+                            if ip['fixed_ip_address'] is None]
+                if not free_ips:
+                    # FIXME: OpenStack Network API v2 requires that we specify
+                    # a network ID along with the request for a floating IP.
+                    # However, ElastiCluster configuration allows for multiple
+                    # networks to be connected to a VM, but does not give any
+                    # hint as to which one(s) should be used for such requests.
+                    # So we try them all, ignoring errors until one request
+                    # succeeds and hope that it's the OK. One can imagine
+                    # scenarios where this is *not* correct, but: (1) these
+                    # scenarios are unlikely, and (2) the old novaclient code
+                    # above has not even had the concept of multiple networks
+                    # for floating IPs and no-one has complained in 5 years...
+                    allocated_ip = None
+                    for network_id in network_ids:
+                        log.debug(
+                            "Trying to allocate floating IP on network %s ...", network_id)
+                        try:
+                            allocated_ip = self.neutron_client.create_floatingip({
+                                'floatingip': {'floating_network_id':network_id}})
+                        except BadNeutronRequest as err:
+                            log.debug(
+                                "Failed allocating floating IP on network %s: %s",
+                                network_id, err)
+                        if allocated_ip:
+                            free_ips.append(allocated_ip)
+                            break
+                        else:
+                            continue  # try next network
+            if free_ips:
+                ip = free_ips.pop()
+            else:
+                raise RuntimeError(
+                    "Could not allocate floating IP for VM {0}"
+                    .format(vm.id))
             instance.add_floating_ip(ip)
         return ip.ip
 
@@ -396,20 +509,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._os_region_name = state['region_name']
         self.request_floating_ip = state['request_floating_ip']
         self.nova_api_version = state.get('nova_api_version', DEFAULT_OS_NOVA_API_VERSION)
-        self.client = client.Client(self.nova_api_version,
-                                    self._os_username, self._os_password, self._os_tenant_name,
-                                    self._os_auth_url, region_name=self._os_region_name)
         self._instances = {}
         self._cached_instances = {}
-        # recover instance objects from the cloud.
-
-        # This is Disabled as we don't want to reload the
-        # instances also for "list" command
-
-        # for vm in self.client.servers.list():
-        #     if vm.id in state['instance_ids']:
-        #         self._instances[vm.id] = vm
-
-        # for missing_vm in set(state['instance_ids']).difference(self._instances.keys()):
-        #     log.warning("VM with id %s not found in cloud "
-        #                 "%s" % (missing_vm, self._os_auth_url))
+        self.__init_os_api()
