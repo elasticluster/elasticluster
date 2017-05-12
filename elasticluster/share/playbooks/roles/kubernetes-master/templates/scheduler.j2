@@ -1,0 +1,7 @@
+###
+# kubernetes scheduler config
+
+# default config should be adequate
+
+# Add your own!
+KUBE_SCHEDULER_ARGS="{{ kube_scheduler_options|join(' ') }} {{ kube_scheduler_additional_options|join(' ') }}"

@@ -1,0 +1,7 @@
+###
+# kubernetes proxy config
+
+# default config should be adequate
+
+# Add your own!
+KUBE_PROXY_ARGS="{{ kube_proxy_options|join(' ') }} {{ kube_proxy_additional_options|join(' ') }}"

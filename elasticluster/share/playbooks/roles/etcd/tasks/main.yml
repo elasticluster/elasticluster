@@ -1,0 +1,97 @@
+---
+
+# etcd installed via package manager leads to flannel failure
+- name: Force Ubuntu-16.04 to install etcd from github release
+  set_fact:
+    etcd_source_type: "github-release"
+  when: is_ubuntu_16_04_or_later
+
+# The following four tasks must be before check for Ubuntu < 16
+# Ubuntu-14.* handles the etcd user/group/etcd dir differently
+- name: Create system etcd group
+  group:
+    name: etcd
+    state: present
+  when: etcd_source_type == "github-release"
+
+- name: Create system etcd user
+  user:
+    name=etcd
+    comment="Etcd user"
+    shell=/sbin/nologin
+    state=present
+    system=yes
+    groups=etcd
+  when: etcd_source_type == "github-release"
+
+- name: Ensure /var/lib/etcd exists
+  file:
+    path=/var/lib/etcd
+    recurse=yes
+    state=directory
+    owner=etcd
+  when: etcd_source_type == "github-release"
+
+- name: Write etcd systemd unit file
+  copy: src=etcd.service dest=/etc/systemd/system
+  notify:
+    - reload systemd
+  when: etcd_source_type == "github-release"
+
+- name: Force Ubuntu-14.04 to install etcd from github release
+  set_fact:
+    etcd_source_type: "github-release"
+  when: is_earlier_than_ubuntu_16_04
+
+- name: Install etcd via package manager
+  action: "{{ ansible_pkg_mgr }}"
+  args:
+        name: etcd
+        state: latest
+  when: etcd_source_type == "package-manager"
+
+- name: Set the etcd_modified fact to true
+  set_fact:
+    etcd_modified: true
+  when: etcd_source_type == "package-manager"
+
+- name: Install etcd from github
+  include: install-github-release.yml
+  when: etcd_source_type == "github-release"
+
+- name: Create upstart script
+  copy: src=etcd.upstart dest=/etc/init/etcd.conf
+  when: is_earlier_than_ubuntu_16_04
+
+- name: Copy certificates if specified
+  include: cert-gen.yml
+  when: etcd_url_scheme == 'https' or etcd_peer_url_scheme == 'https'
+
+- name: Create etcd config directory
+  file: path={{ etcd_conf_dir }} state=directory
+
+- name: Write etcd config file
+  template: src=etcd.conf.j2 dest=/etc/etcd/etcd.conf
+
+- name: Setting the etcd_modified fact to true
+  set_fact:
+  etcd_modified: true
+
+- ufw:
+    state: enabled
+    rule: allow
+    src: '{{ item }}'
+  with_items:
+    - "{{ etcd_client_port }}"
+    - "{{ etcd_peer_port }}"
+    - "{{ etcd_client_legacy_port }}"
+    - "{{ etcd_peer_legacy_port }}"
+
+- name: Enable etcd
+  service: name=etcd enabled=yes
+  when: etcd_enable == true
+
+- name: Start etcd
+  service: name=etcd state=started
+  register: etcd_started
+

@@ -1,0 +1,180 @@
+---
+
+- include: ubuntu-14.04.yml
+  when: is_earlier_than_ubuntu_16_04
+
+- name: Retrieve systemd files for github-release kube_source_type type
+  include: systemd.yml
+  when: kube_source_type == "github-release" or is_ubuntu_16_04_or_later
+
+# Change default value of kube_source_type
+- name: Force kube_source_type to github
+  set_fact:
+    kube_source_type: "github-release"
+  when: is_ubuntu
+
+# Install kubernetes master components
+
+- name: Install kubernetes master
+  action: "{{ ansible_pkg_mgr }}"
+  args:
+    name: kubernetes-master
+    state: latest
+  notify:
+    - restart daemons
+  when: kube_source_type == "packageManager"
+  tags:
+    - binary-update
+
+- name: Install kubernetes node
+  action: "{{ ansible_pkg_mgr }}"
+  args:
+    name: kubernetes-node
+    state: latest
+  notify:
+    - restart daemons
+  when: kube_source_type == "packageManager"
+  tags:
+    - binary-update
+
+- include: install-github-release.yml
+  when: kube_source_type == "github-release"
+  tags:
+    - binary-update
+
+- name: Make sure etcd certificate vars are set
+  fail:
+    msg: "etcd certificates weren't slurped. Aborting ..."
+  when: etcd_ca_cert is not defined or etcd_client_cert is not defined or etcd_client_key is not defined
+
+- name: Make sure Kubernetes apiserver etcd certs dir exists
+  file:
+   state: directory
+   path: "{{ kube_etcd_certs_dir }}"
+   mode: "o-rwx"
+   owner: kube
+   group: "{{ kube_cert_group }}"
+
+- name: Copy etcd certificates to master servers
+  copy:
+    content: "{{ item[1] }}"
+    dest: "{{ item[0] }}"
+    group: "{{ kube_cert_group }}"
+    owner: kube
+    mode: "0440"
+  with_together:
+    - [ "{{ apiserver_etcd_ca_file }}", "{{ apiserver_etcd_cert_file }}", "{{ apiserver_etcd_key_file }}" ]
+    - [ "{{ etcd_ca_cert }}", "{{ etcd_client_cert }}", "{{ etcd_client_key }}" ]
+
+- name: Write the config file for the api server
+  template: src=apiserver.j2 dest={{ kube_config_dir }}/apiserver
+
+- name: Ensure that a token auth file exists (addons may populate it)
+  file: path={{ kube_token_dir }}/known_tokens.csv state=touch
+  changed_when: false
+
+- name: Add cap_net_bind_service to kube-apiserver
+  capabilities: path=/usr/bin/kube-apiserver capability=cap_net_bind_service=ep state=present
+  when: kube_source_type != "github-release" and not is_atomic and not is_coreos and not ansible_distribution == 'Ubuntu' and not ansible_distribution_major_version|int < 15
+
+- name: Read back the api-server certificates
+  slurp:
+    src: "{{ item }}"
+  register: apiserver_certs
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"
+  with_items:
+    - "{{ kube_cert_dir }}/server.crt"
+    - "{{ kube_cert_dir }}/server.key"
+
+- name: Write back the api-server certificates
+  copy:
+    dest: "{{ item.item }}"
+    content: "{{ item.content | b64decode }}"
+    group: "{{ kube_cert_group }}"
+    owner: "kube"
+    mode: 0440
+  with_items: "{{ apiserver_certs.results }}"
+  when: inventory_hostname in groups['masters'] and inventory_hostname != groups['masters'][0]
+
+- name: Enable apiserver
+  service: name=kube-apiserver enabled=yes
+  when: services_enabled == true
+
+- name: Start apiserver
+  service: name=kube-apiserver state=started
+  register: apiserver_started
+
+- name: Get the master token values
+  slurp:
+    src: "{{ kube_token_dir }}/{{ item }}-{{ inventory_hostname }}.token"
+  with_items:
+    - "system:controller_manager"
+    - "system:scheduler"
+    - "system:kubectl"
+  register: tokens
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: Set token facts
+  set_fact:
+    controller_manager_token: "{{ tokens.results[0].content|b64decode }}"
+    scheduler_token: "{{ tokens.results[1].content|b64decode }}"
+    kubectl_token: "{{ tokens.results[2].content|b64decode }}"
+
+- name: Write the config file for the controller-manager
+  template: src=controller-manager.j2 dest={{ kube_config_dir }}/controller-manager
+
+- name: Write the kubecfg (auth) file for controller-manager
+  template: src=controller-manager.kubeconfig.j2 dest={{ kube_config_dir }}/controller-manager.kubeconfig
+
+- name: Enable controller-manager
+  service: name=kube-controller-manager enabled=yes
+  when: services_enabled == true
+
+- name: Start controller-manager
+  service: name=kube-controller-manager state=started
+
+- name: Write the config file for the scheduler
+  template: src=scheduler.j2 dest={{ kube_config_dir }}/scheduler
+
+- name: Write the kubecfg (auth) file for scheduler
+  template: src=scheduler.kubeconfig.j2 dest={{ kube_config_dir }}/scheduler.kubeconfig
+
+- name: Enable scheduler
+  service: name=kube-scheduler enabled=yes
+  when: services_enabled == true
+
+- name: Start scheduler
+  service: name=kube-scheduler state=started
+
+- name: Write the kubecfg (auth) file for kubectl
+  template: src=kubectl.kubeconfig.j2 dest={{ kube_config_dir }}/kubectl.kubeconfig
+
+- name: Write the config files for kubelet
+  template: src=kubelet.j2 dest={{ kube_config_dir }}/kubelet
+
+- name: Enable kubelet
+  service: name=kubelet enabled=yes
+
+- name: Start kubelet
+  service: name=kubelet state=started
+
+- name: Run Ubuntu post tasks
+  include: ubuntu-14-post.yml
+  when: not is_earlier_than_ubuntu_16_04
+
+- ufw:
+    rule: allow
+    port: {{ kube_master_api_port }}
+
+- name: Restart apiserver
+  service: name=kube-apiserver state=restarted
+
+- name: Restart controller-manager
+  service: name=kube-controller-manager state=restarted
+
+- name: Restart scheduler
+  service: name=kube-scheduler state=restarted
+
+- name: Restart kubelet
+  service: name=kubelet state=restarted

@@ -1,0 +1,34 @@
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+iface {{ default_if }} inet manual
+{% if (storage_bridge_address )  %}
+iface {{ storage_bridge_interface }} inet manual
+{% endif %}
+
+auto br0
+iface br0 inet static
+address {{ ansible_default_ipv4.address }}
+netmask {{ ansible_default_ipv4.netmask }}
+bridge_ports {{ default_if }}
+bridge_stp off
+bridge_fd 0
+bridge_maxwait 0
+gateway {{ ansible_default_ipv4.gateway }}
+dns-nameservers 134.226.112.8
+
+{% if (storage_bridge_address )  %}
+auto {{ storage_bridge_name }}
+iface {{ storage_bridge_name }} inet static
+address {{ storage_bridge_address }}
+netmask {{ storage_bridge_netmask }}
+bridge_ports {{ storage_bridge_interface }}
+bridge_stp off
+bridge_fd 0
+bridge_maxwait 0
+{% endif %}

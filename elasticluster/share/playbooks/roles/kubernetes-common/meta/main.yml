@@ -1,0 +1,6 @@
+---
+
+dependencies:
+  - { role: docker }
+  - { role: etcd }
+  - { role: flannel }
