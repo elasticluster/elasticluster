@@ -1,0 +1,20 @@
+---
+
+- name: Install Kubernetes master
+  hosts: kubernetes_master
+  tags:
+    - kubernetes
+    - master
+  roles:
+    - kubernetes-master
+    - kubernetes-worker
+    - { role: kubernetes-addons, when: "addons==True" }
+
+
+- name: Install Kubernetes worker
+  hosts: kubernetes_worker
+  tags:
+    - kubernetes
+    - worker
+  roles:
+    - kubernetes-worker
