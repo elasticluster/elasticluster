@@ -192,6 +192,7 @@ CLOUD_PROVIDER_SCHEMAS = {
 
     'libcloud': {
         "provider": 'libcloud',
+        'driver_name': nonempty_str,
         Optional(str): str,
     }
 }

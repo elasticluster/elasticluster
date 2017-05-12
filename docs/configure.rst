@@ -147,7 +147,7 @@ section:
 ``provider``
 
     the driver to use to connect to the cloud provider.
-    `ec2_boto`, `openstack` or `google`
+    `ec2_boto`, `openstack`, `google` or `libcloud`
 
 
 
@@ -302,6 +302,18 @@ Valid configuration keys for *openstack*
     instance doesn't get one automatically.
 
 
+Valid configuration keys for *libcloud*
+----------------------------------------
+
+    See: https://libcloud.readthedocs.io/en/latest/supported_providers.html
+    for all available providers. Configuration keys are provider dependent.
+
+
+``driver_name``:
+
+    Name of the driver you want to connect with.
+
+
 Examples
 --------
 
@@ -322,6 +334,18 @@ For Google Compute Engine you can use::
     gce_client_id=****REPLACE WITH YOUR CLIENT ID****
     gce_client_secret=****REPLACE WITH YOUR SECRET KEY****
     gce_project_id=****REPLACE WITH YOUR PROJECT ID****
+
+If you would want to use libcloud to connect to openstack using password authentication
+you can configure the following:
+
+    [cloud/libcloud]
+    provider=libcloud
+    driver_name=openstack
+    auth_url=**** YOUR AUTH URL ****
+    ex_tenant_name=**** YOUR TENNANT NAME ****
+    ex_force_auth_version=2.0_password
+    username=**** YOUR USERNAME ****
+    password=**** YOUR PASSWORD ****
 
 OpenStack users
 +++++++++++++++
