@@ -22,7 +22,6 @@ import paramiko
 from libcloud.compute.base import NodeAuthSSHKey, NodeAuthPassword
 from libcloud.compute.providers import get_driver
 from libcloud.compute.types import NodeState
-from libcloud.compute.types import Provider
 from paramiko import SSHException
 
 from elasticluster import AbstractCloudProvider
@@ -34,24 +33,33 @@ EXPLICIT_CONFIG = [
 ]
 
 
-class LibCloud(AbstractCloudProvider):
+class LibCloudProvider(AbstractCloudProvider):
     driver = None
     project_name = None
     floating_ip = False
     rules = None
     auth = None
 
+    def pop_args(self, **kwargs):
+        if kwargs.get('username'):
+            return [kwargs.pop('username'), kwargs.pop('password')]
+        elif kwargs.get('access_token'):
+            return kwargs.pop('access token')
+        elif kwargs.get('access_id'):
+            return kwargs.pop('access_id'), kwargs.pop('secret_key')
+        elif kwargs.get('service_account_email'):
+            return [kwargs.pop('service_account_email'), kwargs.pop('pem_file')]
+        elif kwargs.get('client_id'):
+            return [kwargs.pop('client_id'), kwargs.pop('client_secret')]
+        return None
+
     def __init__(self, driver_name, storage_path=None, **options):
         self.storage_path = storage_path
         if options.get('auth_url') and not options.get('ex_force_auth_url'):
             options['ex_force_auth_url'] = options.get('auth_url').rsplit('/', 1)[0]
-        for provider in dir(Provider):
-            drv, name = provider
-            if driver_name == name:
-                log.debug('selected libcloud driver %s', name)
-                driver_class = get_driver(drv)
-                self.driver = driver_class(options)
-                break
+        log.debug('selected libcloud driver %s', driver_name)
+        driver_class = get_driver(driver_name)
+        self.driver = driver_class(*self.pop_args(**options), **options)
 
     def __get_instance(self, instance_id):
         for node in self.driver.list_nodes():
@@ -59,8 +67,8 @@ class LibCloud(AbstractCloudProvider):
                 return node
         return None
 
-    def starts_instance(self, key_name, public_key_path, private_key_path, security_group, flavor, image_id,
-                        image_userdata, username=None, node_name=None, **options):
+    def start_instance(self, key_name, public_key_path, private_key_path, security_group, flavor, image_id,
+                       image_userdata, username=None, node_name=None, **options):
         self.__prepare_key_pair(key_name,
                                 private_key_path,
                                 public_key_path,
@@ -73,6 +81,7 @@ class LibCloud(AbstractCloudProvider):
             options['security_groups'] = security_group
         options['ex_userdata'] = image_userdata
         options['username'] = username
+        options['networks'] = options.pop('network_ids', None)
 
         if self.driver.get_key_pair(key_name):
             options['auth'] = NodeAuthSSHKey(self.driver.get_key_pair(key_name).public_key)
@@ -89,7 +98,7 @@ class LibCloud(AbstractCloudProvider):
                     else:
                         options[key] = populated_list[0]
 
-        node = self.driver.create_node(options)
+        node = self.driver.create_node(**options)
         if node:
             return node.id
         return None
@@ -174,7 +183,6 @@ class LibCloud(AbstractCloudProvider):
     """
     Check if a list function exists for a key on a driver
     """
-
     def __check_list_function(self, func):
         for lf in [getattr(self.driver, c, None) for c in dir(self.driver) if 'list_{}'.format(func) in c]:
             yield lf
@@ -183,7 +191,6 @@ class LibCloud(AbstractCloudProvider):
     Check if a function exists for a key on a driver, or if it is an 'extended' function.
     :returns a callable or none
     """
-
     def __function_or_ex_function(self, func):
         if func in dir(self.driver):
             return getattr(self.driver, func, None), func
@@ -194,7 +201,6 @@ class LibCloud(AbstractCloudProvider):
     """
     Check if a value chain (ex. 'a,b,c') exists in our list of known items (item.name | item.id)
     """
-
     @staticmethod
     def __check_name_or_id(values, known):
         result = []

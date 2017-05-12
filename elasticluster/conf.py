@@ -89,7 +89,7 @@ KEY_RENAMES = [
 
 SCHEMA = {
     'cloud': {
-        'provider': Or('azure', 'ec2_boto', 'google', 'openstack'),
+        'provider': Or('azure', 'ec2_boto', 'google', 'openstack', 'libcloud'),
         # allow other keys w/out restrictions; each cloud provider has its own
         # set of keys, which are handled separately
         str: str,
@@ -189,6 +189,11 @@ CLOUD_PROVIDER_SCHEMAS = {
         Optional("region_name"): nonempty_str,
         Optional("nova_api_version"): nova_api_version,
     },
+
+    'libcloud': {
+        "provider": 'libcloud',
+        Optional(str): str,
+    }
 }
 
 
@@ -198,6 +203,7 @@ CLOUD_PROVIDERS = {
     'openstack': ('elasticluster.providers.openstack',      'OpenStackCloudProvider'),
     'google':    ('elasticluster.providers.gce',            'GoogleCloudProvider'),
     'azure':     ('elasticluster.providers.azure_provider', 'AzureCloudProvider'),
+    'libcloud': ('elasticluster.providers.libcloud_provider', 'LibCloudProvider'),
 }
 
 

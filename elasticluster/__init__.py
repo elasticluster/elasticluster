@@ -32,4 +32,4 @@ from elasticluster.providers.ec2_boto import BotoCloudProvider
 from elasticluster.providers.openstack import OpenStackCloudProvider
 from elasticluster.providers.gce import GoogleCloudProvider
 from elasticluster.providers.azure_provider import AzureCloudProvider
-from elasticluster.providers.libcloud import LibCloud
+from elasticluster.providers.libcloud_provider import LibCloudProvider
