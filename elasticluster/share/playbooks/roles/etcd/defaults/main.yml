@@ -1,4 +1,5 @@
 ---
+
 etcd_source_type: "pass"
 etcd_version: 2.2.3
 

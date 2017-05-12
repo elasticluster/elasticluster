@@ -4,7 +4,7 @@
 kube_version: 1.4.5
 
 # Set source of kubernetes binaries
-# Available: packageManager, localBuild, github-release, distribution-rpm
+# Available: packageManager, github-release
 kube_source_type: packageManager
 
 # The port that the Kubernetes apiserver component listens on.
