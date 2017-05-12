@@ -195,6 +195,9 @@ class ElastiCluster(cli.app.CommandLineApp):
             return self.params.func()
         except Exception as err:
             log.error("Error: %s", err)
+            if self.params.verbose > 2:
+                import traceback
+                traceback.print_exc()
             print("Aborting because of errors: {err}.".format(err=err))
             sys.exit(1)
 

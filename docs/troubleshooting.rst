@@ -56,6 +56,23 @@ installer `pip`. See `ElastiCluster issue #414`__ for more technical details.
 .. __: https://github.com/gc3-uzh-ch/elasticluster/issues/414
 
 
+Running any ``elasticluster`` command fails with a version conflict about the ``pbr`` package
+---------------------------------------------------------------------------------------------
+
+You can get this error when ElastiCluster installed fine, but attempting to run
+*any* command fails with a Python traceback that ends with a line like the following one::
+
+    pkg_resources.ContextualVersionConflict: (pbr 1.10.0 (...), Requirement.parse('pbr>=2.0.0'), set(['oslo.i18n', 'oslo.serialization', 'oslo.utils', 'debtcollector']))
+
+This means that you have a mixture of older and newer OpenStack libraries in
+your ElastiCluster installation: to solve the issue, make a new ElastiCluster
+virtual environment and install again from scratch.
+
+The root cause of the issue lies in the interplay between the way `pip` handles
+dependencies of dependent packages. There is unfortunately little ElastiCluster
+can do about it.
+
+
 Installation fails with ``ValueError: ('Expected version spec in' [...]``
 -------------------------------------------------------------------------
 
