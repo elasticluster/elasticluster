@@ -1,0 +1,24 @@
+---
+
+- name: Install apt-transport-https
+  apt:
+    name: apt-transport-https
+    state: latest
+    update_cache: true
+
+- name: Add Google key to apt
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+
+- name: Add Kubernetes apt repo
+  apt_repository:
+    repo: 'deb http://apt.kubernetes.io/ kubernetes-{{ansible_distribution_release|lower}} main'
+    filename: kubernetes
+    state: present
+
+- name: Install packages
+  apt:
+    name: '{{ kubeadm_packages | list }}'
+    state: present
+    update_cache: true

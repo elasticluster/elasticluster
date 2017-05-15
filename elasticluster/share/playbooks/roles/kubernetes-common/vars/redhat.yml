@@ -1,0 +1,12 @@
+---
+
+kubeadm_packages:
+  - docker
+  - kubelet
+  - kubeadm
+  - kubectl
+  - kubernetes-cni
+
+kubeadm_services:
+  - docker
+  - kubelet

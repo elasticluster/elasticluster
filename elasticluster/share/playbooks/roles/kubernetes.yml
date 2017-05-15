@@ -2,32 +2,18 @@
 
 - name: Install Kubernetes master
   hosts: kubernetes_master
-  vars:
-    source_type: packageManager
-    cluster_name: kube-cluster.local
-    kube_service_addresses: 10.254.0.0/16
-    flannel_subnet: 172.16.0.0
-    flannel_prefix: 12
-    flannel_host_prefix: 24
   tags:
+    - docker
     - kubernetes
     - master
+    - worker
   roles:
     - kubernetes-master
-    - kubernetes-worker
-    - { role: kubernetes-addons, when: 'addons==True' }
-
 
 - name: Install Kubernetes worker
   hosts: kubernetes_worker
-  vars:
-    source_type: packageManager
-    cluster_name: kube-cluster.local
-    kube_service_addresses: 10.254.0.0/16
-    flannel_subnet: 172.16.0.0
-    flannel_prefix: 12
-    flannel_host_prefix: 24
   tags:
+    - docker
     - kubernetes
     - worker
   roles:

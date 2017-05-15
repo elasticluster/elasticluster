@@ -1,6 +1,0 @@
----
-
-dependencies:
-  - { role: kubernetes-docker }
-  - { role: etcd }
-  - { role: flannel }
