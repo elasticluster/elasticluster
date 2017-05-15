@@ -1,4 +1,3 @@
-
 #! /usr/bin/env python
 #
 #   Copyright (C) 2013, 2015 S3IT, University of Zurich
