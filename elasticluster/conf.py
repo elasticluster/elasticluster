@@ -487,6 +487,13 @@ def _perform_key_renames(tree, changes=KEY_RENAMES):
       will be supported (only relevant if 4th field "verbose" is ``True``).
     """
     for section, from_key, to_key, verbose, supported in changes:
+        if section not in tree:
+            # XXX: should this be a configuration error instead?
+            log.warning(
+                "No section `%s` found in configuration!"
+                " This will almost certainly end up causing an error later on.",
+                section)
+            continue
         for stanza, pairs in tree[section].iteritems():
             # ensure we work on a copy of the keys collection,
             # so we can mutate the tree down below
@@ -523,6 +530,10 @@ def _perform_key_renames(tree, changes=KEY_RENAMES):
 
 
 def _dereference_config_tree(tree, evict_on_error=True):
+    # FIXME: Should allow *three* distinct behaviors on error?
+    # - "evict on error": remove the offending section and continue
+    # - "raise exception": raise a ConfigurationError at the first error
+    # - "just report": log errors but try to return all that makes sense
     """
     Modify `tree` in-place replacing cross-references by section name with the
     actual section content.
@@ -533,11 +544,28 @@ def _dereference_config_tree(tree, evict_on_error=True):
     to_evict = []
     for cluster_name, cluster_conf in tree['cluster'].iteritems():
         for key in ['cloud', 'login', 'setup']:
-            refname = cluster_conf[key]
-            if refname in tree[key]:
+            try:
+                refname = cluster_conf[key]
+            except KeyError:
+                log.error(
+                    "Configuration section `cluster/%s`"
+                    " is missing a `%s=` section reference."
+                    " %s",
+                    cluster_name, key,
+                    ("Dropping cluster definition." if evict_on_error else ""))
+                if evict_on_error:
+                    to_evict.append(cluster_name)
+                    break
+                else:
+                    # cannot continue
+                    raise ConfigurationError(
+                        "Invalid cluster definition `cluster/{0}:"
+                        " missing `{1}=` configuration key"
+                        .format(cluster_name, key))
+            try:
                 # dereference
                 cluster_conf[key] = tree[key][refname]
-            else:
+            except KeyError:
                 log.error(
                     "Configuration section `cluster/%s`"
                     " references non-existing %s section `%s`."
