@@ -49,6 +49,8 @@
 # build and export volumes
 - include: export.yml
   with_items: '{{GLUSTERFS_VOLUMES}}'
+  loop_control:
+    loop_var: item
   tags:
     - gluster
     - glusterfs-server
