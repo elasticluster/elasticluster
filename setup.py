@@ -187,6 +187,8 @@ setup(
     },
     setup_requires=['Babel>=2.3.4'],  # see Issue #268
     install_requires=([
+        # ElastiCluster core requirements
+        'pip>=9.0.0',  ## see issue #433
         'PyCLI',
         'ansible>=2.2.3,!=2.3.0,<2.4',  ## whitelist only "known good" versions of Ansible
         'click>=4.0',  ## click.prompt() added in 4.0
