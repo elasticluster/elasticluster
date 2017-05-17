@@ -57,12 +57,7 @@ class _Unavailable(object):
                     .format(module=self.__missing))
         return _Unavailable(self.__missing)
 
-# Keystone API v2
-from keystoneauth1 import loading
-from keystoneauth1 import session
-# Keystone API v3
-from keystoneauth1.identity import v3
-from keystoneclient.v3 import client
+import keystoneauth1
 try:
     from glanceclient import client as glance_client
 except ImportError:
@@ -116,14 +111,17 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     :param bool request_floating_ip: Whether ip are assigned automatically
                                     `True` or floating ips have to be
                                     assigned manually `False`
-
+    :param identity_api_version: What version of the Keystone API to use.
+        Valid values are the strings `"v2"` or `"v3"`,
+        or `None` (default, meaning try v3 first and fall-back to v2).
     """
     __node_start_lock = threading.Lock()  # lock used for node startup
 
     def __init__(self, username, password, project_name, auth_url,
-                 user_domain_name, project_domain_name,
+                 user_domain_name="default", project_domain_name="default",
                  region_name=None, storage_path=None,
                  request_floating_ip=False,
+                 identity_api_version=None,
                  nova_api_version=DEFAULT_OS_NOVA_API_VERSION):
         self._os_auth_url = os.getenv('OS_AUTH_URL', auth_url)
         self._os_username = os.getenv('OS_USERNAME', username)
@@ -133,6 +131,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._os_user_domain_name = os.getenv('OS_USER_DOMAIN_NAME', user_domain_name)
         self._os_region_name = region_name
         self.request_floating_ip = request_floating_ip
+        self.__identity_api_version = identity_api_version or self.__get_os_identity_api_version()
         self.nova_api_version = nova_api_version
         self._instances = {}
         self._cached_instances = {}
@@ -145,25 +144,118 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         This is in a separate function so to be called by ``__init__`` and
         ``__setstate__``.
         """
-        loader = loading.get_plugin_loader('password')
-        auth = loader.load_from_options(auth_url=self._os_auth_url,
-                                        username=self._os_username,
-                                        password=self._os_password,
-                                        user_domain_name=self._os_user_domain_name,
-                                        project_domain_name=self._os_project_domain_name,
-                                        project_name=self._os_tenant_name)
-        sess = session.Session(auth=auth)
-        if True:  # Keystone API v2
-            self.nova_client = nova_client.Client(self.nova_api_version, session=sess)
-        else:  # Keystone API v3 ???
-            self.nova_client = nova_client.Client(
-                self.nova_api_version,
-                self._os_username, self._os_password, self._os_tenant_name,
-                self._os_user_domain_name, self._os_project_domain_name,
-                self._os_auth_url, region_name=self._os_region_name)
+        sess = self.__init_keystone_session()
+        self.nova_client = nova_client.Client(self.nova_api_version, session=sess)
         self.neutron_client = neutron_client.Client(session=sess)
         self.glance_client = glance_client.Client('2', session=sess)
         self.cinder_client = cinder_client.Client('2', session=sess)
+
+    def __init_keystone_session(self):
+        """Create and return a Keystone session object."""
+        api = self.__identity_api_version  # for readability
+        tried = []
+        if self.__identity_api_version in ['3', None]:
+            sess = self.__init_keystone_session_v3(check=(api is None))
+            tried.append('v3')
+            if sess:
+                return sess
+        if self.__identity_api_version in ['2', None]:
+            sess = self.__init_keystone_session_v2(check=(api is None))
+            tried.append('v2')
+            if sess:
+                return sess
+        raise RuntimeError(
+            "Cannot establish Keystone session (tried: {0})."
+            .format(', '.join(tried)))
+
+    def __init_keystone_session_v2(self, check=False):
+        """Create and return a session object using Keystone API v2."""
+        from keystoneauth1 import loading as keystone_v2
+        loader = keystone_v2.get_plugin_loader('password')
+        auth = loader.load_from_options(
+            auth_url=self._os_auth_url,
+            username=self._os_username,
+            password=self._os_password,
+            project_name=self._os_tenant_name
+        )
+        sess = keystoneauth1.session.Session(auth=auth)
+        if check:
+            log.debug("Checking that Keystone API v2 session works...")
+            try:
+                # if session is invalid, the following will raise some exception
+                nova = nova_client.Client(self.nova_api_version, session=sess)
+                nova.flavors.list()
+            except keystoneauth1.exceptions.NotFound as err:
+                log.warning("Creating Keystone v2 session failed: %s", err)
+                return None
+            except keystoneauth1.exceptions.ClientException as err:
+                log.error("OpenStack server rejected request (likely configuration error?): %s", err)
+                return None  # FIXME: should we be raising an error instead?
+        # if we got to this point, v2 session is valid
+        log.info("Using Keystone API v2 session to authenticate to OpenStack")
+        return sess
+
+    def __init_keystone_session_v3(self, check=False):
+        """
+        Return a new session object, created using Keystone API v3.
+
+        .. note::
+
+          Note that the only supported authN method is password authentication;
+          token or other plug-ins are not currently supported.
+        """
+        try:
+            # may fail on Python 2.6?
+            from keystoneauth1.identity import v3 as keystone_v3
+        except ImportError:
+            log.warning("Cannot load Keystone API v3 library.")
+            return None
+        auth = keystone_v3.Password(
+            auth_url=self._os_auth_url,
+            username=self._os_username,
+            password=self._os_password,
+            user_domain_name=self._os_user_domain_name,
+            project_domain_name=self._os_project_domain_name,
+            project_name=self._os_tenant_name
+        )
+        sess = keystoneauth1.session.Session(auth=auth)
+        if check:
+            log.debug("Checking that Keystone API v3 session works...")
+            try:
+                # if session is invalid, the following will raise some exception
+                nova = nova_client.Client(self.nova_api_version, session=sess)
+                nova.flavors.list()
+            except keystoneauth1.exceptions.NotFound as err:
+                log.warning("Creating Keystone v3 session failed: %s", err)
+                return None
+            except keystoneauth1.exceptions.ClientException as err:
+                log.error("OpenStack server rejected request (likely configuration error?): %s", err)
+                return None  # FIXME: should we be raising an error instead?
+        # if we got to this point, v3 session is valid
+        log.info("Using Keystone API v3 session to authenticate to OpenStack")
+        return sess
+
+
+    @staticmethod
+    def __get_os_identity_api_version():
+        """
+        Return preferred OpenStack Identity API version or ``None``.
+
+        Read the environmental variable `OS_IDENTITY_API_VERSION` and return
+        one of the two string values ``'2'`` or ``'3'``. If the environmental
+        variable is undefined or its value is not ``2`` or ``3``, then return
+        ``None``.
+
+        For more information on ``OS_IDENTITY_API_VERSION``, please see
+        `<https://docs.openstack.org/developer/python-openstackclient/authentication.html>`_.
+        """
+        ver = os.getenv('OS_IDENTITY_API_VERSION', '')
+        if ver == '2' or ver.startswith('2.'):
+            return '2'
+        elif ver == '3':
+            return '3'
+        else:
+            return None
 
 
     def start_instance(self, key_name, public_key_path, private_key_path,
@@ -584,7 +676,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._os_password = state['password']
         self._os_tenant_name = state['project_name']
         self._os_user_domain_name = state['user_domain_name']
-        self._os_project_domain_name = state['project)domain_name']
+        self._os_project_domain_name = state['project_domain_name']
         self._os_region_name = state['region_name']
         self.request_floating_ip = state['request_floating_ip']
         self.nova_api_version = state.get('nova_api_version', DEFAULT_OS_NOVA_API_VERSION)
