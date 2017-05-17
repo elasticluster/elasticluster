@@ -811,7 +811,7 @@ class Cluster(Struct):
                     node.connect()
             except InstanceError as ex:
                 log.warning("Ignoring error updating information on node %s: %s",
-                            node, str(ex))
+                            node, ex)
         self.repository.save_or_update(self)
 
 

@@ -25,6 +25,10 @@ class ConfigurationError(Exception):
     pass
 
 
+class UnsupportedError(ConfigurationError):
+    pass
+
+
 class VpcError(Exception):
     pass
 

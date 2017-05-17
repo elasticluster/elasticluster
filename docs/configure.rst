@@ -307,11 +307,15 @@ Valid configuration keys for *libcloud*
 
     See: https://libcloud.readthedocs.io/en/latest/supported_providers.html
     for all available providers. Configuration keys are provider dependent.
+    For example if you want to configure an azure connection, go to the page
+    https://libcloud.readthedocs.io/en/latest/compute/drivers/azure.html
+    and check what the 'Instantiating a driver' part states, in this case
+    you would need to add the keys 'subscription_id' and 'key_file'.
 
 
 ``driver_name``:
 
-    Name of the driver you want to connect with.
+    Name of the driver you want to configure (provider you want to connect with).
 
 
 Examples
@@ -336,7 +340,7 @@ For Google Compute Engine you can use::
     gce_project_id=****REPLACE WITH YOUR PROJECT ID****
 
 If you would want to use libcloud to connect to openstack using password authentication
-you can configure the following:
+you can configure the following::
 
     [cloud/libcloud]
     provider=libcloud
