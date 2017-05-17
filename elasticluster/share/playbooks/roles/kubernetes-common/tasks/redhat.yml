@@ -1,5 +1,8 @@
 ---
 
+- name: Include redhat specifc vars
+  include_vars: 'redhat.yml'
+
 - name: Add Kubernetes yum repo
   yum_repository:
     name: Kubernetes
@@ -11,10 +14,6 @@
     gpgkey: https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
     gpgcheck: true
     state: present
-
-- name: Workaround to https://github.com/kubernetes/kubernetes/pull/33555
-  command: setenforce 0
-  ignore_errors: true
 
 - name: Install kubeadm packages
   yum:

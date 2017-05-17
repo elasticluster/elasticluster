@@ -1,16 +1,8 @@
 ---
 
-- name: Include debian specifc vars
-  include_vars: 'debian.yml'
-  when: is_debian_compatible
-
 - name: Debian compatible install
   include: debian.yml
   when: is_debian_compatible
-
-- name: Include redhat specifc vars
-  include_vars: 'redhat.yml'
-  when: is_rhel_compatible
 
 - name: Redhat compatible install
   include: redhat.yml

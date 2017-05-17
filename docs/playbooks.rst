@@ -493,7 +493,7 @@ Kubernetes
 
 Supported on:
 
-* Ubuntu 16.04 and later
+* Ubuntu 16.04
 * RHEL/CentOS 7.x
 
 This playbook installs the `Kubernetes`_ container management system on each host.

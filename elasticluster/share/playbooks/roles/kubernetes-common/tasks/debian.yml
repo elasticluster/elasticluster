@@ -1,10 +1,7 @@
 ---
 
-- name: Install apt-transport-https
-  apt:
-    name: apt-transport-https
-    state: latest
-    update_cache: true
+- name: Include debian specifc vars
+  include_vars: 'debian.yml'
 
 - name: Add Google key to apt
   apt_key:

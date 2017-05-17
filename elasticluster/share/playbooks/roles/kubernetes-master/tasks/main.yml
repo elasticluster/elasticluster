@@ -15,13 +15,13 @@
   when: "'failed' in token_list_result.stderr"
 
 - name: Copy network configuration
-  copy:
-    src: kube-{{networking}}.yml
-    dest: /var/tmp/kube-{{networking}}.yml
+  template:
+    src: kube-{{kubernetes_default_networking}}.yml
+    dest: /var/tmp/kube-{{kubernetes_default_networking}}.yml
   when: "'failed' in token_list_result.stderr"
 
 - name: Initialize Kubernetes networking
-  command: kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f /var/tmp/kube-{{networking}}.yml
+  command: kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f /var/tmp/kube-{{kubernetes_default_networking}}.yml
   when: "'failed' in token_list_result.stderr"
 
 - name: Get cluster token

@@ -1,3 +1,3 @@
 ---
 
-default_port: 6443
+kubernetes_default_port: 6443

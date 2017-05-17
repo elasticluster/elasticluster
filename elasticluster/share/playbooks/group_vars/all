@@ -67,7 +67,6 @@ is_ubuntu_13_04_or_later: "({{is_ubuntu}} and {{ansible_distribution_major_versi
 is_ubuntu_14_04_or_later: "({{is_ubuntu}} and {{ansible_distribution_major_version}}|int >= 14)"
 is_ubuntu_15_04_or_later: "({{is_ubuntu}} and {{ansible_distribution_major_version}}|int >= 15)"
 is_ubuntu_16_04_or_later: "({{is_ubuntu}} and {{ansible_distribution_major_version}}|int >= 16)"
-is_earlier_than_ubuntu_16_04: "({{is_ubuntu}} and {{ansible_distribution_major_version}}|int < 16)"
 
 is_ubuntu_12_10_or_later: "({{is_ubuntu}} and ('{{ansible_distribution_version}}' == '12.10' or {{ansible_distribution_major_version}}|int > 12))"
 is_ubuntu_13_10_or_later: "({{is_ubuntu}} and ('{{ansible_distribution_version}}' == '13.10' or {{ansible_distribution_major_version}}|int > 13))"
