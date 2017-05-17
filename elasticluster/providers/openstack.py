@@ -231,9 +231,10 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         volume_available = True
                         break
                 sleep(0.1)
+            delete_volume_on_terminate = 1
             vm = self.nova_client.servers.create(
                 node_name, image_id, flavor,
-                block_device_mapping={'vda': '{0}:::1'.format(volume.id)},
+                block_device_mapping={'vda': '{0}:::{1}'.format(volume.id, delete_volume_on_terminate)},
                 key_name=key_name,
                 security_groups=[s.strip() for s in security_group.split(',')],
                 userdata=image_userdata,
