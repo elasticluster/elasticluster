@@ -1,0 +1,11 @@
+---
+
+- name: Set distribution-specific variables (RHEL/CentOS)
+  tags:
+    - ganglia
+    - ganglia-gmetad
+    - gmetad
+  set_facts:
+    ganglia_gmetad_packages:
+      - ganglia-gmetad
+    ganglia_gmetad_service: gmetad

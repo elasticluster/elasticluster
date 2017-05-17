@@ -70,6 +70,8 @@ from elasticluster.validate import (
 ## defaults and built-in config
 
 KEY_RENAMES = [
+    # pylint: disable=bad-whitespace,bad-continuation
+
     # section   from key          to key          verbose?  supported until...
     ('cluster', 'setup_provider', 'setup',        True,     '2.0'),
     ('cloud',   'tenant_name',    'project_name', True,     '2.0'),
@@ -277,7 +279,7 @@ def make_creator(configfiles, storage_path=None):
 
 
 def _expand_config_file_list(paths, ignore_nonexistent=True,
-                            expand_user_dir=True, expand_env_vars=False):
+                             expand_user_dir=True, expand_env_vars=False):
     """
     Return list of (existing) configuration files.
 
@@ -458,6 +460,7 @@ def _update_nested_item(D, path, items):
     return target
 
 
+# pylint: disable=dangerous-default-value
 def _perform_key_renames(tree, changes=KEY_RENAMES):
     """
     Change a configuration "tree" in-place, renaming legacy keys to new names.
@@ -596,6 +599,11 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'login',
             'network_ids',
             'security_group',
+            'node_name',
+            'boot_disk_size',
+            'boot_disk_type',
+            'scheduling',
+            'tags'
             #'user_key_name',    ## from `login/*`
             #'user_key_private', ## from `login/*`
             #'user_key_public',  ## from `login/*`
@@ -614,8 +622,8 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
     return kind_values
 
 
-def _compute_desired_and_minimum_number_of_nodes(
-        kind_name, cluster_name, cluster_conf):
+# pylint: disable=invalid-name
+def _compute_desired_and_minimum_number_of_nodes(kind_name, cluster_name, cluster_conf):
     """
     Compute desired and minimum number of nodes of the given kind.
     """
@@ -694,6 +702,25 @@ def _cross_validate_final_config(objtree, evict_on_error=True):
     # take a copy of cluster config as we might be modifying it
     for name, cluster in list(objtree['cluster'].items()):
         valid = True
+        # ensure all cluster node kinds are defined in the `setup/*` section
+        setup_sect = cluster['setup']
+        for groupname, properties in cluster['nodes'].items():
+            if (groupname + '_groups') not in setup_sect:
+                log.error("Cluster `%s` requires nodes of kind `%s`,"
+                          " but no such group is defined"
+                          " in the referenced setup section.",
+                          name, groupname)
+                valid = False
+                break
+
+        # ensure `ssh_to` has a valid value
+        if 'ssh_to' in cluster and cluster['ssh_to'] not in cluster['nodes']:
+            log.error("Cluster `%s` is configured to SSH into nodes of kind `%s`,"
+                      " but no such kind is defined.",
+                      name, cluster['ssh_to'])
+            valid = False
+
+        # EC2-specific checks
         if cluster['cloud']['provider'] == 'ec2_boto':
             cluster_uses_vpc = ('vpc' in cluster['cloud'])
             for groupname, properties in cluster['nodes'].items():

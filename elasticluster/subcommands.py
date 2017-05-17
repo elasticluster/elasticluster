@@ -142,21 +142,19 @@ class Start(AbstractCommand):
                             help="Only start the cluster, do not configure it")
 
     def pre_run(self):
-        self.params.extra_conf = {}
-        try:
-            if self.params.nodes:
-                nodes = self.params.nodes.split(',')
-                for nspec in nodes:
-                    n, group = nspec.split(':')
-                    if not n.isdigit():
-                        raise ConfigurationError(
-                            "Invalid syntax for option `--nodes`: "
-                            "`%s` is not an integer." % n)
+        self.params.nodes_override = {}
+        if self.params.nodes:
+            nodes = self.params.nodes.split(',')
+            for nspec in nodes:
+                n, kind = nspec.split(':')
+                try:
                     n = int(n)
-                    self.params.extra_conf[group + '_nodes'] = n
-        except ValueError:
-            raise ConfigurationError(
-                "Invalid argument for option --nodes: %s" % self.params.nodes)
+                except (ValueError, TypeError) as err:
+                    raise ConfigurationError(
+                        "Invalid syntax for option `--nodes`: "
+                        "cannot convert `{n}` to integer: {err}"
+                        .format(n=n, err=err))
+                self.params.nodes_override[kind] = n
 
     def execute(self):
         """
@@ -173,10 +171,14 @@ class Start(AbstractCommand):
                                storage_path=self.params.storage)
 
         # overwrite configuration
-        cluster_conf = creator.cluster_conf[cluster_template]
-        for option, value in self.params.extra_conf.iteritems():
-            if option in cluster_conf:
-                cluster_conf[option] = value
+        cluster_nodes_conf = creator.cluster_conf[cluster_template]['nodes']
+        for kind, num in self.params.nodes_override.iteritems():
+            if kind not in cluster_nodes_conf:
+                raise ConfigurationError(
+                    "No node group `{kind}` defined"
+                    " in cluster template `{template}`"
+                    .format(kind=kind, template=cluster_template))
+            cluster_nodes_conf[kind]['num'] = num
 
         # First, check if the cluster is already created.
         try:
@@ -194,9 +196,8 @@ class Start(AbstractCommand):
             for cls in cluster.nodes:
                 print("* {0:d} {1} nodes.".format(len(cluster.nodes[cls]), cls))
             print("(This may take a while...)")
-            min_nodes = dict(
-                (k[:-len('_nodes_min')], int(v)) for k, v in cluster_conf.iteritems() if
-                k.endswith('_nodes_min'))
+            min_nodes = dict((kind, cluster_nodes_conf[kind]['min_num'])
+                             for kind in cluster_nodes_conf)
             cluster.start(min_nodes=min_nodes)
             if self.params.no_setup:
                 print("NOT configuring the cluster as requested.")
@@ -746,7 +747,8 @@ class SftpFrontend(AbstractCommand):
                     "Hostname %s not found in cluster %s" % (self.params.ssh_to, cluster_name))
         else:
             frontend = cluster.get_frontend_node()
-        host = frontend.connection_ip()
+        host = f
+        rontend.connection_ip()
         username = frontend.image_user
         knownhostsfile = cluster.known_hosts_file if cluster.known_hosts_file \
                          else '/dev/null'

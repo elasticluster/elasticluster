@@ -22,9 +22,9 @@
 
 from __future__ import absolute_import
 
-__docformat__ = 'reStructuredText'
-__author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
-
+# this is needed to get logging info in `py.test` when something fails
+import logging
+logging.basicConfig()
 
 import json
 import os
@@ -38,6 +38,10 @@ from elasticluster.repository import PickleRepository, MemRepository, \
     JsonRepository, YamlRepository, MultiDiskRepository
 
 import pytest
+
+
+__docformat__ = 'reStructuredText'
+__author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
 
 
 class MemRepositoryTests(unittest.TestCase):

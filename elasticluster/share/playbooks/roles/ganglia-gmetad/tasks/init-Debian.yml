@@ -1,0 +1,13 @@
+---
+
+- name: Set distribution-specific variables (Debian/Ubuntu)
+  tags:
+    - ganglia
+    - ganglia-gmetad
+    - gmetad
+  set_fact:
+    ganglia_gmetad_packages:
+      - ganglia-monitor
+      - ganglia-webfrontend
+      - gmetad
+    ganglia_gmetad_service: gmetad

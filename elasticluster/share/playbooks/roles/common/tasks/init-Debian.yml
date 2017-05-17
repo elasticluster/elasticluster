@@ -18,8 +18,14 @@
 - name: Install Ansible `apt` module dependencies
   # the `apt` module depends on both `aptitude` and `python-apt` to do
   # package-level work, so we need to resort to a raw invocation of `apt-get`
-  command: apt-get install -y aptitude python-apt
+  command: |
+    apt-get install -y {{item.name}}
+  args:
+    creates: '{{item.creates}}'
   become: yes
+  with_items:
+    - { name: 'aptitude', creates: '/usr/bin/aptitude' }
+    - { name: 'python-apt', creates: '/usr/share/doc/python-apt' }
 
 - name: Upgrade all installed packages to latest version
   apt:

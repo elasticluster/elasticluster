@@ -16,12 +16,15 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# pylint: disable=missing-docstring,invalid-name
+
 from __future__ import (absolute_import, division, print_function)
 
-import collections
-from copy import copy, deepcopy
+# this is needed to get logging info in `py.test` when something fails
+import logging
+logging.basicConfig()
+
 import os
-from os.path import join
 
 # 3rd-party imports
 from mock import patch
@@ -32,448 +35,16 @@ from pytest import raises
 from elasticluster.conf import (
     load_config_files,
     make_creator,
-    _read_config_files,
-    _arrange_config_tree,
-    _perform_key_renames,
-    _dereference_config_tree,
-    _build_node_section,
 )
 from elasticluster.cluster import Node
-from elasticluster.exceptions import ClusterNotFound
+from elasticluster.exceptions import (
+    ClusterNotFound,
+    ConfigurationError,
+)
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
 from elasticluster.providers.ec2_boto import BotoCloudProvider
 
 from _helpers.config import make_config_snippet
-
-
-CONFIG_TXT = ('''
-
-[cloud/ec2]
-provider = ec2_boto
-ec2_url = https://ec2.us-east-1.amazonaws.com
-ec2_access_key = XXXXXX
-ec2_secret_key = XXXXXX
-ec2_region = us-east-1
-
-
-[cloud/ec2_vpc]
-provider = ec2_boto
-ec2_url = https://ec2.us-east-1.amazonaws.com
-ec2_access_key = XXXXXX
-ec2_secret_key = XXXXXX
-ec2_region = us-east-1
-vpc = vpc-c0ffee
-
-
-[cloud/openstack]
-provider = openstack
-auth_url = http://hobbes.gc3.uzh.ch::5000/v2.0
-username = XXXXXX
-password = XXXXXX
-tenant_name = test-tenant
-
-
-[cloud/google]
-provider = google
-gce_project_id = gc3-uzh
-gce_client_id = XXXXXX
-gce_client_secret = XXXXXX
-
-
-[cluster/example_ec2]
-cloud = ec2
-login = ubuntu
-setup_provider = example_setup
-misc_nodes = 10
-
-# cloud-specific params
-image_id = i-12345
-flavor = m1.tiny
-security_group = default
-
-
-[cluster/example_ec2_with_vpc]
-cloud = ec2
-login = ubuntu
-setup_provider = example_setup
-misc_nodes = 10
-
-# cloud-specific params
-image_id = i-12345
-flavor = m1.tiny
-security_group = default
-
-network_ids = subnet-deadbeef
-
-
-[cluster/example_openstack]
-cloud = openstack
-login = ubuntu
-setup_provider = example_setup
-misc_nodes = 10
-
-# cloud-specific params
-image_id = e23f2df2-d68c-4307-ace0-2571f8fdcd1f
-flavor = 1cpu-4ram-hpc
-security_group = default
-
-
-[cluster/example_google]
-cloud = google1
-setup_provider = example_setup
-misc_nodes = 10
-
-# cloud-specific params
-image_id = i-12345
-login = ubuntu
-flavor = m1.tiny
-security_group = default
-
-
-[setup/example_setup]
-provider = ansible
-misc_groups = whatever
-
-
-[login/ubuntu]
-image_user = ubuntu
-image_user_sudo = root
-image_sudo = False
-
-user_key_name = {keyname}
-user_key_private = {valid_path}
-user_key_public = {valid_path}
-''')
-
-CONFIG_RAW = ({
-    'cloud/ec2': {
-        'provider': 'ec2_boto',
-        'ec2_url': 'https://ec2.us-east-1.amazonaws.com',
-        'ec2_access_key': 'XXXXXX',
-        'ec2_secret_key': 'XXXXXX',
-        'ec2_region': 'us-east-1',
-    },
-
-    'cloud/ec2_vpc': {
-        'provider': 'ec2_boto',
-        'ec2_url': 'https://ec2.us-east-1.amazonaws.com',
-        'ec2_access_key': 'XXXXXX',
-        'ec2_secret_key': 'XXXXXX',
-        'ec2_region': 'us-east-1',
-        'vpc': 'vpc-c0ffee',
-    },
-
-    'cloud/openstack': {
-        'provider': 'openstack',
-        'auth_url': 'http://hobbes.gc3.uzh.ch::5000/v2.0',
-        'username': 'XXXXXX',
-        'password': 'XXXXXX',
-        'tenant_name': 'test-tenant',
-    },
-
-    'cloud/google': {
-        'provider': 'google',
-        'gce_project_id': 'gc3-uzh',
-        'gce_client_id': 'XXXXXX',
-        'gce_client_secret': 'XXXXXX',
-    },
-
-    'cluster/example_ec2': {
-        'cloud': 'ec2',
-        'login': 'ubuntu',
-        'setup_provider': 'example_setup',
-        'misc_nodes': '10',
-        'image_id': 'i-12345',
-        'flavor': 'm1.tiny',
-        'security_group': 'default',
-    },
-
-    'cluster/example_ec2_with_vpc': {
-        'cloud': 'ec2',
-        'login': 'ubuntu',
-        'setup_provider': 'example_setup',
-        'misc_nodes': '10',
-        'image_id': 'i-12345',
-        'flavor': 'm1.tiny',
-        'security_group': 'default',
-        'network_ids': 'subnet-deadbeef',
-    },
-
-    'cluster/example_openstack': {
-        'cloud': 'openstack',
-        'login': 'ubuntu',
-        'setup_provider': 'example_setup',
-        'misc_nodes': '10',
-        'image_id': 'e23f2df2-d68c-4307-ace0-2571f8fdcd1f',
-        'flavor': '1cpu-4ram-hpc',
-        'security_group': 'default',
-    },
-
-    'cluster/example_google': {
-        'cloud': 'google1',
-        'setup_provider': 'example_setup',
-        'misc_nodes': '10',
-        'image_id': 'i-12345',
-        'login': 'ubuntu',
-        'flavor': 'm1.tiny',
-        'security_group': 'default',
-    },
-
-    'setup/example_setup': {
-        'provider': 'ansible',
-        'misc_groups': 'whatever',
-    },
-
-    'login/ubuntu': {
-        'image_user': 'ubuntu',
-        'image_user_sudo': 'root',
-        'image_sudo': 'False',
-        'user_key_name': '{keyname}',
-        'user_key_private': '{valid_path}',
-        'user_key_public': '{valid_path}',
-    },
-})
-
-
-CONFIG_TREE = ({
-    'cloud': {
-        'ec2': {
-            'provider': 'ec2_boto',
-            'ec2_url': 'https://ec2.us-east-1.amazonaws.com',
-            'ec2_access_key': 'XXXXXX',
-            'ec2_secret_key': 'XXXXXX',
-            'ec2_region': 'us-east-1',
-        },
-        'ec2_vpc': {
-            'provider': 'ec2_boto',
-            'ec2_url': 'https://ec2.us-east-1.amazonaws.com',
-            'ec2_access_key': 'XXXXXX',
-            'ec2_secret_key': 'XXXXXX',
-            'ec2_region': 'us-east-1',
-            'vpc': 'vpc-c0ffee',
-        },
-        'openstack': {
-            'provider': 'openstack',
-            'auth_url': 'http://hobbes.gc3.uzh.ch::5000/v2.0',
-            'username': 'XXXXXX',
-            'password': 'XXXXXX',
-            'tenant_name': 'test-tenant',
-        },
-        'google': {
-            'provider': 'google',
-            'gce_project_id': 'gc3-uzh',
-            'gce_client_id': 'XXXXXX',
-            'gce_client_secret': 'XXXXXX',
-        },
-    },  ## close the `cloud:` part
-    'cluster': {
-        'example_ec2': {
-            'cloud': 'ec2',
-            'login': 'ubuntu',
-            'setup_provider': 'example_setup',
-            'misc_nodes': '10',
-            'image_id': 'i-12345',
-            'flavor': 'm1.tiny',
-            'security_group': 'default',
-        },
-        'example_ec2_with_vpc': {
-            'cloud': 'ec2',
-            'login': 'ubuntu',
-            'setup_provider': 'example_setup',
-            'misc_nodes': '10',
-            'image_id': 'i-12345',
-            'flavor': 'm1.tiny',
-            'security_group': 'default',
-            'network_ids': 'subnet-deadbeef',
-        },
-        'example_openstack': {
-            'cloud': 'openstack',
-            'login': 'ubuntu',
-            'setup_provider': 'example_setup',
-            'misc_nodes': '10',
-            'image_id': 'e23f2df2-d68c-4307-ace0-2571f8fdcd1f',
-            'flavor': '1cpu-4ram-hpc',
-            'security_group': 'default',
-        },
-        'example_google': {
-            'cloud': 'google1',
-            'setup_provider': 'example_setup',
-            'misc_nodes': '10',
-            'image_id': 'i-12345',
-            'login': 'ubuntu',
-            'flavor': 'm1.tiny',
-            'security_group': 'default',
-        },
-    },  ## close the `cluster:` part
-    'setup': {
-        'example_setup': {
-            'provider': 'ansible',
-            'misc_groups': 'whatever',
-        },
-    },  ## close the `setup:` part
-    'login': {
-        'ubuntu': {
-            'image_user': 'ubuntu',
-            'image_user_sudo': 'root',
-            'image_sudo': 'False',
-            'user_key_name': '{keyname}',
-            'user_key_private': '{valid_path}',
-            'user_key_public': '{valid_path}',
-        },
-    },
-})
-
-
-CONFIG_TREE_WITH_RENAMES = ({
-    'cloud': {
-        'ec2': {
-            'provider': 'ec2_boto',
-            'ec2_url': 'https://ec2.us-east-1.amazonaws.com',
-            'ec2_access_key': 'XXXXXX',
-            'ec2_secret_key': 'XXXXXX',
-            'ec2_region': 'us-east-1',
-        },
-        'ec2_vpc': {
-            'provider': 'ec2_boto',
-            'ec2_url': 'https://ec2.us-east-1.amazonaws.com',
-            'ec2_access_key': 'XXXXXX',
-            'ec2_secret_key': 'XXXXXX',
-            'ec2_region': 'us-east-1',
-            'vpc': 'vpc-c0ffee',
-        },
-        'openstack': {
-            'provider': 'openstack',
-            'auth_url': 'http://hobbes.gc3.uzh.ch::5000/v2.0',
-            'username': 'XXXXXX',
-            'password': 'XXXXXX',
-            'project_name': 'test-tenant',
-        },
-        'google': {
-            'provider': 'google',
-            'gce_project_id': 'gc3-uzh',
-            'gce_client_id': 'XXXXXX',
-            'gce_client_secret': 'XXXXXX',
-        },
-    },  ## close the `cloud:` part
-    'cluster': {
-        'example_ec2': {
-            'cloud': 'ec2',
-            'login': 'ubuntu',
-            'setup': 'example_setup',
-            'misc_nodes': '10',
-            'image_id': 'i-12345',
-            'flavor': 'm1.tiny',
-            'security_group': 'default',
-        },
-        'example_ec2_with_vpc': {
-            'cloud': 'ec2',
-            'login': 'ubuntu',
-            'setup': 'example_setup',
-            'misc_nodes': '10',
-            'image_id': 'i-12345',
-            'flavor': 'm1.tiny',
-            'security_group': 'default',
-            'network_ids': 'subnet-deadbeef',
-        },
-        'example_openstack': {
-            'cloud': 'openstack',
-            'login': 'ubuntu',
-            'setup': 'example_setup',
-            'misc_nodes': '10',
-            'image_id': 'e23f2df2-d68c-4307-ace0-2571f8fdcd1f',
-            'flavor': '1cpu-4ram-hpc',
-            'security_group': 'default',
-        },
-        'example_google': {
-            'cloud': 'google1',
-            'setup': 'example_setup',
-            'misc_nodes': '10',
-            'image_id': 'i-12345',
-            'login': 'ubuntu',
-            'flavor': 'm1.tiny',
-            'security_group': 'default',
-        },
-    },  ## close the `cluster:` part
-    'setup': {
-        'example_setup': {
-            'provider': 'ansible',
-            'misc_groups': 'whatever',
-        },
-    },  ## close the `setup:` part
-    'login': {
-        'ubuntu': {
-            'image_user': 'ubuntu',
-            'image_user_sudo': 'root',
-            'image_sudo': 'False',
-            'user_key_name': '{keyname}',
-            'user_key_private': '{valid_path}',
-            'user_key_public': '{valid_path}',
-        },
-    },
-})
-
-
-def test_read_config_file(tmpdir):
-    with open(join(str(tmpdir), 'config.ini'), 'w') as cfgfile:
-        cfgfile.write(CONFIG_TXT)
-        cfgfile.flush()
-        raw_config = _read_config_files([cfgfile.name])
-    assert raw_config == CONFIG_RAW
-
-
-def test_arrange_config_tree():
-    tree = _arrange_config_tree(copy(CONFIG_RAW))
-    assert tree == CONFIG_TREE
-
-
-def test_perform_key_renames():
-    tree_with_renames = _perform_key_renames(deepcopy(CONFIG_TREE))
-    assert tree_with_renames == CONFIG_TREE_WITH_RENAMES
-
-
-def test_dereference_config_tree_evict():
-    deref_tree = _dereference_config_tree(deepcopy(CONFIG_TREE_WITH_RENAMES))
-    for cluster_name, ref_section, ref_name in [
-            ('example_ec2',          'cloud', 'ec2'),
-            ('example_ec2',          'login', 'ubuntu'),
-            ('example_ec2',          'setup', 'example_setup'),
-            ('example_ec2_with_vpc', 'cloud', 'ec2'),
-            ('example_ec2_with_vpc', 'login', 'ubuntu'),
-            ('example_ec2_with_vpc', 'setup', 'example_setup'),
-            ('example_openstack',    'cloud', 'openstack'),
-            ('example_openstack',    'login', 'ubuntu'),
-            ('example_openstack',    'setup', 'example_setup'),
-    ]:
-        assert isinstance(deref_tree['cluster'][cluster_name][ref_section],
-                          collections.Mapping)
-        assert (deref_tree['cluster'][cluster_name][ref_section]
-                is deref_tree[ref_section][ref_name])
-    # check eviction of clusters w/ wrong config
-    assert 'example_google' not in deref_tree['cluster']
-
-
-def test_dereference_config_tree_no_evict():
-    deref_tree = _dereference_config_tree(deepcopy(CONFIG_TREE_WITH_RENAMES),
-                                          evict_on_error=False)
-    for cluster_name, ref_section, ref_name in [
-            ('example_google',       'login', 'ubuntu'),
-            ('example_google',       'setup', 'example_setup'),
-    ]:
-        assert (deref_tree['cluster'][cluster_name][ref_section]
-                is deref_tree[ref_section][ref_name])
-
-
-def test_build_node_section():
-    deref_tree = _dereference_config_tree(deepcopy(CONFIG_TREE_WITH_RENAMES))
-    cfg = _build_node_section(deref_tree)['cluster']
-    cluster_cfg = cfg['example_ec2']
-    assert 'nodes' in cluster_cfg
-    nodes_cfg = cluster_cfg['nodes']
-    assert 'misc' in nodes_cfg
-    assert nodes_cfg['misc']['flavor'] == 'm1.tiny'
-    assert nodes_cfg['misc']['image_id'] == 'i-12345'
-    assert nodes_cfg['misc']['num'] == 10
-    assert nodes_cfg['misc']['min_num'] == 10
 
 
 def test_issue_376(tmpdir):
@@ -517,9 +88,47 @@ boot_disk_size=100
     assert cluster.nodes['master'][0].extra['boot_disk_size'] == '100'
     # "worker" nodes take values from the cluster defaults
     assert cluster.nodes['worker'][0].flavor == 'n1-standard-1'
-    # FIXME: Actually, does this imply that the `boot_disk_size` value
-    # defined at cluster level is not propagated to "worker" nodes?
-    assert 'boot_disk_size' not in cluster.nodes['worker'][0].extra
+    assert 'boot_disk_size' in cluster.nodes['worker'][0].extra
+    assert cluster.nodes['worker'][0].extra['boot_disk_size'] == '20'
+
+
+def test_issue_415(tmpdir):
+    """
+    Drop cluster definition if not all node kinds are present in the `setup/*` section.
+    """
+    wd = tmpdir.strpath
+    ssh_key_path = os.path.join(wd, 'id_rsa.pem')
+    with open(ssh_key_path, 'w+') as ssh_key_file:
+        # don't really care about SSH key, just that the file exists
+        ssh_key_file.write('')
+        ssh_key_file.flush()
+    config_path = os.path.join(wd, 'config.ini')
+    with open(config_path, 'w+') as config_file:
+        config_file.write(
+            # reported by @dirkpetersen in issue #415
+            """
+[cluster/gce-slurm]
+cloud=google
+#login=ubuntu
+login=google
+setup=slurm_setup_old
+security_group=default
+image_id=ubuntu-1604-xenial-v20170307
+flavor=n1-standard-1
+frontend_nodes=1
+worker_nodes=2
+image_userdata=
+ssh_to=frontend
+            """
+            + make_config_snippet("cloud", "google")
+            + make_config_snippet("login", "ubuntu", keyname='test_issue_415', valid_path=ssh_key_path)
+            + make_config_snippet("setup", "slurm_setup_old")
+        )
+        config_file.flush()
+    creator = make_creator(config_path)
+    # ERROR: Configuration section `cluster/gce-slurm` references non-existing login section `google`. Dropping cluster definition.
+    with raises(ConfigurationError):
+        creator.create_cluster('gce-slurm')
 
 
 def test_pr_378(tmpdir):
@@ -569,6 +178,32 @@ ssh_to=master
         assert os.path.isabs(cluster.user_key_private)
 
 
+def test_invalid_ssh_to(tmpdir):
+    """
+    Drop cluster definition with an invalid `ssh_to=` line.
+    """
+    wd = tmpdir.strpath
+    ssh_key_path = os.path.join(wd, 'id_rsa.pem')
+    with open(ssh_key_path, 'w+') as ssh_key_file:
+        # don't really care about SSH key, just that the file exists
+        ssh_key_file.write('')
+        ssh_key_file.flush()
+    config_path = os.path.join(wd, 'config.ini')
+    with open(config_path, 'w+') as config_file:
+        config_file.write(
+            make_config_snippet("cluster", "example_openstack", 'ssh_to=non-existent')
+            + make_config_snippet("cloud", "openstack")
+            + make_config_snippet("login", "ubuntu",
+                                  keyname='test_invalid_ssh_to', valid_path=ssh_key_path)
+            + make_config_snippet("setup", "slurm_setup_old")
+        )
+        config_file.flush()
+    creator = make_creator(config_path)
+    # ERROR: Cluster `example_openstack` is configured to SSH into nodes of kind `non-existent`, but no such kind is defined
+    with raises(ConfigurationError):
+        creator.create_cluster('slurm')
+
+
 def test_get_cloud_provider_openstack(tmpdir):
     wd = tmpdir.strpath
     ssh_key_path = os.path.join(wd, 'id_rsa.pem')
@@ -589,7 +224,7 @@ project_name = test
     """
             + make_config_snippet("cluster", "example_openstack")
             + make_config_snippet("login", "ubuntu", keyname='test', valid_path=ssh_key_path)
-            + make_config_snippet("setup", "slurm_setup")
+            + make_config_snippet("setup", "slurm_setup_old")
         )
     creator = make_creator(config_path)
     cloud = creator.create_cloud_provider('example_openstack')
@@ -636,11 +271,11 @@ def test_default_setup_provider_is_ansible(tmpdir):
     with open(config_path, 'w+') as config_file:
         config_file.write(
             make_config_snippet("cloud", "openstack")
-            + make_config_snippet("cluster", "example_openstack")
+            + make_config_snippet("cluster", "example_openstack", 'setup=setup_no_ansible')
             + make_config_snippet("login", "ubuntu", keyname='test', valid_path=ssh_key_path)
             # *note:* no `provider=` line here
             + """
-[setup/slurm_setup]
+[setup/setup_no_ansible]
 frontend_groups = slurm_master
 compute_groups = slurm_worker
     """
