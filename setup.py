@@ -107,11 +107,13 @@ if python_version == (2, 6):
         'oslo.utils<3.1.0',
         'python-keystoneclient<2.0.0',
         'python-novaclient<3.0.0',
+        'python-cinderclient<1.2.2',
     ]
 elif python_version == (2, 7):
     version_dependent_requires = [
         'python-glanceclient',
         'python-neutronclient',
+        'python-cinderclient',
         'python-novaclient',
         # fix dependency conflict among OpenStack libraries:
         # `osc-lib` has a more strict dependency specifier

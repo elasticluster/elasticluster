@@ -545,6 +545,8 @@ image_id=ami-00000099
 flavor=m1.medium
 frontend_nodes=1
 worker_nodes=10
+#boot_disk_size=250
+#boot_disk_type=default
 image_userdata=
 ssh_to=frontend
 
