@@ -6,7 +6,6 @@
     - docker
     - kubernetes
     - master
-    - worker
   roles:
     - kubernetes-master
 
