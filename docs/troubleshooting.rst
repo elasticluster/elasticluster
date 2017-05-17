@@ -98,11 +98,12 @@ report that ends with this Python traceback::
 
 This means that the ``pip` command is too old to properly parse `Python
 environment markers <https://www.python.org/dev/peps/pep-0508/>`_; ``pip``
-version 8.1.2 is the first one known to work well.
+version 8.1.2 is the first one known to work well but version 9.0.0 improves
+support.
 
-To fix the issue, please upgrade ``pip`` to (at least) version 8.1.2::
+To fix the issue, please upgrade ``pip`` to (at least) version 9.0.0::
 
-  pip install --upgrade 'pip>=8.1.2'
+  pip install --upgrade 'pip>=9.0.0'
 
 
 Installation fails complaining about version of ``setuptools``
