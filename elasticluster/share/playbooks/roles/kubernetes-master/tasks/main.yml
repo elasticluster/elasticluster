@@ -16,7 +16,7 @@
 
 - name: Copy network configuration
   template:
-    src: kube-{{kubernetes_default_networking}}.yml
+    src: kube-{{kubernetes_default_networking}}.yml.j2
     dest: /var/tmp/kube-{{kubernetes_default_networking}}.yml
   when: "'failed' in token_list_result.stderr"
 
