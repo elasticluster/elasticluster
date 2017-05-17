@@ -189,11 +189,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             raise ImageError(
                     "No image found with ID `{0}` in project `{1}` of cloud {2}"
                     .format(image_id, self._os_tenant_name, self._os_auth_url))
-        volume_name = '{n}-{i}'.format(n=node_name, i=image_id)
-        if volume_name in [v.name for v in self._get_volumes()]:
-            raise ImageError(
-                    "Volume already exists for ID `{0}` in project `{1}` of cloud {2}"
-                    .format(image_id, self._os_tenant_name, self._os_auth_url))
 
         # Check if the flavor exists
         flavors = [fl for fl in self._get_flavors() if fl.name == flavor]
@@ -214,7 +209,14 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             nics = None
 
         if 'boot_disk_size' in kwargs:
+            volume_name = '{n}-{i}'.format(n=node_name, i=image_id)
             log.info('going to create volume {0}'.format(volume_name))
+
+            if volume_name in [v.name for v in self._get_volumes()]:
+                raise ImageError(
+                    "Volume already exists for ID `{0}` in project `{1}` of cloud {2}"
+                        .format(image_id, self._os_tenant_name, self._os_auth_url))
+
             bds = int(kwargs.pop('boot_disk_size'))
             if bds < 1:
                 raise ConfigurationError('invalid volume size specified ({0})'.format(bds))
