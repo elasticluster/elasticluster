@@ -102,6 +102,7 @@ SCHEMA = {
             str: {
                 'flavor': nonempty_str,
                 'image_id': nonempty_str,
+                Optional('image_userdata', default=''): str,
                 'security_group': str,  ## FIXME: alphanumeric?
                 Optional('network_ids'): str,
                 # these are auto-generated but already there by the time
