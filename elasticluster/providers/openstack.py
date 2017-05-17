@@ -71,6 +71,9 @@ except ImportError:
     class BadNeutronRequest(Exception):
         """Placeholder to avoid syntax errors."""
         pass
+
+from cinderclient import client as cinder_client
+
 from novaclient import client as nova_client
 from novaclient.exceptions import NotFound
 from paramiko import DSSKey, RSAKey, PasswordRequiredException
@@ -143,6 +146,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self.nova_client = nova_client.Client(self.nova_api_version, session=sess)
         self.neutron_client = neutron_client.Client(session=sess)
         self.glance_client = glance_client.Client('2', session=sess)
+        self.cinder_client = cinder_client.Client('2', session=sess)
 
         # self.nova_client = client.Client(self.nova_api_version,
         #                             self._os_username, self._os_password, self._os_tenant_name,
@@ -150,7 +154,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
-                       username=None, node_name=None, **kwargs):
+                       volume_id=None, username=None, node_name=None, **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
 
@@ -184,8 +188,12 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # Check if the image id is present.
         if image_id not in [img.id for img in self._get_images()]:
             raise ImageError(
-                "No image found with ID `{0}` in project `{1}` of cloud {2}"
-                .format(image_id, self._os_tenant_name, self._os_auth_url))
+                    "No image found with ID `{0}` in project `{1}` of cloud {2}"
+                    .format(image_id, self._os_tenant_name, self._os_auth_url))
+        if volume_id and volume_id not in [v.id for v in self._get_volumes()]:
+            raise ImageError(
+                    "No volume found with ID `{0}` in project `{1}` of cloud {2}"
+                    .format(image_id, self._os_tenant_name, self._os_auth_url))
 
         # Check if the flavor exists
         flavors = [fl for fl in self._get_flavors() if fl.name == flavor]
@@ -205,10 +213,19 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         else:
             nics = None
 
-        vm = self.nova_client.servers.create(
-            node_name, image_id, flavor, key_name=key_name,
-            security_groups=[security_group], userdata=image_userdata,
-            nics=nics)
+        if not volume_id:
+            vm = self.nova_client.servers.create(
+                node_name, image_id, flavor, key_name=key_name,
+                security_groups=[s.strip() for s in security_group.split(',')],
+                userdata=image_userdata, nics=nics)
+        else:
+            vm = self.nova_client.servers.create(
+                node_name, image_id, flavor,
+                block_dev_mapping={'vda': volume_id},
+                key_name=key_name,
+                security_groups=[s.strip() for s in security_group.split(',')],
+                userdata=image_userdata,
+                nics=nics)
 
         # allocate and attach a floating IP, if requested
         if self.request_floating_ip:
@@ -328,10 +345,10 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         "could not create keypair `%s`: %s" % (name, ex))
 
 
-    def _check_security_group(self, name):
+    def _check_security_group(self, groups):
         """Checks if the security group exists.
 
-        :param str name: name of the security group
+        :param str groups: name of the security group
         :raises: `SecurityGroupError` if group does not exist
         """
         try:
@@ -346,9 +363,10 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # doesn't exist and at least add a rule to accept ssh access.
         # Also, we should be able to add new rules to a security group
         # if needed.
-        if name not in names:
-            raise SecurityGroupError(
-                "the specified security group %s does not exist" % name)
+        for name in groups.split(','):
+            if name.strip() not in names:
+                raise SecurityGroupError(
+                    "the specified security group %s does not exist" % groups)
 
     @memoize(120)
     def _get_images(self):
@@ -363,6 +381,14 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             # ``glance_client.images.list()`` returns a generator, but callers
             # of `._get_images()` expect a Python list
             return list(self.glance_client.images.list())
+
+    @memoize(120)
+    def _get_volumes(self):
+        """Get available volumes. We cache the results in order to reduce
+        network usage.
+
+        """
+        return self.cinder_client.volumes.list()
 
     @memoize(120)
     def _get_flavors(self):

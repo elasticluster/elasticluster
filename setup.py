@@ -112,6 +112,7 @@ elif python_version == (2, 7):
     version_dependent_requires = [
         'python-glanceclient',
         'python-neutronclient',
+        'python-cinderclient',
         'python-novaclient',
         # fix dependency conflict among OpenStack libraries:
         # `osc-lib` has a more strict dependency specifier
