@@ -1,8 +1,5 @@
 ---
 
-- name: Include debian specifc vars
-  include_vars: 'debian.yml'
-
 - name: Add Google key to apt
   apt_key:
     url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
@@ -16,6 +13,11 @@
 
 - name: Install packages
   apt:
-    name: '{{ kubeadm_packages | list }}'
+    name: "{{ item }}"
     state: present
-    update_cache: true
+  with_items:
+    - docker.io
+    - kubelet
+    - kubeadm
+    - kubectl
+    - kubernetes-cni

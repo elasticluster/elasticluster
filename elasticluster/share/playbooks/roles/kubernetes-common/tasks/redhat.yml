@@ -1,8 +1,5 @@
 ---
 
-- name: Include redhat specifc vars
-  include_vars: 'redhat.yml'
-
 - name: Add Kubernetes yum repo
   yum_repository:
     name: Kubernetes
@@ -17,13 +14,20 @@
 
 - name: Install kubeadm packages
   yum:
-    name: '{{ kubeadm_packages | list }}'
+    name: "{{ item }}"
     state: latest
-    update_cache: true
+  with_items:
+    - docker
+    - kubelet
+    - kubeadm
+    - kubectl
+    - kubernetes-cni
 
 - name: Enable and start kubeadm services
   service:
     name: '{{ item }}'
     enabled: true
     state: started
-  with_items: '{{ kubeadm_services }}'
+  with_items:
+    - docker
+    - kubelet

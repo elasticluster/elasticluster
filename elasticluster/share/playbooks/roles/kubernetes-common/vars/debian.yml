@@ -1,8 +1,0 @@
----
-
-kubeadm_packages:
-  - docker.io
-  - kubelet
-  - kubeadm
-  - kubectl
-  - kubernetes-cni
