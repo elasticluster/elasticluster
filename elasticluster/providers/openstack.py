@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+from time import sleep
 
 __docformat__ = 'reStructuredText'
 __author__ = ', '.join([
@@ -84,16 +85,15 @@ from elasticluster import log
 from elasticluster.utils import memoize
 from elasticluster.providers import AbstractCloudProvider
 from elasticluster.exceptions import (
-    ClusterError,
     FlavorError,
     ImageError,
-    InstanceError,
     InstanceNotFoundError,
     KeypairError,
     SecurityGroupError,
-)
+    ConfigurationError)
 
 DEFAULT_OS_NOVA_API_VERSION = "2"
+
 
 class OpenStackCloudProvider(AbstractCloudProvider):
     """
@@ -154,7 +154,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
-                       volume_id=None, username=None, node_name=None, **kwargs):
+                       username=None, node_name=None, **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
 
@@ -190,9 +190,10 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             raise ImageError(
                     "No image found with ID `{0}` in project `{1}` of cloud {2}"
                     .format(image_id, self._os_tenant_name, self._os_auth_url))
-        if volume_id and volume_id not in [v.id for v in self._get_volumes()]:
+        volume_name = '{n}-{i}'.format(n=node_name, i=image_id)
+        if volume_name in [v.name for v in self._get_volumes()]:
             raise ImageError(
-                    "No volume found with ID `{0}` in project `{1}` of cloud {2}"
+                    "Volume already exists for ID `{0}` in project `{1}` of cloud {2}"
                     .format(image_id, self._os_tenant_name, self._os_auth_url))
 
         # Check if the flavor exists
@@ -213,19 +214,34 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         else:
             nics = None
 
-        if not volume_id:
-            vm = self.nova_client.servers.create(
-                node_name, image_id, flavor, key_name=key_name,
-                security_groups=[s.strip() for s in security_group.split(',')],
-                userdata=image_userdata, nics=nics)
-        else:
+        if 'boot_disk_size' in kwargs:
+            log.info('going to create volume {0}'.format(volume_name))
+            bds = int(kwargs.pop('boot_disk_size'))
+            if bds < 1:
+                raise ConfigurationError('invalid volume size specified ({0})'.format(bds))
+            volume = self.cinder_client.volumes.create(size=bds,
+                                               name=volume_name,
+                                               imageRef=image_id,
+                                               volume_type=kwargs.pop('boot_disk_type'))
+            volume_available = False
+            while not volume_available:
+                for v in self._get_volumes():
+                    if v.name == volume_name and v.status == 'available':
+                        volume_available = True
+                        break
+                sleep(0.1)
             vm = self.nova_client.servers.create(
                 node_name, image_id, flavor,
-                block_dev_mapping={'vda': volume_id},
+                block_device_mapping={'vda': '{0}:::1'.format(volume.id)},
                 key_name=key_name,
                 security_groups=[s.strip() for s in security_group.split(',')],
                 userdata=image_userdata,
                 nics=nics)
+        else:
+            vm = self.nova_client.servers.create(
+                node_name, image_id, flavor, key_name=key_name,
+                security_groups=[s.strip() for s in security_group.split(',')],
+                userdata=image_userdata, nics=nics)
 
         # allocate and attach a floating IP, if requested
         if self.request_floating_ip:
@@ -382,7 +398,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             # of `._get_images()` expect a Python list
             return list(self.glance_client.images.list())
 
-    @memoize(120)
     def _get_volumes(self):
         """Get available volumes. We cache the results in order to reduce
         network usage.
