@@ -15,8 +15,8 @@
 
 - name: add Apache Bigtop repository
   apt_repository:
-    # download from: http://www.apache.org/dist/bigtop/bigtop-1.0.0/repos/trusty/bigtop.list
-    repo='deb http://bigtop-repos.s3.amazonaws.com/releases/{{bigtop_release}}/{{ansible_distribution|lower}}/{{ansible_distribution_major_version}}/x86_64 bigtop contrib'
+    # download from: http://www.apache.org/dist/bigtop/bigtop-1.2.0/repos/16.04/bigtop.list
+    repo='deb http://bigtop-repos.s3.amazonaws.com/releases/{{bigtop_release}}/{{ansible_distribution|lower}}/{{ansible_distribution_version}}/x86_64 bigtop contrib'
     state=present
   when: is_debian_compatible
 
