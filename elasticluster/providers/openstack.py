@@ -247,6 +247,9 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
             # ok, use volume as VM disk
             vm_start_args['block_device_mapping'] = {
+                # FIXME: is it possible that `vda` is not the boot disk? e.g. if
+                # a non-paravirtualized kernel is being used?  should we allow
+                # to set the boot device as an image parameter?
                 'vda': ('{id}:::{delete_on_terminate}'
                         .format(id=volume.id, delete_on_terminate=1)),
             }
