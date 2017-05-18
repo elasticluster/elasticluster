@@ -178,12 +178,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         with OpenStackCloudProvider.__node_start_lock:
             self._check_keypair(key_name, public_key_path, private_key_path)
 
-        security_groups = []
-        for g in security_group.split(','):
-            g = g.strip()
-            log.debug("Checking security group `%s` ...", g)
-            self._check_security_group(g)
-            security_groups.append(g)
+        log.debug("Checking security group `%s` ...", security_group)
+        self._check_security_group(security_group)
 
         # Check if the image id is present.
         if image_id not in [img.id for img in self._get_images()]:
@@ -211,7 +207,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         vm = self.nova_client.servers.create(
             node_name, image_id, flavor, key_name=key_name,
-            security_groups=security_groups, userdata=image_userdata,
+            security_groups=[security_group], userdata=image_userdata,
             nics=nics)
 
         # allocate and attach a floating IP, if requested
