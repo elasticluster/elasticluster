@@ -71,11 +71,10 @@ except ImportError:
     class BadNeutronRequest(Exception):
         """Placeholder to avoid syntax errors."""
         pass
-
 from cinderclient import client as cinder_client
-
 from novaclient import client as nova_client
 from novaclient.exceptions import NotFound
+
 from paramiko import DSSKey, RSAKey, PasswordRequiredException
 from paramiko.ssh_exception import SSHException
 
@@ -84,12 +83,13 @@ from elasticluster import log
 from elasticluster.utils import memoize
 from elasticluster.providers import AbstractCloudProvider
 from elasticluster.exceptions import (
+    ConfigurationError,
     FlavorError,
     ImageError,
     InstanceNotFoundError,
     KeypairError,
     SecurityGroupError,
-    ConfigurationError)
+)
 
 DEFAULT_OS_NOVA_API_VERSION = "2"
 
@@ -176,24 +176,29 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         :return: str - instance id of the started instance
         """
+        vm_start_args = {}
 
         log.debug("Checking keypair `%s` ...", key_name)
         with OpenStackCloudProvider.__node_start_lock:
             self._check_keypair(key_name, public_key_path, private_key_path)
+        vm_start_args['key_name'] = key_name
 
-        log.debug("Checking security group `%s` ...", security_group)
-        self._check_security_group(security_group)
+        security_groups = [sg.strip() for sg in security_group.split(',')]
+        self._check_security_groups(security_groups)
+        vm_start_args['security_groups'] = security_groups
+
 
         # Check if the image id is present.
         if image_id not in [img.id for img in self._get_images()]:
             raise ImageError(
                     "No image found with ID `{0}` in project `{1}` of cloud {2}"
                     .format(image_id, self._os_tenant_name, self._os_auth_url))
+        vm_start_args['userdata'] = image_userdata
 
         # Check if the flavor exists
         flavors = [fl for fl in self._get_flavors() if fl.name == flavor]
         if not flavors:
-            raise FlavorError("No flavor found with name %s on cloud "
+            raise FlavorError(
                 "No flavor found with name `{0}` in project `{1}` of cloud {2}"
                 .format(flavor, self._os_tenant_name, self._os_auth_url))
         flavor = flavors[0]
@@ -207,19 +212,20 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                       node_name, ', '.join([nic['net-id'] for nic in nics]))
         else:
             nics = None
+        vm_start_args['nics'] = nics
 
         if 'boot_disk_size' in kwargs:
-            volume_name = '{n}-{i}'.format(n=node_name, i=image_id)
-            log.info('going to create volume {0}'.format(volume_name))
-
+            # check if the backing volume is already there
+            volume_name = '{name}-{id}'.format(name=node_name, id=image_id)
             if volume_name in [v.name for v in self._get_volumes()]:
                 raise ImageError(
-                    "Volume already exists for ID `{0}` in project `{1}` of cloud {2}"
-                        .format(image_id, self._os_tenant_name, self._os_auth_url))
+                    "Volume `{0}` already exists in project `{1}` of cloud {2}"
+                    .format(volume_name, self._os_tenant_name, self._os_auth_url))
 
+            log.info('Going to create volume `%s` to use as VM disk', volume_name)
             bds = int(kwargs.pop('boot_disk_size'))
             if bds < 1:
-                raise ConfigurationError('invalid volume size specified ({0})'.format(bds))
+                raise ConfigurationError('Invalid volume size specified ({0})'.format(bds))
             volume = self.cinder_client.volumes.create(size=bds,
                                                name=volume_name,
                                                imageRef=image_id,
@@ -230,20 +236,16 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                     if v.name == volume_name and v.status == 'available':
                         volume_available = True
                         break
-                sleep(0.1)
-            delete_volume_on_terminate = 1
-            vm = self.nova_client.servers.create(
-                node_name, image_id, flavor,
-                block_device_mapping={'vda': '{0}:::{1}'.format(volume.id, delete_volume_on_terminate)},
-                key_name=key_name,
-                security_groups=[s.strip() for s in security_group.split(',')],
-                userdata=image_userdata,
-                nics=nics)
-        else:
-            vm = self.nova_client.servers.create(
-                node_name, image_id, flavor, key_name=key_name,
-                security_groups=[s.strip() for s in security_group.split(',')],
-                userdata=image_userdata, nics=nics)
+                sleep(1)  # FIXME: hard-coded waiting time
+            vm_start_args['block_device_mapping'] = {
+                'vda': ('{id}:::{delete_on_terminate}'
+                        .format(id=volume.id, delete_on_terminate=1)),
+            }
+
+        # due to some `nova_client.servers.create()` implementation weirdness,
+        # the first three args need to be spelt out explicitly and cannot be
+        # conflated into `**vm_start_args`
+        vm = self.nova_client.servers.create(node_name, image_id, flavor, **vm_start_args)
 
         # allocate and attach a floating IP, if requested
         if self.request_floating_ip:
@@ -363,28 +365,34 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         "could not create keypair `%s`: %s" % (name, ex))
 
 
-    def _check_security_group(self, groups):
-        """Checks if the security group exists.
+    def _check_security_groups(self, names):
+        """
+        Raise an exception if any of the named security groups does not exist.
 
-        :param str groups: name of the security group
+        :param List[str] groups: List of security group names
         :raises: `SecurityGroupError` if group does not exist
         """
+        log.debug("Checking existence of security group(s) %s ...", names)
         try:
             # python-novaclient < 8.0.0
             security_groups = self.nova_client.security_groups.list()
-            names = [sg.name for sg in security_groups]
+            existing = set(sg.name for sg in security_groups)
         except AttributeError:
             security_groups = self.neutron_client.list_security_groups()['security_groups']
-            names = [sg[u'name'] for sg in security_groups]
+            existing = set(sg[u'name'] for sg in security_groups)
 
         # TODO: We should be able to create the security group if it
         # doesn't exist and at least add a rule to accept ssh access.
         # Also, we should be able to add new rules to a security group
         # if needed.
-        for name in groups.split(','):
-            if name.strip() not in names:
-                raise SecurityGroupError(
-                    "the specified security group %s does not exist" % groups)
+        nonexisting = set(names) - existing
+        if nonexisting:
+            raise SecurityGroupError(
+                "Security group(s) `{0}` do not exist"
+                .format(', '.join(nonexisting)))
+
+        # if we get to this point, all sec groups exist
+        return True
 
     @memoize(120)
     def _get_images(self):
@@ -401,10 +409,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             return list(self.glance_client.images.list())
 
     def _get_volumes(self):
-        """Get available volumes. We cache the results in order to reduce
-        network usage.
-
-        """
+        """Return list of available volumes."""
         return self.cinder_client.volumes.list()
 
     @memoize(120)
