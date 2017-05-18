@@ -734,19 +734,19 @@ Optional configuration keys
     Define the type of boot disk to use.
     Only supported when the cloud provider is `google` or `openstack`.
     Supported values are `pd-standard` and `pd-ssd` for Google,
-    or the types available in the openstack volume (cinde) configuration.
+    or the types available in the OpenStack volume (cinder) configuration.
     Default value is `pd-standard` for Google.
-    When using this option for openstack, it creates volumes to be used
+    When using this option for OpenStack, it creates volumes to be used
     as the root disks for the VM's of the specified size, when terminating
     and instance the volume will be deleted automatically. Always specify
-    the boot_disk_size when using this with openstack.
+    the boot_disk_size when using this with OpenStack.
 
 ``boot_disk_size``
     Define the size of boot disk to use.
     Only supported when the cloud provider is `google` or `openstack`.
     Values are specified in gigabytes.
     Default value for Google is 10.
-    No default is given for openstack.
+    No default is given for OpenStack.
 
 ``tags``
     Comma-separated list of instance tags.
