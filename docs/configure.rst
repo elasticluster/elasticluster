@@ -318,6 +318,31 @@ Valid configuration keys for *libcloud*
     Name of the driver you want to configure (provider you want to connect with).
 
 
+Arguments for a set of drivers:
+-------------------------------
+
+Provider    Arguments                                      Configuration parameters
+===================================================================================
+CloudSigma: username, password, region, api_version     :: username=user
+                                                           password=pass
+                                                           region=zrh
+                                                           api_version=2.0
+CloudStack: apikey, secretkey, host, path               :: apikey=key
+                                                           secretkey=secret
+                                                           host=example.com
+                                                           path=/path/to/api
+ExoScale:   key, secret, host, path                     :: key=key
+                                                           secret=secret
+                                                           host=example.com
+                                                           path=/path/to/api
+LibVirt:    uri                                         :: uri=qemu:///system
+RackSpace:  username, apikey, region                    :: username=user
+                                                           apikey=key
+                                                           region=iad
+vSphere:    host, username, password                    :: host=192.168.1.100
+                                                           username=user
+                                                           password=pass
+
 Examples
 --------
 
@@ -346,7 +371,7 @@ you can configure the following::
     provider=libcloud
     driver_name=openstack
     auth_url=**** YOUR AUTH URL ****
-    ex_tenant_name=**** YOUR TENNANT NAME ****
+    ex_tenant_name=**** YOUR TENANT NAME ****
     ex_force_auth_version=2.0_password
     username=**** YOUR USERNAME ****
     password=**** YOUR PASSWORD ****

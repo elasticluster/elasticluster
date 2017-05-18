@@ -28,10 +28,6 @@ from elasticluster import AbstractCloudProvider
 from elasticluster import log
 from elasticluster.exceptions import KeypairError, UnsupportedError
 
-EXPLICIT_CONFIG = set(
-    # 'floating_ip'
-)
-
 
 class LibCloudProvider(AbstractCloudProvider):
     """
@@ -80,7 +76,7 @@ class LibCloudProvider(AbstractCloudProvider):
         else:
             options['auth'] = NodeAuthPassword(options.get('image_user_password'))
 
-        for key in set(options.keys()) - EXPLICIT_CONFIG:
+        for key in options.keys():
             list_function = self.__get_list_function(key)
             if list_function:
                 populated_list = self.__get_name_or_id(options[key], list_function())
