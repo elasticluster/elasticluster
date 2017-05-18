@@ -222,17 +222,21 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                     "Volume `{0}` already exists in project `{1}` of cloud {2}"
                     .format(volume_name, self._os_tenant_name, self._os_auth_url))
 
-            log.info('Going to create volume `%s` to use as VM disk', volume_name)
+            log.info('Creating volume `%s` to use as VM disk ...', volume_name)
             try:
-                bds = int(kwargs.pop('boot_disk_size'))
+                bds = int(kwargs['boot_disk_size'])
+                if bds < 1:
+                    raise ValueError('non-positive int')
             except (ValueError, TypeError):
-                raise ConfigurationError('Invalid boot_disk_size specified, should be a number')
-            if bds < 1:
-                raise ConfigurationError('Invalid boot_disk_size specified ({0})'.format(bds))
-            volume = self.cinder_client.volumes.create(size=bds,
-                                               name=volume_name,
-                                               imageRef=image_id,
-                                               volume_type=kwargs.pop('boot_disk_type'))
+                raise ConfigurationError(
+                    "Invalid `boot_disk_size` specified:"
+                    " should be a positive integer, got {0} instead"
+                    .format(kwargs['boot_disk_size']))
+            volume = self.cinder_client.volumes.create(
+                size=bds, name=volume_name, imageRef=image_id,
+                volume_type=kwargs.pop('boot_disk_type'))
+
+            # wait for volume to come up
             volume_available = False
             while not volume_available:
                 for v in self._get_volumes():
@@ -240,6 +244,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         volume_available = True
                         break
                 sleep(1)  # FIXME: hard-coded waiting time
+
+            # ok, use volume as VM disk
             vm_start_args['block_device_mapping'] = {
                 'vda': ('{id}:::{delete_on_terminate}'
                         .format(id=volume.id, delete_on_terminate=1)),
