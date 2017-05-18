@@ -19,7 +19,6 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
 __docformat__ = 'reStructuredText'
 __author__ = ', '.join([
     'Antonio Messina <antonio.s.messina@gmail.com>',
@@ -30,6 +29,7 @@ __author__ = ', '.join([
 import os
 import threading
 from warnings import warn
+from time import sleep
 
 # External modules
 
@@ -71,8 +71,10 @@ except ImportError:
     class BadNeutronRequest(Exception):
         """Placeholder to avoid syntax errors."""
         pass
+from cinderclient import client as cinder_client
 from novaclient import client as nova_client
 from novaclient.exceptions import NotFound
+
 from paramiko import DSSKey, RSAKey, PasswordRequiredException
 from paramiko.ssh_exception import SSHException
 
@@ -81,16 +83,16 @@ from elasticluster import log
 from elasticluster.utils import memoize
 from elasticluster.providers import AbstractCloudProvider
 from elasticluster.exceptions import (
-    ClusterError,
+    ConfigurationError,
     FlavorError,
     ImageError,
-    InstanceError,
     InstanceNotFoundError,
     KeypairError,
     SecurityGroupError,
 )
 
 DEFAULT_OS_NOVA_API_VERSION = "2"
+
 
 class OpenStackCloudProvider(AbstractCloudProvider):
     """
@@ -143,6 +145,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self.nova_client = nova_client.Client(self.nova_api_version, session=sess)
         self.neutron_client = neutron_client.Client(session=sess)
         self.glance_client = glance_client.Client('2', session=sess)
+        self.cinder_client = cinder_client.Client('2', session=sess)
 
         # self.nova_client = client.Client(self.nova_api_version,
         #                             self._os_username, self._os_password, self._os_tenant_name,
@@ -173,24 +176,29 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         :return: str - instance id of the started instance
         """
+        vm_start_args = {}
 
         log.debug("Checking keypair `%s` ...", key_name)
         with OpenStackCloudProvider.__node_start_lock:
             self._check_keypair(key_name, public_key_path, private_key_path)
+        vm_start_args['key_name'] = key_name
 
-        log.debug("Checking security group `%s` ...", security_group)
-        self._check_security_group(security_group)
+        security_groups = [sg.strip() for sg in security_group.split(',')]
+        self._check_security_groups(security_groups)
+        vm_start_args['security_groups'] = security_groups
+
 
         # Check if the image id is present.
         if image_id not in [img.id for img in self._get_images()]:
             raise ImageError(
-                "No image found with ID `{0}` in project `{1}` of cloud {2}"
-                .format(image_id, self._os_tenant_name, self._os_auth_url))
+                    "No image found with ID `{0}` in project `{1}` of cloud {2}"
+                    .format(image_id, self._os_tenant_name, self._os_auth_url))
+        vm_start_args['userdata'] = image_userdata
 
         # Check if the flavor exists
         flavors = [fl for fl in self._get_flavors() if fl.name == flavor]
         if not flavors:
-            raise FlavorError("No flavor found with name %s on cloud "
+            raise FlavorError(
                 "No flavor found with name `{0}` in project `{1}` of cloud {2}"
                 .format(flavor, self._os_tenant_name, self._os_auth_url))
         flavor = flavors[0]
@@ -204,11 +212,52 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                       node_name, ', '.join([nic['net-id'] for nic in nics]))
         else:
             nics = None
+        vm_start_args['nics'] = nics
 
-        vm = self.nova_client.servers.create(
-            node_name, image_id, flavor, key_name=key_name,
-            security_groups=[security_group], userdata=image_userdata,
-            nics=nics)
+        if 'boot_disk_size' in kwargs:
+            # check if the backing volume is already there
+            volume_name = '{name}-{id}'.format(name=node_name, id=image_id)
+            if volume_name in [v.name for v in self._get_volumes()]:
+                raise ImageError(
+                    "Volume `{0}` already exists in project `{1}` of cloud {2}"
+                    .format(volume_name, self._os_tenant_name, self._os_auth_url))
+
+            log.info('Creating volume `%s` to use as VM disk ...', volume_name)
+            try:
+                bds = int(kwargs['boot_disk_size'])
+                if bds < 1:
+                    raise ValueError('non-positive int')
+            except (ValueError, TypeError):
+                raise ConfigurationError(
+                    "Invalid `boot_disk_size` specified:"
+                    " should be a positive integer, got {0} instead"
+                    .format(kwargs['boot_disk_size']))
+            volume = self.cinder_client.volumes.create(
+                size=bds, name=volume_name, imageRef=image_id,
+                volume_type=kwargs.pop('boot_disk_type'))
+
+            # wait for volume to come up
+            volume_available = False
+            while not volume_available:
+                for v in self._get_volumes():
+                    if v.name == volume_name and v.status == 'available':
+                        volume_available = True
+                        break
+                sleep(1)  # FIXME: hard-coded waiting time
+
+            # ok, use volume as VM disk
+            vm_start_args['block_device_mapping'] = {
+                # FIXME: is it possible that `vda` is not the boot disk? e.g. if
+                # a non-paravirtualized kernel is being used?  should we allow
+                # to set the boot device as an image parameter?
+                'vda': ('{id}:::{delete_on_terminate}'
+                        .format(id=volume.id, delete_on_terminate=1)),
+            }
+
+        # due to some `nova_client.servers.create()` implementation weirdness,
+        # the first three args need to be spelt out explicitly and cannot be
+        # conflated into `**vm_start_args`
+        vm = self.nova_client.servers.create(node_name, image_id, flavor, **vm_start_args)
 
         # allocate and attach a floating IP, if requested
         if self.request_floating_ip:
@@ -328,27 +377,34 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         "could not create keypair `%s`: %s" % (name, ex))
 
 
-    def _check_security_group(self, name):
-        """Checks if the security group exists.
+    def _check_security_groups(self, names):
+        """
+        Raise an exception if any of the named security groups does not exist.
 
-        :param str name: name of the security group
+        :param List[str] groups: List of security group names
         :raises: `SecurityGroupError` if group does not exist
         """
+        log.debug("Checking existence of security group(s) %s ...", names)
         try:
             # python-novaclient < 8.0.0
             security_groups = self.nova_client.security_groups.list()
-            names = [sg.name for sg in security_groups]
+            existing = set(sg.name for sg in security_groups)
         except AttributeError:
             security_groups = self.neutron_client.list_security_groups()['security_groups']
-            names = [sg[u'name'] for sg in security_groups]
+            existing = set(sg[u'name'] for sg in security_groups)
 
         # TODO: We should be able to create the security group if it
         # doesn't exist and at least add a rule to accept ssh access.
         # Also, we should be able to add new rules to a security group
         # if needed.
-        if name not in names:
+        nonexisting = set(names) - existing
+        if nonexisting:
             raise SecurityGroupError(
-                "the specified security group %s does not exist" % name)
+                "Security group(s) `{0}` do not exist"
+                .format(', '.join(nonexisting)))
+
+        # if we get to this point, all sec groups exist
+        return True
 
     @memoize(120)
     def _get_images(self):
@@ -363,6 +419,10 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             # ``glance_client.images.list()`` returns a generator, but callers
             # of `._get_images()` expect a Python list
             return list(self.glance_client.images.list())
+
+    def _get_volumes(self):
+        """Return list of available volumes."""
+        return self.cinder_client.volumes.list()
 
     @memoize(120)
     def _get_flavors(self):
