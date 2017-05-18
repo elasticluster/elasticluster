@@ -1,0 +1,10 @@
+---
+
+- name: Debian compatible install
+  include: debian.yml
+  when: is_debian_compatible
+
+- name: Redhat compatible install
+  include: redhat.yml
+  when: is_rhel_compatible
+

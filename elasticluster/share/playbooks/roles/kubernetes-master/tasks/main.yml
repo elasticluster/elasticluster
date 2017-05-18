@@ -1,0 +1,31 @@
+---
+
+- name: Check current Kubernetes master status
+  command: kubeadm token list
+  register: token_list_result
+  ignore_errors: True
+
+- name: Initialize Kubernetes master
+  command: kubeadm init
+  when: "'failed' in token_list_result.stderr"
+
+- name: Waiting for configuration to become available
+  wait_for:
+    path: /etc/kubernetes/admin.conf
+  when: "'failed' in token_list_result.stderr"
+
+- name: Copy network configuration
+  template:
+    src: kube-{{kubernetes_default_networking}}.yml.j2
+    dest: /var/tmp/kube-{{kubernetes_default_networking}}.yml
+  when: "'failed' in token_list_result.stderr"
+
+- name: Initialize Kubernetes networking
+  command: kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f /var/tmp/kube-{{kubernetes_default_networking}}.yml
+  when: "'failed' in token_list_result.stderr"
+
+- name: Get cluster token
+  shell: kubeadm token list | awk 'NR==2{print $1}'
+  register: token_result
+
+- set_fact: token={{token_result.stdout_lines}}

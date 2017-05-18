@@ -1,0 +1,33 @@
+---
+
+- name: Add Kubernetes yum repo
+  yum_repository:
+    name: Kubernetes
+    description: Kubernetes
+    file: kubernetes
+    baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
+    enabled: true
+    gpgcakey: https://packages.cloud.google.com/yum/doc/yum-key.gpg
+    gpgkey: https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    gpgcheck: true
+    state: present
+
+- name: Install kubeadm packages
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - docker
+    - kubelet
+    - kubeadm
+    - kubectl
+    - kubernetes-cni
+
+- name: Enable and start kubeadm services
+  service:
+    name: '{{ item }}'
+    enabled: true
+    state: started
+  with_items:
+    - docker
+    - kubelet
