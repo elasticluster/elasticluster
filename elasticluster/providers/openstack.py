@@ -145,7 +145,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self.nova_client = nova_client.Client(self.nova_api_version, session=sess)
         self.neutron_client = neutron_client.Client(session=sess)
         self.glance_client = glance_client.Client('2', session=sess)
-        self.cinder_client = cinder_client.Client('2', session=sess)
+        self.cinder_client = cinder_client.Client(session=sess)
 
         # self.nova_client = client.Client(self.nova_api_version,
         #                             self._os_username, self._os_password, self._os_tenant_name,
@@ -223,9 +223,12 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                     .format(volume_name, self._os_tenant_name, self._os_auth_url))
 
             log.info('Going to create volume `%s` to use as VM disk', volume_name)
-            bds = int(kwargs.pop('boot_disk_size'))
+            try:
+                bds = int(kwargs.pop('boot_disk_size'))
+            except (ValueError, TypeError):
+                raise ConfigurationError('Invalid boot_disk_size specified, should be a number')
             if bds < 1:
-                raise ConfigurationError('Invalid volume size specified ({0})'.format(bds))
+                raise ConfigurationError('Invalid boot_disk_size specified ({0})'.format(bds))
             volume = self.cinder_client.volumes.create(size=bds,
                                                name=volume_name,
                                                imageRef=image_id,
