@@ -2,8 +2,6 @@
 
 - name: Install Mesos master node
   hosts: mesos_master
-  vars:
-    java_version: 8
   tags:
     - zookeeper
     - mesos
@@ -17,8 +15,6 @@
 
 - name: Install Mesos slave nodes
   hosts: mesos_slave
-  vars:
-    java_version: 8
   tags:
     - docker
     - mesos

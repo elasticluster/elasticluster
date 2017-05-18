@@ -1,15 +1,10 @@
 # bigtop/defaults/main.yml
 ---
 
-bigtop_experimental: False
-
 # What release of Apache Bigtop to get packages from
-bigtop_release: '1.1.0'
+bigtop_release: '1.2.0'
 
 # identifier for GnuPG key(s) used to sign packages from the Apache Bigtop repo
 bigtop_signing_key:
   - '13971DA39475BD5D'
   - '3A367EA0FA08B173'
-
-bigtop_signing_key_trunk: '7C8F6C13BAFB30E54AF3E8CF412388E021647D0C'
-bigtop_uri: 'https://cloud.s3it.uzh.ch:8080/v1/AUTH_6169dd64a7ed498581cee5abff0c6cd7/bigtop'

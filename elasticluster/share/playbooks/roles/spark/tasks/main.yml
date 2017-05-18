@@ -127,11 +127,6 @@
     - spark-thriftserver
 
 
-- name: Fetch Spark major version
-  shell: spark-shell --version 2>&1 | grep version | grep -v Scala | awk '{print $5}' | head -c 1
-  register: spark_major_version
-
-
 - name: Set SPARK_HOME in environment
   lineinfile: dest=/etc/environment line='export SPARK_HOME=/usr/lib/spark' insertafter='EOF' state=present
 
