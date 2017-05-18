@@ -1,0 +1,19 @@
+---
+
+- name: Install Kubernetes master
+  hosts: kubernetes_master
+  tags:
+    - docker
+    - kubernetes
+    - master
+  roles:
+    - kubernetes-master
+
+- name: Install Kubernetes worker
+  hosts: kubernetes_worker
+  tags:
+    - docker
+    - kubernetes
+    - worker
+  roles:
+    - kubernetes-worker
