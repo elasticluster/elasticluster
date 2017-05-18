@@ -145,7 +145,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self.nova_client = nova_client.Client(self.nova_api_version, session=sess)
         self.neutron_client = neutron_client.Client(session=sess)
         self.glance_client = glance_client.Client('2', session=sess)
-        self.cinder_client = cinder_client.Client(session=sess)
+        self.cinder_client = cinder_client.Client('2', session=sess)
 
         # self.nova_client = client.Client(self.nova_api_version,
         #                             self._os_username, self._os_password, self._os_tenant_name,
