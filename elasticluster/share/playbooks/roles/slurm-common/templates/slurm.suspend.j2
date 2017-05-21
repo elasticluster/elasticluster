@@ -1,0 +1,10 @@
+#!/bin/bash
+# Example SuspendProgram
+sudo sh -c 'echo "`date` Susped invoked $0 $*" >>/var/log/power_save.log'
+hosts=`scontrol show hostnames $1`
+for host in $hosts
+do
+   sudo gcloud compute instances stop --zone=us-west1-a slurm-$host
+   sudo gcloud compute instances stop --zone=us-east1-d slurm-$host
+   sudo scontrol update NodeName=slurm-$host state=down reason='Suspended due to inactivity for cost savings'
+done

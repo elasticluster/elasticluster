@@ -20,3 +20,11 @@
 # By default, this parameter is the empty list, i.e., no NFS filesystems are mounted.
 #
 NFS_MOUNTS: []
+#     NFS_MOUNTS:
+#       - fs: 'cluster-zfs:/opt'
+#         mountpoint: '/opt'
+#         options: 'rw,defaults'
+#       - fs: 'cluster-zfs:/data'
+#         mountpoint: '/zfs_home'
+#         options: 'rw,defaults'
+     

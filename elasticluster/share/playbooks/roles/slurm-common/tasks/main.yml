@@ -93,6 +93,25 @@
     group=root
     mode=0444
 
+- name: Deploy script to suspend cloud instance 
+  tags: 
+    - slurm
+  template:
+    src=slurm.suspend.j2
+    dest=/etc/slurm/slurm.suspend.sh
+    owner=root
+    group=root
+    mode=0555
+
+- name: Deploy script to resume cloud instance 
+  tags: 
+    - slurm
+  template:
+    src=slurm.resume.j2
+    dest=/etc/slurm/slurm.resume.sh
+    owner=root
+    group=root
+    mode=0555
 
 - name: Install support packages (Debian/Ubuntu)
   package:
@@ -124,3 +143,4 @@
   command: |
     restorecon -r /
   when: 'is_rhel_compatible'
+

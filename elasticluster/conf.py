@@ -105,6 +105,9 @@ SCHEMA = {
                 Optional('image_userdata', default=''): str,
                 'security_group': str,  ## FIXME: alphanumeric?
                 Optional('network_ids'): str,
+                Optional('accelerator'): str,
+                Optional('accelerator_count'): str,
+                Optional('setup_script'): str,
                 # these are auto-generated but already there by the time
                 # validation is run
                 'login': nonempty_str,
@@ -171,8 +174,10 @@ CLOUD_PROVIDER_SCHEMAS = {
         "gce_client_secret": nonempty_str,
         "gce_project_id": nonempty_str,
         Optional("noauth_local_webserver"): boolean,
-        Optional("zone", default="us-central1-a"): nonempty_str,
+        Optional("zone", default="us-west1-a"): nonempty_str,
+        Optional("region", default="us-west1"): nonempty_str,
         Optional("network", default="default"): nonempty_str,
+        Optional("subnetwork", default="None"): str,
     },
 
     'openstack': {

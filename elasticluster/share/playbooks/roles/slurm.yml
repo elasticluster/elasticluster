@@ -9,6 +9,13 @@
       NFS_EXPORTS:
         - path: '/home'
           clients: "{{groups.slurm_worker + groups.slurm_submit|default([])}}"
+      NFS_MOUNTS:
+        - fs: 'zfs-east:/cluster_home'
+          mountpoint: '/cluster_home'
+          options: 'rw,defaults'
+        - fs: 'zfs-east:/opt'
+          mountpoint: '/opt'
+          options: 'rw,defaults'
     - slurm-master
 
       
@@ -21,6 +28,30 @@
       NFS_MOUNTS:
         - fs: '{{groups.slurm_master[0]}}:/home'
           mountpoint: '/home'
+        - fs: 'zfs-east:/cluster_home'
+          mountpoint: '/cluster_home'
+          options: 'rw,defaults'
+        - fs: 'zfs-east:/opt'
+          mountpoint: '/opt'
+          options: 'rw,defaults'
+    - slurm-worker
+
+
+- name: Slurm GPU nodes Playbook
+  hosts: slurm_gpu:slurm_worker
+  roles:
+    - role: 'nis'
+      NIS_MASTER: "{{groups.slurm_master[0]}}"
+    - role: 'nfs-client'
+      NFS_MOUNTS:
+        - fs: '{{groups.slurm_master[0]}}:/home'
+          mountpoint: '/home'
+        - fs: 'zfs-east:/cluster_home'
+          mountpoint: '/cluster_home'
+          options: 'rw,defaults'
+        - fs: 'zfs-east:/opt'
+          mountpoint: '/opt'
+          options: 'rw,defaults'
     - slurm-worker
 
 
@@ -33,9 +64,14 @@
       NFS_MOUNTS:
         - fs: '{{groups.slurm_master[0]}}:/home'
           mountpoint: '/home'
+        - fs: 'zfs-east:/cluster_home'
+          mountpoint: '/cluster_home'
+          options: 'rw,defaults'
+        - fs: 'zfs-east:/opt'
+          mountpoint: '/opt'
+          options: 'rw,defaults'
     - slurm-client
 
-    
 - name: Restart SLURMd after all config is done
   hosts: slurm_worker
   tasks:

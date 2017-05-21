@@ -55,7 +55,7 @@
     enabled: yes
     state: '{{_nfs_server_started_state}}'
   with_items: '{{nfs_server_services}}'
-  when: 'not {{is_debian_8}}'
+  when: 'not is_debian_8'
 
 
 - name: Reload NFS exports file
@@ -63,4 +63,6 @@
     - nfs
     - nfs-server
   command:
-    exportfs -r
+# exportfs replaced by starting nfs service for Centos 7 - this fix may be inappropriately placed for Ubuntu images 
+    systemctl start nfs
+#   exportfs -r   
