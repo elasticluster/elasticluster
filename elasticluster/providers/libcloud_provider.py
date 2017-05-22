@@ -211,10 +211,11 @@ class LibCloudProvider(AbstractCloudProvider):
     @staticmethod
     def __get_name_or_id(values, known):
         """
-        Check if a value chain (ex. 'a,b,c') exists in our list of known items (item.name | item.id), if so, return it.
-        :param values: list of items to check (ex. network_id, etc.)
-        :param known: libcloud items of the named type to validate against
-        :return: list of the libcloud items that match the values (ex. NetworkObject)
+        Return list of values that match attribute ``.id`` or ``.name`` of any object in list `known`.
+
+        :param str values: comma-separated list (i.e., a Python string) of items
+        :param list known: list of libcloud items to filter
+        :return: list of the libcloud items that match the given values
         """
         result = list()
         for element in [e.strip() for e in values.split(',')]:
