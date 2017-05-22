@@ -22,7 +22,7 @@ import paramiko
 from paramiko import SSHException
 from libcloud.compute.base import NodeAuthSSHKey, NodeAuthPassword
 from libcloud.compute.providers import get_driver
-from libcloud.compute.types import NodeState
+from libcloud.compute.types import NodeState, Provider
 
 from elasticluster import AbstractCloudProvider
 from elasticluster import log
@@ -44,16 +44,24 @@ class LibCloudProvider(AbstractCloudProvider):
     def __init__(self, driver_name, storage_path=None, **options):
         self.storage_path = storage_path
         if 'auth_url' in options and 'ex_force_auth_url' not in options:
-            options['ex_force_auth_url'] = options.get('auth_url').rsplit('/', 1)[0]
-        log.debug('selecting libcloud driver %s', driver_name)
+            options['ex_force_auth_url'] = options['auth_url'].rsplit('/', 1)[0]
+
+        try:
+            driver_name = getattr(Provider, driver_name.upper())
+        except AttributeError:
+            raise ValueError("No libcloud driver for provider {name}".format(name=driver_name))
         driver_class = get_driver(driver_name)
+        log.debug('Using libcloud driver `%s` ...', driver_class.__name__)
+
         self.driver = driver_class(*self.__pop_driver_auth_args(**options), **options)
+
 
     def __get_instance(self, instance_id):
         for node in self.driver.list_nodes():
             if node.id == instance_id:
                 return node
         return None
+
 
     def start_instance(self, key_name, public_key_path, private_key_path, security_group, flavor, image_id,
                        image_userdata, username=None, node_name=None, **options):
