@@ -6,6 +6,8 @@
 .. include:: global.inc
 
 
+.. configuration:
+
 =================
   Configuration
 =================
@@ -90,7 +92,7 @@ Processing of configuration values
 ==================================
 
 Within each ``key=value`` assignment, the *value* part undergoes the following
-transformations::
+transformations:
 
 * References to enviromental variables of the form ``$VARNAME`` or
   ``${VARNAME}`` are replaced by the content of the named environmental
@@ -152,7 +154,7 @@ section:
 
 
 Valid configuration keys for `ec2_boto`
------------------------------------
+---------------------------------------
 
 ``ec2_url``
 
