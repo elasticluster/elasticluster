@@ -5,6 +5,9 @@
 
 .. include:: global.inc
 
+
+.. _usage:
+
 =========
   Usage
 =========

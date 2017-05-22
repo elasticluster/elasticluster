@@ -187,6 +187,7 @@ setup(
         'azure',
         # OpenStack clouds
         'netifaces',
+        'apache-libcloud',
         'requests!=2.13.0,!=2.12.2,>=2.10.0',  ## see issue #414
         #'python-novaclient' ## this needs special treatment depending on Python version, see below
     ] + version_dependent_requires),

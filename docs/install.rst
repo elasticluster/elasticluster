@@ -6,6 +6,8 @@
 .. include:: global.inc
 
 
+.. _installation:
+
 ================
   Installation
 ================
@@ -34,6 +36,8 @@ can run without conflicting with system files or Python libraries. Installing in
 a `python virtualenv`_ makes it also easier to uninstall or upgrade
 `elasticluster`.
 
+
+.. _`install required dependencies`:
 
 Install required dependencies
 +++++++++++++++++++++++++++++

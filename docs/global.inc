@@ -18,6 +18,7 @@
 
 .. _`Amazon's Elastic Compute Cloud EC2`: http://aws.amazon.com/ec2/
 .. _`Ansible`: http://ansible.com/
+.. _`Apache LibCloud`: https://libcloud.readthedocs.io/
 .. _`Bigtop`: http://bigtop.apache.org/
 .. _`boto library`: https://github.com/boto/boto
 .. _`CentOS`: http://www.centos.org/
