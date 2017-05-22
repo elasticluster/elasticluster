@@ -85,14 +85,17 @@ class LibCloudProvider(AbstractCloudProvider):
             options['auth'] = NodeAuthPassword(options.get('image_user_password'))
 
         for key in options.keys():
-            list_fn = self.__get_function_or_ex_function('list_{0}'.format(key))
-            if list_fn:
-                populated_list = self.__get_name_or_id(options[key], list_fn())
-                if populated_list:
-                    if key.endswith('s'):
-                        options[key] = populated_list
-                    else:
-                        options[key] = populated_list[0]
+            try:
+                list_fn = self.__get_function_or_ex_function('list_{0}'.format(key))
+            except AttributeError:
+                # skip non-existing
+                continue
+            populated_list = self.__get_name_or_id(options[key], list_fn())
+            if populated_list:
+                if key.endswith('s'):
+                    options[key] = populated_list
+                else:
+                    options[key] = populated_list[0]
 
         node = self.driver.create_node(**options)
         if node:
@@ -126,14 +129,20 @@ class LibCloudProvider(AbstractCloudProvider):
             log.warn('user_key_name has not been defined, assuming password based authentication')
             return
 
-        if not self.__get_function_or_ex_function('list_key_pairs'):
+        try:
+            list_key_pairs = self.__get_function_or_ex_function('list_key_pairs')
+        except AttributeError:
             raise UnsupportedError('key management not supported by provider')
-        if not self.__get_function_or_ex_function('import_key_pair_from_file'):
+        try:
+            self.__get_function_or_ex_function('import_key_pair_from_file')
+        except AttributeError:
             raise UnsupportedError('key import not supported by provider')
-        if not self.__get_function_or_ex_function('create_key_pair'):
+        try:
+            self.__get_function_or_ex_function('create_key_pair')
+        except AttributeError:
             raise UnsupportedError('key creation not supported by provider')
 
-        if key_name in [k.name for k in self.__get_function_or_ex_function('list_key_pairs')()]:
+        if key_name in [k.name for k in list_key_pairs()]:
             log.info('Key pair (%s) already exists, skipping import.', key_name)
             return
 
@@ -195,7 +204,9 @@ class LibCloudProvider(AbstractCloudProvider):
         except AttributeError:
             pass
         # no such function
-        return None
+        raise AttributeError(
+            "No function named `{0}` or `{1}` in class `{2}`"
+            c.format(func_name, 'ex_'+func_name, self.__class__.__name__))
 
     @staticmethod
     def __get_name_or_id(values, known):
