@@ -491,7 +491,7 @@ This configuration will create a SLURM cluster with 10 compute nodes,
 from the data nodes to both the compute nodes and the frontend.
 
 Kubernetes
-=======
+==========
 
 Supported on:
 

@@ -6,6 +6,8 @@
 .. include:: global.inc
 
 
+.. _troubleshooting:
+
 ===================
   Troubleshooting
 ===================
@@ -443,8 +445,8 @@ Issues when installing from source on MacOSX
 
   Installation and testing of ElastiCluster on MacOSX is not currently part of
   the development or the release cycle. So these notes could be severely out of
-  date. Please report issues and seek for solutions on the `elasticluster
-  mailing-list`_.
+  date. Please report issues and seek for solutions on the ElastiCluster
+  `mailing-list`_.
 
 When installing ElastiCluster on MacOSX you may
 get some errors while running `python setup.py install`, because
@@ -508,8 +510,8 @@ Error "ImportError: No module named anyjson" on MacOSX
 
   Installation and testing of ElastiCluster on MacOSX is not currently part of
   the development or the release cycle. So these notes could be severely out of
-  date. Please report issues and seek for solutions on the `elasticluster
-  mailing-list`_.
+  date. Please report issues and seek for solutions on the ElastiCluster
+  `mailing-list`_.
 
 In some MacOSX version, even if the installation *seems* to succeed, you may get
 the following error the first time you run `elasticluster`::

@@ -78,7 +78,12 @@ for mod_name in MOCK_MODULES:
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.viewcode']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.viewcode',
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -141,6 +146,16 @@ pygments_style = 'sphinx'
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
+
+# Configure the InterSphinx extension,
+# see: http://www.sphinx-doc.org/en/stable/ext/intersphinx.html
+intersphinx_mapping = {
+    # namespace URL                   cache file?
+    # |         |                            |
+    # v         v                            v
+    'click':  ('http://click.pocoo.org/6/',  None),
+    'python': ('https://docs.python.org/2/', None),
+}
 
 
 # -- Options for HTML output ---------------------------------------------------

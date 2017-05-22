@@ -17,7 +17,7 @@
    elasticluster/conf.rst
    elasticluster/exceptions.rst
    elasticluster/gc3pie_config.rst
-   elasticluster/main.rst
+   elasticluster/__main__.rst
    elasticluster/providers.rst
    elasticluster/providers/ansible_provider.rst
    elasticluster/providers/ec2_boto.rst
