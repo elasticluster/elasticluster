@@ -543,6 +543,7 @@ The following example configuration sets up a Mesos cluster using 1 master node 
 slave nodes::
 
     [cluster/pmesos]
+    setup_provider=mesos
     master_nodes=1
     slave_nodes=3
     ssh_to=master
@@ -551,3 +552,31 @@ slave nodes::
     provider=ansible
     master_groups=mesos_master
     slave_groups=mesos_slave
+
+Kafka
+==============
+
+Supported on:
+
+* Ubuntu 16.04
+
+This playbook installs Kafka_ nodes with Zookeeper_ as orchistrator. It
+comprises a Zookeeper quorum, and kafka nodes. Kafka is a distributed
+streaming platform (used for building real-time data pipelines and streaming).
+
+=================  ==================================================
+Ansible group      Action
+=================  ==================================================
+``stream_master``  Install the node with Kafka and Zookeeper.
+=================  ==================================================
+
+The following example configuration sets up a group of 3 kafka nodes::
+
+    [cluster/kafka]
+    setup_provider=kafka
+    master_nodes=3
+    ssh_to=master
+
+    [setup/kafka]
+    provider=ansible
+    master_groups=stream_master
