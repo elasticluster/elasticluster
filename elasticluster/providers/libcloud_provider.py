@@ -206,7 +206,7 @@ class LibCloudProvider(AbstractCloudProvider):
         # no such function
         raise AttributeError(
             "No function named `{0}` or `{1}` in class `{2}`"
-            c.format(func_name, 'ex_'+func_name, self.__class__.__name__))
+            .format(func_name, 'ex_'+func_name, self.__class__.__name__))
 
     @staticmethod
     def __get_name_or_id(values, known):
