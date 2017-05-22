@@ -137,20 +137,29 @@ access to different cloud providers and want to deploy different
 clusters in different clouds. The mapping between cluster and cloud
 provider is done in the `cluster` section (see later).
 
-Currently three cloud providers are available:
+Currently these cloud providers are available:
 
-- openstack: supports OpenStack cloud
-- ec2_boto: supports Amazon EC2 and compatible cloud
+- ec2_boto: supports Amazon EC2 and compatible clouds
 - google: supports Google Compute Engine
+- libcloud: support `many cloud providers`__ through `Apache LibCloud`_
+- openstack: supports OpenStack-based clouds
+
+.. __: https://libcloud.readthedocs.io/en/latest/supported_providers.html
 
 Therefore the following configuration option needs to be set in the cloud
 section:
 
 ``provider``
 
-    the driver to use to connect to the cloud provider.
-    `ec2_boto`, `openstack`, `google` or `libcloud`
+    the driver to use to connect to the cloud provider:
+    `ec2_boto`, `openstack`, `google` or `libcloud`.
 
+    .. note::
+
+       The LibCloud provider can also provision VMs on EC2, Google Compute
+       Engine, and OpenStack. The native drivers can however offer functionality
+       that is not available through the generic LibCloud driver. Feedback is
+       welcome on the ElastiCluster `mailing-list`_.
 
 
 Valid configuration keys for `ec2_boto`
@@ -260,6 +269,62 @@ Valid configuration keys for `google`
     The GCE network to be used. Default is ``default``.
 
 
+Valid configuration keys for *libcloud*
+----------------------------------------
+
+``driver_name``:
+
+  Name of the driver you want to configure (provider you want to connect with).
+
+  See: https://libcloud.readthedocs.io/en/latest/supported_providers.html for
+  all available providers.
+
+Other configuration keys are provider-dependent; ElastiCluster configuration
+items map 1-1 to LibCloud "NodeDriver" instanciation parameters, both in name
+and in type.
+
+For example, to configure an Azure connection, go to the page
+https://libcloud.readthedocs.io/en/latest/compute/drivers/azure.html and check
+what the *Instantiating a driver* section states: you would need to
+configure the keys ``subscription_id`` and ``key_file``.
+
+A few examples for providers supported through LibCloud are given in the table
+below:
+
+==========  =======================================  ========================
+Provider    Additional arguments                     Example
+==========  =======================================  ========================
+Azure       key_file, subscription_id                \
+                                                     ``subscription_id=...``
+                                                     ``key_file=/path/to/azure.pem``
+CloudSigma  username, password, region, api_version  \
+                                                     ``username=user``
+                                                     ``password=pass``
+                                                     ``region=zrh``
+                                                     ``api_version=2.0``
+CloudStack  apikey, secretkey, host, path            \
+                                                     ``apikey=key``
+                                                     ``secretkey=secret``
+                                                     ``host=example.com``
+                                                     ``path=/path/to/api``
+ExoScale    key, secret, host, path                  \
+                                                     ``key=key``
+                                                     ``secret=secret``
+                                                     ``host=example.com``
+                                                     ``path=/path/to/api``
+LibVirt     uri                                      \
+                                                     ``uri=qemu:///system``
+RackSpace   username, apikey, region                 \
+                                                     ``username=user``
+                                                     ``apikey=key``
+                                                     ``region=iad``
+vSphere     host, username, password                 \
+                                                     ``host=192.168.1.100``
+                                                     ``username=user``
+                                                     ``password=pass``
+==========  =======================================  ========================
+
+
 Valid configuration keys for *openstack*
 ----------------------------------------
 
@@ -303,47 +368,6 @@ Valid configuration keys for *openstack*
     will force `elasticluster` to request such a floating IP if the
     instance doesn't get one automatically.
 
-
-Valid configuration keys for *libcloud*
-----------------------------------------
-
-    See: https://libcloud.readthedocs.io/en/latest/supported_providers.html
-    for all available providers. Configuration keys are provider dependent.
-    For example if you want to configure an azure connection, go to the page
-    https://libcloud.readthedocs.io/en/latest/compute/drivers/azure.html
-    and check what the 'Instantiating a driver' part states, in this case
-    you would need to add the keys 'subscription_id' and 'key_file'.
-
-
-``driver_name``:
-
-    Name of the driver you want to configure (provider you want to connect with).
-
-
-Arguments for a set of drivers:
--------------------------------
-
-Provider    Arguments                                      Configuration parameters
-===================================================================================
-CloudSigma: username, password, region, api_version     :: username=user
-                                                           password=pass
-                                                           region=zrh
-                                                           api_version=2.0
-CloudStack: apikey, secretkey, host, path               :: apikey=key
-                                                           secretkey=secret
-                                                           host=example.com
-                                                           path=/path/to/api
-ExoScale:   key, secret, host, path                     :: key=key
-                                                           secret=secret
-                                                           host=example.com
-                                                           path=/path/to/api
-LibVirt:    uri                                         :: uri=qemu:///system
-RackSpace:  username, apikey, region                    :: username=user
-                                                           apikey=key
-                                                           region=iad
-vSphere:    host, username, password                    :: host=192.168.1.100
-                                                           username=user
-                                                           password=pass
 
 Examples
 --------
