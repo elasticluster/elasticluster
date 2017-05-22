@@ -7,8 +7,6 @@ kafka_num_network_threads: 2
 kafka_num_io_threads: 2
 kafka_num_partitions: 2
 
-kafka_heap_opts: "-Xmx1G -Xms1G"
-
 kafka_socket_send_buffer_bytes: 1048576
 kafka_socket_receive_buffer_bytes: 1048576
 kafka_socket_request_max_bytes: 104857600
@@ -23,6 +21,4 @@ kafka_log_retention_hours: 24
 kafka_log_segment_bytes: "{{kafka_log_retention_bytes}}"
 kafka_log_cleanup_interval_mins: 1
 
-monasca_wait_for_period: 30
-monasca_log_level: WARN
-zookeeper_connection_timeout_ms: 1000000
+kafka_zookeeper_connection_timeout_ms: 1000000
