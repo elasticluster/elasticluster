@@ -85,9 +85,9 @@ class LibCloudProvider(AbstractCloudProvider):
             options['auth'] = NodeAuthPassword(options.get('image_user_password'))
 
         for key in options.keys():
-            list_function = self.__get_list_function(key)
-            if list_function:
-                populated_list = self.__get_name_or_id(options[key], list_function())
+            list_fn = self.__get_function_or_ex_function('list_{0}'.format(key))
+            if list_fn:
+                populated_list = self.__get_name_or_id(options[key], list_fn())
                 if populated_list:
                     if key.endswith('s'):
                         options[key] = populated_list
@@ -126,14 +126,14 @@ class LibCloudProvider(AbstractCloudProvider):
             log.warn('user_key_name has not been defined, assuming password based authentication')
             return
 
-        if not self.__get_list_function('key_pairs'):
+        if not self.__get_function_or_ex_function('list_key_pairs'):
             raise UnsupportedError('key management not supported by provider')
         if not self.__get_function_or_ex_function('import_key_pair_from_file'):
             raise UnsupportedError('key import not supported by provider')
         if not self.__get_function_or_ex_function('create_key_pair'):
             raise UnsupportedError('key creation not supported by provider')
 
-        if key_name in [k.name for k in self.__get_list_function('key_pairs')()]:
+        if key_name in [k.name for k in self.__get_function_or_ex_function('list_key_pairs')()]:
             log.info('Key pair (%s) already exists, skipping import.', key_name)
             return
 
@@ -177,17 +177,6 @@ class LibCloudProvider(AbstractCloudProvider):
             with NamedTemporaryFile('w+t') as f:
                 f.write('{n} {p}'.format(n=pem.get_name(), p=pem.get_base64()))
                 key_import(name=key_name, key_file_path=f.name)
-
-    def __get_list_function(self, func):
-        """
-        Check if a list function exists for a key on a driver, and if it does, return it
-        :param func: partial function name (ex. key_pair)
-        :return: list function that goes with it (ex. list_key_pairs)
-        """
-        list_functions = [getattr(self.driver, c, None) for c in dir(self.driver) if 'list_{}'.format(func) in c]
-        if list_functions:
-            return list_functions[0]
-        return None
 
     def __get_function_or_ex_function(self, func_name):
         """
