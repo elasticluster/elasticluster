@@ -140,7 +140,7 @@ class LibCloudProvider(AbstractCloudProvider):
             log.debug("deriving and importing public key from private key")
             self.__import_pem(key_name, private_key_path, password)
         elif os.path.exists(os.path.join(self.storage_path, '{p}.pem'.format(p=key_name))):
-            self.__import_pem(key_name, os.path.join(self.storage_path, '{}.pem'.format(key_name)), password)
+            self.__import_pem(key_name, os.path.join(self.storage_path, '{k}.pem'.format(k=key_name)), password)
         else:
             with open(os.path.join(self.storage_path, '{p}.pem'.format(p=key_name)), 'w') as new_key_file:
                 new_key_file.write(self.__get_function_or_ex_function('create_key_pair')(name=key_name))
@@ -176,7 +176,7 @@ class LibCloudProvider(AbstractCloudProvider):
         :param func: partial function name (ex. key_pair)
         :return: list function that goes with it (ex. list_key_pairs)
         """
-        list_functions = [getattr(self.driver, c, None) for c in dir(self.driver) if 'list_{}'.format(func) in c]
+        list_functions = [getattr(self.driver, c, None) for c in dir(self.driver) if 'list_{f}'.format(f=func) in c]
         if list_functions:
             return list_functions[0]
         return None
