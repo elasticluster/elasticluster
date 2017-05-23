@@ -86,7 +86,7 @@ class LibCloudProvider(AbstractCloudProvider):
 
         for key in options.keys():
             try:
-                list_fn = self.__get_function_or_ex_function('list_{0}'.format(key))
+                list_fn = self.__get_function_by_pattern('list_{0}'.format(key))
             except AttributeError:
                 # skip non-existing
                 continue
@@ -130,7 +130,7 @@ class LibCloudProvider(AbstractCloudProvider):
             return
 
         try:
-            list_key_pairs = self.__get_function_or_ex_function('list_key_pairs')
+            list_key_pairs = self.__get_function_by_pattern('list_key_pairs')
         except AttributeError:
             raise UnsupportedError('key management not supported by provider')
         try:
@@ -186,6 +186,27 @@ class LibCloudProvider(AbstractCloudProvider):
             with NamedTemporaryFile('w+t') as f:
                 f.write('{n} {p}'.format(n=pem.get_name(), p=pem.get_base64()))
                 key_import(name=key_name, key_file_path=f.name)
+
+    def __get_function_by_pattern(self, pattern):
+        """
+        Return first function whose name *contains* the string `pattern`.
+
+        :param func: partial function name (ex. key_pair)
+        :return: list function that goes with it (ex. list_key_pairs)
+        """
+        function_names = [name for name in dir(self.driver) if pattern in name]
+        if function_names:
+            name = function_names[0]
+            if len(function_names) > 1:
+                log.warn(
+                    "Several functions match pattern `%s`: %r -- using first one!",
+                    pattern, function_names)
+            return getattr(self.driver, name)
+        else:
+            # no such function
+            raise AttributeError(
+                "No function name contains `{0}` in class `{1}`"
+                .format(pattern, self.__class__.__name__))
 
     def __get_function_or_ex_function(self, func_name):
         """
