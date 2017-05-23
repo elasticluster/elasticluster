@@ -494,8 +494,8 @@ class Cluster(Struct):
                 log.info("Node `%s` has been started.", node.name)
                 return True
             except Exception as err:
-                log.error("Could not start node `%s`: %s -- %s",
-                          node.name, err, err.__class__)
+                log.exception("Could not start node `%s`: %s -- %s",
+                              node.name, err, err.__class__)
                 return False
 
     def _check_starting_nodes(self, nodes, lapse):

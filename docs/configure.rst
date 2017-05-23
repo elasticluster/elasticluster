@@ -274,10 +274,11 @@ Valid configuration keys for *libcloud*
 
 ``driver_name``:
 
-  Name of the driver you want to configure (provider you want to connect with).
+  Name of the driver you want to configure (provider you want to connect with);
+  it has to be one of the strings listed in column "Provider constant" in
+  LibCloud's `Provider Matrix`__ (which see for all supported providers).
 
-  See: https://libcloud.readthedocs.io/en/latest/supported_providers.html for
-  all available providers.
+  .. __: https://libcloud.readthedocs.io/en/latest/supported_providers.html#provider-matrix
 
 Other configuration keys are provider-dependent; ElastiCluster configuration
 items map 1-1 to LibCloud "NodeDriver" instanciation parameters, both in name
