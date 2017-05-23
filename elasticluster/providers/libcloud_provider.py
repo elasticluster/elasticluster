@@ -31,16 +31,15 @@ from elasticluster.exceptions import KeypairError, UnsupportedError
 
 class LibCloudProvider(AbstractCloudProvider):
     """
-        This implementation of
-        :py:class:`elasticluster.providers.AbstractCloudProvider` uses
-        LibCloud to connect to various clouds and manage instances.
+    This implementation of
+    :py:class:`elasticluster.providers.AbstractCloudProvider` uses
+    LibCloud to connect to various clouds and manage instances.
 
-        :param str driver_name: name of the driver to use
-        :param str storage_path: path to store temporary data
-        :param options: all the configuration items that should
-                        be forwarded to the driver
-        """
-
+    :param str driver_name: name of the driver to use
+    :param str storage_path: path to store temporary data
+    :param options: all the configuration items that should
+                    be forwarded to the driver
+    """
     def __init__(self, driver_name, storage_path=None, **options):
         self.storage_path = storage_path
         if 'auth_url' in options and 'ex_force_auth_url' not in options:
@@ -55,13 +54,11 @@ class LibCloudProvider(AbstractCloudProvider):
 
         self.driver = driver_class(*self.__pop_driver_auth_args(**options), **options)
 
-
     def __get_instance(self, instance_id):
         for node in self.driver.list_nodes():
             if node.id == instance_id:
                 return node
         return None
-
 
     def start_instance(self, key_name, public_key_path, private_key_path, security_group, flavor, image_id,
                        image_userdata, username=None, node_name=None, **options):
@@ -86,7 +83,7 @@ class LibCloudProvider(AbstractCloudProvider):
 
         for key in options.keys():
             try:
-                list_fn = self.__get_function_or_ex_function('list_{0}'.format(key))
+                list_fn = self.__get_function_or_ex_function_partial('list_{0}'.format(key))
             except AttributeError:
                 # skip non-existing
                 continue
@@ -121,7 +118,7 @@ class LibCloudProvider(AbstractCloudProvider):
         instance = self.__get_instance(instance_id)
         if not instance:
             log.warn('could not find instance with id %s', instance_id)
-            return []
+            return list()
         return instance.public_ips + instance.private_ips
 
     def __prepare_key_pair(self, key_name, private_key_path, public_key_path, password):
@@ -157,7 +154,7 @@ class LibCloudProvider(AbstractCloudProvider):
             log.debug("deriving and importing public key from private key")
             self.__import_pem(key_name, private_key_path, password)
         elif os.path.exists(os.path.join(self.storage_path, '{p}.pem'.format(p=key_name))):
-            self.__import_pem(key_name, os.path.join(self.storage_path, '{}.pem'.format(key_name)), password)
+            self.__import_pem(key_name, os.path.join(self.storage_path, '{k}.pem'.format(k=key_name)), password)
         else:
             with open(os.path.join(self.storage_path, '{p}.pem'.format(p=key_name)), 'w') as new_key_file:
                 new_key_file.write(self.__get_function_or_ex_function('create_key_pair')(name=key_name))
@@ -186,6 +183,20 @@ class LibCloudProvider(AbstractCloudProvider):
             with NamedTemporaryFile('w+t') as f:
                 f.write('{n} {p}'.format(n=pem.get_name(), p=pem.get_base64()))
                 key_import(name=key_name, key_file_path=f.name)
+
+    def __get_function_or_ex_function_partial(self, func_name):
+        """
+        Check if a function or (or an 'extended' function) exists for a key on a driver, and if it does, return it
+        :param func_name: partial function name (ex. list_key_pair)
+        :return: function that goes with it (ex. ex_list_key_pairs)
+        """
+        available_functions = [getattr(self.driver, c, None) for c in dir(self.driver) if func_name in c]
+        if available_functions:
+            if len(available_functions) > 1:
+                log.warn('found more than 1 possible function for {f}, using {ef}.'
+                         .format(f=func_name, ef=available_functions[0]))
+            return self.__get_function_or_ex_function(available_functions[0])
+        return None
 
     def __get_function_or_ex_function(self, func_name):
         """
