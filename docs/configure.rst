@@ -6,6 +6,8 @@
 .. include:: global.inc
 
 
+.. configuration:
+
 =================
   Configuration
 =================
@@ -90,7 +92,7 @@ Processing of configuration values
 ==================================
 
 Within each ``key=value`` assignment, the *value* part undergoes the following
-transformations::
+transformations:
 
 * References to enviromental variables of the form ``$VARNAME`` or
   ``${VARNAME}`` are replaced by the content of the named environmental
@@ -135,24 +137,33 @@ access to different cloud providers and want to deploy different
 clusters in different clouds. The mapping between cluster and cloud
 provider is done in the `cluster` section (see later).
 
-Currently three cloud providers are available:
+Currently these cloud providers are available:
 
-- openstack: supports OpenStack cloud
-- ec2_boto: supports Amazon EC2 and compatible cloud
+- ec2_boto: supports Amazon EC2 and compatible clouds
 - google: supports Google Compute Engine
+- libcloud: support `many cloud providers`__ through `Apache LibCloud`_
+- openstack: supports OpenStack-based clouds
+
+.. __: https://libcloud.readthedocs.io/en/latest/supported_providers.html
 
 Therefore the following configuration option needs to be set in the cloud
 section:
 
 ``provider``
 
-    the driver to use to connect to the cloud provider.
-    `ec2_boto`, `openstack` or `google`
+    the driver to use to connect to the cloud provider:
+    `ec2_boto`, `openstack`, `google` or `libcloud`.
 
+    .. note::
+
+       The LibCloud provider can also provision VMs on EC2, Google Compute
+       Engine, and OpenStack. The native drivers can however offer functionality
+       that is not available through the generic LibCloud driver. Feedback is
+       welcome on the ElastiCluster `mailing-list`_.
 
 
 Valid configuration keys for `ec2_boto`
------------------------------------
+---------------------------------------
 
 ``ec2_url``
 
@@ -258,6 +269,63 @@ Valid configuration keys for `google`
     The GCE network to be used. Default is ``default``.
 
 
+Valid configuration keys for *libcloud*
+----------------------------------------
+
+``driver_name``:
+
+  Name of the driver you want to configure (provider you want to connect with);
+  it has to be one of the strings listed in column "Provider constant" in
+  LibCloud's `Provider Matrix`__ (which see for all supported providers).
+
+  .. __: https://libcloud.readthedocs.io/en/latest/supported_providers.html#provider-matrix
+
+Other configuration keys are provider-dependent; ElastiCluster configuration
+items map 1-1 to LibCloud "NodeDriver" instanciation parameters, both in name
+and in type.
+
+For example, to configure an Azure connection, go to the page
+https://libcloud.readthedocs.io/en/latest/compute/drivers/azure.html and check
+what the *Instantiating a driver* section states: you would need to
+configure the keys ``subscription_id`` and ``key_file``.
+
+A few examples for providers supported through LibCloud are given in the table
+below:
+
+==========  =======================================  ========================
+Provider    Additional arguments                     Example
+==========  =======================================  ========================
+Azure       key_file, subscription_id                \
+                                                     ``subscription_id=...``
+                                                     ``key_file=/path/to/azure.pem``
+CloudSigma  username, password, region, api_version  \
+                                                     ``username=user``
+                                                     ``password=pass``
+                                                     ``region=zrh``
+                                                     ``api_version=2.0``
+CloudStack  apikey, secretkey, host, path            \
+                                                     ``apikey=key``
+                                                     ``secretkey=secret``
+                                                     ``host=example.com``
+                                                     ``path=/path/to/api``
+ExoScale    key, secret, host, path                  \
+                                                     ``key=key``
+                                                     ``secret=secret``
+                                                     ``host=example.com``
+                                                     ``path=/path/to/api``
+LibVirt     uri                                      \
+                                                     ``uri=qemu:///system``
+RackSpace   username, apikey, region                 \
+                                                     ``username=user``
+                                                     ``apikey=key``
+                                                     ``region=iad``
+vSphere     host, username, password                 \
+                                                     ``host=192.168.1.100``
+                                                     ``username=user``
+                                                     ``password=pass``
+==========  =======================================  ========================
+
+
 Valid configuration keys for *openstack*
 ----------------------------------------
 
@@ -322,6 +390,18 @@ For Google Compute Engine you can use::
     gce_client_id=****REPLACE WITH YOUR CLIENT ID****
     gce_client_secret=****REPLACE WITH YOUR SECRET KEY****
     gce_project_id=****REPLACE WITH YOUR PROJECT ID****
+
+If you would want to use libcloud to connect to openstack using password authentication
+you can configure the following::
+
+    [cloud/libcloud]
+    provider=libcloud
+    driver_name=openstack
+    auth_url=**** YOUR AUTH URL ****
+    ex_tenant_name=**** YOUR TENANT NAME ****
+    ex_force_auth_version=2.0_password
+    username=**** YOUR USERNAME ****
+    password=**** YOUR PASSWORD ****
 
 OpenStack users
 +++++++++++++++
@@ -732,15 +812,21 @@ Optional configuration keys
 
 ``boot_disk_type``
     Define the type of boot disk to use.
-    Only supported when the cloud provider is `google`.
-    Supported values are `pd-standard` and `pd-ssd`.
-    Default value is `pd-standard`.
+    Only supported when the cloud provider is `google` or `openstack`.
+    Supported values are `pd-standard` and `pd-ssd` for Google,
+    or the types available in the OpenStack volume (cinder) configuration.
+    Default value is `pd-standard` for Google.
+    When using this option for OpenStack, it creates volumes to be used
+    as the root disks for the VM's of the specified size, when terminating
+    and instance the volume will be deleted automatically. Always specify
+    the boot_disk_size when using this with OpenStack.
 
 ``boot_disk_size``
     Define the size of boot disk to use.
-    Only supported when the cloud provider is `google`.
+    Only supported when the cloud provider is `google` or `openstack`.
     Values are specified in gigabytes.
-    Default value is 10.
+    Default value for Google is 10.
+    No default is given for OpenStack.
 
 ``tags``
     Comma-separated list of instance tags.

@@ -6,6 +6,8 @@
 .. include:: global.inc
 
 
+.. _installation:
+
 ================
   Installation
 ================
@@ -21,16 +23,27 @@ explain you how to do it.
 If you instead want to test the *development* version, go to the
 `Installing development code from GitHub`_ section.
 
-In both cases, it's strongly suggested to install `elasticluster` in a
-`python virtualenv`_, so that you can easily uninstall or upgrade
+
+Prepare the environment for installation
+----------------------------------------
+
+The following sections document preliminary steps that need to be carried out in
+order to install ElastiCluster on a GNU/Linux or MacOSX computer.
+
+We strongly recommend that `elasticluster` is installed in a `python
+virtualenv`_, in order to create a controlled environment where ElastiCluster
+can run without conflicting with system files or Python libraries. Installing in
+a `python virtualenv`_ makes it also easier to uninstall or upgrade
 `elasticluster`.
 
 
+.. _`install required dependencies`:
+
 Install required dependencies
------------------------------
++++++++++++++++++++++++++++++
 
 CentOS/RHEL
-+++++++++++
+~~~~~~~~~~~
 
 To install software prerequisites for building and running ElastiCluster, run
 the following commands as the ``root`` admin user::
@@ -38,7 +51,7 @@ the following commands as the ``root`` admin user::
     yum install gcc gcc-c++ git libffi-devel openssl-devel python-devel python-virtualenv
 
 Debian/Ubuntu
-+++++++++++++
+~~~~~~~~~~~~~
 
 To install software prerequisites for building and running ElastiCluster, run
 the following commands (omit the ``sudo`` word if running as the ``root`` admin
@@ -47,7 +60,7 @@ user)::
     sudo apt-get install gcc g++ git libc6-dev libffi-dev libssl-dev python-dev virtualenv
 
 MacOSX
-++++++
+~~~~~~
 
 .. warning::
 
@@ -58,6 +71,22 @@ MacOSX
 
 In order to install ElastiCluster, you need to install `Xcode`_.
 It's free and you can install it directly from the `AppStore`_.
+
+
+Create a Python "virtualenv"
+----------------------------
+
+Assuming you already have ``virtualenv`` installed on your machine (see section
+`Install required dependencies`_ if not), create a virtualenv and activate one
+with the following commands::
+
+    virtualenv elasticluster
+    . elasticluster/bin/activate
+
+Now upgrade the `pip`_ command to the latest version (to ensure that it can
+correctly resolve the many dependencies of the ElastiCluster code)::
+
+    pip install --upgrade 'pip>=9.0.0'
 
 
 Installing released code from PyPI
@@ -72,6 +101,10 @@ Installing released code from PyPI
 
 Please follow the instructions in section `Install required dependencies`_
 before proceeding.
+
+Please follow the instructions in section `Prepare the environment for
+installation`_ before proceeding. The rest of this section assumes that you have
+created and activated a virtualenv in directory ``elasticluster``.
 
 It's quite easy to install `elasticluster` using `pip`_; the command
 below is all you need to install `elasticluster` on your system::
@@ -89,19 +122,9 @@ Installing development code from GitHub
 The source code of ElastiCluster is on `GitHub`_, if you want to test the
 latest development version you can clone the `GitHub elasticluster repository`_.
 
-Please follow the instructions in section `Install required dependencies`_
-before proceeding.
-
-You will need the ``git`` command in order to be able to clone it, and
-we suggest you use a `python virtualenv`_ in order to create a
-controlled environment in which you can install ElastiCluster without
-conflicting with system files or Python libraries.
-
-Assuming you already have ``virtualenv`` installed on your machine,
-you first need to create a virtualenv::
-
-    virtualenv elasticluster
-    . elasticluster/bin/activate
+Please follow the instructions in section `Prepare the environment for
+installation`_ before proceeding. The rest of this section assumes that you have
+created and activated a virtualenv in directory ``elasticluster``.
 
 Then you have to download the software. We suggest you to download it
 *within* the created virtualenv::

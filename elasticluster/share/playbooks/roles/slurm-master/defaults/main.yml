@@ -5,4 +5,4 @@ SLURM_ACCOUNTING_HOST: '{{groups.slurm_master[0]|default("slurmdbd")}}'
 # list of users that should be created in the SLURM accounting DB
 # (i.e., users that can submit jobs)
 slurm_cluster_users:
-  - '{{ansible_ssh_user}}'
+  - '{{ansible_user}}'

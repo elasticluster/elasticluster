@@ -145,6 +145,8 @@ available:
 * `slurm-master <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-master>`_
 * `slurm-worker <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-worker>`_
 
+In order for the NFS exported home directory to be mountable from the cluster's compute nodes,
+security groups on OpenStack need to permit all UDP traffic between all cluster nodes.
 
 GridEngine
 ==========
@@ -487,3 +489,33 @@ You can combine, for instance, a SLURM cluster with a PVFS2 cluster::
 This configuration will create a SLURM cluster with 10 compute nodes,
 10 data nodes and a frontend, and will mount the ``/pvfs2`` directory
 from the data nodes to both the compute nodes and the frontend.
+
+Kubernetes
+==========
+
+Supported on:
+
+* Ubuntu 16.04
+* RHEL/CentOS 7.x
+
+This playbook installs the `Kubernetes`_ container management system on each host.
+It is configured using kubeadm. Currently only 1 master node is supported.
+
+To force the playbook to run, add the Ansible group ``kubernetes``. The
+following example configuration sets up a kubernetes cluster using 1
+master and 2 worker nodes, and additionally installs flannel for the networking
+(canal is also available)::
+
+    [cluster/kubernetes]
+    master_nodes=1
+    worker_nodes=2
+    ssh_to=master
+    setup_provider=kubernetes
+    # ...
+
+    [setup/kubernetes]
+    master_groups=kubernetes_master
+    worker_groups=kubernetes_worker
+    # ...
+
+SSH into the cluster and execute 'sudo kubectl --kubeconfig /etc/kubernetes/admin.conf get nodes' to view the cluster.

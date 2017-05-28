@@ -23,6 +23,7 @@
 - include: roles/pbs+maui.yml
 - include: roles/gridengine.yml
 - include: roles/hadoop.yml
+- include: roles/kubernetes.yml
 - include: roles/pvfs2.yml
 - include: roles/ceph.yml
 - include: roles/glusterfs.yml

@@ -45,8 +45,7 @@ from elasticluster.exceptions import TimeoutError, NodeNotFound, \
 from elasticluster.repository import MemRepository
 from elasticluster.utils import Struct, parse_ip_address_and_port, sighandler, timeout
 
-
-SSH_PORT=22
+SSH_PORT = 22
 
 
 def raise_timeout_error(signum, frame):
@@ -142,7 +141,7 @@ class Cluster(Struct):
         # cluster using json. The `extra` keywords will become a
         # single, dictionary-valued, `extra` option when calling again
         # the constructor.
-        self.extra.update(extra.pop('extra',{}))
+        self.extra.update(extra.pop('extra', {}))
 
         # attributes that have already been defined trump whatever is
         # in the `extra` dictionary
@@ -263,7 +262,7 @@ class Cluster(Struct):
             raise ValueError(
                 "Invalid name `{kind}`. The `kind` argument may only contain"
                 " alphanumeric characters, and must not end with a digit."
-                .format(kind=kind))
+                    .format(kind=kind))
 
         if kind not in self.nodes:
             self.nodes[kind] = []
@@ -302,7 +301,6 @@ class Cluster(Struct):
 
         self.nodes[kind].append(node)
         return node
-
 
     def add_nodes(self, kind, num, image_id, image_user, flavor,
                   security_group, image_userdata='', **extra):
@@ -345,7 +343,7 @@ class Cluster(Struct):
         """
         if node.kind not in self.nodes:
             raise NodeNotFound("Unable to remove node %s: invalid node type `%s`.",
-                      node.name, node.kind)
+                               node.name, node.kind)
         else:
             try:
                 index = self.nodes[node.kind].index(node)
@@ -357,7 +355,6 @@ class Cluster(Struct):
                 self.repository.save_or_update(self)
             except ValueError:
                 raise NodeNotFound("Node %s not found in cluster" % node.name)
-
 
     def start(self, min_nodes=None):
         """
@@ -401,8 +398,7 @@ class Cluster(Struct):
         # Try to connect to each node to gather IP addresses and SSH host keys
         log.info("Checking SSH connection to nodes ...")
         pending_nodes = nodes - not_started_nodes
-        unreachable_nodes = self._gather_node_ip_addresses(
-            pending_nodes, self.startup_timeout)
+        self._gather_node_ip_addresses(pending_nodes, self.startup_timeout)
 
         # It might be possible that the node.connect() call updated
         # the `preferred_ip` attribute, so, let's save the cluster
@@ -445,6 +441,7 @@ class Cluster(Struct):
         # pressing Ctrl+C flips this flag, which in turn stops the main loop
         # down below
         keep_running = True
+
         def sigint_handler(signal, frame):
             """
             Makes sure the cluster is saved, before the sigint results in
@@ -476,7 +473,6 @@ class Cluster(Struct):
             return set(node for node, ok
                        in itertools.izip(nodes, result.get()) if ok)
 
-
     @staticmethod
     def _start_node(node):
         """
@@ -498,8 +494,8 @@ class Cluster(Struct):
                 log.info("Node `%s` has been started.", node.name)
                 return True
             except Exception as err:
-                log.error("Could not start node `%s`: %s -- %s",
-                          node.name, err, err.__class__)
+                log.exception("Could not start node `%s`: %s -- %s",
+                              node.name, err, err.__class__)
                 return False
 
     def _check_starting_nodes(self, nodes, lapse):
@@ -510,7 +506,7 @@ class Cluster(Struct):
             try:
                 while nodes:
                     nodes = set(node for node in nodes
-                                      if not node.is_alive())
+                                if not node.is_alive())
                     if nodes:
                         log.debug("Waiting for %d more nodes to come up ...", len(nodes))
                         time.sleep(self.polling_interval)
@@ -583,7 +579,7 @@ class Cluster(Struct):
         if min_nodes is None:
             min_nodes = {}
         # check that each group has a minimum value
-        for group, nodes in self.nodes.iteritems():
+        for group, nodes in self.nodes.items():
             if group not in min_nodes:
                 min_nodes[group] = len(nodes)
         return min_nodes
@@ -601,7 +597,7 @@ class Cluster(Struct):
         """
         # check the total sizes before moving the nodes around
         minimum_nodes = 0
-        for group, size in min_nodes.iteritems():
+        for group, size in min_nodes.items():
             minimum_nodes = minimum_nodes + size
 
         if len(self.get_all_nodes()) < minimum_nodes:
@@ -615,20 +611,20 @@ class Cluster(Struct):
 
         # finding all node groups with an unsatisfied amount of nodes
         unsatisfied_groups = []
-        for group, size in min_nodes.iteritems():
+        for group, size in min_nodes.items():
             if len(self.nodes[group]) < size:
                 unsatisfied_groups.append(group)
 
         # trying to move nodes around to fill the groups with missing nodes
         for ugroup in unsatisfied_groups[:]:
             missing = min_nodes[ugroup] - len(self.nodes[ugroup])
-            for group, nodes in self.nodes.iteritems():
+            for group, nodes in self.nodes.items():
                 spare = len(self.nodes[group]) - min_nodes[group]
                 while spare > 0 and missing > 0:
                     self.nodes[ugroup].append(self.nodes[group][-1])
                     del self.nodes[group][-1]
-                    spare = spare - 1
-                    missing = missing - 1
+                    spare -= 1
+                    missing -= 1
 
                     if missing == 0:
                         unsatisfied_groups.remove(ugroup)
@@ -732,7 +728,6 @@ class Cluster(Struct):
                     node.name, node.instance_id, err, err.__class__)
         return failed
 
-
     def get_frontend_node(self):
         """Returns the first node of the class specified in the
         configuration file as `ssh_to`, or the first node of
@@ -811,12 +806,12 @@ class Cluster(Struct):
                 # preferred_ip is not in the current list, then try to connect
                 # to one of the node ips and update the preferred_ip.
                 if node.ips and \
-                   not (node.preferred_ip and \
-                        node.preferred_ip in node.ips):
-                  node.connect()
+                        not (node.preferred_ip and \
+                                         node.preferred_ip in node.ips):
+                    node.connect()
             except InstanceError as ex:
                 log.warning("Ignoring error updating information on node %s: %s",
-                          node, str(ex))
+                            node, ex)
         self.repository.save_or_update(self)
 
 
@@ -929,11 +924,11 @@ class NodeNamingPolicy(object):
         else:
             raise ValueError(
                 "Cannot parse node name `{name}`"
-                .format(name=name))
+                    .format(name=name))
 
     _NODE_NAME_RE = re.compile(
         r'(?P<kind>[a-z0-9-]*[a-z-]+) (?P<index>\d+)$',
-        re.I|re.X)
+        re.I | re.X)
 
     def new(self, kind, **extra):
         """
@@ -974,7 +969,7 @@ class NodeNamingPolicy(object):
                 self._free[kind].remove(index)
             top = self._top[kind]
             if index > top:
-                self._free[kind].update(range(top+1, index))
+                self._free[kind].update(range(top + 1, index))
                 self._top[kind] = index
         except ValueError:
             log.warning(
@@ -1066,7 +1061,6 @@ class Node(Struct):
         self.extra.update(extra.pop('extra', {}))
         self.extra.update(extra)
 
-
     def __setstate__(self, state):
         self.__dict__ = state
         if 'image_id' not in state and 'image' in state:
@@ -1090,7 +1084,6 @@ class Node(Struct):
             node_name=("%s-%s" % (self.cluster_name, self.name)),
             **self.extra)
         log.debug("Node `%s` has instance ID `%s`", self.name, self.instance_id)
-
 
     def stop(self, wait=False):
         """
@@ -1159,7 +1152,7 @@ class Node(Struct):
         # Try connecting using the `preferred_ip`, if
         # present. Otherwise, try all of them and set `preferred_ip`
         # using the first that is working.
-        ips=self.ips[:]
+        ips = self.ips[:]
         # This is done in order to "sort" the IPs and put the preferred_ip first.
         if self.preferred_ip:
             if self.preferred_ip in ips:
@@ -1186,7 +1179,6 @@ class Node(Struct):
                 if ip != self.preferred_ip:
                     log.debug("Setting `preferred_ip` to %s", ip)
                     self.preferred_ip = ip
-                    cluster_changed = True
                 # Connection successful.
                 return ssh
             except socket.error as ex:
@@ -1229,7 +1221,6 @@ IPs:    %s
 instance id:   %s
 instance flavor: %s""" % (self.name, self.preferred_ip, ips,
                           self.instance_id, self.flavor)
-
 
     def keys(self):
         """Only expose some of the attributes when using as a dictionary"""

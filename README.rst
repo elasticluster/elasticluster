@@ -57,27 +57,25 @@ use the *master* branch as starting point.
 Quickstart
 ==========
 
-ElastiCluster_ is a Python_ program; Python version 2.6 or 2.7 is
-required to run it.  Python 3 is not (yet) supported.
-
-It's quite easy to install ElastiCluster using pip_; the command
-below is all you need to install ElastiCluster on your system::
-
-    pip install elasticluster
-
-If you want to try out the development version instead, please read
-the `Installing development code from GitHub`__ section in the
-manual__.
+The 1.3 release is nearing, which has seen quite some changes from the
+1.2 code that's on PyPI. For the moment, you are therefore encouraged to run the
+`development code from GitHub`__ (click to see installation instructions) and
+report on any bugs you find!
 
 .. __: http://elasticluster.readthedocs.io/en/master/install.html#installing-development-code-from-github
-.. __: http://elasticluster.readthedocs.io/en/latest/
 
-**Note:** The 1.3 release is nearing, which has seen quite some changes
-from the 1.2 code that's on PyPI.  For the moment, you are therefore
-encouraged to run the `development code from GitHub`__ and report on
-any bugs you find!
+**Note:** ElastiCluster_ is a Python_ program; Python version 2.6 or 2.7 is
+required to run it. Python 3 is not (yet) supported.
 
-.. __: http://elasticluster.readthedocs.io/en/master/install.html#installing-development-code-from-github
+After ElastiCluster is installed, run this command to deploy an `example
+configuration file`_::
+
+  elasticluster list-templates
+
+The configuration file is located in `.elasticluster/config`; adjust it
+to your liking using the `configuration reference`__.
+
+.. __: http://elasticluster.readthedocs.io/en/master/configure.html
 
 
 .. References

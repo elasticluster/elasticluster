@@ -73,7 +73,9 @@ class Tox(TestCommand):
 # conditional dependencies in Python packages, support for it is inconsistent
 # (at best) among the PyPA tools. An attempt to use the conditional syntax has
 # already caused issues #308, #249, #227, and many more headaches to me while
-# trying to find a combination of `pip`, `setuptools`, `wheel`, and dependency
+# trying to find a combination of
+
+# `pip`, `setuptools`, `wheel`, and dependency
 # specification syntax that would work reliably across all supported Linux
 # distributions. I give up, and revert to computing the dependencies via
 # explicit Python code in `setup.py`; this will possibly break wheels but it's
@@ -105,10 +107,19 @@ if python_version == (2, 6):
         'oslo.utils<3.1.0',
         'python-keystoneclient<2.0.0',
         'python-novaclient<3.0.0',
+        'python-cinderclient<1.2.2',
     ]
 elif python_version == (2, 7):
     version_dependent_requires = [
+        'python-glanceclient',
+        'python-neutronclient',
+        'python-cinderclient',
         'python-novaclient',
+        # fix dependency conflict among OpenStack libraries:
+        # `osc-lib` has a more strict dependency specifier
+        # which is not picked up by `pip` because it's not
+        # a top-level dependency of ElastiCluster
+        'Babel>=2.3.4,!=2.4.0',
     ]
 else:
     raise RuntimeError("ElastiCluster requires Python 2.6 or 2.7")
@@ -176,6 +187,8 @@ setup(
         'azure',
         # OpenStack clouds
         'netifaces',
+        'apache-libcloud',
+        'requests!=2.13.0,!=2.12.2,>=2.10.0',  ## see issue #414
         #'python-novaclient' ## this needs special treatment depending on Python version, see below
     ] + version_dependent_requires),
     tests_require=['tox', 'mock', 'pytest>=2.10'],  # read right-to-left

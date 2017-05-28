@@ -4,8 +4,8 @@
    http://docutils.sf.net/rst.html for more information.
 
 
-`elasticluster.main`
-====================
-.. automodule:: elasticluster.main
+`elasticluster.__main__`
+========================
+.. automodule:: elasticluster.__main__
    :members:
 

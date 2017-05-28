@@ -6,6 +6,8 @@
 .. include:: global.inc
 
 
+.. _troubleshooting:
+
 ===================
   Troubleshooting
 ===================
@@ -15,6 +17,62 @@ workarounds (if available).  Please use the `mailing-list`_ for
 further help and for any problem not reported here!
 
 .. contents::
+
+
+Running any ``elasticluster`` command fails with a version conflict about the ``requests`` package
+--------------------------------------------------------------------------------------------------
+
+You can get this error when ElastiCluster installed fine, but attempting to run
+*any* command fails with a Python traceback like the following one::
+
+  Traceback (most recent call last):
+    File "/home/ec2-user/elasticluster/bin/elasticluster", line 6, in <module>
+      from pkg_resources import load_entry_point
+    File "/home/ec2-user/elasticluster/lib/python2.7/site-packages/pkg_resources/__init__.py", line 3036, in <module>
+      @_call_aside
+    File "/home/ec2-user/elasticluster/lib/python2.7/site-packages/pkg_resources/__init__.py", line 3020, in _call_aside
+      f(*args, **kwargs)
+    File "/home/ec2-user/elasticluster/lib/python2.7/site-packages/pkg_resources/__init__.py", line 3049, in _initialize_master_working_set
+      working_set = WorkingSet._build_master()
+    File "/home/ec2-user/elasticluster/lib/python2.7/site-packages/pkg_resources/__init__.py", line 656, in _build_master
+      return cls._build_from_requirements(__requires__)
+    File "/home/ec2-user/elasticluster/lib/python2.7/site-packages/pkg_resources/__init__.py", line 669, in _build_from_requirements
+      dists = ws.resolve(reqs, Environment())
+    File "/home/ec2-user/elasticluster/lib/python2.7/site-packages/pkg_resources/__init__.py", line 859, in resolve
+      raise VersionConflict(dist, req).with_context(dependent_req)
+      pkg_resources.ContextualVersionConflict: (requests 2.13.0 (/home/ec2-user/elasticluster/lib/python2.7/site-packages), Requirement.parse('requests!=2.12.2,!=2.13.0,>=2.10.0'), set(['keystoneauth1']))
+
+There is a workaround for this bug in ElastiCluster from `commit 7bf55b8`_
+onwards, (to be) included in ElastiCluster 1.3. So, upgrading to the latest
+ElastiCluster code should solve the issue. Alternatively, you can solve the
+problem by manually resolving the conflict::
+
+  pip install requests==2.12.3
+
+.. _`commit 7bf55b8`: https://github.com/gc3-uzh-ch/elasticluster/commit/7bf55b883db43bbba9802328589ab1dfd4cd85c6
+
+Unfortunately, the root cause of this problem does not lie in ElastiCluster;
+instead it stems from the dependency resolution mechanism of the package
+installer `pip`. See `ElastiCluster issue #414`__ for more technical details.
+
+.. __: https://github.com/gc3-uzh-ch/elasticluster/issues/414
+
+
+Running any ``elasticluster`` command fails with a version conflict about the ``pbr`` package
+---------------------------------------------------------------------------------------------
+
+You can get this error when ElastiCluster installed fine, but attempting to run
+*any* command fails with a Python traceback that ends with a line like the following one::
+
+    pkg_resources.ContextualVersionConflict: (pbr 1.10.0 (...), Requirement.parse('pbr>=2.0.0'), set(['oslo.i18n', 'oslo.serialization', 'oslo.utils', 'debtcollector']))
+
+This means that you have a mixture of older and newer OpenStack libraries in
+your ElastiCluster installation: to solve the issue, make a new ElastiCluster
+virtual environment and install again from scratch.
+
+The root cause of the issue lies in the interplay between the way `pip` handles
+dependencies of dependent packages. There is unfortunately little ElastiCluster
+can do about it.
 
 
 Installation fails with ``ValueError: ('Expected version spec in' [...]``
@@ -42,11 +100,12 @@ report that ends with this Python traceback::
 
 This means that the ``pip` command is too old to properly parse `Python
 environment markers <https://www.python.org/dev/peps/pep-0508/>`_; ``pip``
-version 8.1.2 is the first one known to work well.
+version 8.1.2 is the first one known to work well but version 9.0.0 improves
+support.
 
-To fix the issue, please upgrade ``pip`` to (at least) version 8.1.2::
+To fix the issue, please upgrade ``pip`` to (at least) version 9.0.0::
 
-  pip install --upgrade 'pip>=8.1.2'
+  pip install --upgrade 'pip>=9.0.0'
 
 
 Installation fails complaining about version of ``setuptools``
@@ -386,8 +445,8 @@ Issues when installing from source on MacOSX
 
   Installation and testing of ElastiCluster on MacOSX is not currently part of
   the development or the release cycle. So these notes could be severely out of
-  date. Please report issues and seek for solutions on the `elasticluster
-  mailing-list`_.
+  date. Please report issues and seek for solutions on the ElastiCluster
+  `mailing-list`_.
 
 When installing ElastiCluster on MacOSX you may
 get some errors while running `python setup.py install`, because
@@ -451,8 +510,8 @@ Error "ImportError: No module named anyjson" on MacOSX
 
   Installation and testing of ElastiCluster on MacOSX is not currently part of
   the development or the release cycle. So these notes could be severely out of
-  date. Please report issues and seek for solutions on the `elasticluster
-  mailing-list`_.
+  date. Please report issues and seek for solutions on the ElastiCluster
+  `mailing-list`_.
 
 In some MacOSX version, even if the installation *seems* to succeed, you may get
 the following error the first time you run `elasticluster`::

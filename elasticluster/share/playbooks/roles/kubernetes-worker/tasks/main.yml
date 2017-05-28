@@ -1,0 +1,4 @@
+---
+
+- name: Join Kubernetes cluster
+  command: kubeadm join --token {{hostvars[groups['kubernetes_master'][0]].token[0]}} {{hostvars[groups['kubernetes_master'][0]].ansible_default_ipv4.address}}:{{kubernetes_default_port}}
