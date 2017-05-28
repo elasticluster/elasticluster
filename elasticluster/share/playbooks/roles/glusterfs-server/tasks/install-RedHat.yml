@@ -1,0 +1,7 @@
+---
+- name: Install GlusterFS release
+  yum:
+    name=centos-release-gluster{{ glusterfs_version | replace('.', '') }}
+  tags:
+    - gluster
+    - glusterfs-server
