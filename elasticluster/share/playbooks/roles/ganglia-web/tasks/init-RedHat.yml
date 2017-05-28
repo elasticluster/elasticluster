@@ -9,7 +9,7 @@
     - apache2
     - http
     - web
-  set_facts:
+  set_fact:
     ganglia_web_packages:
       - ganglia-web
     ganglia_web_services:
