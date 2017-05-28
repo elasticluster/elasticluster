@@ -42,3 +42,5 @@ glusterfs_main_host: '{{groups.glusterfs_server[0]}}'
 # that runs GlusterFS commands, ``False`` elsewhere.  By default, use
 # the first server node.
 is_glusterfs_main_server_node: "inventory_hostname == '{{glusterfs_main_host}}'"
+
+glustefs_version: '3.10'
