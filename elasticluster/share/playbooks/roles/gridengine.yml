@@ -8,6 +8,7 @@
   roles:
     - role: 'nis'
       NIS_MASTER: "{{groups.gridengine_master[0]}}"
+      when: '{{multiuser_cluster|default("true")|bool}}'
     - role: gridengine-master
     - role: nfs-server
       NFS_EXPORTS:
@@ -27,6 +28,7 @@
   roles:
     - role: 'nis'
       NIS_MASTER: "{{groups.gridengine_master[0]}}"
+      when: '{{multiuser_cluster|default("true")|bool}}'
     # we need to explicitly run `gridengine-common` before `nfs-client` to set
     # the `SGE_*` variables; having Ansible run the `gridengine-common` role as
     # a dependenciy for `gridengine-exec` sets it too late and NFS mounts are

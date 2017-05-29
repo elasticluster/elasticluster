@@ -13,6 +13,7 @@
   roles:
     - role: 'nis'
       NIS_MASTER: '{{groups.hadoop_master[0]}}'
+      when: '{{multiuser_cluster|default("true")|bool}}'
     - hdfs-namenode
     - role: hive-server
       HIVE_METASTORE_HOST: '{{groups.hadoop_master[0]}}'
@@ -29,6 +30,7 @@
   roles:
     - role: 'nis'
       NIS_MASTER: '{{groups.hadoop_master[0]}}'
+      when: '{{multiuser_cluster|default("true")|bool}}'
     - hdfs-datanode
     - role: hive
       HIVE_METASTORE_HOST: '{{groups.hadoop_master[0]}}'
