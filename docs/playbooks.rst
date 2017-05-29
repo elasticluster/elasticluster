@@ -131,11 +131,17 @@ Variable name                      Default             Description
 ``slurm_maxarraysize``             1000                Maximum size of an array job
 ``slurm_maxjobcount``              10000               Maximum nr. of jobs actively managed by the
                                                        SLURM controller (i.e., pending and running)
+``multiuser_cluster``              yes                 Install NIS/YP
 ================================== =================== =================================================
 
 Note that the ``slurm_*`` extra variables need to be set *globally*
 (e.g., ``global_var_slurm_selectype``) because the SLURM configuration
 file must be identical across the whole cluster.
+
+Global variable ``multiuser_cluster`` controls whether the NIS/YP software is
+installed on the cluster (NIS master on the cluster master node, compute nodes
+are NIS slaves) to make it easier to add users to the cluster (just run the
+``adduser`` command on the master).
 
 The "SLURM" playbook depends on the following Ansible roles being
 available:
@@ -198,6 +204,11 @@ You can combine the gridengine playbooks with ganglia. In this case the
     frontend_groups=gridengine_master,ganglia_master
     compute_groups=gridengine_worker,ganglia_monitor
     ...
+
+Global variable ``multiuser_cluster`` controls whether the NIS/YP software is
+installed on the cluster (NIS master on the cluster master node, compute nodes
+are NIS slaves) to make it easier to add users to the cluster (just run the
+``adduser`` command on the master).
 
 
 HTCondor
@@ -378,6 +389,11 @@ storage+execution nodes::
     provider=ansible
     master_groups=hadoop_master
     worker_groups=hadoop_worker
+
+Global variable ``multiuser_cluster`` controls whether the NIS/YP software is
+installed on the cluster (NIS master on the cluster master node, compute nodes
+are NIS slaves) to make it easier to add users to the cluster (just run the
+``adduser`` command on the master).
 
 
 GlusterFS

@@ -5,6 +5,7 @@
   roles:
     - role: 'nis'
       NIS_MASTER: "{{groups.slurm_master[0]}}"
+      when: '{{multiuser_cluster|default("true")|bool}}'
     - role: 'nfs-server'
       NFS_EXPORTS:
         - path: '/home'
@@ -17,6 +18,7 @@
   roles:
     - role: 'nis'
       NIS_MASTER: "{{groups.slurm_master[0]}}"
+      when: '{{multiuser_cluster|default("true")|bool}}'
     - role: 'nfs-client'
       NFS_MOUNTS:
         - fs: '{{groups.slurm_master[0]}}:/home'
@@ -29,6 +31,7 @@
   roles:
     - role: 'nis'
       NIS_MASTER: "{{groups.slurm_master[0]}}"
+      when: '{{multiuser_cluster|default("true")|bool}}'
     - role: 'nfs-client'
       NFS_MOUNTS:
         - fs: '{{groups.slurm_master[0]}}:/home'
