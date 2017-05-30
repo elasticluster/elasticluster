@@ -44,3 +44,4 @@
   with_items:
     - { key: 'HostbasedAuthentication', value: 'yes' }
     - { key: 'EnableSSHKeysign',        value: 'yes' }
+  notify: restart sshd
