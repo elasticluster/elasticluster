@@ -363,6 +363,11 @@ nodes from the cluster.
      node before removing it.  Be careful when shrinking a cluster, as
      this may lead to data loss!
 
+  3. The current HDFS replication factor is set to 1 e.g. off, depending on
+     your case you may want to change this. In order to do so, add the
+     following to your setup config (setting replication to ):
+     global_var_hdfs_replication_factor=3
+
 The following example configuration sets up a Hadoop cluster using 4
 storage+execution nodes::
 
