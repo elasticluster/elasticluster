@@ -1,6 +1,6 @@
 ############################# Server Basics #############################
 
-{% for server in groups.stream_master %}
+{% for server in groups.kafka_streamer %}
 {% if server == inventory_hostname %}
 broker.id={{ loop.index }}
 port={{ kafka_port + loop.index }}
@@ -94,7 +94,7 @@ log.cleaner.enable=false
 
 ############################# Zookeeper #############################
 
-zookeeper.connect={% for server in groups['stream_master'] -%}{{ server }}:2181{%- if not loop.last %},{% endif -%}{%- endfor %}
+zookeeper.connect={% for server in groups['kafka_streamer'] -%}{{ server }}:2181{%- if not loop.last %},{% endif -%}{%- endfor %}
 
 # Timeout in ms for connecting to zookeeper
 zookeeper.connection.timeout.ms={{kafka_zookeeper_connection_timeout_ms}}

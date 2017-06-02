@@ -1,0 +1,5 @@
+{% for server in groups.nifi_transformer %}
+{% if server == inventory_hostname %}
+{{ loop.index }}
+{% endif %}
+{% endfor %}

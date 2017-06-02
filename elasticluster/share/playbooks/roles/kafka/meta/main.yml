@@ -2,4 +2,4 @@
 dependencies:
   - { role: bigtop }
   - role: zookeeper
-    zookeeper_hosts: '{{ groups.stream_master }}'
+    zookeeper_hosts: '{{ groups.kafka_streamer }}'

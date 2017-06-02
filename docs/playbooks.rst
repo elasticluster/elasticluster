@@ -567,16 +567,45 @@ streaming platform (used for building real-time data pipelines and streaming).
 =================  ==================================================
 Ansible group      Action
 =================  ==================================================
-``stream_master``  Install the node with Kafka and Zookeeper.
+``kafka_node``     Install the node with Kafka and Zookeeper.
 =================  ==================================================
 
 The following example configuration sets up a group of 3 kafka nodes::
 
     [cluster/kafka]
     setup_provider=kafka
-    master_nodes=3
-    ssh_to=master
+    streamer_nodes=3
+    ssh_to=streamer
 
     [setup/kafka]
     provider=ansible
-    master_groups=stream_master
+    streamer_groups=kafka_streamer
+
+NiFi
+==============
+
+Supported on:
+
+* Ubuntu 16.04
+
+This playbook installs NiFi_ nodes with Zookeeper_ as orchistrator. It
+comprises a Zookeeper quorum, and NiFi nodes. Apache NiFi supports powerful
+and scalable directed graphs of data routing, transformation, and system mediation
+logic. The NiFi web interface will be available on port 8080 on any of the nodes.
+
+=================  ==================================================
+Ansible group      Action
+=================  ==================================================
+``nifi_node``      Install the node with NiFi and Zookeeper.
+=================  ==================================================
+
+The following example configuration sets up a group of 3 nifi nodes::
+
+    [cluster/nifi]
+    setup_provider=nifi
+    transformer_nodes=3
+    ssh_to=transformer
+
+    [setup/kafka]
+    provider=ansible
+    transformer_groups=nifi_transformer

@@ -1,0 +1,10 @@
+---
+
+- name: Install NiFi node(s)
+  hosts: nifi_transformer
+  tags:
+    - zookeeper
+    - nifi
+    - transformer
+  roles:
+    - nifi

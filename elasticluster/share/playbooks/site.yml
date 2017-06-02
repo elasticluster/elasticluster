@@ -28,6 +28,7 @@
 - include: roles/kafka.yml
 - include: roles/kubernetes.yml
 - include: roles/mesos.yml
+- include: roles/nifi.yml
 - include: roles/pbs+maui.yml
 - include: roles/pvfs2.yml
 - include: roles/slurm.yml
@@ -35,6 +36,8 @@
 # Jupyter installation comes last, to allow it to pick up any SW that's been
 # installed so far (e.g., for kernels, or for ipyparallel)
 - include: roles/jupyterhub.yml
+# Same goes for R-Studio Server
+- include: roles/rstudio.yml
 
 # for local customizations
 - include: after.yml
