@@ -52,16 +52,17 @@ class LibCloudProvider(AbstractCloudProvider):
             raise ValueError("No libcloud driver for provider {name}".format(name=driver_name))
         driver_class = get_driver(driver_name)
         log.debug('Using libcloud driver `%s` ...', driver_class.__name__)
-
-        self.driver = driver_class(*self.__pop_driver_auth_args(**options), **options)
-
+        auth_args = self.__pop_driver_auth_args(**options)
+        if auth_args:
+            self.driver = driver_class(*auth_args, **options)
+        else:
+            self.driver = driver_class(**options)
 
     def __get_instance(self, instance_id):
         for node in self.driver.list_nodes():
             if node.id == instance_id:
                 return node
         return None
-
 
     def start_instance(self, key_name, public_key_path, private_key_path, security_group, flavor, image_id,
                        image_userdata, username=None, node_name=None, **options):
