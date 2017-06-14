@@ -187,7 +187,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._check_security_groups(security_groups)
         vm_start_args['security_groups'] = security_groups
 
-
         # Check if the image id is present.
         if image_id not in [img.id for img in self._get_images()]:
             raise ImageError(
@@ -215,43 +214,30 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         vm_start_args['nics'] = nics
 
         if 'boot_disk_size' in kwargs:
+            # check if a disk type is defined, if not 'default'
+            boot_disk_type = 'default'
+            if 'boot_disk_type' in kwargs:
+                boot_disk_type = kwargs.pop('boot_disk_type')
+            # by default we delete the boot disk after terminating the VM
+            boot_disk_delete_on_terminate = 1
+            if 'boot_disk_delete_on_terminate' in kwargs:
+                if not kwargs.pop('boot_disk_delete_on_terminate'):
+                    boot_disk_delete_on_terminate = 0
+            boot_disk_device = 'vda'
+            if 'boot_disk_device' in kwargs:
+                boot_disk_device = kwargs.pop('boot_disk_device')
             # check if the backing volume is already there
             volume_name = '{name}-{id}'.format(name=node_name, id=image_id)
-            if volume_name in [v.name for v in self._get_volumes()]:
-                raise ImageError(
-                    "Volume `{0}` already exists in project `{1}` of cloud {2}"
-                    .format(volume_name, self._os_tenant_name, self._os_auth_url))
-
-            log.info('Creating volume `%s` to use as VM disk ...', volume_name)
-            try:
-                bds = int(kwargs['boot_disk_size'])
-                if bds < 1:
-                    raise ValueError('non-positive int')
-            except (ValueError, TypeError):
-                raise ConfigurationError(
-                    "Invalid `boot_disk_size` specified:"
-                    " should be a positive integer, got {0} instead"
-                    .format(kwargs['boot_disk_size']))
-            volume = self.cinder_client.volumes.create(
-                size=bds, name=volume_name, imageRef=image_id,
-                volume_type=kwargs.pop('boot_disk_type'))
-
-            # wait for volume to come up
-            volume_available = False
-            while not volume_available:
-                for v in self._get_volumes():
-                    if v.name == volume_name and v.status == 'available':
-                        volume_available = True
-                        break
-                sleep(1)  # FIXME: hard-coded waiting time
-
+            volume = self.__create_volume(volume_name,
+                                          boot_disk_type,
+                                          kwargs['boot_disk_size'],
+                                          image_id)
             # ok, use volume as VM disk
             vm_start_args['block_device_mapping'] = {
-                # FIXME: is it possible that `vda` is not the boot disk? e.g. if
-                # a non-paravirtualized kernel is being used?  should we allow
-                # to set the boot device as an image parameter?
-                'vda': ('{id}:::{delete_on_terminate}'
-                        .format(id=volume.id, delete_on_terminate=1)),
+                '{dev}': ('{id}:::{delete_on_terminate}'
+                          .format(dev=boot_disk_device,
+                                  id=volume.id,
+                                  delete_on_terminate=boot_disk_delete_on_terminate)),
             }
 
         # due to some `nova_client.servers.create()` implementation weirdness,
@@ -272,9 +258,77 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             if not floating_ips:
                 self._allocate_address(vm, network_ids)
 
+        if 'volume_disk_size' in kwargs:
+            volume_disk_type = 'default'
+            if 'volume_disk_type' in kwargs:
+                volume_disk_type = kwargs.pop('volume_disk_type')
+            volume_disk_device = 'vdb'
+            if 'volume_disk_device' in kwargs:
+                volume_disk_device = kwargs.pop('volume_disk_device')
+            volume_name = '{name}-{id}-data'.format(name=node_name, id=image_id)
+            if 'volume_name' in kwargs:
+                volume_name = kwargs.pop('volume_name')
+            self.__create_attach_volume(volume_name,
+                                        volume_disk_type,
+                                        kwargs['volume_disk_size'],
+                                        volume_disk_device,
+                                        vm.id)
+
         self._instances[vm.id] = vm
 
         return vm.id
+
+    def __create_attach_volume(self, volume_name, disk_type, disk_size, disk_device, vm_uuid):
+        log.debug('waiting for the instance to become available')
+        vm_available = False
+        while not vm_available:
+            for s in self.nova_client.servers.list():
+                if s.id == vm_uuid and s.status.lower() == 'active':
+                    vm_available = True
+                    break
+
+        volume = next(iter([v for v in self._get_volumes() if v.name == volume_name]), None)
+        if not volume:
+            log.info("Volume `{0}` does not exists in project `{1}` of cloud {2},"
+                     "creating it ...".format(volume_name,
+                                              self._os_tenant_name,
+                                              self._os_auth_url))
+            volume = self.__create_volume(volume_name, disk_type, disk_size)
+
+        log.debug('going to attach volume {0} to vm {1}'.format(volume_name, vm_uuid))
+        self.nova_client.volumes.create_server_volume(server_id=vm_uuid,
+                                                      volume_id=volume.id,
+                                                      device='/dev/{0}'.format(disk_device))
+
+    def __create_volume(self, volume_name, disk_type, disk_size, image_id=None):
+        if volume_name in [v.name for v in self._get_volumes()]:
+            raise ImageError(
+                "Volume `{0}` already exists in project `{1}` of cloud {2}"
+                    .format(volume_name, self._os_tenant_name, self._os_auth_url))
+        log.info('Creating volume `%s` to use as VM disk ...', volume_name)
+        try:
+            bds = int(disk_size)
+            if bds < 1:
+                raise ValueError('non-positive int')
+        except (ValueError, TypeError):
+            raise ConfigurationError(
+                "Invalid `boot_disk_size` specified:"
+                " should be a positive integer, got {0} instead"
+                    .format(disk_size))
+        volume = self.cinder_client.volumes.create(
+            size=bds, name=volume_name, imageRef=image_id,
+            volume_type=disk_type)
+
+        log.debug('waiting for the volume to become available')
+        volume_available = False
+        while not volume_available:
+            for v in self._get_volumes():
+                if v.name == volume_name and v.status == 'available':
+                    volume_available = True
+                    break
+            sleep(1)  # FIXME: hard-coded waiting time
+
+        return volume
 
     def stop_instance(self, instance_id):
         """Stops the instance gracefully.

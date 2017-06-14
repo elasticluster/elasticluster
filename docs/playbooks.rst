@@ -630,3 +630,4 @@ The following example configuration sets up a group of 3 nifi nodes::
     [setup/kafka]
     provider=ansible
     transformer_groups=nifi_transformer
+

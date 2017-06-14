@@ -1,0 +1,94 @@
+---
+
+- name: Register all attached disks
+  shell: fdisk -l | grep "Disk" | grep "sectors" | awk '{print $2}' | sed 's/.$//'
+  register: attached_disks
+
+- name: Register mounted disks
+  shell: cat /proc/mounts | grep '{{item}}'
+  with_items: '{{ attached_disks.stdout_lines | list }}'
+  register: mounted_disks
+  ignore_errors: yes
+
+- name: Register unmounted disks
+  set_fact:
+    unmounted_disks: "{{ (attached_disks.stdout_lines | list) | difference(mounted_disks.results | map(attribute='stdout_lines') | list) }}"
+
+- name: Partitioned disks
+  shell: blkid | awk '{print $1}' | sed 's/.\{2\}$//'
+  register: partitioned_disks
+
+- name: Register unpartitioned unmounted disks
+  set_fact:
+    disks_to_format: "{{ unmounted_disks | difference(partitioned_disks.stdout_lines | list) }}"
+
+- name: Install parted
+  package:
+    name: parted
+    state: present
+  when: disks_to_format|length > 0
+
+- name: Install XFS tools
+  package:
+    name: xfsprogs
+    state: present
+  when: disks_to_format|length > 0
+
+- name: Get disk alignment for disks
+  shell: |
+    if
+      [[ -e /sys/block/{{ item | basename }}/queue/optimal_io_size && -e /sys/block/{{ item | basename }}/alignment_offset && -e /sys/block/{{ item | basename }}/queue/physical_block_size ]];
+    then
+      echo $[$(( ($(cat /sys/block/{{ item | basename }}/queue/optimal_io_size) + $(cat /sys/block/{{ item | basename }}/alignment_offset)) / $(cat /sys/block/{{ item | basename }}/queue/physical_block_size) )) | 2048];
+    else
+      echo 2048;
+    fi
+  args:
+    creates: '{{ item }}1'
+    executable: '/bin/bash'
+  with_items: '{{ disks_to_format }}'
+  register: disk_offset
+  when: disks_to_format|length > 0
+
+- name: Partition additional disks
+  shell: |
+    if
+        [ -b {{ item }} ]
+    then
+        [ -b {{ item }}1 ] || parted -a optimal --script "{{ item }}" mklabel gpt mkpart primary {{ disk_offset.stdout|default("2048") }}s 100% && sleep 5 && partprobe {{ item }}; sleep 5
+    fi
+  args:
+    creates: '{{ item }}1'
+    executable: '/bin/bash'
+  with_items: '{{ disks_to_format }}'
+  when: disks_to_format|length > 0
+
+- name: Create filesystem on the first partition
+  filesystem:
+    dev: '{{ item }}1'
+    fstype: 'xfs'
+  with_items: '{{ disks_to_format }}'
+  when: disks_to_format|length > 0
+
+- name: Get all unmounted partitions with fstype
+  shell: blkid -o list | grep '(not mounted)' | awk '{print $1, $2}'
+  register: unmounted_partitions
+
+- name: Conversion
+  set_fact:
+    unmounted_partition_list: '{{ unmounted_partition_list|default([]) + [ {"name":item.split(" ")[0], "fstype":item.split(" ")[1]} ] }}'
+  with_items: '{{ (unmounted_partitions.stdout_lines | list) }}'
+
+- name: Ensure all mount directories exist for all partitions that are not mounted
+  file:
+    path: '/mnt/{{ item.name | basename}}'
+    state: directory
+  with_items: '{{ unmounted_partition_list }}'
+
+- name: Mount all unmounted partitions
+  mount:
+    name: '/mnt/{{ item.name | basename}}'
+    src: '{{ item.name }}'
+    fstype: '{{ item.fstype }}'
+    state: mounted
+  with_items: '{{ unmounted_partition_list }}'

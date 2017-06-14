@@ -28,6 +28,7 @@
 - include: roles/kafka.yml
 - include: roles/kubernetes.yml
 - include: roles/mesos.yml
+- include: roles/nfs.yml
 - include: roles/nifi.yml
 - include: roles/pbs+maui.yml
 - include: roles/pvfs2.yml

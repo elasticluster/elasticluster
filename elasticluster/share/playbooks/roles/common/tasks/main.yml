@@ -12,3 +12,4 @@
 - include: hostname.yml
 - include: 'software-{{ansible_os_family}}.yml'
 - include: ssh_host_based_authentication.yml
+- include: partition_format_mount_volumes.yml

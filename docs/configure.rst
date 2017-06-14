@@ -817,9 +817,9 @@ Optional configuration keys
     or the types available in the OpenStack volume (cinder) configuration.
     Default value is `pd-standard` for Google.
     When using this option for OpenStack, it creates volumes to be used
-    as the root disks for the VM's of the specified size, when terminating
-    and instance the volume will be deleted automatically. Always specify
-    the boot_disk_size when using this with OpenStack.
+    as the root disks for the VM's of the specified size.
+    Default value is `default` for OpenStack, other values are dependent
+    on the OpenStack configuration.
 
 ``boot_disk_size``
     Define the size of boot disk to use.
@@ -827,6 +827,42 @@ Optional configuration keys
     Values are specified in gigabytes.
     Default value for Google is 10.
     No default is given for OpenStack.
+
+``boot_disk_delete_on_terminate``
+    Delete a boot disk after terminating the VM.
+    Only supported when the cloud provider is `openstack`.
+    Default is `True`.
+
+``boot_disk_device``
+    Specify the device mapping for the boot disk.
+    Only supported when the cloud provider is `openstack`.
+    Default is `vda`.
+
+``volume_name``
+    Define an existing volume to attach to our instance.
+    Only supported when the cloud provider is `openstack`.
+    There are 2 ways to use the `volume-` parameters:
+    1. attach an existing volume
+    2. create a 'data' volume and attach it.
+
+``volume_disk_type``
+    Define the type of volume to attach to our instance.
+    Only supported when the cloud provider is `openstack`.
+    When using this option for OpenStack, it creates volumes to be used
+    as the data disks for the VM's of the specified size.
+    Default value is `default` for OpenStack, other values are dependent
+    on the OpenStack configuration.
+
+``volume_disk_size``
+    Define the size of a volume to attach to our instance.
+    Only supported when the cloud provider is `openstack`.
+    Values are specified in gigabytes.
+    No default is given for OpenStack.
+
+``volume_disk_device``
+    Define the device mapping for the volume on the instance.
+    Only supported when the cloud provider is `openstack`.
+    Default value is `vdb`.
 
 ``tags``
     Comma-separated list of instance tags.

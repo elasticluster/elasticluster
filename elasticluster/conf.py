@@ -637,6 +637,12 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'node_name',
             'boot_disk_size',
             'boot_disk_type',
+            'boot_disk_delete_on_terminate',
+            'boot_disk_device',
+            'volume_name',
+            'volume_disk_size',
+            'volume_disk_type',
+            'volume_disk_device',
             'scheduling',
             'tags'
             #'user_key_name',    ## from `login/*`
