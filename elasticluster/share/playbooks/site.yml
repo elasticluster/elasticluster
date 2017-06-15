@@ -7,6 +7,8 @@
   gather_facts: yes
   roles:
     - role: common
+    - role: volumes
+      when: ansible_hostname not in groups.zfs_server|default([])
     - role: iptables
       # FIXME: should change to 'DROP' when all playbooks register their input ports!
       default_input_policy: 'ACCEPT'
@@ -28,11 +30,11 @@
 - include: roles/kafka.yml
 - include: roles/kubernetes.yml
 - include: roles/mesos.yml
-- include: roles/nfs.yml
 - include: roles/nifi.yml
 - include: roles/pbs+maui.yml
 - include: roles/pvfs2.yml
 - include: roles/slurm.yml
+- include: roles/zfs.yml
 
 # Jupyter installation comes last, to allow it to pick up any SW that's been
 # installed so far (e.g., for kernels, or for ipyparallel)

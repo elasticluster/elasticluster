@@ -631,3 +631,33 @@ The following example configuration sets up a group of 3 nifi nodes::
     provider=ansible
     transformer_groups=nifi_transformer
 
+ZFS
+==============
+
+Supported on:
+
+* Ubuntu 16.04
+
+This playbook installs ZFS_ nodes. It can be used to deploy one or more
+shared storage environments. When using this play you need to have one
+or more disks/volumes attached to the vm (currently working only on
+OpenStack).
+
+=================  ==================================================
+Ansible group      Action
+=================  ==================================================
+``zfs_server``     Install the node with zfs.
+=================  ==================================================
+
+The following example configuration sets up a group of 2 zfs nodes::
+
+    [cluster/share]
+    setup_provider=share
+    share_nodes=2
+    ssh_to=share
+    volume_disk_size=100
+
+    [setup/kafka]
+    provider=ansible
+    share_groups=zfs_server
+

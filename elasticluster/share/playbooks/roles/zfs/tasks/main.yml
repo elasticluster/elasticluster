@@ -1,0 +1,128 @@
+---
+
+- name: Check playbook compatibility with host platform
+  fail:
+    msg="ZFS playbook currently only works with ubuntu 16."
+  when: not is_ubuntu_16_04 or not is_ubuntu_16_10
+
+- name: Install zfs packages
+  apt: name={{item}} state=installed
+  with_items:
+    - zfsutils-linux
+    - parted
+    - samba
+    - nfs-kernel-server
+
+- name: Download zfs-auto-snapshot
+  get_url:
+    url: https://github.com/zfsonlinux/zfs-auto-snapshot/archive/master.zip
+    dest: /tmp/zfs-auto-snapshot.zip
+
+- name: Unpack zfs-auto-snapshot
+  unarchive:
+    src: /tmp/zfs-auto-snapshot.zip
+    dest: /tmp/
+    remote_src: True
+
+- name: Install zfs-auto-snapshot
+  shell: make install
+  args:
+    chdir: /tmp/zfs-auto-snapshot-master/
+
+- name: Check pool status
+  shell: zpool list | grep {{ zfs_pool_name }} | wc -l
+  register: pool_exists
+
+- name: Register all attached disks
+  shell: fdisk -l | grep "Disk" | grep "sectors" | awk '{print $2}' | sed 's/.$//'
+  register: attached_disks
+  when: pool_exists.stdout == "0"
+
+- name: Register mounted disks
+  shell: cat /proc/mounts | grep '{{item}}'
+  with_items: '{{ attached_disks.stdout_lines | list }}'
+  register: mounted_disks
+  ignore_errors: yes
+  when: pool_exists.stdout == "0"
+
+- name: Register unmounted disks
+  set_fact:
+    unmounted_disks: "{{ (attached_disks.stdout_lines | list) | difference(mounted_disks.results | map(attribute='stdout_lines') | list) }}"
+  when: pool_exists.stdout == "0"
+
+- name: Partitioned disks
+  shell: blkid | awk '{print $1}' | sed 's/.\{2\}$//'
+  register: partitioned_disks
+  when: pool_exists.stdout == "0"
+
+- name: Register unpartitioned unmounted disks
+  set_fact:
+    zfs_disks: "{{ unmounted_disks | difference(partitioned_disks.stdout_lines | list) | join(' ')}}"
+  when: pool_exists.stdout == "0"
+
+- name: Set disk labels
+  shell: parted {{ item }} mklabel GPT
+  with_items: '{{ zfs_disks }}'
+  when: pool_exists.stdout == "0"
+
+- name: Create zfs pool
+  shell: zpool create {{ zfs_pool_name }} {{ zfs_disks }}
+  when: pool_exists.stdout == "0"
+
+- name: Check zfs pool status
+  shell: zpool status {{ zfs_pool_name }} | grep state | awk '{print $2}'
+  register: pool_status
+
+- name: Report invalid pool status
+  fail:
+    msg="zfs pool state {{ pool_status.stdout }}, please recover manually!"
+  when: pool_status.stdout != "ONLINE"
+
+- name: Check dataset status
+  shell: zfs list | grep "{{ zfs_pool_name }}/{{ zfs_data_set }}" | wc -l
+  register: dataset_status
+
+- name: Create dataset if it does not exist (NFS)
+  shell: zfs create -o sharenfs=on {{ zfs_pool_name }}/{{ zfs_data_set }}
+  when: dataset_status.stdout == "0" and zfs_share_type == "nfs"
+
+- name: Create dataset if it does not exist (SMB)
+  shell: zfs create -o sharesmb=on {{ zfs_pool_name }}/{{ zfs_data_set }}
+  when: dataset_status.stdout == "0" and zfs_share_type == "smb"
+
+- name: Enable snapshots
+  shell: "{{item}}"
+  with_items:
+    - zfs set com.sun:auto-snapshot=true {{ zfs_pool_name }}/{{ zfs_data_set }}
+    - zfs set com.sun:auto-snapshot:monthly={{zfs_backup_monthly}} {{ zfs_pool_name }}/{{ zfs_data_set }}
+    - zfs set com.sun:auto-snapshot:weekly={{zfs_backup_weekly}} {{ zfs_pool_name }}/{{ zfs_data_set }}
+    - zfs set com.sun:auto-snapshot:daily={{zfs_backup_daily}} {{ zfs_pool_name }}/{{ zfs_data_set }}
+    - zfs set com.sun:auto-snapshot:hourly={{zfs_backup_hourly}} {{ zfs_pool_name }}/{{ zfs_data_set }}
+    - zfs set com.sun:auto-snapshot:frequent={{zfs_backup_frequent}} {{ zfs_pool_name }}/{{ zfs_data_set }}
+
+- name: Enable sharing
+  shell: zfs share {{ zfs_pool_name }}/{{ zfs_data_set }}
+
+- name: Register nfs share status
+  shell: zfs get sharenfs {{ zfs_pool_name }}/{{ zfs_data_set }} | sed -n -e '2{p;q}' | awk '{print $3}'
+  register: nfs_share_state
+
+- name: Register smb share status
+  shell: zfs get sharesmb {{ zfs_pool_name }}/{{ zfs_data_set }} | sed -n -e '2{p;q}' | awk '{print $3}'
+  register: smb_share_state
+
+- name: Disable nfs share when switching to smb
+  shell: zfs set sharenfs=off {{ zfs_pool_name }}/{{ zfs_data_set }}
+  when: zfs_share_type == "nfs" and smb_share_state.stdout == "on"
+
+- name: Disable smb share when switching to nfs
+  shell: zfs set sharesmb=off {{ zfs_pool_name }}/{{ zfs_data_set }}
+  when: zfs_share_type == "smb" and nfs_share_state.stdout == "on"
+
+- name: Configure nfs share
+  shell: zfs set sharenfs=on {{ zfs_pool_name }}/{{ zfs_data_set }}
+  when: zfs_share_type == "nfs" and nfs_share_state.stdout == "off"
+
+- name: Configure smb share
+  shell: zfs set sharesmb=on {{ zfs_pool_name }}/{{ zfs_data_set }}
+  when: zfs_share_type == "smb" and smb_share_state.stdout == "off"
