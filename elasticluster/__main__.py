@@ -48,6 +48,7 @@ from elasticluster.subcommands import (
     SshFrontend,
     Start,
     Stop,
+    ApiServer,
 )
 from elasticluster.conf import Creator
 from elasticluster.exceptions import ConfigurationError
@@ -105,6 +106,7 @@ class ElastiCluster(cli.app.CommandLineApp):
                     RemoveNode(self.params),
                     ExportCluster(self.params),
                     ImportCluster(self.params),
+                    ApiServer(self.params),
                     ]
 
         # to parse subcommands

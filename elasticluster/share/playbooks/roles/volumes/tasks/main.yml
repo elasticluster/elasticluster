@@ -84,6 +84,7 @@
     path: '/mnt/{{ item.name | basename}}'
     state: directory
   with_items: '{{ unmounted_partition_list }}'
+  when: unmounted_partition_list is defined
 
 - name: Mount all unmounted partitions
   mount:
@@ -92,3 +93,4 @@
     fstype: '{{ item.fstype }}'
     state: mounted
   with_items: '{{ unmounted_partition_list }}'
+  when: unmounted_partition_list is defined

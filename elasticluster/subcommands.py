@@ -39,6 +39,7 @@ from elasticluster.conf import make_creator
 from elasticluster.exceptions import ClusterNotFound, ConfigurationError, \
     ImageError, SecurityGroupError, NodeNotFound, ClusterError
 from elasticluster.utils import confirm_or_abort
+from elasticluster.apiserver.apiserver import app as apiserver
 
 
 SSH_PORT = 22
@@ -747,8 +748,7 @@ class SftpFrontend(AbstractCommand):
                     "Hostname %s not found in cluster %s" % (self.params.ssh_to, cluster_name))
         else:
             frontend = cluster.get_frontend_node()
-        host = f
-        rontend.connection_ip()
+        host = frontend.connection_ip()
         username = frontend.image_user
         knownhostsfile = cluster.known_hosts_file if cluster.known_hosts_file \
                          else '/dev/null'
@@ -1042,3 +1042,19 @@ class ImportCluster(AbstractCommand):
             print("Successfully imported cluster from ZIP %s to %s"
                   % (self.params.file, repo.storage_path))
         sys.exit(rc)
+
+
+class ApiServer(AbstractCommand):
+    """
+    Start elasticluster api server (rest).
+    """
+
+    def setup(self, subparsers):
+        parser = subparsers.add_parser(
+            "apiserver", help="Start API Server.", description=self.__doc__)
+        parser.set_defaults(func=self)
+        parser.add_argument('-p', '--port', dest='port_number', default=8080, help='port to run the api server on')
+
+    def execute(self):
+        print("press <crtl + c> to stop the api server")
+        apiserver.run('0.0.0.0', self.params.port_number)
