@@ -111,6 +111,10 @@ if python_version == (2, 6):
     ]
 elif python_version == (2, 7):
     version_dependent_requires = [
+        # Novaclient 8.0.0 changed some API again, see issue #425
+        # FIXME: need to fix this at source level rather than blacklisting
+        'python-novaclient<8.0.0',
+        'python-keystoneclient<3.10.0',
         'python-glanceclient',
         'python-neutronclient',
         'python-cinderclient',
