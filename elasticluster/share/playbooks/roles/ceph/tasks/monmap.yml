@@ -1,0 +1,20 @@
+---
+#
+# Create the initial "monmap" in a single place,
+# then we'll deploy it to all MON hosts.
+#
+
+- name: Create monmap
+  tags:
+    - ceph
+  command: |
+    monmaptool --create --generate -c /etc/ceph/ceph.conf /etc/ceph/monmap
+  args:
+    creates: /etc/ceph/monmap
+
+
+- name: Fetch master monmap file
+  fetch:
+    src: /etc/ceph/monmap
+    dest: /tmp/monmap
+    flat: yes

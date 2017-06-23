@@ -1,0 +1,20 @@
+---
+
+# Ceph release to install; note that you cannot just plug any release name here
+# and expect the playbook to work!
+ceph_release: 'luminous'
+
+# number of object replicas+
+ceph_osd_pool_size: 2
+
+
+### No customization should be necessary or useful below this line ###
+
+# unique identifier for the filesystem
+ceph_fsid: '00baac7a-0ad4-4ab7-9d5e-fdaf7d122aee'
+
+# argument to the `--cluster` option for `ceph` commands;
+# there is little need to change it unless you're working with
+# multiple clusters at the same time
+ceph_cluster_name: 'ceph'
+
