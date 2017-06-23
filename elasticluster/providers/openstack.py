@@ -135,20 +135,26 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self.nova_api_version = nova_api_version
         self._instances = {}
         self._cached_instances = {}
-        self.__init_os_api()
+        # these will be initialized later by `_init_os_api()`
+        self.nova_client = None
+        self.neutron_client = None
+        self.glance_client = None
+        self.cinder_client = None
 
-    def __init_os_api(self):
+
+    def _init_os_api(self):
         """
         Initialise client objects for talking to OpenStack API.
 
         This is in a separate function so to be called by ``__init__`` and
         ``__setstate__``.
         """
-        sess = self.__init_keystone_session()
-        self.nova_client = nova_client.Client(self.nova_api_version, session=sess)
-        self.neutron_client = neutron_client.Client(session=sess)
-        self.glance_client = glance_client.Client('2', session=sess)
-        self.cinder_client = cinder_client.Client('2', session=sess)
+        if not self.nova_client:
+            sess = self.__init_keystone_session()
+            self.nova_client = nova_client.Client(self.nova_api_version, session=sess)
+            self.neutron_client = neutron_client.Client(session=sess)
+            self.glance_client = glance_client.Client('2', session=sess)
+            self.cinder_client = cinder_client.Client('2', session=sess)
 
     def __init_keystone_session(self):
         """Create and return a Keystone session object."""
@@ -283,6 +289,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         :return: str - instance id of the started instance
         """
+        self._init_os_api()
+
         vm_start_args = {}
 
         log.debug("Checking keypair `%s` ...", key_name)
@@ -388,6 +396,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         :param str instance_id: instance identifier
         """
+        self._init_os_api()
         instance = self._load_instance(instance_id)
         instance.delete()
         del self._instances[instance_id]
@@ -397,6 +406,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         :return: tuple (IPs)
         """
+        self._init_os_api()
         instance = self._load_instance(instance_id)
         IPs = sum(instance.networks.values(), [])
         return IPs
@@ -408,7 +418,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         :return: bool - True if running, False otherwise
         """
-
+        self._init_os_api()
         # Here, it's always better if we update the instance.
         instance = self._load_instance(instance_id, force_reload=True)
         return instance.status == 'ACTIVE'
@@ -428,7 +438,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                  the key could not be uploaded or the fingerprint does not
                  match to the one uploaded to the cloud.
         """
-
+        self._init_os_api()
         # Read key. We do it as first thing because we need it either
         # way, to check the fingerprint of the remote keypair if it
         # exists already, or to create a new keypair.
@@ -491,6 +501,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         :param List[str] groups: List of security group names
         :raises: `SecurityGroupError` if group does not exist
         """
+        self._init_os_api()
         log.debug("Checking existence of security group(s) %s ...", names)
         try:
             # python-novaclient < 8.0.0
@@ -519,6 +530,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         network usage.
 
         """
+        self._init_os_api()
         try:
             # python-novaclient < 8.0.0
             return self.nova_client.images.list()
@@ -529,6 +541,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
     def _get_volumes(self):
         """Return list of available volumes."""
+        self._init_os_api()
         return self.cinder_client.volumes.list()
 
     @memoize(120)
@@ -537,6 +550,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         network usage.
 
         """
+        self._init_os_api()
         return self.nova_client.flavors.list()
 
     def _load_instance(self, instance_id, force_reload=True):
@@ -558,6 +572,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         :raises: `InstanceError` is returned if the instance can't
                  be found in the local cache or in the cloud.
         """
+        self._init_os_api()
         if force_reload:
             try:
                 # Remove from cache and get from server again
@@ -602,6 +617,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         :return: public ip address
         """
+        self._init_os_api()
         with OpenStackCloudProvider.__node_start_lock:
             try:
                 # Use the `novaclient` API (works with python-novaclient <8.0.0)
@@ -682,4 +698,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self.nova_api_version = state.get('nova_api_version', DEFAULT_OS_NOVA_API_VERSION)
         self._instances = {}
         self._cached_instances = {}
-        self.__init_os_api()
+        # these will be initialized later by `_init_os_api()`
+        self.nova_client = None
+        self.neutron_client = None
+        self.glance_client = None
+        self.cinder_client = None
