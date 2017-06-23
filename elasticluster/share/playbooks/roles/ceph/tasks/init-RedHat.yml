@@ -1,0 +1,29 @@
+---
+#
+# Distribution-specific setup for RHEL and CentOS
+#
+
+- name: "Enable Ceph's YUM public repository"
+  tags:
+    - ceph
+  template:
+    src: 'etc/yum.repos.d/ceph.repo.j2'
+    dest: '/etc/yum.repos.d/ceph.repo'
+
+- name: Install Ceph packages and their dependencies
+  tags:
+    - ceph
+  package:
+    name: '{{item}}'
+    state: present
+  with_items:
+    - ceph
+
+
+- name: Install Ceph MDS package
+  tags:
+    - ceph
+  package:
+    name: 'ceph-mds'
+    state: present
+  when: 'inventory_hostname in groups.ceph_mds|default([])'

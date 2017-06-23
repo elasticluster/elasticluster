@@ -1,21 +1,64 @@
 ---
-- action: file dest=/var/lib/ceph/mds/ceph-{{ceph_idx}} state=directory
+
+- name: Local Ceph constants
   tags:
     - ceph
+  set_fact:
+    _ceph_mds_name: 'mds.{{inventory_hostname}}'
+    _ceph_mds_data: '/var/lib/ceph/mds/{{ceph_cluster_name}}-{{inventory_hostname}}'
 
-- name: Copying keyring from mon.0
-  action: shell scp root@{{groups.ceph_mon[0]}}:/etc/ceph/ceph.mon.keyring /etc/ceph/keyring
-          creates=/etc/ceph/keyring
+
+- name: Ensure Ceph MDS directory exists
   tags:
     - ceph
+  file:
+    dest: '{{_ceph_mds_data}}'
+    state: directory
+    owner: 'ceph'
+    group: 'ceph'
+    mode: 0755
 
-- name: Copy mon keyring
-  action: shell cp -a /etc/ceph/keyring /var/lib/ceph/mds/ceph-{{ceph_idx}}/keyring
-          creates=/var/lib/ceph/mds/ceph-{{ceph_idx}}/keyring
+
+- name: Does MDS keyring exist?
+  stat:
+    path: '{{_ceph_mds_data}}/keyring'
+  register: ceph_mds_keyring_file
+  ignore_errors: yes
+
+
+- name: Create MDS keyring
+  command: |
+    ceph-authtool --create-keyring {{_ceph_mds_data}}/keyring --gen-key -n {{_ceph_mds_name}}
+  become: yes
+  become_user: 'ceph'
+  when: 'not ceph_mds_keyring_file.stat.exists'
+
+
+- name: Register the MDS authentication key
   tags:
     - ceph
+  shell: |
+    ceph --cluster {{ceph_cluster_name}} auth add {{_ceph_mds_name}} mon 'allow profile mds' osd 'allow rwx' mds 'allow *' -i {{_ceph_mds_data}}/keyring
+  become: yes
+  become_user: 'ceph'
 
-- name: Ensure ceph-mds is running
-  action: service name=ceph state=started
+
+- name: Start `ceph-mds` process
+  tags:
+    - ceph
+  shell: |
+    if ! (ceph --cluster '{{ceph_cluster_name}}' tell '{{_ceph_mds_name}}' version
+              1>/dev/null 2>/dev/null); then
+        ceph-mds --cluster '{{ceph_cluster_name}}' -n '{{_ceph_mds_name}}'
+    fi
+  become: yes
+  become_user: 'ceph'
+
+
+- name: Ensure `ceph-mds` is running and (re)started at boot
+  service:
+    name: ceph
+    state: started
+    enabled: yes
   tags:
     - ceph
