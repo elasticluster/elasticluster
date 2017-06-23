@@ -53,8 +53,8 @@ provider = openstack
 auth_url = http://openstack.example.com:5000/v2.0
 username = ${USER}
 password = XXXXXX
-project_domain_id = Default
-user_domain_id = Default
+project_domain_name = Default
+user_domain_name = Default
 tenant_name = test-tenant
         """,
 
@@ -247,8 +247,8 @@ _CONFIG_KV = {
                 "password": "XXXXXX",
                 "project_name": "test-tenant",
                 "provider": "openstack",
-                "project_domain_id": "Default",
-                "user_domain_id": "Default",
+                "project_domain_name": "Default",
+                "user_domain_name": "Default",
                 "username": "rmurri"
             },
             "compute_nodes": "2",
@@ -367,8 +367,8 @@ class Configuration(object):
                     "auth_url": "http://cloud.gc3.uzh.ch:35357",
                     "username": "myusername",
                     "password": "mypassword",
-                    "project_domain_id": "Default",
-                    "user_domain_id": "Default",
+                    "project_domain_name": "Default",
+                    "user_domain_name": "Default",
                     "project_name": "myproject",
                     },
                 "login": {
