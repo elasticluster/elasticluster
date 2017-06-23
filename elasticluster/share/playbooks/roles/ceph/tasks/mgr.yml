@@ -1,0 +1,64 @@
+---
+
+- name: Local Ceph constants
+  tags:
+    - ceph
+  set_fact:
+    _ceph_mgr_name: 'mgr.{{inventory_hostname}}'
+    _ceph_mgr_data: '/var/lib/ceph/mgr/{{ceph_cluster_name}}-{{inventory_hostname}}'
+
+
+- name: Ensure Ceph MGR directory exists
+  tags:
+    - ceph
+  file:
+    dest: '{{_ceph_mgr_data}}'
+    state: directory
+    owner: 'ceph'
+    group: 'ceph'
+    mode: 0755
+
+
+- name: Does MGR keyring exist?
+  stat:
+    path: '{{_ceph_mgr_data}}/keyring'
+  register: ceph_mgr_keyring_file
+  ignore_errors: yes
+
+
+- name: Create MGR keyring
+  command: |
+    ceph-authtool --create-keyring {{_ceph_mgr_data}}/keyring
+  become: yes
+  become_user: 'ceph'
+  when: 'not ceph_mgr_keyring_file.stat.exists'
+
+
+- name: Register the MGR authentication key
+  tags:
+    - ceph
+  shell: |
+    ceph --cluster {{ceph_cluster_name}} auth add {{_ceph_mgr_name}} mon 'allow profile mgr' osd 'allow *' mds 'allow *' -i {{_ceph_mgr_data}}/keyring
+  become: yes
+  become_user: 'ceph'
+
+
+- name: Start `ceph-mgr` process
+  tags:
+    - ceph
+  shell: |
+    if ! (ceph --cluster '{{ceph_cluster_name}}' tell '{{_ceph_mgr_name}}' version
+              1>/dev/null 2>/dev/null); then
+        ceph-mgr --cluster '{{_ceph_cluster_name}}' -n '{{_ceph_mgr_name}}'
+    fi
+  become: yes
+  become_user: 'ceph'
+
+
+- name: Ensure `ceph-mgr` is (re)started at boot
+  tags:
+    - ceph
+  service:
+    name: ceph
+    state: started
+    enabled: yes

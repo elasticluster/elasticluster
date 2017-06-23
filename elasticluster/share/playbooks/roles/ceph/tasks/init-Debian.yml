@@ -1,0 +1,38 @@
+---
+#
+# Distribution-specific setup for Debian and Ubuntu
+#
+
+- name: "Add Ceph's APT key"
+  tags:
+    - ceph
+  apt_key:
+    url: 'https://download.ceph.com/keys/release.asc'
+    state: present
+
+- name: "Enable Ceph's APT public repository"
+  tags:
+    - ceph
+  apt_repository:
+    repo: 'deb https://download.ceph.com/debian-{{ceph_release}}/ {{ansible_distribution_release}} main'
+    filename: 'ceph'
+    state: present
+
+- name: Install Ceph packages and their dependencies
+  tags:
+    - ceph
+  apt:
+    pkg: '{{item}}'
+    state: present
+  with_items:
+    - ceph
+    #- linux-image-extra-{{ansible_kernel}}
+
+
+- name: Install Ceph MDS package
+  tags:
+    - ceph
+  apt:
+    pkg: 'ceph-mds'
+    state: present
+  when: 'inventory_hostname in groups.ceph_mds|default([])'
