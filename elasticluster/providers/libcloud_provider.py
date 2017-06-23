@@ -70,7 +70,6 @@ class LibCloudProvider(AbstractCloudProvider):
                                 private_key_path,
                                 public_key_path,
                                 options.get('image_user_password'))
-
         options['name'] = node_name
         options['size'] = flavor
         options['image'] = image_id
@@ -133,7 +132,9 @@ class LibCloudProvider(AbstractCloudProvider):
         try:
             list_key_pairs = self.__get_function_by_pattern('list_key_pairs')
         except AttributeError:
-            raise UnsupportedError('key management not supported by provider')
+            log.warn('key management not supported by provider, will try to continue without it...')
+            return
+
         try:
             self.__get_function_or_ex_function('import_key_pair_from_file')
         except AttributeError:
