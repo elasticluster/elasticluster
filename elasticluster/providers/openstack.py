@@ -123,7 +123,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                  request_floating_ip=False,
                  identity_api_version=None,
                  nova_api_version=DEFAULT_OS_NOVA_API_VERSION):
-        self._os_auth_url = os.getenv('OS_AUTH_URL', auth_url)
+        self._os_auth_url = os.getenv('OS_AUTH_URL', auth_url).rstrip('/')
         self._os_username = os.getenv('OS_USERNAME', username)
         self._os_password = os.getenv('OS_PASSWORD', password)
         self._os_tenant_name = os.getenv('OS_TENANT_NAME', project_name)
@@ -131,7 +131,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._os_user_domain_name = os.getenv('OS_USER_DOMAIN_NAME', user_domain_name)
         self._os_region_name = region_name
         self.request_floating_ip = request_floating_ip
-        self.__identity_api_version = identity_api_version or self.__get_os_identity_api_version()
+        self.__identity_api_version = identity_api_version or self.__detect_os_identity_api_version()
         self.nova_api_version = nova_api_version
         self._instances = {}
         self._cached_instances = {}
@@ -242,25 +242,43 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         return sess
 
 
-    @staticmethod
-    def __get_os_identity_api_version():
+    def __detect_os_identity_api_version(self):
         """
-        Return preferred OpenStack Identity API version or ``None``.
+        Return preferred OpenStack Identity API version (either one of the two strings ``'2'`` or ``'3'``) or ``None``.
 
-        Read the environmental variable `OS_IDENTITY_API_VERSION` and return
-        one of the two string values ``'2'`` or ``'3'``. If the environmental
-        variable is undefined or its value is not ``2`` or ``3``, then return
-        ``None``.
+        The following auto-detection strategies are tried (in this order):
+
+        #. Read the environmental variable `OS_IDENTITY_API_VERSION` and check if its value is one of the two strings ``'2'`` or ``'3'``;
+        #. Check if a version tag like ``/v3`` or ``/v2.0`` ends the OpenStack auth URL.
+
+        If none of the above worked, return ``None``.
 
         For more information on ``OS_IDENTITY_API_VERSION``, please see
         `<https://docs.openstack.org/developer/python-openstackclient/authentication.html>`_.
         """
         ver = os.getenv('OS_IDENTITY_API_VERSION', '')
-        if ver == '2' or ver.startswith('2.'):
-            return '2'
-        elif ver == '3':
+        if ver == '3':
+            log.info(
+                "Using OpenStack Identity API v3"
+                " because of environmental variable setting `OS_IDENTITY_API_VERSION=3`")
             return '3'
+        elif ver == '2' or ver.startswith('2.'):
+            log.info(
+                "Using OpenStack Identity API v2"
+                " because of environmental variable setting `OS_IDENTITY_API_VERSION=2`")
+            return '2'
+        elif self._os_auth_url.endswith('/v3'):
+            log.info(
+                "Using OpenStack Identity API v3 because of `/v3` ending in auth URL;"
+                " set environmental variable OS_IDENTITY_API_VERSION to force use of Identity API v2 instead.")
+            return '3'
+        elif self._os_auth_url.endswith('/v2.0'):
+            log.info(
+                "Using OpenStack Identity API v2 because of `/v2.0` ending in auth URL;"
+                " set environmental variable OS_IDENTITY_API_VERSION to force use of Identity API v3 instead.")
+            return '2'
         else:
+            # auto-detection failed, need to probe
             return None
 
 
