@@ -57,8 +57,7 @@ class _Unavailable(object):
                     .format(module=self.__missing))
         return _Unavailable(self.__missing)
 
-from keystoneauth1 import loading
-from keystoneauth1 import session
+import keystoneauth1
 try:
     from glanceclient import client as glance_client
 except ImportError:
@@ -104,52 +103,184 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     :param str username: username of the keystone user
     :param str password: password of the keystone user
     :param str project_name: name of the project to use
+    :param str user_domain_name: name of the user domain to use
+    :param str project_domain_name: name of the project domain to use
     :param str auth_url: url of keystone endpoint
     :param str region: OpenStack region to use
     :param str storage_path: path to store temporary data
     :param bool request_floating_ip: Whether ip are assigned automatically
                                     `True` or floating ips have to be
                                     assigned manually `False`
-
+    :param identity_api_version: What version of the Keystone API to use.
+        Valid values are the strings `"v2"` or `"v3"`,
+        or `None` (default, meaning try v3 first and fall-back to v2).
     """
     __node_start_lock = threading.Lock()  # lock used for node startup
 
     def __init__(self, username, password, project_name, auth_url,
+                 user_domain_name="default", project_domain_name="default",
                  region_name=None, storage_path=None,
                  request_floating_ip=False,
+                 identity_api_version=None,
                  nova_api_version=DEFAULT_OS_NOVA_API_VERSION):
-        self._os_auth_url = os.getenv('OS_AUTH_URL', auth_url)
+        self._os_auth_url = os.getenv('OS_AUTH_URL', auth_url).rstrip('/')
         self._os_username = os.getenv('OS_USERNAME', username)
         self._os_password = os.getenv('OS_PASSWORD', password)
         self._os_tenant_name = os.getenv('OS_TENANT_NAME', project_name)
+        self._os_project_domain_name = os.getenv('OS_PROJECT_DOMAIN_NAME', project_domain_name)
+        self._os_user_domain_name = os.getenv('OS_USER_DOMAIN_NAME', user_domain_name)
         self._os_region_name = region_name
         self.request_floating_ip = request_floating_ip
+        self.__identity_api_version = identity_api_version or self.__detect_os_identity_api_version()
         self.nova_api_version = nova_api_version
         self._instances = {}
         self._cached_instances = {}
-        self.__init_os_api()
+        # these will be initialized later by `_init_os_api()`
+        self.nova_client = None
+        self.neutron_client = None
+        self.glance_client = None
+        self.cinder_client = None
 
-    def __init_os_api(self):
+
+    def _init_os_api(self):
         """
         Initialise client objects for talking to OpenStack API.
 
         This is in a separate function so to be called by ``__init__`` and
         ``__setstate__``.
         """
-        loader = loading.get_plugin_loader('password')
-        auth = loader.load_from_options(auth_url=self._os_auth_url,
-                                        username=self._os_username,
-                                        password=self._os_password,
-                                        project_name=self._os_tenant_name)
-        sess = session.Session(auth=auth)
-        self.nova_client = nova_client.Client(self.nova_api_version, session=sess)
-        self.neutron_client = neutron_client.Client(session=sess)
-        self.glance_client = glance_client.Client('2', session=sess)
-        self.cinder_client = cinder_client.Client('2', session=sess)
+        if not self.nova_client:
+            sess = self.__init_keystone_session()
+            self.nova_client = nova_client.Client(self.nova_api_version, session=sess)
+            self.neutron_client = neutron_client.Client(session=sess)
+            self.glance_client = glance_client.Client('2', session=sess)
+            self.cinder_client = cinder_client.Client('2', session=sess)
 
-        # self.nova_client = client.Client(self.nova_api_version,
-        #                             self._os_username, self._os_password, self._os_tenant_name,
-        #                             self._os_auth_url, region_name=self._os_region_name)
+    def __init_keystone_session(self):
+        """Create and return a Keystone session object."""
+        api = self.__identity_api_version  # for readability
+        tried = []
+        if self.__identity_api_version in ['3', None]:
+            sess = self.__init_keystone_session_v3(check=(api is None))
+            tried.append('v3')
+            if sess:
+                return sess
+        if self.__identity_api_version in ['2', None]:
+            sess = self.__init_keystone_session_v2(check=(api is None))
+            tried.append('v2')
+            if sess:
+                return sess
+        raise RuntimeError(
+            "Cannot establish Keystone session (tried: {0})."
+            .format(', '.join(tried)))
+
+    def __init_keystone_session_v2(self, check=False):
+        """Create and return a session object using Keystone API v2."""
+        from keystoneauth1 import loading as keystone_v2
+        loader = keystone_v2.get_plugin_loader('password')
+        auth = loader.load_from_options(
+            auth_url=self._os_auth_url,
+            username=self._os_username,
+            password=self._os_password,
+            project_name=self._os_tenant_name
+        )
+        sess = keystoneauth1.session.Session(auth=auth)
+        if check:
+            log.debug("Checking that Keystone API v2 session works...")
+            try:
+                # if session is invalid, the following will raise some exception
+                nova = nova_client.Client(self.nova_api_version, session=sess)
+                nova.flavors.list()
+            except keystoneauth1.exceptions.NotFound as err:
+                log.warning("Creating Keystone v2 session failed: %s", err)
+                return None
+            except keystoneauth1.exceptions.ClientException as err:
+                log.error("OpenStack server rejected request (likely configuration error?): %s", err)
+                return None  # FIXME: should we be raising an error instead?
+        # if we got to this point, v2 session is valid
+        log.info("Using Keystone API v2 session to authenticate to OpenStack")
+        return sess
+
+    def __init_keystone_session_v3(self, check=False):
+        """
+        Return a new session object, created using Keystone API v3.
+
+        .. note::
+
+          Note that the only supported authN method is password authentication;
+          token or other plug-ins are not currently supported.
+        """
+        try:
+            # may fail on Python 2.6?
+            from keystoneauth1.identity import v3 as keystone_v3
+        except ImportError:
+            log.warning("Cannot load Keystone API v3 library.")
+            return None
+        auth = keystone_v3.Password(
+            auth_url=self._os_auth_url,
+            username=self._os_username,
+            password=self._os_password,
+            user_domain_name=self._os_user_domain_name,
+            project_domain_name=self._os_project_domain_name,
+            project_name=self._os_tenant_name
+        )
+        sess = keystoneauth1.session.Session(auth=auth)
+        if check:
+            log.debug("Checking that Keystone API v3 session works...")
+            try:
+                # if session is invalid, the following will raise some exception
+                nova = nova_client.Client(self.nova_api_version, session=sess)
+                nova.flavors.list()
+            except keystoneauth1.exceptions.NotFound as err:
+                log.warning("Creating Keystone v3 session failed: %s", err)
+                return None
+            except keystoneauth1.exceptions.ClientException as err:
+                log.error("OpenStack server rejected request (likely configuration error?): %s", err)
+                return None  # FIXME: should we be raising an error instead?
+        # if we got to this point, v3 session is valid
+        log.info("Using Keystone API v3 session to authenticate to OpenStack")
+        return sess
+
+
+    def __detect_os_identity_api_version(self):
+        """
+        Return preferred OpenStack Identity API version (either one of the two strings ``'2'`` or ``'3'``) or ``None``.
+
+        The following auto-detection strategies are tried (in this order):
+
+        #. Read the environmental variable `OS_IDENTITY_API_VERSION` and check if its value is one of the two strings ``'2'`` or ``'3'``;
+        #. Check if a version tag like ``/v3`` or ``/v2.0`` ends the OpenStack auth URL.
+
+        If none of the above worked, return ``None``.
+
+        For more information on ``OS_IDENTITY_API_VERSION``, please see
+        `<https://docs.openstack.org/developer/python-openstackclient/authentication.html>`_.
+        """
+        ver = os.getenv('OS_IDENTITY_API_VERSION', '')
+        if ver == '3':
+            log.info(
+                "Using OpenStack Identity API v3"
+                " because of environmental variable setting `OS_IDENTITY_API_VERSION=3`")
+            return '3'
+        elif ver == '2' or ver.startswith('2.'):
+            log.info(
+                "Using OpenStack Identity API v2"
+                " because of environmental variable setting `OS_IDENTITY_API_VERSION=2`")
+            return '2'
+        elif self._os_auth_url.endswith('/v3'):
+            log.info(
+                "Using OpenStack Identity API v3 because of `/v3` ending in auth URL;"
+                " set environmental variable OS_IDENTITY_API_VERSION to force use of Identity API v2 instead.")
+            return '3'
+        elif self._os_auth_url.endswith('/v2.0'):
+            log.info(
+                "Using OpenStack Identity API v2 because of `/v2.0` ending in auth URL;"
+                " set environmental variable OS_IDENTITY_API_VERSION to force use of Identity API v3 instead.")
+            return '2'
+        else:
+            # auto-detection failed, need to probe
+            return None
+
 
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
@@ -176,6 +307,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         :return: str - instance id of the started instance
         """
+        self._init_os_api()
+
         vm_start_args = {}
 
         log.debug("Checking keypair `%s` ...", key_name)
@@ -281,6 +414,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         :param str instance_id: instance identifier
         """
+        self._init_os_api()
         instance = self._load_instance(instance_id)
         instance.delete()
         del self._instances[instance_id]
@@ -290,6 +424,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         :return: tuple (IPs)
         """
+        self._init_os_api()
         instance = self._load_instance(instance_id)
         IPs = sum(instance.networks.values(), [])
         return IPs
@@ -301,7 +436,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         :return: bool - True if running, False otherwise
         """
-
+        self._init_os_api()
         # Here, it's always better if we update the instance.
         instance = self._load_instance(instance_id, force_reload=True)
         return instance.status == 'ACTIVE'
@@ -321,7 +456,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                  the key could not be uploaded or the fingerprint does not
                  match to the one uploaded to the cloud.
         """
-
+        self._init_os_api()
         # Read key. We do it as first thing because we need it either
         # way, to check the fingerprint of the remote keypair if it
         # exists already, or to create a new keypair.
@@ -384,6 +519,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         :param List[str] groups: List of security group names
         :raises: `SecurityGroupError` if group does not exist
         """
+        self._init_os_api()
         log.debug("Checking existence of security group(s) %s ...", names)
         try:
             # python-novaclient < 8.0.0
@@ -412,6 +548,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         network usage.
 
         """
+        self._init_os_api()
         try:
             # python-novaclient < 8.0.0
             return self.nova_client.images.list()
@@ -422,6 +559,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
     def _get_volumes(self):
         """Return list of available volumes."""
+        self._init_os_api()
         return self.cinder_client.volumes.list()
 
     @memoize(120)
@@ -430,6 +568,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         network usage.
 
         """
+        self._init_os_api()
         return self.nova_client.flavors.list()
 
     def _load_instance(self, instance_id, force_reload=True):
@@ -451,6 +590,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         :raises: `InstanceError` is returned if the instance can't
                  be found in the local cache or in the cloud.
         """
+        self._init_os_api()
         if force_reload:
             try:
                 # Remove from cache and get from server again
@@ -495,6 +635,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         :return: public ip address
         """
+        self._init_os_api()
         with OpenStackCloudProvider.__node_start_lock:
             try:
                 # Use the `novaclient` API (works with python-novaclient <8.0.0)
@@ -555,6 +696,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 'username': self._os_username,
                 'password': self._os_password,
                 'project_name': self._os_tenant_name,
+                'project_domain_name': self._os_project_domain_name,
+                'user_domain_name': self._os_user_domain_name,
                 'region_name': self._os_region_name,
                 'request_floating_ip': self.request_floating_ip,
                 'instance_ids': self._instances.keys(),
@@ -566,9 +709,15 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._os_username = state['username']
         self._os_password = state['password']
         self._os_tenant_name = state['project_name']
+        self._os_user_domain_name = state['user_domain_name']
+        self._os_project_domain_name = state['project_domain_name']
         self._os_region_name = state['region_name']
         self.request_floating_ip = state['request_floating_ip']
         self.nova_api_version = state.get('nova_api_version', DEFAULT_OS_NOVA_API_VERSION)
         self._instances = {}
         self._cached_instances = {}
-        self.__init_os_api()
+        # these will be initialized later by `_init_os_api()`
+        self.nova_client = None
+        self.neutron_client = None
+        self.glance_client = None
+        self.cinder_client = None

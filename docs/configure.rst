@@ -355,6 +355,27 @@ Valid configuration keys for *openstack*
     starts, the config option will be ignored and the value of the
     variable will be used instead.
 
+``identity_api_version``
+
+    Force use of the OpenStack Identity ("Keystone") API v2 or v3: use the
+    values '2' or '3' respectively. If this configuration item is not specified,
+    try to autodetect. If the environment variable `OS_IDENTITY_API_VERSION` is
+    set, this option is ignored and the value of the variable is used instead.
+
+``project_domain_name``
+
+    OpenStack project domain; only used with the Identity API v3.
+    If an environment variable `OS_PROJECT_DOMAIN_NAME` is set when
+    elasticluster starts, the config option will be ignored and the
+    value of the variable will be used instead.
+
+``user_domain_name``
+
+    OpenStack user domain; only used with the Identity API v3.
+    If an environment variable `OS_USER_DOMAIN_NAME` is set when elasticluster
+    starts, the config option will be ignored and the value of the variable will
+    be used instead.
+
 ``region_name``
 
     OpenStack region (optional)

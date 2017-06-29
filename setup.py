@@ -111,6 +111,7 @@ if python_version == (2, 6):
     ]
 elif python_version == (2, 7):
     version_dependent_requires = [
+        'python-keystoneclient',
         'python-glanceclient',
         'python-neutronclient',
         'python-cinderclient',
