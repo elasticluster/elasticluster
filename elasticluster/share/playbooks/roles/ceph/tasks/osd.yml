@@ -62,7 +62,7 @@
   tags:
     - ceph
   shell: |
-    if ! (ceph osd dump | grep -q '^{{_ceph_osd_name}}'); then
+    if ! (ceph --cluster {{ceph_cluster_name}} osd dump | grep -q '^{{_ceph_osd_name}}'); then
       ceph --cluster {{ceph_cluster_name}} osd create
     fi
 

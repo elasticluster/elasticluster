@@ -32,7 +32,7 @@
   tags:
     - ceph
   command: |
-    ceph-mon --cluster {{ceph_cluster_name}} --mkfs -n {{_ceph_mon_name}} --monmap /etc/ceph/monmap --keyring /etc/ceph/ceph.keyring
+    ceph-mon --cluster {{ceph_cluster_name}} --mkfs -n {{_ceph_mon_name}} --monmap /etc/ceph/monmap --keyring /etc/ceph/{{ceph_cluster_name}}.keyring
   args:
     creates: '{{_ceph_mon_data}}/store.db/CURRENT'
   become: yes
@@ -43,7 +43,7 @@
   tags:
     - ceph
   command: |
-    rsync -a /etc/ceph/ceph.keyring {{_ceph_mon_data}}/keyring
+    rsync -a /etc/ceph/{{ceph_cluster_name}}.keyring {{_ceph_mon_data}}/keyring
 
 
 - name: Ensure keyring is readable by `ceph` user
