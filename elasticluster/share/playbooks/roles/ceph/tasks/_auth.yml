@@ -7,7 +7,7 @@
   tags:
     - ceph
   shell: |
-    ceph-authtool /etc/ceph/ceph.keyring --list \
+    ceph-authtool /etc/ceph/{{ceph_cluster_name}}.keyring --list \
       | grep -F -A 1 '[{{keyname}}]' \
       | grep -q '^[[:space:]]key = '
   register: '_ceph_key_in_keyring'
@@ -18,7 +18,7 @@
   tags:
     - ceph
   shell: |
-    ceph-authtool /etc/ceph/ceph.keyring --print-key \
+    ceph-authtool /etc/ceph/{{ceph_cluster_name}}.keyring --print-key \
       --gen-key -n {{keyname}} {{capabilities}} \
       | grep -q '^[[:space:]]key = ' \
       | sed 's/^\s+key = //g'
