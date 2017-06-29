@@ -6,14 +6,14 @@
 
 - name: Does the keyring exist?
   stat:
-    path: '/etc/ceph/ceph.keyring'
+    path: '/etc/ceph/{{ceph_cluster_name}}.keyring'
   register: ceph_keyring_file
   ignore_errors: yes
 
 
 - name: Create Ceph keyring
   command: |
-    ceph-authtool --create-keyring /etc/ceph/ceph.keyring
+    ceph-authtool --create-keyring /etc/ceph/{{ceph_cluster_name}}.keyring
   when: 'not ceph_keyring_file.stat.exists'
 
 
@@ -37,6 +37,6 @@
 # playbook only runs on the first MON node)
 - name: Fetch master keyring file
   fetch:
-    src: /etc/ceph/ceph.keyring
-    dest: /tmp/ceph.keyring
+    src: /etc/ceph/{{ceph_cluster_name}}.keyring
+    dest: /tmp/{{ceph_cluster_name}}.keyring
     flat: yes

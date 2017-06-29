@@ -74,8 +74,8 @@
     - ceph
   include: '{{playbook}}.yml'
   with_items:
-    - keyring
-    - monmap
+    - _keyring
+    - _monmap
   loop_control:
     loop_var: playbook
   when: 'inventory_hostname == groups.ceph_mon[0]'
