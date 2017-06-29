@@ -1,10 +1,9 @@
 ---
 
-# Ceph release to install; note that you cannot just plug any release name here
-# and expect the playbook to work!
+# name of Ceph release to install, e.g. "luminous" or "jewel"
 ceph_release: 'luminous'
 
-# number of object replicas+
+# number of object replicas
 ceph_osd_pool_size: 2
 
 
