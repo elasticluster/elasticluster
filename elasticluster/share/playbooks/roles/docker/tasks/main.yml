@@ -1,11 +1,14 @@
 ---
 
 - name: Install docker GPG key (Debian/Ubuntu)
-  apt_key: keyserver=hkp://p80.pool.sks-keyservers.net:80 id=58118E89F3A912897C070ADBF76221572C52609D state=present
+  apt_key:
+    id: 0EBFCD88
+    url: "https://download.docker.com/linux/ubuntu/gpg"
+    state: present
   when: is_debian_compatible
 
 - name: Add docker apt repository (Debian/Ubuntu)
-  apt_repository: repo="deb https://apt.dockerproject.org/repo {{ ansible_distribution|lower }}-{{ ansible_distribution_release }} main" state=present
+  apt_repository: repo="deb https://download.docker.com/linux/{{ ansible_distribution|lower }} {{ ansible_distribution_release }} stable" state=present
   when: is_debian_compatible
 
 - name: Add docker repository (Redhat/Centos)

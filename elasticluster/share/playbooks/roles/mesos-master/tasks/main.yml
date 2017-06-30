@@ -1,5 +1,17 @@
 ---
 
+- name: Install ZooKeeper on master node (Debian/Ubuntu)
+  package:
+    name: zookeeper
+    state: present
+  when: is_debian_or_ubuntu
+
+- name: Install ZooKeeper on master node (RHEL/CentOS)
+  package:
+    name: mesosphere-zookeeper
+    state: present
+  when: is_rhel_compatible
+
 - name: Mesos master configuration files
   template:
     src='{{item}}.j2'
