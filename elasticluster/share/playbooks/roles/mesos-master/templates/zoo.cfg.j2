@@ -1,0 +1,10 @@
+maxClientCnxns=50
+tickTime=2000
+initLimit=10
+syncLimit=5
+dataDir=/var/lib/zookeeper
+clientPort=2181
+
+{% for server in groups['mesos_master'] %}
+server.{{ loop.index }}={{server}}:2888:3888
+{% endfor %}

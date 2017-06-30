@@ -709,6 +709,8 @@ Some (working) examples::
     provider=ansible
     frontend_groups=pbs_master,maui_master
     compute_groups=pbs_clients
+    # you can set the timezone to Zurich for machines by adding
+    global_var_ntp_timezone=Europe/Zurich
 
     [setup/ansible_matlab]
     # Please note that this setup assumes you already have matlab

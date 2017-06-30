@@ -7,3 +7,5 @@ SPARK_CONF_DIR: '/etc/spark/conf.elasticluster'
 
 SPARK_HISTORY_DIR: '/user/spark/applicationHistory'
 SPARK_EVENTLOG_DIR: '/user/spark/eventLog'
+
+spark_include_r: True

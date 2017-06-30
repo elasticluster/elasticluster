@@ -1,0 +1,37 @@
+---
+
+- name: Add OpenJDK repository to sources
+  apt_repository:
+    repo: ppa:openjdk-r/ppa
+    state: present
+
+- name: Installing openjdk-jdk
+  apt:
+    name: openjdk-{{ java_version }}-jdk
+    state: present
+
+- name: Select java version
+  alternatives:
+    name: java
+    path: /usr/lib/jvm/java-{{ java_version }}-openjdk-amd64/bin/java
+
+- name: Select javac version
+  alternatives:
+    name: javac
+    path: /usr/lib/jvm/java-{{ java_version }}-openjdk-amd64/bin/javac
+
+- name: Select jar version
+  alternatives:
+    name: jar
+    path: /usr/lib/jvm/java-{{ java_version }}-openjdk-amd64/bin/jar
+
+- name: Select jps version
+  alternatives:
+    name: jps
+    path: /usr/lib/jvm/java-{{ java_version }}-openjdk-amd64/bin/jps
+
+- name: Set default-java symlink
+  file: src=/usr/lib/jvm/java-{{ java_version }}-openjdk-amd64 dest=/usr/lib/jvm/default-java state=link
+
+- name: Set JAVA_HOME in environment
+  lineinfile: dest=/etc/environment line='export JAVA_HOME=/usr/lib/jvm/default-java' insertafter='EOF' state=present

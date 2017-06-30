@@ -1,0 +1,9 @@
+---
+
+- name: Installing JDK
+  yum:
+    name: java-1.{{ java_version }}.0-openjdk-devel
+    state: present
+
+- name: Set JAVA_HOME in environment
+  lineinfile: dest=/etc/environment line='export JAVA_HOME=/usr/lib/jvm/java' insertafter='EOF' state=present

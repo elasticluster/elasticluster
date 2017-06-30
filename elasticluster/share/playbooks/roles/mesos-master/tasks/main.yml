@@ -1,18 +1,5 @@
 ---
 
-
-- name: Restart Zookeeper services
-  service:
-    name: zookeeper
-    state: restarted
-
-
-- name: Install Mesosphere on master nodes
-  package:
-    name: mesosphere
-    state: present
-
-
 - name: Mesos master configuration files
   template:
     src='{{item}}.j2'
@@ -22,6 +9,13 @@
     - hostname
     - ip
 
+- name: Zookeeper configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/etc/zookeeper/conf/{{item}}'
+  with_items:
+    - myid
+    - zoo.cfg
 
 - name: Restart mesos master services
   service:
@@ -31,4 +25,20 @@
   with_items:
     - zookeeper
     - mesos-master
-    - marathon
+
+- name: Spark History Server systemd service config
+  template:
+    src='spark-history.service.j2'
+    dest='/etc/systemd/system/spark-history.service'
+
+- name: Create local Spark History folder
+  file:
+    path: /tmp/spark-events
+    state: directory
+    owner: spark
+    group: spark
+
+- name: Start Spark History Server service
+  service:
+    name: spark-history
+    state: started

@@ -6,3 +6,7 @@
     ntpd_package: ntp
   when:
     '{{is_rhel_compatible}}'
+
+- name: Set timezone
+  shell: timedatectl set-timezone {{ntp_timezone}}
+  when: ntp_timezone is defined

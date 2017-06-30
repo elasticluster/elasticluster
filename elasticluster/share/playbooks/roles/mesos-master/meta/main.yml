@@ -2,5 +2,3 @@
 
 dependencies:
   - { role: mesos-common }
-  - role: zookeeper
-    zookeeper_hosts: '{{ groups.mesos_master }}'

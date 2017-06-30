@@ -541,27 +541,28 @@ master and 2 worker nodes, and additionally installs flannel for the networking
 
 SSH into the cluster and execute 'sudo kubectl --kubeconfig /etc/kubernetes/admin.conf get nodes' to view the cluster.
 
-Mesos + Marathon
-==============
+Mesos + Spark
+============================
 
 Supported on:
 
-* Ubuntu 14.04 (marathon not packages for Ubuntu 16.04 at this time)
+* Ubuntu 16.04
+* RHEL/CentOS 7.x
 
-This playbook installs a Mesos_ cluster with Marathon_.  The
-cluster comprises a Zookeeper quorum, Mesos master and slave nodes and
-Marathon masters. The cluster runs docker containers by default.
+This playbook installs a Mesos_ cluster with Spark_.  The cluster
+comprises a Zookeeper quorum, Mesos master and slave nodes and
+Spark. The cluster runs docker containers by default.
 
 =================  ==================================================
 Ansible group      Action
 =================  ==================================================
 ``mesos_master``   Install the Mesos cluster master node: run Mesos,
-                   Zookeeper and Marathon server.
-``mesos_slave``    Install a mesos slave node and docker.
+                   Zookeeper and Spark.
+``mesos_slave``    Install a mesos slave node, docker and Spark.
 =================  ==================================================
 
-The following example configuration sets up a Mesos cluster using 1 master node and 3
-slave nodes::
+The following example configuration sets up a Mesos cluster using 1
+master node and 3 slave nodes::
 
     [cluster/pmesos]
     setup_provider=mesos

@@ -1,0 +1,5 @@
+export SPARK_HOME=${SPARK_HOME:-/usr/lib/spark}
+export SPARK_LOG_DIR=${SPARK_LOG_DIR:-/var/log/spark}
+
+export MESOS_NATIVE_JAVA_LIBRARY=/usr/lib/libmesos.so
+export SPARK_EXECUTOR_URI={{mesos_spark_uri}}

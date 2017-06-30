@@ -1,0 +1,7 @@
+---
+
+mesos_spark_uri_root: https://d3kbcqa49mib13.cloudfront.net/
+mesos_spark_package: spark-2.1.1-bin-hadoop2.7.tgz
+mesos_spark_package_root: spark-2.1.1-bin-hadoop2.7
+
+mesos_spark_uri: '{{mesos_spark_uri_root}}{{mesos_spark_package}}'

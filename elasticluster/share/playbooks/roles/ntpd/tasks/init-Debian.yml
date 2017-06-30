@@ -6,3 +6,16 @@
     ntpd_package: ntp
   when:
     '{{is_debian_compatible}}'
+
+- name: Remove default timezone
+  file:
+    path: /etc/localtime
+    state: absent
+  when: ntp_timezone is defined
+
+- name: Set timezone
+  file:
+    src: /usr/share/zoneinfo/{{ntp_timezone}}
+    dest: /etc/localtime
+    state: link
+  when: ntp_timezone is defined

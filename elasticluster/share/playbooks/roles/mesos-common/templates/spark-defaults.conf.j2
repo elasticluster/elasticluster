@@ -1,0 +1,57 @@
+# Default system properties included when running spark-submit.
+# This is useful for setting default environmental settings.
+
+{%- set spark_workers_max_vcpus = groups.mesos_slave|map('extract', hostvars, 'ansible_processor_vcpus')|list|max -%}
+{%- set spark_workers_min_vcpus = groups.mesos_slave|map('extract', hostvars, 'ansible_processor_vcpus')|list|min -%}
+{%- set spark_workers_max_free_memory_mb = groups.mesos_slave|map('extract', hostvars, ['ansible_memory_mb', 'nocache', 'free'])|list|max -%}
+
+# this is local to the master node, so use its memory and vcpu values for computing
+spark.driver.memory              {{ (ansible_memory_mb.nocache.free / ansible_processor_vcpus)|int }}m
+
+# This value depends more on the intended usage of the cluster than on its
+# features; still, ElastiCluster has to provide a default. Ideally one woulda use
+# the *minimum* RAM-per-core ratio (as that would give the largest compatibility)
+# but Ansible and Jinja currently lack filters to allow us to compute the RAM/core
+# quotient across all nodes. So use the (max memory) / (average nr. of cores) as a
+# "reasonable" approximation...
+spark.executor.memory            {{ (2 * spark_workers_max_free_memory_mb / (spark_workers_max_vcpus + spark_workers_min_vcpus))|int }}m
+
+# Limit of total size of serialized results of all partitions for each Spark action (e.g. collect)
+spark.driver.maxResultSize       {{(ansible_memory_mb.nocache.free * 0.8)|int}}m
+
+# Although the documentation says that PYSPARK_PYTHON and
+# PYSPARK_DRIVER_PYTHON control which Python interpreter will be used
+# by Spark, this seems not to be the case with Spark 1.6.1 which
+# always calls `python`.  So also set the PATH environmental variable
+# so that Anaconda Python is found first.
+#
+# Anyway, see: https://issues.apache.org/jira/browse/SPARK-9235
+#
+spark.executorEnv.PYSPARK_PYTHON {{anaconda_home}}/bin/python
+spark.executorEnv.PATH {{anaconda_home}}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+spark.yarn.appMasterEnv.PYSPARK_PYTHON {{anaconda_home}}/bin/python
+spark.yarn.appMasterEnv.PYSPARK_DRIVER_PYTHON {{anaconda_home}}/bin/python
+spark.yarn.appMasterEnv.PATH {{anaconda_home}}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Amount of memory to use per python worker process during
+# aggregation, in the same format as JVM memory strings (e.g. 512m, 2g).
+# If the memory used during aggregation goes above this amount, it will
+# spill the data into disks. 
+#
+spark.python.worker.memory       {{(ansible_memory_mb.nocache.free * 0.5)|int}}m
+
+# Maximum amount of time to wait for resources to register before scheduling begins
+spark.scheduler.maxRegisteredResourcesWaitingTime 5s
+
+# The minimum ratio of registered resources (registered resources /
+# total expected resources) (resources are executors in yarn mode, CPU
+# cores in standalone mode) to wait for before scheduling begins.
+# Specified as a double between 0.0 and 1.0. Regardless of whether the
+# minimum ratio of resources has been reached, the maximum amount of
+# time it will wait before scheduling begins is controlled by config
+# spark.scheduler.maxRegisteredResourcesWaitingTime. 
+#
+spark.scheduler.minRegisteredResourcesRatio 0.5
+
+spark.mesos.executor.home           /usr/lib/spark
+spark.yarn.historyServer.address    {{groups['mesos_master']|first}}:18080

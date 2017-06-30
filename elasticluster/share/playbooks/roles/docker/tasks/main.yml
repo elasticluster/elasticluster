@@ -9,13 +9,20 @@
   when: is_debian_compatible
 
 - name: Add docker repository (Redhat/Centos)
-  yum_repository:
-    name: docker
-    description: Docker YUM repo
-    baseurl: https://docs.docker.com/engine/installation/linux/repo_files/centos/docker.repo
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
+  when: is_rhel_compatible
+
+- name: Install Docker dependencies (RHEL/Centos)
+  package: name={{ item }} state=present
+  with_items:
+    - yum-utils
+    - device-mapper-persistent-data
+    - lvm2
   when: is_rhel_compatible
 
 - name: Install docker package
   package:
-    name: docker-engine
+    name: docker-ce
     state: present

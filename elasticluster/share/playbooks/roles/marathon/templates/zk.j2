@@ -1,1 +1,0 @@
-zk://{% for server in groups['mesos_master'] -%}{{ server }}:2181/marathon{%- if not loop.last %},{% endif -%}{%- endfor %}
