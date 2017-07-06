@@ -1,23 +1,13 @@
 ---
 
-- name: Install Mesos master node
-  hosts: mesos_master
+- name: Install Mesos mixed master/slave node
+  hosts: mesos
   tags:
     - zookeeper
     - mesos
+    - alluxio
     - spark
     - master
-  roles:
-    - mesos-master
-
-
-- name: Install Mesos slave nodes
-  hosts: mesos_slave
-  tags:
-    - docker
-    - mesos
-    - spark
     - slave
   roles:
-    - docker
-    - mesos-slave
+    - mesos

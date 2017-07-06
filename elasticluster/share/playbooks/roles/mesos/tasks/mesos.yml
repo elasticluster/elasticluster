@@ -1,0 +1,76 @@
+---
+
+- name: Add mesosphere apt-key
+  apt_key: id=E56151BF keyserver=keyserver.ubuntu.com state=present
+
+- name: Add mesosphere repository
+  apt_repository:
+    repo='deb http://repos.mesosphere.com/{{ ansible_distribution | lower }} {{ ansible_distribution_release | lower }} main'
+    state=present
+    update_cache=yes
+
+- name: Install Apache Mesos and dependencies
+  apt:
+    name={{item}}
+    state=present
+  with_items:
+    - build-essential
+    - python-dev
+    - libcurl3
+    - libevent-dev
+    - mesos
+
+- name: Mesos configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/etc/mesos/{{item}}'
+  with_items:
+    - zk
+
+- name: Mesos master configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/etc/mesos-master/{{item}}'
+  with_items:
+    - quorum
+    - hostname
+    - ip
+
+- name: Start mesos master services
+  service:
+    name="{{item}}"
+    state=started
+    enabled=yes
+  with_items:
+    - mesos-master
+
+- name: Mesos slave configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/etc/mesos-slave/{{item}}'
+  with_items:
+    - hostname
+    - ip
+    - containerizers
+    - image_providers
+    - isolation
+
+- name: Create Mesos Slave Resouces directory
+  file:
+    path='/etc/mesos-slave/resources'
+    state=directory
+
+- name: Mesos slave resources configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/etc/mesos-slave/resources/{{item}}'
+  with_items:
+    - ports
+
+- name: Start mesos slave services
+  service:
+    name="{{item}}"
+    state=started
+    enabled=yes
+  with_items:
+    - mesos-slave

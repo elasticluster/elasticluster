@@ -1,0 +1,13 @@
+[Unit]
+Description=Apache Spark Mesos Shuffle Service
+After=network.target
+
+[Service]
+Type=forking
+User=spark
+Group=spark
+ExecStart=/usr/lib/spark/sbin/start-mesos-shuffle-service.sh
+ExecStop=/usr/lib/spark/sbin/stop-mesos-shuffle-service.sh
+
+[Install]
+WantedBy=multi-user.target

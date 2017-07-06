@@ -1,4 +1,0 @@
----
-
-quorum_size: "{{groups['mesos_master']|length}}"
-mesos_quorum: "{% if quorum_size == '1' %}{{quorum_size}}{% else %}{{((quorum_size|int/3)*2)|round|int}}{% endif %}"

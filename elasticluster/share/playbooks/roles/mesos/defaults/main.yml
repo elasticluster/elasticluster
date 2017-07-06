@@ -1,0 +1,30 @@
+---
+
+mesos_hadoop_version: 2.7
+
+mesos_spark_version: 2.1.1
+mesos_spark_uri_root: 'https://d3kbcqa49mib13.cloudfront.net/'
+mesos_spark_package: 'spark-{{mesos_spark_version}}-bin-hadoop{{mesos_hadoop_version}}.tgz'
+mesos_spark_package_root: 'spark-{{mesos_spark_version}}-bin-hadoop{{mesos_hadoop_version}}'
+
+mesos_spark_uri: '{{mesos_spark_uri_root}}{{mesos_spark_package}}'
+
+mesos_alluxio_version: 1.5.0
+mesos_alluxio_uri_root: 'http://downloads.alluxio.org/downloads/files/{{mesos_alluxio_version}}/'
+mesos_alluxio_package: 'alluxio-{{mesos_alluxio_version}}-hadoop-{{mesos_hadoop_version}}-bin.tar.gz'
+mesos_alluxio_package_root: 'alluxio-{{mesos_alluxio_version}}-hadoop-{{mesos_hadoop_version}}'
+
+mesos_alluxio_uri: '{{mesos_alluxio_uri_root}}{{mesos_alluxio_package}}'
+
+mesos_alluxio_storage_protocol: swift
+mesos_alluxio_storage_root: default
+mesos_alluxio_storage_region: RegionOne
+mesos_alluxio_storage_auth_method: keystone
+mesos_alluxio_storage_auth_url: "{{ lookup('env','OS_AUTH_URL') }}"
+mesos_alluxio_storage_tenant: "{{ lookup('env','OS_PROJECT_NAME') }}"
+mesos_alluxio_storage_user:  "{{ lookup('env','OS_USERNAME') }}"
+mesos_alluxio_storage_password: "{{ lookup('env','OS_PASSWORD') }}"
+mesos_alluxio_storage_use_public_url: false
+
+mesos_quorum_size: "{{groups['mesos']|length}}"
+mesos_quorum: "{% if mesos_quorum_size == '1' %}{{mesos_quorum_size}}{% else %}{{((mesos_quorum_size|int/3)*2)|round|int}}{% endif %}"

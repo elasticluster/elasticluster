@@ -1,0 +1,106 @@
+---
+
+- name: Create Apache Spark group
+  group:
+    name: spark
+    state: present
+
+- name: Create Apache Spark user
+  user:
+    name: spark
+    group: spark
+    system: True
+    createhome: False
+
+- name: Download Spark
+  get_url:
+    url: '{{mesos_spark_uri}}'
+    dest: '/tmp/{{mesos_spark_package}}'
+
+- name: Unpack Spark
+  unarchive:
+    src: '/tmp/{{mesos_spark_package}}'
+    dest: /usr/lib/
+    owner: spark
+    group: spark
+    remote_src: True
+
+- name: Create Spark symlink
+  file: src="/usr/lib/{{mesos_spark_package_root}}" dest="/usr/lib/spark" state=link
+
+- name: Check if Py4J version-independent `.zip` archive exist
+  stat:
+    path='/usr/lib/spark/python/lib/py4j-src.zip'
+    follow=no
+  register: p
+
+- name: Symlink Py4J `.zip` archive under a version-independent name
+  # XXX: We use shell globbing to find out what source file to link,
+  # assuming there is one and only one Py4J `.zip` file.
+  shell: |
+    cd /usr/lib/spark/python/lib
+    ln -s py4j-*-src.zip py4j-src.zip
+  when: not p.stat.exists
+
+- name: Create Spark Configuration symlink
+  file: src="/usr/lib/spark/conf" dest="/etc/spark" state=link
+
+- name: Spark configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/usr/lib/spark/conf/{{item}}'
+    owner=spark
+    group=spark
+  with_items:
+    - spark-defaults.conf
+    - spark-env.sh
+
+- name: Create Spark log directory
+  file:
+    path='/var/log/spark'
+    state=directory
+    owner=spark
+    group=spark
+
+- name: Set SPARK_HOME in environment
+  lineinfile: dest=/etc/environment line='export SPARK_HOME=/usr/lib/spark' insertafter='EOF' state=present
+
+- name: Spark Thrift Server systemd service config
+  template:
+    src='spark-thrift.service.j2'
+    dest='/etc/systemd/system/spark-thrift.service'
+
+- name: Start Spark Thrift Server service
+  service:
+    name: spark-thrift
+    state: restarted
+
+- name: Spark Mesos Shuffle Server systemd service config
+  template:
+    src='spark-shuffle.service.j2'
+    dest='/etc/systemd/system/spark-shuffle.service'
+
+- name: Start Spark Mesos Shuffle Server service
+  service:
+    name: spark-shuffle
+    state: restarted
+
+- name: Spark History Server systemd service config
+  template:
+    src='spark-history.service.j2'
+    dest='/etc/systemd/system/spark-history.service'
+  when: inventory_hostname == (groups['mesos']|first)
+
+- name: Create local Spark History folder
+  file:
+    path: /tmp/spark-events
+    state: directory
+    owner: spark
+    group: spark
+  when: inventory_hostname == (groups['mesos']|first)
+
+- name: Start Spark History Server service
+  service:
+    name: spark-history
+    state: restarted
+  when: inventory_hostname == (groups['mesos']|first)

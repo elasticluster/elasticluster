@@ -1,0 +1,22 @@
+---
+
+- name: Install ZooKeeper
+  package:
+    name: zookeeperd
+    state: present
+
+- name: Zookeeper configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/etc/zookeeper/conf/{{item}}'
+  with_items:
+    - myid
+    - zoo.cfg
+
+- name: Start Zookeeper
+  service:
+    name="{{item}}"
+    state=started
+    enabled=yes
+  with_items:
+    - zookeeper

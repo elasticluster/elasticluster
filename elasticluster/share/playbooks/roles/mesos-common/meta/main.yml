@@ -1,7 +1,0 @@
----
-
-dependencies:
-  - { role: java }
-  - role: anaconda
-    anaconda_python_version: '3'
-    anaconda_in_path: true

@@ -1,0 +1,13 @@
+[Unit]
+Description=Apache Alluxio Service
+After=mesos-slave.target
+
+[Service]
+Type=forking
+User=alluxio
+Group=alluxio
+ExecStart=/usr/lib/alluxio/integration/mesos/bin/alluxio-mesos-start.sh {{groups['mesos']|first}}:5050
+ExecStop=/usr/lib/alluxio/integration/mesos/bin/alluxio-mesos-stop.sh
+
+[Install]
+WantedBy=multi-user.target

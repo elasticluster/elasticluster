@@ -1,0 +1,84 @@
+---
+
+- name: Create Apache Alluxio group
+  group:
+    name: alluxio
+    state: present
+
+- name: Create Apache Alluxio user
+  user:
+    name: alluxio
+    group: alluxio
+    system: True
+
+- name: Download Alluxio
+  get_url:
+    url: '{{mesos_alluxio_uri}}'
+    dest: '/tmp/{{mesos_alluxio_package}}'
+
+- name: Unpack Alluxio
+  unarchive:
+    src: '/tmp/{{mesos_alluxio_package}}'
+    dest: /usr/lib/
+    owner: alluxio
+    group: alluxio
+    remote_src: True
+
+- name: Create Alluxio symlink
+  file: src="/usr/lib/{{mesos_alluxio_package_root}}" dest="/usr/lib/alluxio" state=link
+
+- name: Create Alluxio log directory
+  file:
+    path='/var/log/alluxio'
+    state=directory
+    owner=alluxio
+    group=alluxio
+
+- name: Create Alluxio RAM directory
+  file:
+    path='/mnt/ramdisk'
+    state=directory
+    owner=alluxio
+    group=alluxio
+
+- name: Create Alluxio underFS directory
+  file:
+    path='/usr/lib/alluxio/underFSStorage'
+    state=directory
+    owner=alluxio
+    group=alluxio
+
+- name: Create Alluxio Configuration symlink
+  file: src="/usr/lib/alluxio/conf" dest="/etc/alluxio" state=link
+
+- name: Alluxio configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/usr/lib/alluxio/conf/{{item}}'
+    owner=alluxio
+    group=alluxio
+  with_items:
+    - alluxio-site.properties
+    - alluxio-env.sh
+    - masters
+    - workers
+
+- name: Set ALLUXIO_HOME in environment
+  lineinfile: dest=/etc/environment line='export ALLUXIO_HOME=/usr/lib/alluxio' insertafter='EOF' state=present
+
+- name: Alluxio master systemd service config
+  template:
+    src='alluxio.service.j2'
+    dest='/etc/systemd/system/alluxio.service'
+
+- name: Format Alluxio storage device
+  command: /usr/lib/alluxio/bin/alluxio format
+  become: true
+  become_user: alluxio
+
+- name: Reload Alluxio
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: alluxio
+

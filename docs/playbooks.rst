@@ -541,39 +541,49 @@ master and 2 worker nodes, and additionally installs flannel for the networking
 
 SSH into the cluster and execute 'sudo kubectl --kubeconfig /etc/kubernetes/admin.conf get nodes' to view the cluster.
 
-Mesos + Spark
+Mesos + Alluxio + Spark
 ============================
 
 Supported on:
 
 * Ubuntu 16.04
-* RHEL/CentOS 7.x
 
-This playbook installs a Mesos_ cluster with Spark_.  The cluster
-comprises a Zookeeper quorum, Mesos master and slave nodes and
-Spark. The cluster runs docker containers by default.
+This playbook installs a Mesos_ cluster with Zookeeper_,  Alluxio_
+and Spark_. The cluster comprises a Zookeeper quorum, Mesos nodes
+(mixed master and slave), Alluxio and Spark. The cluster runs docker
+containers by default. Not that due to the mixed mode install this
+scales to about 99 nodes. Try to choose an odd number of servers
+(otherwise zookeeper complains a lot).
 
 =================  ==================================================
 Ansible group      Action
 =================  ==================================================
-``mesos_master``   Install the Mesos cluster master node: run Mesos,
-                   Zookeeper and Spark.
-``mesos_slave``    Install a mesos slave node, docker and Spark.
+``mesos``          Install the Mesos cluster node: Mesos, Alluxio,
+                   docker, Zookeeper and Spark.
 =================  ==================================================
 
-The following example configuration sets up a Mesos cluster using 1
-master node and 3 slave nodes::
+The following example configuration sets up a Mesos cluster using 9
+ nodes::
 
-    [cluster/pmesos]
+    [cluster/mesos]
     setup_provider=mesos
-    master_nodes=1
-    slave_nodes=3
-    ssh_to=master
+    mesos_nodes=9
+    ssh_to=mesos
 
     [setup/mesos]
     provider=ansible
-    master_groups=mesos_master
-    slave_groups=mesos_slave
+    mesos_groups=mesos
+
+By default Alluxio connects to a Swift backend, but it supports way more:
+http://www.alluxio.org/docs/master/en/Configuring-Alluxio-with-Swift.html
+check the 'Under Storages' list. All parameters are pushed down from
+the configuration but not all are sensible defaults. Note that your connection
+settings are pushed to the Alluxio config, which will then contain your plain
+text secrets. So it is recommended to only use such a system for yourself.
+
+Use `global_var_mesos_alluxio_storage_root`=<container name> to connect
+to a specific container. `global_var_mesos_alluxio_storage_protocol` can
+be used to switch to a different protocol than 'swift'.
 
 Kafka
 ==============

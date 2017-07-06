@@ -1,0 +1,5 @@
+{% for server in groups['mesos'] %}
+{% if server != (groups['mesos']|first) %}
+{{ server }}
+{% endif %}
+{% endfor %}

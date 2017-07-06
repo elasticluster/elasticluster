@@ -5,6 +5,6 @@ syncLimit=5
 dataDir=/var/lib/zookeeper
 clientPort=2181
 
-{% for server in groups['mesos_master'] %}
+{% for server in groups['mesos'] %}
 server.{{ loop.index }}={{server}}:2888:3888
 {% endfor %}
