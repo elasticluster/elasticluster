@@ -1,18 +1,30 @@
 ---
+#
+# Install the Ceph MDS service/daemon
+#
 
-- name: Local Ceph constants
+# variables created by `set_fact` are all set *concurrently*;
+# so if there are inter-dependencies, we need to split creation
+# over a sequence of steps
+- name: Local Ceph constants (1)
   tags:
     - ceph
   set_fact:
-    _ceph_mds_name: 'mds.{{inventory_hostname}}'
-    _ceph_mds_data: '/var/lib/ceph/mds/{{ceph_cluster_name}}-{{inventory_hostname}}'
+    _ceph_service: 'mds'
+
+- name: Local Ceph constants (2)
+  tags:
+    - ceph
+  set_fact:
+    _ceph_daemon_name: '{{_ceph_service}}.{{inventory_hostname}}'
+    _ceph_daemon_dir: '/var/lib/ceph/{{_ceph_service}}/{{ceph_cluster_name}}-{{inventory_hostname}}'
 
 
 - name: Ensure Ceph MDS directory exists
   tags:
     - ceph
   file:
-    dest: '{{_ceph_mds_data}}'
+    dest: '{{_ceph_daemon_dir}}'
     state: directory
     owner: 'ceph'
     group: 'ceph'
@@ -21,14 +33,14 @@
 
 - name: Does MDS keyring exist?
   stat:
-    path: '{{_ceph_mds_data}}/keyring'
+    path: '{{_ceph_daemon_dir}}/keyring'
   register: ceph_mds_keyring_file
   ignore_errors: yes
 
 
 - name: Create MDS keyring
   command: |
-    ceph-authtool --create-keyring {{_ceph_mds_data}}/keyring --gen-key -n {{_ceph_mds_name}}
+    ceph-authtool --create-keyring {{_ceph_daemon_dir}}/keyring --gen-key -n {{_ceph_daemon_name}}
   become: yes
   become_user: 'ceph'
   when: 'not ceph_mds_keyring_file.stat.exists'
@@ -38,27 +50,47 @@
   tags:
     - ceph
   shell: |
-    ceph --cluster {{ceph_cluster_name}} auth add {{_ceph_mds_name}} mon 'allow profile mds' osd 'allow rwx' mds 'allow *' -i {{_ceph_mds_data}}/keyring
+    ceph --cluster {{ceph_cluster_name}} auth add {{_ceph_daemon_name}} mon 'allow profile mds' osd 'allow rwx' mds 'allow *' -i {{_ceph_daemon_dir}}/keyring
   become: yes
   become_user: 'ceph'
 
 
-- name: Start `ceph-mds` process
-  tags:
-    - ceph
-  shell: |
-    if ! (ceph --cluster '{{ceph_cluster_name}}' tell '{{_ceph_mds_name}}' version
-              1>/dev/null 2>/dev/null); then
-        ceph-mds --cluster '{{ceph_cluster_name}}' -n '{{_ceph_mds_name}}'
-    fi
-  become: yes
-  become_user: 'ceph'
+- name: Deploy Ceph MDS init script
+  template:
+    src: 'etc/init.d/ceph-service.sh.j2'
+    dest: '/etc/init.d/ceph-mds.sh'
+    mode: 0444
+  when: 'not init_is_systemd'
+
+
+- name: Deploy Ceph MDS systemd unit file
+  template:
+    src: 'etc/systemd/system/ceph.service.j2'
+    dest: '/etc/systemd/system/ceph-mds.service'
+    mode: 0444
+  register: ceph_mds_systemd_unit
+  when: 'init_is_systemd'
+
+
+- name: Reload systemd unit definitions
+  command: |
+    systemctl daemon-reload
+  when: ceph_mds_systemd_unit|changed
 
 
 - name: Ensure `ceph-mds` is running and (re)started at boot
+  tags:
+    - ceph
+  service:
+    name: ceph-mds
+    state: started
+    enabled: yes
+
+
+- name: Ensure other Ceph services are running and (re)started at boot
+  tags:
+    - ceph
   service:
     name: ceph
     state: started
     enabled: yes
-  tags:
-    - ceph
