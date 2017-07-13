@@ -33,6 +33,19 @@
   when: 'is_ceph_server'
 
 
+- name: Install Ceph client packages and their dependencies
+  tags:
+    - ceph
+    - client
+  package:
+    name: '{{item}}'
+    state: present
+  with_items:
+    - ceph-common
+    - ceph-fuse
+    - rbd-fuse
+  when: 'is_ceph_client'
+
 
 - name: Install Ceph MDS package
   tags:
