@@ -16,6 +16,18 @@
   when: 'groups.ceph_osd|length|int < 2'
 
 
+- name: Define convenient conditional shortcut variables
+  tags:
+    - ceph
+  set_fact:
+    is_ceph_client: '{{"ceph_client" in group_names}}'
+    is_ceph_mds: '{{"ceph_mds" in group_names}}'
+    is_ceph_mon: '{{"ceph_mon" in group_names}}'
+    is_ceph_osd: '{{"ceph_osd" in group_names}}'
+    is_ceph_server: '{{inventory_hostname in (groups.ceph_mon + groups.ceph_osd + groups.ceph_mds|default([]))}}'
+    is_ceph_first_mon: '{{inventory_hostname == groups.ceph_mon[0]}}'
+
+
 - name: Run distribution-specific setup
   tags:
     - ceph
@@ -54,12 +66,12 @@
 
 
 - name: Deploy Ceph configuration file
+  tags:
+    - ceph
   template:
     src: etc/ceph/ceph.conf.j2
     dest: /etc/ceph/ceph.conf
     mode: 0444
-  tags:
-    - ceph
 
 
 - name: Gather Ceph facts
@@ -78,10 +90,10 @@
     - _monmap
   loop_control:
     loop_var: playbook
-  when: 'inventory_hostname == groups.ceph_mon[0]'
+  when: 'is_ceph_first_mon'
 
 
-- name: Copy master files to all nodes
+- name: Deploy server master files to server nodes
   tags:
     - ceph
   copy:
@@ -94,40 +106,46 @@
     - '{{ceph_cluster_name}}.keyring'
     - '{{ceph_cluster_name}}.client.admin.keyring'
     - monmap
+  when: 'is_ceph_server'
 
 
 - name: Install MON nodes
   tags:
     - ceph
+    - server
   include: mon.yml
-  when: 'inventory_hostname in groups.ceph_mon'
+  when: 'is_ceph_mon'
 
 
 - name: Install MGR nodes
   tags:
     - ceph
+    - server
   include: mgr.yml
-  when: '{{ceph_requires_mgr}} and (inventory_hostname in groups.ceph_mon)'
+  when: 'ceph_requires_mgr and is_ceph_mon'
 
 
 - name: Install OSD nodes
   tags:
     - ceph
+    - server
   include: osd.yml
-  when: 'inventory_hostname in groups.ceph_osd'
+  when: 'is_ceph_osd'
 
 
 - name: Install MDS nodes
   tags:
     - ceph
+    - server
   include: mds.yml
-  when: 'inventory_hostname in groups.ceph_mds|default([])'
+  when: 'is_ceph_mds'
 
 
 - name: Create filesystem
   tags:
     - ceph
     - cephfs
+    - server
   include: fs.yml
   # use client.admin key from mon0 host
-  when: 'groups.ceph_mds|default([])|length > 0 and inventory_hostname in groups.ceph_mon'
+  when: 'groups.ceph_mds|default([])|length > 0 and is_ceph_first_mon'
