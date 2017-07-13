@@ -10,20 +10,27 @@
     src: 'etc/yum.repos.d/ceph.repo.j2'
     dest: '/etc/yum.repos.d/ceph.repo'
 
-- name: Install Ceph packages and their dependencies
+
+- name: Install Ceph server packages and their dependencies
   tags:
     - ceph
+    - server
   package:
     name: '{{item}}'
     state: present
   with_items:
     - ceph
+  when: 'is_ceph_server'
+
+
 
 
 - name: Install Ceph MDS package
   tags:
     - ceph
+    - server
+    - ceph-mds
   package:
     name: 'ceph-mds'
     state: present
-  when: 'inventory_hostname in groups.ceph_mds|default([])'
+  when: 'is_ceph_mds'

@@ -10,6 +10,7 @@
     url: 'https://download.ceph.com/keys/release.asc'
     state: present
 
+
 - name: "Enable Ceph's APT public repository"
   tags:
     - ceph
@@ -18,15 +19,19 @@
     filename: 'ceph'
     state: present
 
+
 - name: Install Ceph packages and their dependencies
   tags:
     - ceph
+    - server
   apt:
     pkg: '{{item}}'
     state: present
   with_items:
     - ceph
     #- linux-image-extra-{{ansible_kernel}}
+  when: 'is_ceph_server'
+
 
 
 - name: Install Ceph MDS package
@@ -35,4 +40,4 @@
   apt:
     pkg: 'ceph-mds'
     state: present
-  when: 'inventory_hostname in groups.ceph_mds|default([])'
+  when: 'is_ceph_mds'
