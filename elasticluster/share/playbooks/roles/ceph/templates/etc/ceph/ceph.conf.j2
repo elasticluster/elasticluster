@@ -75,7 +75,7 @@ osd data = /var/lib/ceph/osd/{{ceph_cluster_name}}-{{ osd_id }}
 # MDS hosts
 #
 {% for host in groups.ceph_mds|sort %}
-  {% set mds_id = loop.index0 %}
+  {% set mds_id = host %}
 [mds.{{ mds_id }}]
 host = {{ host }}
 
