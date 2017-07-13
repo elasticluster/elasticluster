@@ -31,10 +31,9 @@
 - name: Create MGR authentication key
   tags:
     - ceph
-  include: _auth.yml
+  include: _create_key.yml
   vars:
     keyname: '{{_ceph_daemon_name}}'
-    varname: 'mgr'
     capabilities: "--cap mon 'allow profile mgr' --cap osd 'allow *' --cap mds 'allow *'"
     keyring: '{{_ceph_daemon_dir}}/keyring'
   become: yes

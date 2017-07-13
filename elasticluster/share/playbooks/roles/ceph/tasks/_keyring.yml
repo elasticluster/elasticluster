@@ -8,7 +8,6 @@
   include: _create_key.yml
   vars:
     keyname: 'mon.'
-    varname: 'mon'
     capabilities: '--cap mon "allow *"'
     keyring: '/etc/ceph/{{ceph_cluster_name}}.keyring'
 
@@ -17,7 +16,6 @@
   include: _create_key.yml
   vars:
     keyname: 'client.admin'
-    varname: 'client_admin'
     capabilities: '--cap mon "allow *" --cap osd "allow *" --cap mds "allow *" {% if ceph_requires_mgr %}--cap mgr "allow *"{% endif %}'
     keyring: '/etc/ceph/{{ceph_cluster_name}}.client.admin.keyring'
 
