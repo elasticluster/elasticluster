@@ -121,3 +121,12 @@
     - ceph
   include: mds.yml
   when: 'inventory_hostname in groups.ceph_mds|default([])'
+
+
+- name: Create filesystem
+  tags:
+    - ceph
+    - cephfs
+  include: fs.yml
+  # use client.admin key from mon0 host
+  when: 'groups.ceph_mds|default([])|length > 0 and inventory_hostname in groups.ceph_mon'
