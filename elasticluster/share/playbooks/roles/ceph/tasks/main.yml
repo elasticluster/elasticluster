@@ -104,7 +104,6 @@
     mode: 0600
   with_items:
     - '{{ceph_cluster_name}}.keyring'
-    - '{{ceph_cluster_name}}.client.admin.keyring'
     - monmap
   when: 'is_ceph_server'
 
@@ -149,3 +148,8 @@
   include: fs.yml
   # use client.admin key from mon0 host
   when: 'groups.ceph_mds|default([])|length > 0 and is_ceph_first_mon'
+
+
+- name: Install client nodes
+  include: client.yml
+  when: 'is_ceph_client'
