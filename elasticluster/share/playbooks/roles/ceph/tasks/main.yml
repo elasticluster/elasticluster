@@ -92,6 +92,7 @@
     mode: 0600
   with_items:
     - '{{ceph_cluster_name}}.keyring'
+    - '{{ceph_cluster_name}}.client.admin.keyring'
     - monmap
 
 

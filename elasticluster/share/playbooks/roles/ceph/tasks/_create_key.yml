@@ -3,11 +3,18 @@
 # Blocks of code used to create CephX keys
 #
 
+- name: Create keyring
+  command: |
+    ceph-authtool --create-keyring {{keyring}}
+  args:
+    creates: '{{keyring}}'
+
+
 - name: Check if key exists
   tags:
     - ceph
   shell: |
-    ceph-authtool /etc/ceph/{{ceph_cluster_name}}.keyring --list \
+    ceph-authtool {{keyring}} --list \
       | grep -F -A 1 '[{{keyname}}]' \
       | grep -q '^[[:space:]]key = '
   register: '_ceph_key_in_keyring'
@@ -18,7 +25,7 @@
   tags:
     - ceph
   shell: |
-    ceph-authtool /etc/ceph/{{ceph_cluster_name}}.keyring --print-key \
+    ceph-authtool {{keyring}} --print-key \
       --gen-key -n {{keyname}} {{capabilities}} \
       | grep -q '^[[:space:]]key = ' \
       | sed 's/^\s+key = //g'
