@@ -1,0 +1,34 @@
+---
+#
+# Create a Ceph filesystem, see: http://docs.ceph.com/docs/master/cephfs/createfs/
+#
+# This is expected to run on a single Ceph node with admin capabilities.
+#
+
+- name: Create FS pools
+  tags:
+    - ceph
+  include: '_create_pool.yml'
+  vars:
+    pool_name: '{{item.pool_name}}'
+    pool_pg_num: '{{item.pool_pg_num}}'
+  with_items:
+    - { pool_name: 'cephfs_metadata', pool_pg_num: '{{ceph_metadata_pg_num}}' }
+    - { pool_name: 'cephfs_data',     pool_pg_num: '{{ceph_data_pg_num}}' }
+
+
+- name: Does Ceph FS exist?
+  tags:
+    - ceph
+  shell: |
+    ceph --cluster {{ceph_cluster_name}} fs ls | egrep -q '^name: cephfs,'
+  ignore_errors: yes
+  register: check_ceph_fs_exists
+
+
+- name: Create FS
+  tags:
+    - ceph
+  command: |
+    ceph --cluster {{ceph_cluster_name}} fs new cephfs cephfs_metadata cephfs_data
+  when: 'check_ceph_fs_exists|failed'
