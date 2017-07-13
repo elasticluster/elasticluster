@@ -1,0 +1,53 @@
+---
+#
+# Setup CephFS clients
+#
+
+- name: Deploy `client.admin` keyring
+  tags:
+    - ceph
+    - client
+  copy:
+    src: '/tmp/{{item}}'
+    dest: '/etc/ceph/{{item}}'
+    owner: ceph
+    group: ceph
+    mode: 0400
+  with_items:
+    - '{{ceph_cluster_name}}.client.admin.keyring'
+
+
+- name: Extract CephX `client.admin` key
+  tags:
+    - ceph
+    - cephfs
+    - client
+  shell: |
+    ceph-authtool '/etc/ceph/{{ceph_cluster_name}}.client.admin.keyring' \
+        --print-key -n 'client.admin'
+  register: _ceph_key_client_admin
+
+
+- name: Save CephX `client.admin` key
+  tags:
+    - ceph
+    - cephfs
+    - client
+  lineinfile:
+    dest: '/etc/ceph/client.admin.secret'
+    line: '{{_ceph_key_client_admin.stdout}}'
+    state: present
+    create: yes
+    owner: root
+    group: root
+    mode: 0400
+
+
+- name: Mount filesystems on clients
+  tags:
+    - ceph
+    - cephfs
+    - client
+    - mount
+  include: _mount.yml
+  with_items: '{{ CEPH_MOUNTS }}'

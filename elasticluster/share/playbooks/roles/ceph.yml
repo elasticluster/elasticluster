@@ -3,7 +3,6 @@
 # Install a Ceph cluster; see http://ceph.com/ for more info
 #
 
-- hosts: ceph_osd:ceph_mon:ceph_mds
-  any_errors_fatal: true
+- hosts: ceph_osd:ceph_mon:ceph_mds:ceph_client
   roles:
     - ceph
