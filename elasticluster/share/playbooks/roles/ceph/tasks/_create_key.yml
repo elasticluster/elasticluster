@@ -25,9 +25,5 @@
   tags:
     - ceph
   shell: |
-    ceph-authtool {{keyring}} --print-key \
-      --gen-key -n {{keyname}} {{capabilities}} \
-      | grep -q '^[[:space:]]key = ' \
-      | sed 's/^\s+key = //g'
+    ceph-authtool {{keyring}} --gen-key -n {{keyname}} {{capabilities}}
   when: '_ceph_key_in_keyring|failed'
-  register: '{{varname}}'
