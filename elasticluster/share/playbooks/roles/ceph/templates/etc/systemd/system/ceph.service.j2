@@ -1,0 +1,17 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+[Unit]
+Description=Ceph {{_ceph_service}}
+Wants=network-online.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/ceph/{{_ceph_daemon_name}}.pid
+ExecStart=/usr/bin/ceph-{{_ceph_service}} --cluster {{ceph_cluster_name}} -n {{_ceph_daemon_name}} --pid-file /var/run/ceph/{{_ceph_daemon_name}}.pid
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
