@@ -439,17 +439,6 @@ nodes) using the ``client.admin`` key (deployed in file
 .. _`CephFS kernel driver`: http://docs.ceph.com/docs/master/cephfs/kernel/
 .. _`CephFS FUSE driver`: http://docs.ceph.com/docs/master/cephfs/fuse/
 
-This playbook's defaults differ from Ceph's upstream defaults in the following
-ways:
-
-* default replication factor for objects in a pool is 2 (Ceph's upstream is 3)
-* the minimum number of copies of an object that a pool should have to continue
-  being operational is 1 (Ceph's upstream is 2).
-
-In both cases, the different default is motivated by the assumption that
-cloud-based storage is "safer" than normal disk-based storage due to redundancy
-and fault-tolerance mechanisms at the cloud IaaS level.
-
 The Ceph and CephFS behavior can be changed by defining the
 following variables in the `setup/` section:
 
@@ -478,9 +467,35 @@ following variables in the `setup/` section:
      - 7/8 of ``ceph_osd_pool_size``
      - Number of PGs for the CephFS data pool.
 
-More detailed information on the `ceph role README`_
+More detailed information can be found in the `ceph role README`_.
 
 .. _`ceph role README`: https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/ceph
+
+.. note::
+
+  * In contrast with similar ElastiCluster playbooks, the CephFS playbook does
+    *not* automatically mount CephFS on client nodes.
+
+  * This playbook's defaults differ from Ceph's upstream defaults in the following
+    ways:
+
+    - default replication factor for objects in a pool is 2 (Ceph's upstream is 3)
+    - the minimum number of copies of an object that a pool should have to continue
+      being operational is 1 (Ceph's upstream is 2).
+
+    In both cases, the different default is motivated by the assumption that
+    cloud-based storage is "safer" than normal disk-based storage due to redundancy
+    and fault-tolerance mechanisms at the cloud IaaS level.
+
+  * The `CephFS kernel driver`_ for the "Luminous" release requires features
+    that are only present in the Linux kernel from version 4.5 on. At the time
+    of this writing, a >4.5 kernel is only installed by default on Debian 9
+    "stretch". To mount a "Luminous" CephFS on any other Linux distribution, you
+    will have to either use the `CephFS FUSE driver`_ or tell Ceph not tu use
+    tunables v5::
+
+      sudo ceph osd crush tunables hammer
+
 
 The following example configuration sets up a CephFS cluster using 1 MON+MDS
 node, 5 OSD nodes and providing 3 replicas for each object::
