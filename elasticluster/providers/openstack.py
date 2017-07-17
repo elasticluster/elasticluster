@@ -258,22 +258,22 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         """
         ver = os.getenv('OS_IDENTITY_API_VERSION', '')
         if ver == '3':
-            log.info(
+            log.debug(
                 "Using OpenStack Identity API v3"
                 " because of environmental variable setting `OS_IDENTITY_API_VERSION=3`")
             return '3'
         elif ver == '2' or ver.startswith('2.'):
-            log.info(
+            log.debug(
                 "Using OpenStack Identity API v2"
                 " because of environmental variable setting `OS_IDENTITY_API_VERSION=2`")
             return '2'
         elif self._os_auth_url.endswith('/v3'):
-            log.info(
+            log.debug(
                 "Using OpenStack Identity API v3 because of `/v3` ending in auth URL;"
                 " set environmental variable OS_IDENTITY_API_VERSION to force use of Identity API v2 instead.")
             return '3'
         elif self._os_auth_url.endswith('/v2.0'):
-            log.info(
+            log.debug(
                 "Using OpenStack Identity API v2 because of `/v2.0` ending in auth URL;"
                 " set environmental variable OS_IDENTITY_API_VERSION to force use of Identity API v3 instead.")
             return '2'
