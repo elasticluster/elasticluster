@@ -1,0 +1,8 @@
+#
+# Elasticluster  Example
+#
+# This is ...
+#
+# For more details about the configuration, see:
+# http://elasticluster.readthedocs.io/en/latest/configure.html
+#
