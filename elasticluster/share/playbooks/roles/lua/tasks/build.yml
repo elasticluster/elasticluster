@@ -95,3 +95,8 @@
     chdir: "{{lua_build_dir}}"
     creates: "{{lua_install_dir}}/bin/lua"
   become: '{% if lua_install_dir_writable|success %}no{% else %}yes{% endif %}'
+
+
+- name: Make this Lua interpreter available to other roles
+  set_fact:
+    lua_exe: "{{lua_install_dir}}/bin/lua"
