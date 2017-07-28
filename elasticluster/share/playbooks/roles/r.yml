@@ -1,0 +1,12 @@
+---
+
+- name: Install R with commonly-used libraries
+  hosts: r
+
+  roles:
+    - r
+
+  tags:
+    - R
+
+  
