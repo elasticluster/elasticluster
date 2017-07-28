@@ -30,9 +30,9 @@
 
 - name: Create required directories
   file:
-    dest='{{item}}'
-    state=directory
-    mode=0755
+    dest: '{{item}}'
+    state: directory
+    mode: 0755
   with_items:
     - '{{lua_install_dir}}/'
     - '{{lua_source_dir}}/'
@@ -41,9 +41,9 @@
 
 - name: Download Lua sources
   get_url:
-    url='{{lua_source_url}}'
-    dest='{{lua_source_dir}}/lua-{{LUA_VERSION}}.tar.gz'
-    mode=0444
+    url: '{{lua_source_url}}'
+    dest: '{{lua_source_dir}}/lua-{{LUA_VERSION}}.tar.gz'
+    mode: 0444
 
 # XXX: Ansible issues a warning message "Consider using unarchive module rather
 # than running tar"; however, `unarchive` seems to misteriously fail on CentOS
