@@ -1,7 +1,7 @@
 ---
 
 # Lmod version >= 5.6.3 is needed by EasyBuild
-LMOD_VERSION: '6.5'
+LMOD_VERSION: '7.0'
 
 # Lmod's install process creates a top-level container directory named
 # `lmod` with subdirectories for each version
