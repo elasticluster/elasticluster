@@ -11,9 +11,9 @@
       - path: '/home'
         clients: '{{groups.pbs_clients}}'
         options: 'rw,no_root_squash,async'
+    - role: hpc-common
   tasks: 
     - include: pbs+maui/tasks/master.yml
-    - include: cluster/tasks/packages.yml
   handlers:
     - include: common/handlers/main.yml
     - include: pbs+maui/handlers/main.yml
@@ -36,9 +36,8 @@
       - fs: '{{groups.pbs_master[0]}}:/home'
         mountpoint: '/home'
         options: 'rw,async'
+    - role: hpc-common
   tasks: 
     - include: pbs+maui/tasks/clients.yml
-    - include: cluster/tasks/packages.yml
   handlers:
     - include: pbs+maui/handlers/main.yml
-
