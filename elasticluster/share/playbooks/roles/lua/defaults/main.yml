@@ -6,7 +6,7 @@ lua_source_dir:  '/opt/lua/{{LUA_VERSION}}/src'
 lua_install_dir: '/opt/lua/{{LUA_VERSION}}'
 
 # where to download LUA sources from
-lua_source_url: 'http://sourceforge.net/projects/lmod/files/lua-{{LUA_VERSION}}.tar.gz/download'
+lua_source_url: 'https://sourceforge.net/projects/lmod/files/lua-{{LUA_VERSION}}.tar.gz/download'
 
 # Whether this Lua interpreter should be made
 # the first match in users' shell $PATH
