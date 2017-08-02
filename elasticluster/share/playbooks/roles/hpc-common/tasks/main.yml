@@ -18,12 +18,12 @@
     state: directory
   with_items:
     - '/etc/modulefiles'
-    - '/etc/modulefiles/mpi'
+    - '/etc/modulefiles/Core'
+    - '/etc/modulefiles/Core/mpi'
 
-    
+
 - name: Deploy OpenMPI environment module
   template:
-    dest: '/etc/modulefiles/mpi/openmpi.lua'
-    src: 'etc/modulefiles/mpi/openmpi.lua.j2'
+    dest: '/etc/modulefiles/Core/mpi/openmpi.lua'
+    src: 'etc/modulefiles/Core/mpi/openmpi.lua.j2'
     mode: 0444
-    
