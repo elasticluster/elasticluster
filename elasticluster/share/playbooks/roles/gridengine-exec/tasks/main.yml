@@ -90,6 +90,6 @@
     - gridengine
     - gridengine-execd
   service:
-    name='{{gridengine_execd_service}}'
-    state=running
-    enabled=yes
+    name: '{{gridengine_execd_service}}'
+    state: started
+    enabled: yes
