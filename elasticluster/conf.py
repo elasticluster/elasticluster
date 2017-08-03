@@ -188,8 +188,14 @@ CLOUD_PROVIDER_SCHEMAS = {
                  default=os.getenv('OS_PROJECT_NAME',
                                    os.getenv('OS_TENANT_NAME', ''))): nonempty_str,
         Optional("request_floating_ip"): boolean,
-        Optional("region_name", default=os.getenv('OS_REGION_NAME', None)): nonempty_str,
-        Optional("identity_api_version"): Or('3', '2'),
+        Optional("region_name", default=os.getenv('OS_REGION_NAME', '')): nonempty_str,
+        ## NOTE: defaults here should match those in `OpenStackCloudProvider` ctor
+        Optional("compute_api_version", default=os.getenv('OS_COMPUTE_API_VERSION', '2')): Or('1.1', '2'),
+        Optional("image_api_version", default=os.getenv('OS_IMAGE_API_VERSION', '2')): Or('1', '2'),
+        Optional("network_api_version", default=os.getenv('OS_NETWORK_API_VERSION', '2.0')): Or('2.0'),
+        Optional("volume_api_version", default=os.getenv('OS_VOLUME_API_VERSION', '3')): Or('1', '2', '3'),
+        Optional("identity_api_version"): Or('3', '2'),  # no default, can auto-detect
+        ## DEPRECATED, use `compute_api_version` instead
         Optional("nova_api_version"): nova_api_version,
     },
 
