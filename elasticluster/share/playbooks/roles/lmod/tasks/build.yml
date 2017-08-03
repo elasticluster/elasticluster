@@ -67,9 +67,8 @@
 
 - name: Download sources
   get_url:
-    url='{{ lmod_source_url }}'
-    dest='{{ lmod_build_dir }}'
-
+    url: '{{ lmod_source_url }}'
+    dest: '{{ lmod_build_dir }}'
 
 # XXX: See comment in `roles/lua/tasks/build.yml` about `unarchive` failing with
 # no apparent reason.
@@ -82,10 +81,10 @@
 #       dest='{{ lmod_build_dir }}/'
 #       creates='{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}/configure'
 #       copy=no
-#
+
 - name: Extract sources
   command:
-    'tar -xjf "{{ lmod_build_dir }}/Lmod-{{LMOD_VERSION}}.tar.bz2" -C "{{ lmod_build_dir }}"'
+    'tar -xzf "{{ lmod_build_dir }}/Lmod-{{LMOD_VERSION}}.tar.gz" -C "{{ lmod_build_dir }}"'
   args:
     creates='{{ lmod_build_dir }}/Lmod-{{LMOD_VERSION}}/configure'
 

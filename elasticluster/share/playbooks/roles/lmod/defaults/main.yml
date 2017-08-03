@@ -24,7 +24,7 @@ lua_exe: '/usr/bin/lua'
 ### No customization should be necessary nor useful below this line ###
 
 # where to download Lmod sources
-lmod_source_url: 'http://downloads.sourceforge.net/project/lmod/Lmod-{{LMOD_VERSION}}.tar.bz2'
+lmod_source_url: 'https://github.com/TACC/Lmod/archive/{{LMOD_VERSION}}.tar.gz'
 
 # extra options to pass to Lmod's `./configure` script
 lmod_configure_extra_opts: ''
