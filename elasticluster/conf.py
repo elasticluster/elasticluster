@@ -188,7 +188,7 @@ CLOUD_PROVIDER_SCHEMAS = {
                  default=os.getenv('OS_PROJECT_NAME',
                                    os.getenv('OS_TENANT_NAME', ''))): nonempty_str,
         Optional("request_floating_ip"): boolean,
-        Optional("region_name"): nonempty_str,
+        Optional("region_name", default=os.getenv('OS_REGION_NAME', None)): nonempty_str,
         Optional("identity_api_version"): Or('3', '2'),
         Optional("nova_api_version"): nova_api_version,
     },
