@@ -136,13 +136,13 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                  # this is deprecated in favor of `compute_api_version`
                  nova_api_version=None):
         # OpenStack connection params
-        self._os_auth_url = self._get_os_config_value('auth URL', auth_url, 'OS_AUTH_URL').rstrip('/')
-        self._os_username = self._get_os_config_value('user name', username, 'OS_USERNAME')
-        self._os_user_domain_name = self._get_os_config_value('user domain name', user_domain_name, 'OS_USER_DOMAIN_NAME', 'default')
-        self._os_password = self._get_os_config_value('password', password, 'OS_PASSWORD')
-        self._os_tenant_name = self._get_os_config_value('project name', project_name, 'OS_PROJECT_NAME')
-        self._os_project_domain_name = self._get_os_config_value('project domain name', project_domain_name, 'OS_PROJECT_DOMAIN_NAME', 'default')
-        self._os_region_name = self._get_os_config_value('region_name', region_name, 'OS_REGION_NAME', '')
+        self._os_auth_url = self._get_os_config_value('auth URL', auth_url, ['OS_AUTH_URL']).rstrip('/')
+        self._os_username = self._get_os_config_value('user name', username, ['OS_USERNAME'])
+        self._os_user_domain_name = self._get_os_config_value('user domain name', user_domain_name, ['OS_USER_DOMAIN_NAME'], 'default')
+        self._os_password = self._get_os_config_value('password', password, ['OS_PASSWORD'])
+        self._os_tenant_name = self._get_os_config_value('project name', project_name, ['OS_PROJECT_NAME', 'OS_TENANT_NAME'])
+        self._os_project_domain_name = self._get_os_config_value('project domain name', project_domain_name, ['OS_PROJECT_DOMAIN_NAME'], 'default')
+        self._os_region_name = self._get_os_config_value('region_name', region_name, ['OS_REGION_NAME'], '')
 
         # the OpenStack versioning mess
         if nova_api_version is not None:
@@ -172,26 +172,29 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._cached_instances = {}
 
     @staticmethod
-    def _get_os_config_value(thing, value, varname, default=None):
+    def _get_os_config_value(thing, value, varnames, default=None):
+        assert varnames, "List of env variable names cannot be empty"
         if value:
-            env_value = os.getenv(varname, '')
-            if env_value != value:
-                warn("OpenStack {thing} is present both in the environment"
-                     " and the config file. Environment variable {varname}"
-                     " takes precedence, but this may change in the future."
-                     .format(thing=thing, varname=varname),
-                     FutureWarning)
-                return env_value
+            for varname in varnames:
+                env_value = os.getenv(varname, None)
+                if env_value is not None and env_value != value:
+                    warn("OpenStack {thing} is present both in the environment"
+                         " and the config file. Environment variable {varname}"
+                         " takes precedence, but this may change in the future."
+                         .format(thing=thing, varname=varname),
+                         FutureWarning)
+                    return env_value
             return value
         else:
             if default is not None:
                 return default
             else:
-                raise RuntimeError(
+                # first variable name is preferred; others are for backwards-compatibility only
+                 raise RuntimeError(
                     "There is no default value for OpenStack {0};"
                     " please specify one in the config file"
                     " or using environment variable {1}."
-                    .format(thing, varname))
+                    .format(thing, varnames[0]))
 
     def _init_os_api(self):
         """
