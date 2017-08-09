@@ -95,7 +95,7 @@ from elasticluster.exceptions import (
 DEFAULT_OS_COMPUTE_API_VERSION='2'
 DEFAULT_OS_IDENTITY_API_VERSION='3'
 DEFAULT_OS_IMAGE_API_VERSION='2'
-DEFAULT_OS_NETWORK_API_VERSION='2.0'  # no choice
+DEFAULT_OS_NETWORK_API_VERSION='2.0'  # no choice as of Aug. 2017
 DEFAULT_OS_VOLUME_API_VERSION='2'
 
 
@@ -219,7 +219,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 region_name=self._os_region_name)
             log.debug("Creating OpenStack Network API (Neutron) client ...")
             self.neutron_client = neutron_client.Client(
-                #self._network_api_version,  ## doesn't work :-(
+                #self._network_api_version,  ## doesn't work as of Neutron Client 2 :-(
                 session=sess, region_name=self._os_region_name)
             log.debug("Creating OpenStack Image API (Glance) v%s client ...", self._image_api_version)
             self.glance_client = glance_client.Client(
