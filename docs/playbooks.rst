@@ -592,7 +592,7 @@ Supported on:
 
 * Ubuntu 16.04
 
-This playbook installs Kafka_ nodes with Zookeeper_ as orchistrator. It
+This playbook installs Kafka_ nodes with Zookeeper_ as orchestrator. It
 comprises a Zookeeper quorum, and kafka nodes. Kafka is a distributed
 streaming platform (used for building real-time data pipelines and streaming).
 
@@ -620,7 +620,7 @@ Supported on:
 
 * Ubuntu 16.04
 
-This playbook installs NiFi_ nodes with Zookeeper_ as orchistrator. It
+This playbook installs NiFi_ nodes with Zookeeper_ as orchestrator. It
 comprises a Zookeeper quorum, and NiFi nodes. Apache NiFi supports powerful
 and scalable directed graphs of data routing, transformation, and system mediation
 logic. The NiFi web interface will be available on port 8080 on any of the nodes.

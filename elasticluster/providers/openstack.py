@@ -367,10 +367,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                                           image_id)
             # ok, use volume as VM disk
             vm_start_args['block_device_mapping'] = {
-                '{dev}': ('{id}:::{delete_on_terminate}'
-                          .format(dev=boot_disk_device,
-                                  id=volume.id,
-                                  delete_on_terminate=boot_disk_delete_on_terminate)),
+                '{0}'.format(boot_disk_device): ('{0}:::{1}'.format(volume.id, boot_disk_delete_on_terminate)),
             }
 
         # due to some `nova_client.servers.create()` implementation weirdness,
