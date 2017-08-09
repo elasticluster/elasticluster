@@ -177,23 +177,18 @@ CLOUD_PROVIDER_SCHEMAS = {
 
     'openstack': {
         "provider": 'openstack',
-        Optional("auth_url", default=os.getenv('OS_AUTH_URL', '')): url,
-        Optional("username", default=os.getenv('OS_USERNAME', '')): nonempty_str,
-        Optional("password", default=os.getenv('OS_PASSWORD', '')): nonempty_str,
-        Optional("user_domain_name", default=os.getenv('OS_USER_DOMAIN_NAME', 'default')): nonempty_str,
-        Optional("project_domain_name", default=os.getenv('OS_PROJECT_DOMAIN_NAME', 'default')): nonempty_str,
-        Optional("project_name",
-                 # if OS_PROJECT_NAME is not defined,
-                 # try legacy variable OS_TENANT_NAME as a fallback
-                 default=os.getenv('OS_PROJECT_NAME',
-                                   os.getenv('OS_TENANT_NAME', ''))): nonempty_str,
+        Optional("auth_url"): url,
+        Optional("username"): nonempty_str,
+        Optional("password"): nonempty_str,
+        Optional("user_domain_name"): nonempty_str,
+        Optional("project_domain_name"): nonempty_str,
+        Optional("project_name"): nonempty_str,
         Optional("request_floating_ip"): boolean,
-        Optional("region_name", default=os.getenv('OS_REGION_NAME', '')): nonempty_str,
-        ## NOTE: defaults here should match those in `OpenStackCloudProvider` ctor
-        Optional("compute_api_version", default=os.getenv('OS_COMPUTE_API_VERSION', '2')): Or('1.1', '2'),
-        Optional("image_api_version", default=os.getenv('OS_IMAGE_API_VERSION', '2')): Or('1', '2'),
-        Optional("network_api_version", default=os.getenv('OS_NETWORK_API_VERSION', '2.0')): Or('2.0'),
-        Optional("volume_api_version", default=os.getenv('OS_VOLUME_API_VERSION', '3')): Or('1', '2', '3'),
+        Optional("region_name"): nonempty_str,
+        Optional("compute_api_version"): Or('1.1', '2'),
+        Optional("image_api_version"): Or('1', '2'),
+        Optional("network_api_version"): Or('2.0'),
+        Optional("volume_api_version"): Or('1', '2', '3'),
         Optional("identity_api_version"): Or('3', '2'),  # no default, can auto-detect
         ## DEPRECATED, use `compute_api_version` instead
         Optional("nova_api_version"): nova_api_version,

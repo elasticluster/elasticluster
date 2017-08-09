@@ -174,27 +174,30 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     @staticmethod
     def _get_os_config_value(thing, value, varnames, default=None):
         assert varnames, "List of env variable names cannot be empty"
-        if value:
-            for varname in varnames:
-                env_value = os.getenv(varname, None)
-                if env_value is not None and env_value != value:
+        for varname in varnames:
+            env_value = os.getenv(varname, None)
+            if env_value is not None:
+                if value is not None and env_value != value:
                     warn("OpenStack {thing} is present both in the environment"
                          " and the config file. Environment variable {varname}"
                          " takes precedence, but this may change in the future."
                          .format(thing=thing, varname=varname),
                          FutureWarning)
-                    return env_value
+                else:
+                    log.debug('OpenStack %s taken from env variable %s',
+                              thing, varname)
+                return env_value
+        if value:
             return value
+        elif default is not None:
+            return default
         else:
-            if default is not None:
-                return default
-            else:
-                # first variable name is preferred; others are for backwards-compatibility only
-                 raise RuntimeError(
-                    "There is no default value for OpenStack {0};"
-                    " please specify one in the config file"
-                    " or using environment variable {1}."
-                    .format(thing, varnames[0]))
+            # first variable name is preferred; others are for backwards-compatibility only
+            raise RuntimeError(
+                "There is no default value for OpenStack {0};"
+                " please specify one in the config file"
+                " or using environment variable {1}."
+                .format(thing, varnames[0]))
 
     def _init_os_api(self):
         """
