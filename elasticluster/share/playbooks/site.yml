@@ -20,6 +20,7 @@
 # their setup depending on configured host groups
 - include: roles/ansible.yml
 - include: roles/ceph.yml
+- include: roles/elasticsearch.yml
 - include: roles/ganglia.yml
 - include: roles/glusterfs.yml
 - include: roles/gridengine.yml

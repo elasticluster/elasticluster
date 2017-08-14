@@ -1,0 +1,25 @@
+
+{% if es_config %}
+{{ es_config | to_nice_yaml }}
+{% endif %}
+
+{% if es_config['cluster.name'] is not defined %}
+cluster.name: {{es_cluster_name}}
+{% endif %}
+
+{% if es_config['node.name'] is not defined %}
+node.name: {{inventory_hostname}}
+{% endif %}
+
+network.host: [_site_,_local_]
+
+discovery.zen.ping.unicast.hosts: [{% for server in groups['elasticsearch'] -%}"{{ server }}"{%- if not loop.last %},{% endif -%}{%- endfor %}]
+
+#################################### Paths ####################################
+
+# Path to directory containing configuration (this file and logging.yml):
+path.conf: {{ es_conf_dir }}
+
+path.data: {{ es_data_dir }}
+
+path.logs: {{ es_log_dir }}

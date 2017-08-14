@@ -672,3 +672,30 @@ The following example configuration sets up a group of 2 zfs nodes::
     provider=ansible
     share_groups=zfs_server
 
+ELASTICSEARCH
+==============
+
+Supported on:
+
+* Ubuntu 16.04
+* CentOS 7
+
+This playbook installs ELASTICSEARCH_ nodes.
+
+=================  ==================================================
+Ansible group      Action
+=================  ==================================================
+``elasticsearch``  Install the node with elasticsearch.
+=================  ==================================================
+
+The following example configuration sets up a group of 3 elasticsearch
+ nodes (please choose a odd amount of servers to prevent split-brain)::
+
+    [cluster/elasticsearch]
+    setup_provider=elasticsearch
+    elasticsearch_nodes=3
+    ssh_to=elasticsearch
+
+    [setup/elasticsearch]
+    provider=ansible
+    elasticsearch_groups=elasticsearch
