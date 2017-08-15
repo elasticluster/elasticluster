@@ -1,55 +1,89 @@
-# THIS FILE IS CONTROLLED BY ANSIBLE
-# any local modifications will be overwritten!
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
 #
 
+
 [global]
-    auth cluster required = cephx
-    auth service required = cephx
-    auth client required = cephx
+fsid = {{ ceph_fsid }}
 
-    fsid = {{fsid}}
+# Ceph seems to require that the network is specified in netaddr/prefix format,
+# although the documentation states that netaddr/netmask is used;
+# for the required conversions in Ansible Jinja templates,
+# see: http://docs.ansible.com/ansible/playbooks_filters_ipaddr.html
+{% set net_and_netmask = [ansible_default_ipv4.network, ansible_default_ipv4.netmask]|join('/') -%}
+public network = {{ net_and_netmask | ipaddr('net') }}
 
-    # mon initial members = {% for host in groups['ceph_mon']|sort %}{{ host }}{% if not loop.last %},{% endif %}{% endfor %}
+auth cluster required = cephx
+auth service required = cephx
+auth client required = cephx
 
-    # debug ms = 1
+mon initial members = {{ groups.ceph_mon|join(',') }}
 
-{% for host in groups['ceph_mon']|sort %}
-[mon.{{ loop.index0 }}]
-    # debug mon = 20
-    # debug paxos = 20
-    # debug auth = 20
+osd journal size = 1000
+osd pool default size = {{ ceph_osd_pool_size }}
+osd pool default min size = 1
 
-    host = {{ host }}
-    mon addr = {{ hostvars[host].ansible_default_ipv4.address }}:6789
-    mon data = /var/lib/ceph/mon/ceph-{{ loop.index0 }}
+# see http://docs.ceph.com/docs/master/rados/operations/placement-groups/#a-preselection-of-pg-num
+# for how to compute PG number
+osd pool default pg num = {{ ceph_osd_pg_num }}
+osd pool default pgp num = {{ ceph_osd_pg_num }}
+osd crush chooseleaf type = 1
+
+# make object name max length equal to the maximum file name length on the
+# `ext4` filesystem, otherwise the OSD complains that "backend (filestore) is
+# unable to support max object name[space] len" and drops out...
+osd max object name len = 255
+
+
+#
+# MON hosts
+#
+{% for host in groups.ceph_mon|sort %}
+  {%- set mon_id = host -%}
+[mon.{{ mon_id }}]
+host = {{ host }}
+mon addr = {{ hostvars[host].ansible_default_ipv4.address }}:6789
+mon data = /var/lib/ceph/mon/{{ceph_cluster_name}}-{{ mon_id }}
 {% endfor %}
 
-{% for host in groups['ceph_osd']|sort %}
-[osd.{{ loop.index0 }}]
-    host = {{ host }}
 
-    osd journal size = 1000
+#
+# OSD hosts
+#
+{% for host in groups.ceph_osd|sort %}
+  {% set osd_id = loop.index0 %}
+[osd.{{ osd_id }}]
+host = {{ host }}
 
-    osd mkfs type = xfs
-    devs = {{osd_devs}}
-    osd addr = {{ hostvars[host].ansible_default_ipv4.address }}:6789
-    osd data = /var/lib/ceph/osd/ceph-{{ loop.index0 }}
-
+osd data = /var/lib/ceph/osd/{{ceph_cluster_name}}-{{ osd_id }}
 {% endfor %}
 
-{% for host in groups['ceph_mds']|sort %}
-[mds.{{ loop.index0 }}]
-    host = {{ host }}
-    mds addr = {{ hostvars[host].ansible_default_ipv4.address }}:6789
-    mds data = /var/lib/ceph/mds/ceph-{{ loop.index0 }}
+
+{% if 'ceph_mds' in groups %}
+#
+# MDS hosts
+#
+{% for host in groups.ceph_mds|sort %}
+  {% set mds_id = host %}
+[mds.{{ mds_id }}]
+host = {{ host }}
+
+mds data = /var/lib/ceph/mds/{{ceph_cluster_name}}-{{ mds_id }}
 {% endfor %}
+{% endif %}
+
 
 {% if 'ceph_rgw' in groups %}
+#
+# RGW hosts
+#
+
 [client.radosgw.gateway]
-    host = {{ groups['ceph_rgw'] }}
-    keyring = /etc/ceph/keyring
-    rgw socket path = /tmp/radosgw.sock
-    log file = /var/log/ceph/radosgw.log
-    rgw print continue = false
+host = {{ groups.ceph_rgw }}
+keyring = /etc/ceph/keyring
+rgw socket path = /tmp/radosgw.sock
+log file = /var/log/ceph/radosgw.log
+rgw print continue = false
 {% endif %}
 

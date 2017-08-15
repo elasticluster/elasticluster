@@ -117,13 +117,30 @@ def nonempty_str(v):
 
 @validator
 def nova_api_version(version):
-    try:
-        from novaclient import client, exceptions
-        client.get_client_class(version)
+    """
+    Check that the ``OS_COMPUTE_API_VERSION`` is valid.
+
+    For what is a valid "Nova client" version, see:
+    `<https://github.com/openstack/python-novaclient/blob/master/novaclient/client.py#L282>`_
+    """
+    if version in ['1.1', '2']:
         return version
-    except exceptions.UnsupportedVersion as err:
+    elif version.startswith('2.'):
+        try:
+            microversion = int(version[2:])
+        except (ValueError, TypeError):
+            raise ValueError(
+                "Invalid OpenStack Compute API version: {0}"
+                " -- must be either '1.1', '2', or '2.X'"
+                " (where 'X' is a microversion integer)"
+                .format(version))
+        return version
+    else:
         raise ValueError(
-            "Unsupported Nova API version: {0}".format(err))
+            "Invalid OpenStack Compute API version: {0}"
+            " -- must be either '1.1', '2', or '2.X'"
+            " (where 'X' is a microversion integer)"
+            .format(version))
 
 
 @validator

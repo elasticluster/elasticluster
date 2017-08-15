@@ -1,0 +1,31 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+
+[ceph]
+name=Ceph binary packages
+baseurl=https://download.ceph.com/rpm-{{ceph_release}}/{{ansible_distribution_major_version}}/$basearch
+enabled=1
+gpgcheck=1
+type=rpm-md
+gpgkey=https://download.ceph.com/keys/release.asc
+
+
+[ceph-noarch]
+name=Ceph architecture-independent packages
+baseurl=https://download.ceph.com/rpm-{{ceph_release}}/{{ansible_distribution_major_version}}/noarch
+enabled=1
+gpgcheck=1
+type=rpm-md
+gpgkey=https://download.ceph.com/keys/release.asc
+
+
+[ceph-src]
+name=Ceph source packages
+baseurl=https://download.ceph.com/rpm-{{ceph_release}}/{{ansible_distribution_major_version}}/SRPMS
+enabled=0
+gpgcheck=1
+type=rpm-md
+gpgkey=https://download.ceph.com/keys/release.asc

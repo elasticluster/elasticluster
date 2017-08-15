@@ -30,9 +30,9 @@
 
 - name: Create required directories
   file:
-    dest='{{item}}'
-    state=directory
-    mode=0755
+    dest: '{{item}}'
+    state: directory
+    mode: 0755
   with_items:
     - '{{lua_install_dir}}/'
     - '{{lua_source_dir}}/'
@@ -41,9 +41,9 @@
 
 - name: Download Lua sources
   get_url:
-    url='{{lua_source_url}}'
-    dest='{{lua_source_dir}}/lua-{{LUA_VERSION}}.tar.gz'
-    mode=0444
+    url: '{{lua_source_url}}'
+    dest: '{{lua_source_dir}}/lua-{{LUA_VERSION}}.tar.gz'
+    mode: 0444
 
 # XXX: Ansible issues a warning message "Consider using unarchive module rather
 # than running tar"; however, `unarchive` seems to misteriously fail on CentOS
@@ -62,7 +62,7 @@
   command:
     'tar -xzf "{{ lua_source_dir }}/lua-{{LUA_VERSION}}.tar.gz" -C "{{ lua_source_dir }}"'
   args:
-    creates='{{ lua_source_dir }}/lua-{{LUA_VERSION}}/configure'
+    creates: '{{ lua_source_dir }}/lua-{{LUA_VERSION}}/configure'
 
 
 - name: Set up Lua compilation
@@ -78,7 +78,7 @@
   command: make
   args:
     chdir: "{{lua_build_dir}}"
-
+    creates: 'lua/src/lua'
 
 - name: Is installation directory writable?
   command: test -w "{{lua_install_dir}}/"
@@ -93,4 +93,10 @@
   command: make install
   args:
     chdir: "{{lua_build_dir}}"
+    creates: "{{lua_install_dir}}/bin/lua"
   become: '{% if lua_install_dir_writable|success %}no{% else %}yes{% endif %}'
+
+
+- name: Make this Lua interpreter available to other roles
+  set_fact:
+    lua_exe: "{{lua_install_dir}}/bin/lua"

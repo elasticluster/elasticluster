@@ -1,0 +1,101 @@
+---
+
+# variables created by `set_fact` are all set *concurrently*;
+# so if there are inter-dependencies, we need to split creation
+# over a sequence of steps
+- name: Local Ceph constants (1)
+  tags:
+    - ceph
+  set_fact:
+    _ceph_service: 'mgr'
+
+- name: Local Ceph constants (2)
+  tags:
+    - ceph
+  set_fact:
+    _ceph_daemon_name: '{{_ceph_service}}.{{inventory_hostname}}'
+    _ceph_daemon_dir: '/var/lib/ceph/{{_ceph_service}}/{{ceph_cluster_name}}-{{inventory_hostname}}'
+
+
+- name: Ensure Ceph MGR directory exists
+  tags:
+    - ceph
+  file:
+    dest: '{{_ceph_daemon_dir}}'
+    state: directory
+    owner: 'ceph'
+    group: 'ceph'
+    mode: 0755
+
+
+- name: Create MGR authentication key
+  tags:
+    - ceph
+  include: _create_key.yml
+  vars:
+    keyname: '{{_ceph_daemon_name}}'
+    capabilities: "--cap mon 'allow profile mgr' --cap osd 'allow *' --cap mds 'allow *'"
+    keyring: '{{_ceph_daemon_dir}}/keyring'
+  become: yes
+  become_user: 'ceph'
+
+
+- name: Register the MGR authentication key
+  tags:
+    - ceph
+  shell: |
+    ceph --cluster {{ceph_cluster_name}} auth import -i {{_ceph_daemon_dir}}/keyring
+  become: yes
+  become_user: 'ceph'
+
+
+- name: Deploy Ceph MGR init script
+  template:
+    src: 'etc/init.d/ceph-service.sh.j2'
+    dest: '/etc/init.d/ceph-mgr.sh'
+    mode: 0444
+  when: 'not init_is_systemd'
+
+
+- name: Deploy Ceph MGR systemd unit file
+  template:
+    src: 'etc/systemd/system/ceph.service.j2'
+    dest: '/etc/systemd/system/ceph-mgr.service'
+    mode: 0444
+  register: ceph_mgr_systemd_unit
+  when: 'init_is_systemd'
+
+
+- name: Reload systemd unit definitions
+  command: |
+    systemctl daemon-reload
+  when: ceph_mgr_systemd_unit|changed
+
+
+- name: Ensure `ceph-mgr` is running and (re)started at boot
+  tags:
+    - ceph
+  service:
+    name: ceph-mgr
+    state: started
+    enabled: yes
+
+# - name: Start `ceph-mgr` process
+#   tags:
+#     - ceph
+#   shell: |
+#     if ! (ceph --cluster '{{ceph_cluster_name}}' tell '{{_ceph_daemon_name}}' version
+#               1>/dev/null 2>/dev/null); then
+#         ceph-mgr --cluster '{{_ceph_cluster_name}}' -n '{{_ceph_daemon_name}}'
+#     fi
+#   become: yes
+#   become_user: 'ceph'
+
+
+- name: Ensure `ceph-mgr` is (re)started at boot
+  tags:
+    - ceph
+  service:
+    name: ceph
+    state: started
+    enabled: yes

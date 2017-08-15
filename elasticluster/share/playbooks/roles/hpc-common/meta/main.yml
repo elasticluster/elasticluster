@@ -1,0 +1,7 @@
+# hpc-common/meta/main.yml
+---
+
+dependencies:
+  # install `lmod` to manage "environment module" files
+  - role: lua
+  - role: lmod

@@ -1,0 +1,27 @@
+---
+
+- name: Create mountpoint directory {{item.mountpoint}}
+  tags:
+      - ceph
+      - cephfs
+      - client
+      - mount
+  file:
+    path: '{{item.mountpoint}}'
+    state: directory
+  with_items: '{{CEPH_MOUNTS}}'
+
+
+- name: Mount CephFS filesystem {{item.mountpoint}}
+  tags:
+      - ceph
+      - cephfs
+      - client
+      - mount
+  mount:
+    src: '{{groups.ceph_mon|join(",")}}:/'
+    name: '{{item.mountpoint}}'
+    fstype: ceph
+    opts: 'name=admin,secretfile=/etc/ceph/client.admin.secret,{{item.options|default("rw")}}'
+    state: '{{item.state|default("mounted")}}'
+  with_items: '{{CEPH_MOUNTS}}'

@@ -1,14 +1,15 @@
 ---
 - name: HTCondor common Playbook
   hosts: condor_master:condor_workers
+  roles:
+    - role: hpc-common
   tasks:
-    - include: cluster/tasks/packages.yml
     - include: htcondor/tasks/common.yml
-
   handlers:
     - include: common/handlers/main.yml
     - include: htcondor/handlers/common.yml
 
+      
 - name: HTCondor master Playbook
   hosts: condor_master
   roles:

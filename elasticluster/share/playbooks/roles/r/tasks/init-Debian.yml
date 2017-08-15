@@ -6,6 +6,10 @@
       - r-base
       - r-base-dev
       - r-recommended
+      # support parallel execution
+      - r-cran-rmpi
+      - r-cran-snow
+      - r-cran-dosnow
       # dependency packages for Jupyter's IRkernel,
       # see: https://irkernel.github.io/installation/#source-panel
       - libzmq3-dev

@@ -396,6 +396,152 @@ are NIS slaves) to make it easier to add users to the cluster (just run the
 ``adduser`` command on the master).
 
 
+CephFS
+======
+
+Supported on:
+
+* Ubuntu 16.04, 14.04
+* Debian 8 ("jessie"), 9 ("stretch")
+* CentOS 6.x and 7.x
+
+=================  ======================================================
+Ansible group      Action
+=================  ======================================================
+``ceph_mon``       Install Ceph server software and configure this host
+                   to run the MON (monitor) service.  There *must* be
+                   at least one MON node in any Ceph cluster.
+``ceph_osd``       Install Ceph server software and configure this host
+                   to run the OSD (object storage device) service.
+                   There *must* be at least three OSD nodes in a Ceph
+                   cluster.
+``ceph_mds``       Install Ceph server software and configure this host
+                   to run the MDS (meta-data server) service.  This node
+                   is optional but CephFS is only available if at least one
+                   MDS is available in the cluster.
+``ceph_client``    Install required packages to make usage of Ceph Storage
+                   Cluster and CephFS possible.  Any mount point listed in
+                   ``CEPH_MOUNTS`` will be created and the corresponding
+                   filesystem mounted.
+=================  ======================================================
+
+This will install a Ceph Storage Cluster with CephFS. Actual data storage is
+done in the OSD nodes, on each node under directory
+``/var/lib/ceph/osd/ceph-NNN``. All hosts in group ``ceph_client`` can then
+mount this filesystem, using either the `CephFS kernel driver`_ or the `CephFS
+FUSE driver`_.
+
+Management of the cluster is possible from any node (incl. ``ceph_client``
+nodes) using the ``client.admin`` key (deployed in file
+``/etc/ceph/ceph.client.admin.keyring``, by default only readable to the
+``root`` user).
+
+.. _`CephFS kernel driver`: http://docs.ceph.com/docs/master/cephfs/kernel/
+.. _`CephFS FUSE driver`: http://docs.ceph.com/docs/master/cephfs/fuse/
+
+The Ceph and CephFS behavior can be changed by defining the
+following variables in the `setup/` section:
+
+.. list-table:: Ceph/CephFS variables in ElastiCluster
+   :widths: 30 20 50
+   :header-rows: 1
+
+   * - Variable
+     - Default value
+     - Description
+   * - ``ceph_release``
+     - ``luminous``
+     - Name of Ceph release to install, e.g. "luminous" or "jewel". Note that
+       not all releases are available on all platforms; for instance, selecting
+       the "hammer" release on Ubuntu 16.04 will install "jewel" instead.
+   * - ``ceph_osd_pool_size``
+     - 2
+     - Default number of object replicas in a pool.
+   * - ``ceph_osd_pg_num``
+     - computed according to: `<http://docs.ceph.com/docs/master/rados/operations/placement-groups/#a-preselection-of-pg-num>`_
+     - Default number of PGs in a pool.
+   * - ``ceph_metadata_pg_num``
+     - 1/8 of ``ceph_osd_pool_size``
+     - Number of PGs for the CephFS metadata pool.
+   * - ``ceph_data_pg_num``
+     - 7/8 of ``ceph_osd_pool_size``
+     - Number of PGs for the CephFS data pool.
+
+More detailed information can be found in the `ceph role README`_.
+
+.. _`ceph role README`: https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/ceph
+
+.. note::
+
+  * In contrast with similar ElastiCluster playbooks, the CephFS playbook does
+    *not* automatically mount CephFS on client nodes.
+
+  * This playbook's defaults differ from Ceph's upstream defaults in the following
+    ways:
+
+    - default replication factor for objects in a pool is 2 (Ceph's upstream is 3)
+    - the minimum number of copies of an object that a pool should have to continue
+      being operational is 1 (Ceph's upstream is 2).
+
+    In both cases, the different default is motivated by the assumption that
+    cloud-based storage is "safer" than normal disk-based storage due to redundancy
+    and fault-tolerance mechanisms at the cloud IaaS level.
+
+  * The `CephFS kernel driver`_ for the "Luminous" release requires features
+    that are only present in the Linux kernel from version 4.5 on. At the time
+    of this writing, a >4.5 kernel is only installed by default on Debian 9
+    "stretch". To mount a "Luminous" CephFS on any other Linux distribution, you
+    will have to either use the `CephFS FUSE driver`_ or tell Ceph not tu use
+    tunables v5::
+
+      sudo ceph osd crush tunables hammer
+
+
+The following example configuration sets up a CephFS cluster using 1 MON+MDS
+node, 5 OSD nodes and providing 3 replicas for each object::
+
+    [setup/ceph1]
+    mon_groups=ceph_mon,ceph_mds
+    osd_groups=ceph_osd
+    client_groups=ceph_client
+
+    global_var_ceph_release=luminous
+    global_var_ceph_osd_pool_size=3
+
+    [cluster/ceph1]
+    setup=ceph1
+
+    mon_nodes=1
+    osd_nodes=5
+    client_nodes=1
+    ssh_to=client
+
+    # .. cloud-specific params ...
+
+This example configuration sets up a CephFS cluster using 3 MON+OSD nodes, 1 MDS
+nodes and sets explicitly the number of PGs to use for CephFS metadata and
+data::
+
+    [setup/ceph2]
+    mon_groups=ceph_mon,ceph_osd
+    mds_groups=ceph_mds
+    client_groups=ceph_client
+
+    global_var_ceph_release=luminous
+    global_var_ceph_metadata_pg_num=1024
+    global_var_ceph_data_pg_num=8192
+
+    [cluster/ceph2]
+    setup=ceph2
+
+    mon_nodes=3
+    mds_nodes=1
+    client_nodes=1
+    ssh_to=client
+
+    # .. cloud-specific params ...
+
+
 GlusterFS
 =========
 

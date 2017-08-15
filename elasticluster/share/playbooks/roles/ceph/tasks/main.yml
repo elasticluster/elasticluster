@@ -1,35 +1,155 @@
 ---
-- name: configure apt key for CEPH repository
-  action: apt_key url=https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc state=present
-  when: is_debian_or_ubuntu
+
+- name: Check that at least one MON node is configured
   tags:
     - ceph
+  fail:
+    msg: 'At least one node should be in the `ceph_mon` group!'
+  when: 'groups.ceph_mon|length|int < 1'
 
-- name: add CEPH apt public repository
-  action: apt_repository repo='deb http://ceph.com/debian/ precise main' state=present
-  when: is_debian_or_ubuntu
+
+- name: Check that at least two OSD nodes are configured
   tags:
     - ceph
+  fail:
+    msg: 'At least two nodes should be in the `ceph_osd` group!'
+  when: 'groups.ceph_osd|length|int < 2'
 
-- name: Install required package for apt_repository.
-  action: apt pkg={{item}} state=present
-  when: is_debian_or_ubuntu
+
+- name: Define convenient conditional shortcut variables
+  tags:
+    - ceph
+  set_fact:
+    is_ceph_client: '{{"ceph_client" in group_names}}'
+    is_ceph_mds: '{{"ceph_mds" in group_names}}'
+    is_ceph_mon: '{{"ceph_mon" in group_names}}'
+    is_ceph_osd: '{{"ceph_osd" in group_names}}'
+    is_ceph_server: '{{inventory_hostname in (groups.ceph_mon + groups.ceph_osd + groups.ceph_mds|default([]))}}'
+    is_ceph_first_mon: '{{inventory_hostname == groups.ceph_mon[0]}}'
+
+
+- name: Run distribution-specific setup
+  tags:
+    - ceph
+  include: 'init-{{ansible_os_family}}.yml'
+
+
+- name: Does user `ceph` exist?
+  tags:
+    - ceph
+  command: |
+    getent passwd ceph
+  register: check_user_ceph_existence
+  ignore_errors: yes
+
+
+- name: Create user `ceph` if needed
+  tags:
+    - ceph
+  user:
+    name: ceph
+    home: /var/lib/ceph
+    system: yes
+    state: present
+  when: check_user_ceph_existence|failed
+
+
+- name: Ensure working directories exist
+  tags:
+    - ceph
+  file:
+    dest: '{{item}}'
+    state: directory
   with_items:
-    - ceph
-    - pdsh
-    - linux-image-extra-{{ansible_kernel}}
-  tags:
-    - ceph
+    - '/etc/ceph'
+    - '/var/run/ceph'
 
-- action: file dest=/etc/ceph state=directory
-  tags:
-    - ceph
 
-- action: file dest=/var/run/ceph state=directory
+- name: Deploy Ceph configuration file
   tags:
     - ceph
+  template:
+    src: etc/ceph/ceph.conf.j2
+    dest: /etc/ceph/ceph.conf
+    mode: 0444
 
-- name: configure ceph
-  action: template src=ceph/templates/etc/ceph/ceph.conf.j2 dest=/etc/ceph/ceph.conf
+
+- name: Gather Ceph facts
   tags:
     - ceph
+    - facts
+  action: ceph_facts
+
+
+- name: Create master files on primary MON node
+  tags:
+    - ceph
+  include: '{{playbook}}.yml'
+  with_items:
+    - _keyring
+    - _monmap
+  loop_control:
+    loop_var: playbook
+  when: 'is_ceph_first_mon'
+
+
+- name: Deploy server master files to server nodes
+  tags:
+    - ceph
+  copy:
+    src: '/tmp/{{item}}'
+    dest: '/etc/ceph/{{item}}'
+    owner: ceph
+    group: ceph
+    mode: 0600
+  with_items:
+    - '{{ceph_cluster_name}}.keyring'
+    - monmap
+  when: 'is_ceph_server'
+
+
+- name: Install MON nodes
+  tags:
+    - ceph
+    - server
+  include: mon.yml
+  when: 'is_ceph_mon'
+
+
+- name: Install MGR nodes
+  tags:
+    - ceph
+    - server
+  include: mgr.yml
+  when: 'ceph_requires_mgr and is_ceph_mon'
+
+
+- name: Install OSD nodes
+  tags:
+    - ceph
+    - server
+  include: osd.yml
+  when: 'is_ceph_osd'
+
+
+- name: Install MDS nodes
+  tags:
+    - ceph
+    - server
+  include: mds.yml
+  when: 'is_ceph_mds'
+
+
+- name: Create filesystem
+  tags:
+    - ceph
+    - cephfs
+    - server
+  include: fs.yml
+  # use client.admin key from mon0 host
+  when: 'groups.ceph_mds|default([])|length > 0 and is_ceph_first_mon'
+
+
+- name: Install client nodes
+  include: client.yml
+  when: 'is_ceph_client'

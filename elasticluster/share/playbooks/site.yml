@@ -30,6 +30,9 @@
 - include: roles/ipython.yml
 - include: roles/htcondor.yml
 
+# add-on software
+- include: roles/r.yml
+  
 # Jupyter installation comes last, to allow it to pick up any SW that's been
 # installed so far (e.g., for kernels, or for ipyparallel)
 - include: roles/jupyterhub.yml
