@@ -135,14 +135,14 @@ specific cloud provider.
 You can define as many cloud sections you want, assuming you have
 access to different cloud providers and want to deploy different
 clusters in different clouds. The mapping between cluster and cloud
-provider is done in the `cluster` section (see later).
+provider is done in a ``cluster`` section (see below).
 
 Currently these cloud providers are available:
 
-- ec2_boto: supports Amazon EC2 and compatible clouds
-- google: supports Google Compute Engine
-- libcloud: support `many cloud providers`__ through `Apache LibCloud`_
-- openstack: supports OpenStack-based clouds
+- ``ec2_boto``: supports Amazon EC2 and compatible clouds
+- ``google``: supports Google Compute Engine
+- ``libcloud``: support `many cloud providers`__ through `Apache LibCloud`_
+- ``openstack``: supports OpenStack-based clouds
 
 .. __: https://libcloud.readthedocs.io/en/latest/supported_providers.html
 
@@ -152,7 +152,7 @@ section:
 ``provider``
 
     the driver to use to connect to the cloud provider:
-    `ec2_boto`, `openstack`, `google` or `libcloud`.
+    ``ec2_boto``, ``openstack``, ``google`` or ``libcloud``.
 
     .. note::
 
@@ -166,56 +166,48 @@ Valid configuration keys for `ec2_boto`
 ---------------------------------------
 
 ``ec2_url``
-
-    the url of the EC2 endpoint. For Amazon EC2 it is probably
+    URL of the EC2 endpoint. For Amazon EC2 it is probably
     something like::
 
         https://ec2.us-east-1.amazonaws.com
 
-    replace ``us-east-1`` with the zone you want to use.  If using
-    OpenStack's EC2 adapter, you can read the endpoint from the web
-    interface
+    (replace ``us-east-1`` with the zone you want to use).
 
 ``ec2_access_key``
-
-    the access key (also known as access id) your cloud
+    the access key (also known as *access ID*) your cloud
     provider gave you to access its cloud resources.
 
 ``ec2_secret_key``
-
-    the secret key (also known as secret id) your cloud
+    the secret key (also known as *secret ID*) your cloud
     provider gave you to access its cloud resources.
 
 ``ec2_region``
-
     the availability zone you want to use.
 
 ``vpc``
-
-    the name or ID of the AWS Virtual Private Cloud to provision
+    name or ID of the AWS Virtual Private Cloud to provision
     resources in.
 
 ``request_floating_ip``
-
-    request assignment of a floating IP when the instance is
-    started. Valid values are `True` and `False`.
-    Some cloud providers do not automatically assign a public IP
-    to the instances, but this is often needed if you want to connect
-    to the VM from outside. Setting ``request_floating_ip`` to `True`
-    will force `elasticluster` to request such a floating IP if the
-    instance doesn't get one automatically.
+    request assignment of a public IPv4 address when the instance is
+    started. Valid values are ``yes`` (or ``True`` or ``1``) and
+    ``no`` (or ``False`` or ``0``; default).  Please see
+    `<http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-instance-addressing.html#concepts-public-addresses>`_
+    regarding Amazon EC2's assignment of public IPv4
+    addresses. Setting ``request_floating_ip`` to ``yes`` will force
+    `elasticluster` to request a public IPv4 address if the instance
+    doesn't get one automatically.
 
 ``price``
-
     If set to a non-zero value, ElastiCluster will allocate `spot
-    instances`__ with a price less than or equal to the value given
+    instances`_ with a price less than or equal to the value given
     here.  Note that there is currently no way to specify a currency:
-    the amount is expressed in whatever currency__ is default in the
+    the amount is expressed in whatever currency_ is default in the
     Boto API (typically, US Dollars).
 
-    .. __: https://aws.amazon.com/ec2/spot/
+    .. _`spot instances`: https://aws.amazon.com/ec2/spot/
 
-    .. __: http://boto.cloudhackers.com/en/latest/ref/mturk.html#module-boto.mturk.price
+    .. _`currency`: http://boto.cloudhackers.com/en/latest/ref/mturk.html#module-boto.mturk.price
 
     Defaults to 0, i.e., use regular non-spot instances.
 
@@ -227,7 +219,6 @@ Valid configuration keys for `ec2_boto`
 
 
 ``timeout``
-
     Maximum amount of seconds to wait for a spot instance to become
     available; if a request for a spot instance cannot be satisfied in
     the given time, the instance startup process aborts.  If set to 0
@@ -237,36 +228,38 @@ Valid configuration keys for `ec2_boto`
 
 
 ``instance_profile``
-
-     Name of an `IAM instance profile`__ that contains roles allowing
+     Name of an `IAM instance profile`_ that contains roles allowing
      EC2 instances to have specified privileges. For example, you can
      allow EC2 instances to access S3 without passing credentials in.
 
-     .. __: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html
+     .. _`iam instance profile`: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html
 
 
 Valid configuration keys for `google`
 -------------------------------------
 
 ``gce_client_id``
-
-    The API client id generated in the Google Developers Console
+    The API client ID generated in the Google Developers Console
 
 ``gce_client_secret``
-
     The API client secret generated in the Google Developers Console
 
 ``gce_project_id``
-
-    The project id of your Google Compute Engine project
+    The project ID of your Google Compute Engine project
 
 ``zone``
-
     The GCE zone to be used. Default is ``us-central1-a``.
 
 ``network``
-
     The GCE network to be used. Default is ``default``.
+
+
+Obtaining your ``gce_client_id`` and ``gce_client_secret``
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Find the ``gce_client_id`` and ``gce_client_secret`` values by
+following instructions at:
+`<http://googlegenomics.readthedocs.io/en/latest/use_cases/setup_gridengine_cluster_on_compute_engine/index.html#index-obtaining-client-id-and-client-secrets>`_
 
 
 Valid configuration keys for *libcloud*
@@ -329,66 +322,71 @@ vSphere     host, username, password                 \
 Valid configuration keys for *openstack*
 ----------------------------------------
 
-``auth_url``:
+.. _`*openstack* command`: https://docs.openstack.org/python-openstackclient/latest/cli/man/openstack.html#manpage
 
-    The URL of the keystone service (main entry point for OpenStack
-    clouds). If an environment variable `OS_AUTH_URL` is set when
-    elasticluster starts, the config option will be ignored and the
-    value of the variable will be used instead.
-
-``username``
-
-    OpenStack username. If an environment variable `OS_USERNAME` is
-    set when elasticluster starts, the config option will be ignored
-    and the value of the variable will be used instead.
-
-``password``
-
-    OpenStack password. If an environment variable `OS_PASSWORD` is
-    set when elasticluster starts, the config option will be ignored
-    and the value of the variable will be used instead.
-
-``project_name``
-
-    OpenStack project to use (also known as `tenant`). If an
-    environment variable `OS_TENANT_NAME` is set when elasticluster
-    starts, the config option will be ignored and the value of the
-    variable will be used instead.
+``auth_url``
+  URL of the OpenStack Identity service (aka *Keystone*, main entry
+  point for OpenStack clouds), same as option ``--os-auth-url`` of the
+  `*openstack* command`_. If the environment variable ``OS_AUTH_URL``
+  is set, this option is ignored and the value of the environment
+  variable is used instead.
 
 ``identity_api_version``
+  Force use of the OpenStack Identity ("Keystone") API v2 or v3.  (Use
+  the values ``2`` or ``3`` respectively.)  If this configuration item
+  is not specified, ElastiCluster will try v3 and then v2.  If
+  environment variable ``OS_IDENTITY_API_VERSION`` is set, this option
+  is ignored and the value of the environment variable is used
+  instead.
 
-    Force use of the OpenStack Identity ("Keystone") API v2 or v3: use the
-    values '2' or '3' respectively. If this configuration item is not specified,
-    try to autodetect. If the environment variable `OS_IDENTITY_API_VERSION` is
-    set, this option is ignored and the value of the variable is used instead.
-
-``project_domain_name``
-
-    OpenStack project domain; only used with the Identity API v3.
-    If an environment variable `OS_PROJECT_DOMAIN_NAME` is set when
-    elasticluster starts, the config option will be ignored and the
-    value of the variable will be used instead.
+``username``
+  OpenStack user name, same as option ``--os-username`` of the
+  `*openstack* command`_. If an environment variable ``OS_USERNAME`` is
+  set, this option is ignored and the value of the environment
+  variable is used instead.
 
 ``user_domain_name``
+  OpenStack user domain.  This is mandatory for
+  Identity API v3.  The default value is ``default``. If the
+  environment variable ``OS_USER_DOMAIN_NAME`` is set, this option is
+  ignored and the value of the environment variable is used instead.
 
-    OpenStack user domain; only used with the Identity API v3.
-    If an environment variable `OS_USER_DOMAIN_NAME` is set when elasticluster
-    starts, the config option will be ignored and the value of the variable will
-    be used instead.
+``password``
+  OpenStack password, same as option ``--os-password`` of the
+  `*openstack* command`_. If an environment variable ``OS_PASSWORD`` is
+  set, this option is ignored and the value of the environment
+  variable is used instead.
+
+``project_name``
+  OpenStack project to use (formerly known as "tenant"), same as
+  option ``--os-project-name`` of the `*openstack* command`_. If an
+  environment variable ``OS_PROJECT_NAME`` or ``OS_TENANT_NAME`` is
+  set, this option is ignored and the value of the environment
+  variable is used instead.
+
+``project_domain_name``
+  OpenStack project domain.  This is mandatory for Identity API v3.
+  The default value is ``default``. If the environment variable
+  ``OS_PROJECT_DOMAIN_NAME`` is set, this option is ignored and the
+  value of the environment variable is used instead.
 
 ``region_name``
-
-    OpenStack region (optional)
+  OpenStack region. This is optional; not all OpenStack clouds require
+  it and there is no widespread default: region names are arbitrary
+  strings set by the OpenStack cloud administrators. Ask your local
+  OpenStack support for valid values. If environment variable
+  ``OS_REGION_NAME`` is set, this option is ignored and the value of
+  the environment variable is used instead.
 
 ``request_floating_ip``
-
-    request assignment of a floating IP when the instance is
-    started. Valid values: `True`, `False`.
-    Some cloud providers does not automatically assign a public IP
-    to the instances, but this is often needed if you want to connect
-    to the VM from outside. Setting ``request_floating_ip`` to `True`
-    will force `elasticluster` to request such a floating IP if the
-    instance doesn't get one automatically.
+  request assignment of a "floating IP" when the instance is
+  started. Valid values are ``yes`` (or ``True`` or ``1``) and ``no``
+  (or ``False`` or ``0``; default).  Some cloud providers do not
+  automatically assign a public IP to the instances, but this is often
+  needed if you want to connect to the VM from outside. Setting
+  ``request_floating_ip`` to ``yes`` will force `elasticluster` to
+  request such a floating IP if the instance doesn't get one
+  automatically.
 
 
 Examples
@@ -424,48 +422,9 @@ you can configure the following::
     username=**** YOUR USERNAME ****
     password=**** YOUR PASSWORD ****
 
-OpenStack users
-+++++++++++++++
+A larger set of commented examples can be found at:
+`<https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples>`_
 
-From the horizon web interface you can download a file containing your
-EC2 credentials by logging into your provider web interface and
-clicking on:
-
-"*settings*"
-  => "*EC2 Credentials*"
-    => "*Download EC2 Credentials*"
-
-The ``ec2rc.sh`` file will contain some values. Update the
-configuration file:
-
-* `ec2_url` using the value of the variable EC2_URL
-* `ec2_access_key` using the value of the variable EC2_ACCESS_KEY
-* `ec2_secret_key` using the value of the variable EC2_SECRET_KEY
-
-
-Google Compute Engine users
-+++++++++++++++++++++++++++
-To generate a client_id and client_secret to access the Google Compute
-Engine visit the following page:
-
-  https://console.developers.google.com/project/_/apiui/credential
-
-1. Select the project to be used for your cluster
-2. If a "Client ID for native application" is listed on this page,
-   skip to step 8
-3. Under the OAuth section, click "Create new Client ID"
-4. Select "Installed Application"
-5. If prompted, click "Configure consent screen" and follow the
-   instructions to set a "product name" to identify your Cloud
-   project in the consent screen
-6. In the Create Client ID dialog, be sure the following are selected::
-
-    Application type: Installed application
-    Installed application type: Other
-
-7. Click the "Create Client ID" button
-8. You'll see your Client ID and Client secret listed under
-   "Client ID for native application"
 
 Login Section
 ===============
@@ -481,49 +440,58 @@ Some of the values depend on the image you specified in the
 `cluster` section. Values defined here also can affect the `setup`
 section and the way the system is setup.
 
-Mandatory configuration keys
-----------------------------
+Configuration keys
+------------------
 
 ``image_user``
-
-    the remote user you must use to connect to the virtual machine. In case
-    you're using Google Compute Engine you have to set your Google username
-    here; so if your Gmail address is karl.marx@gmail.com, your username is
-    `karl.marx`
+  login name used to SSH into the virtual machine. In case you're
+  using Google Compute Engine you have to set your user name here.  So
+  if your GMail address is ``karl.marx@gmail.com``, use ``karl.marx``
+  as value of ``image_user``.
 
 ``image_sudo``
+  Boolean value: ``yes`` (or ``True`` or ``1``; default) means that on
+  the remote machine the ``image_user`` can execute commands as root
+  by running the ``sudo`` program.
 
-    Can be `True` or `False`. `True` means that on the remote machine
-    you can execute commands as root by running the `sudo` program.
+  .. warning::
+
+     ElastiCluster makes the assumption that this value is always true
+     and will not work correctly otherwise.  This configuration item
+     will be removed in a future version of ElastiCluster (as there is
+     really no option).
 
 ``image_user_sudo``
-
-    the login name of the administrator. Use `root` unless you know
-    what you are doing.
+  login name of the "super user". This is optional, and defaults to
+  `root`.  There is little reason to ever change this value from the
+  default.
 
 ``user_key_name``
-
-    name of the *keypair* to use on the cloud provider. If the keypair
-    does not exist it will be created by elasticluster.
+  name of the *keypair* to use on the cloud provider. If the keypair
+  does not exist it will be created by ElastiCluster, uploading the
+  public SSH key pointed to by `user_key_public` (see below).
 
 ``user_key_private``
+  file containing a valid SSH private key to be used to connect
+  to the virtual machine. Please note that this must match the
+  ``user_key_public`` file (SSH keys always come in pairs).
 
-    file containing a valid RSA or DSA private key to be used to
-    connect to the remote machine. Please note that this must match
-    the ``user_key_public`` file (RSA and DSA keys go in pairs). Also
-    note that Amazon does not accept DSA keys but only RSA ones.
+  .. note::
+
+     Currently ElastiCluster only supports RSA and DSA key types.
+     Pull requests to add support for more modern SSH key types are
+     very welcome.
 
 ``user_key_public``
-
-    file containing the RSA/DSA public key corresponding to the
-    ``user_key_private`` private key. See ``user_key_private`` for more
-    details.
+  file containing the RSA/DSA public key corresponding to the
+  ``user_key_private`` private key file. See ``user_key_private`` for
+  more details.
 
 
 Examples
 --------
 
-For a typical Ubuntu machine, both on Amazon and most OpenStack
+For a typical Ubuntu VM, on either Amazon EC2 or most OpenStack
 providers, these values should be fine::
 
     [login/ubuntu]
@@ -531,19 +499,27 @@ providers, these values should be fine::
     image_user_sudo=root
     image_sudo=True
     user_key_name=elasticluster
+    # these paths should point to the SSH key file used to log in to VMs
     user_key_private=~/.ssh/id_rsa
     user_key_public=~/.ssh/id_rsa.pub
 
-while for Hobbes appliances you will need to use the `gc3-user`
-instead::
+For Google Compute Engine, something like the following should be
+used instead::
 
-    [login/gc3-user]
-    image_user=gc3-user
-    image_user_sudo=root
-    image_sudo=True
+    [login/google]
+    image_user=****REPLACE WITH YOUR GOOGLE USERID (just the userid, not email)****
+    image_sudo=yes
     user_key_name=elasticluster
-    user_key_private=~/.ssh/id_rsa
-    user_key_public=~/.ssh/id_rsa.pub
+    # You can generate the keypair with the command: `gcloud compute config-ssh`
+    user_key_private=~/.ssh/google_compute_engine
+    user_key_public=~/.ssh/google_compute_engine.pub
+
+In contrast to other cloud providers, GCE creates a personal account on each
+VM so you effectively re-use the same `[login/google]` section across
+different VM images.
+
+A larger set of commented examples can be found at:
+`<https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples>`_
 
 
 Setup Section
@@ -557,82 +533,72 @@ This section contain information on *how to setup* a cluster. After
 the cluster is started, elasticluster will run a ``setup provider`` in
 order to configure it.
 
+A ``setup`` section is mostly independent of any other, and can be
+easily re-used across multiple clouds and base OS images -- that's the
+whole point of ElastiCluster!
+
+
 General configuration keys
-----------------------------
+--------------------------
 
 ``provider``
-
     Type of the setup provider. So far, ``ansible`` is the only valid value
     (and, obviously, the default)
 
-Ansible-specific mandatory configuration keys
-----------------------------------------------
 
-The following configuration keys are only valid if `provider` is
-`ansible`.
+Controlling what is installed on the nodes
+------------------------------------------
 
 ``<class>_groups``
+    Comma separated list of Ansible groups nodes of kind *class* will
+    belong to. For each ``<class>_nodes`` in a ``[cluster/...]``
+    section there should be a corresponding ``<class>_groups`` option
+    to include that specific class of nodes in the given Ansible
+    groups.
 
-    Comma separated list of ansible groups the specific <class> will
-    belong to. For each <class>_nodes in a [cluster/] section there
-    should be a <class>_groups option to configure that specific class
-    of nodes with the ansible groups specified.
-
-    If you are setting up a standard HPC cluster you probably want to
-    have only two main groups: `frontend_groups` and `compute_groups`.
-
-    To configure a slurm cluster, for instance, you have the following
-    available groups:
-
-    ``slurm_master``
-        configure this machine as slurm masternode
-
-    ``slurm_worker``
-        compute nodes of a slurm cluster
-
-    ``ganglia_master``
-        configure as ganglia web frontend.  On the
-        master, you probably want to define `ganglia monitor` as well
-
-    ``ganglia_monitor``
-        configure as ganglia monitor.
-
-    You can combine more groups together, but of course not all
-    combinations make sense. A common setup is, for instance::
+    For example, to set up a standard HPC cluster you probably want to
+    define only two main kinds of nodes: ``frontend_groups`` (for the
+    master/control server) and ``compute_groups`` (for the compute
+    nodes).  A common setup for a SLURM cluster is::
 
         frontend_groups=slurm_master,ganglia_master,ganglia_monitor
         compute_groups=slurm_worker,ganglia_monitor
 
-    This will configure the frontend node as slurm master and ganglia
-    frontend, and the compute nodes as clients for both slurm and
-    ganglia frontend.
+    This will configure the ``frontend001`` node as SLURM master and
+    Ganglia collector and frontend, and the ``computeXXX`` nodes as
+    SLURM executors and Ganglia ``gmond`` sources.
 
-    A full list of the available groups is available at the
-    `playbooks`:ref: page.
+    Ansible group names supported by ElastiCluster can be found in the
+    Playbooks_ section of this manual.  You can combine more groups
+    together, separating the names with a comma (``,``) -- but of
+    course not all combinations make sense.
+
+    .. warning::
+
+       Any group name that is not supported by ElastiCluster playbooks
+       will (silently) be ignored, so watch out for typos!
 
 ``<class>_var_<varname>``
-
-    an entry of this type will define a variable called ``<varname>``
-    for the specific ``<class>`` and add it to the ansible inventory
-    file. Please refer to the documentation of the playbook
-    ot know which variables you can set and its meaning.
+    Define an variable called ``<varname>`` that applies only to the
+    given node ``<class>``. See the Playbooks_ section to know which
+    variables can be set and their meaning.
 
 ``global_var_<varname>``
-
-    An entry of this type will define a variable called ``<varname>``
-    for all the nodes in the cluster, and add it to the ansible
-    inventory file. Please refer to the documentation of the playbook
-    ot know which variables you can set and its meaning.
+    Define a variable called ``<varname>`` that applies to all the
+    nodes in the cluster.  See the Playbooks_ section to know which
+    variables can be set and their meaning.
 
 ``playbook_path``
+    Path to the Ansible playbook file to use when running
+    ``elasticluster setup``.  The default value is to use playbook
+    ``site.yml`` in the root directory of the distributed with
+    ElastiCluster.
 
-    Path to the playbook to use when configuring the system. The
-    default value printed here points to the playbook distributed with
-    elasticluster. The default value points to the playbooks
-    distributed with elasticluster.
+
+Controlling Ansible invocation
+------------------------------
 
 ``ansible_command``
-
     Path name of the ``ansible-playbook`` command; defaults to
     ``ansible-playbook``, i.e., search for the command named
     ``ansible-playbook`` in the shell search path.  Can also include
@@ -640,7 +606,6 @@ The following configuration keys are only valid if `provider` is
     ElastiCluster adds to build the "setup" command invocation.
 
 ``ansible_extra_args``
-
     Arguments to *append* to the "setup" command invocation; can be used
     to override specific parameters or to further influence the
     behavior of the ``ansible-playbook`` command (e.g., skip certain tags).
@@ -657,6 +622,12 @@ The following configuration keys are only valid if `provider` is
       [setup/ansible]
       # ask for confirmation at each step
       ansible_extra_args = --step
+
+``ansible_ssh_pipelining``
+    Enable or disable SSH pipelining when setting up the
+    cluster. Enabled by default, as it improves connection
+    speed. Incompatible with some base OS'es, notoriously CentOS6.
+    Setting this to ``no``/``false``/``0`` disables it.
 
 ``ansible_<option>``
     Any configuration key starting with the string ``ansible_`` is
@@ -689,103 +660,138 @@ The following configuration keys are only valid if `provider` is
        paths are missing from the replaced value, a number of fatal errors can
        happen.
 
+``ssh_pipelining``
+  **Deprecated.**  Use ``ansible_ssh_pipelining`` instead.
+
 
 Examples
 --------
 
-Some (working) examples::
+A ``setup`` section is mostly independent of any other, and can be
+easily re-used across multiple clouds and base OS images -- that's the
+whole point of ElastiCluster!
 
-    [setup/ansible-slurm]
-    provider=ansible
-    frontend_groups=slurm_master
-    compute_groups=slurm_worker
+The following shows how to set up a simple SoGE_ cluster using the
+Playbooks_ distributed with ElastiCluster::
 
-    [setup/ansible-gridengine]
-    provider=ansible
-    frontend_groups=gridengine_master
-    compute_groups=gridengine_clients
+  [setup/gridengine]
+  provider=ansible
+  frontend_groups=gridengine_master
+  compute_groups=gridengine_clients
 
-    [setup/ansible-pbs]
-    provider=ansible
-    frontend_groups=pbs_master,maui_master
-    compute_groups=pbs_clients
+This example shows how to combine multiple Ansible groups into a class
+of nodes; namely, install Ganglia_ alongside with PBS/TORQUE::
 
-    [setup/ansible_matlab]
-    # Please note that this setup assumes you already have matlab
-    # installed on the image that is being used.
-    provider=ansible
-    frontend_groups=mdce_master,mdce_worker,ganglia_monitor,ganglia_master
-    worker_groups=mdce_worker,ganglia_monitor
+  [setup/pbs]
+  provider=ansible
+  frontend_groups=pbs_master,ganglia_master
+  compute_groups=pbs_worker,ganglia_monitor
+
+This final example shows how variables can be used to customize or set
+options in the playbooks.  Specifically, the example shows how to
+install NIS/YP to easily manage users across the cluster::
+
+  [setup/slurm]
+  # provider=ansible is the default
+  frontend_groups=slurm_master
+  compute_groups=slurm_worker
+
+  # install NIS/YP to manage cluster users
+  global_var_multiuser_cluster=yes
+
+A larger set of commented examples can be found at:
+`<https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples>`_
 
 
 Cluster Section
 ===============
 
-A ``cluster`` section named ``<name>`` starts with::
+The ``cluster`` section named ``<name>`` starts with::
 
     [cluster/<name>]
 
-The cluster section defines a `template` for a cluster. This section
+A cluster section defines a "template" for a cluster. This section
 has references to each one of the other sections and define the
 image to use, the default number of compute nodes and the security
 group.
 
-Mandatory configuration keys
------------------------------
+Some configuration keys can be overridden for specific node kinds.
+The way to do this is to create a section named like this::
+
+    [cluster/<name>/<kind>]
+
+Any configuration specified in this section would take precedence over
+the values given in section ``[cluster/<name>]``, but only for nodes
+of class ``<kind>``.
+
+For example: assume you have a standard SLURM cluster with a frontend
+which is used as master node and NFS server for the home directories,
+and a set of compute nodes.  You may want to use different VM flavors
+for the frontend and the compute nodes, since for the first you need
+more space and you don't need many cores or much memory, while the
+compute nodes may requires more memory and more cores but are not
+eager about disk space.  If your cloud provided, e.g., a ``bigdisk``
+flavor for VMs with a large root disk space, and a ``hpc`` flavor for
+VMs optimized for running computational jobs, you could use the former
+for the frontend node and the latter for the compute nodes. Your
+configuration will thus look like::
+
+    [cluster/slurm]
+    # ...
+    flavor=hpc
+    frontend_nodes=1
+    compute_nodes=10
+
+    [cluster/slurm/frontend]
+    flavor=bigdisk
+
+    [cluster/slurm/compute]
+    # the following setting is (implicitly) inherited
+    # from the `[cluster/slurm]` section
+    #flavor=hpc
+
+.. _`template configuration file`: https://raw.github.com/gc3-uzh-ch/elasticluster/master/elasticluster/share/etc/config.template
+
+
+Cluster-wide configuration keys
+-------------------------------
+
+The following configuration keys can only be specified in a top-level
+``[cluster/...]`` section (i.e., *not* in node-level
+``[cluster/.../node]`` override).
 
 ``cloud``
-
-    the name of a valid `cloud` section. For instance `hobbes` or
-    `amazon-us-east-1`
+    Name of a valid ``cloud`` section.
 
 ``login``
+    Name of a valid ``login`` section. For instance ``ubuntu`` or
+    ``google-login``.
 
-    the name of a valid `login` section. For instance `ubuntu` or
-    `gc3-user`
-
-``setup_provider``
-
-    the name of a valid `setup` section. For instance, `ansible-slurm`
-    or `ansible-pbs`
-
-``image_id``
-
-    image id in `ami` format. If you are using OpenStack, you need to
-    run `euca-describe-images` to get a valid `ami-*` id. With Google
-    Compute Engine you can also use a URL of a private image. `gcloud
-    compute images describe <your_image_name>` will show the selfLink
-    URL to use.
-
-``flavor``
-
-    the image type to use. Different cloud providers call it
-    differently, could be `instance type`, `instance size` or
-    `flavor`. This setting can be overwritten in the Cluster Node
-    section, e.g. to use fewer resources on the frontend nodes than on
-    the compute nodes.
-
-``security_group``
-
-    Security group to use when starting the instance.
+``setup``
+    Name of a valid ``setup`` section.
 
 ``<class>_nodes``
+   the number of nodes of type ``<class>``. These configuration
+   options will define the composition of your cluster.
+   Each ``<class>_nodes`` group is configured using the corresponding
+   ``<class>_groups`` configuration option in the ``[setup/...]``
+   section.
 
-    the number of nodes of type ``<class>``. These configuration
-    options will define the composition of your cluster. A very common
-    configuration will include only two group of nodes:
+``<class>_min_nodes`` (optional)
+    **Deprecated.** Please rename to ``<class>_nodes_min``.
 
-    ``frontend_nodes``
-        the queue manager and frontend of the cluster. You
-        probably want only one.
+``<class>_nodes_min`` (optional)
+    Minimum amount of nodes of type ``<class>`` that must be up &
+    running in order to start configuring the cluster.
 
-    ``compute_nodes``
-        the worker nodes of the cluster.
-
-    Each ``<class>_nodes`` group is configured using the corresponding
-    ``<class>_groups`` configuration option in the ``[setup/...]``
-    section.
+    When running ``elasticluster start`` to start a cluster, creation
+    of some instances may fail; if at least this amount of nodes are
+    started correctly (i.e. are not in error state), the cluster is
+    configured anyway. Otherwise, the ``start`` command will fail.
 
 ``ssh_to``
+    Which class of nodes to SSH into, when running
+    ``elasticluster ssh`` or ``elasticluster sftp``.
 
     Commands ``elasticluster ssh`` and ``elasticluster sftp`` need to
     single out one node from the cluster, and connect to it via
@@ -801,196 +807,234 @@ Mandatory configuration keys
     order).  If the cluster has no node in all these classes, then the
     first found node is used.
 
+``thread_pool_max_size`` (optional)
+    Maximum number of Python worker threads to create for starting VMs
+    in parallel.  Default is 10.
 
-Optional configuration keys
----------------------------
 
-``image_userdata``
+Overridable configuration keys
+------------------------------
 
-    shell script to be executed (as root) when the machine
-    starts. This is usually not needed because the `ansible` provider
-    works on *vanilla* images, but if you are using other setup
-    providers you may need to execute some command to bootstrap it.
+The following configuration keys can appear in a top-level
+``[cluster/...]`` section, as well as in a node-level
+``[cluster/.../node]`` override.  Configuration keys specified in a
+node-level section take precedence over cluster-wide ones.
 
-``network_ids``
+``flavor``
+   The VM "size" to use. Different cloud providers call it
+   differently: could be "instance type", "instance size" or "flavor".
+   This setting can be overwritten in the Cluster Node section,
+   e.g. to use fewer resources on the frontend nodes than on the
+   compute nodes.
 
-    comma separated list of network or subnet IDs the nodes of the cluster
+``image_id``
+   Image ID to use as a base for all VMs in this cluster
+   (unless later overridden for a class of nodes, see below).  Actual
+   format is cloud specific: OpenStack uses UUIDs
+   (e.g. `2bf3baba-35c8-4e20-9cc9-b36808720c9b`), Amazon EC2 uses IDs
+   like `ami-123456`. For Google Compute Engine you can also use a
+   URL of a private image; run ``gcloud compute images describe
+   <your_image_name>``:file: to show the selfLink URL to use.
+
+``image_userdata`` (optional)
+    Shell script to be executed (as root) when the machine
+    starts. This can happen before ElastiCluster even gets a
+    chance to connect to the VM.
+
+``network_ids`` (optional)
+    Comma separated list of network or subnet IDs the nodes of the cluster
     will be connected to. Only supported when the cloud provider is
-    `ec2_boto` or `openstack`
+    ``ec2_boto`` or ``openstack``.
 
-``<class>_min_nodes``
+``security_group``
+   Security group to use when starting the instance.
 
-    **Deprecated.** Please rename to ``<class>_nodes_min``.
 
-``<class>_nodes_min``
+Additional optional configuration keys for Amazon EC2
+-----------------------------------------------------
 
-    Minimum amount of nodes of type ``<class>`` that must be up &
-    running in order to start configuring the cluster. When starting a
-    cluster, creation of some instances may fail; if at least this
-    amount of nodes are started correctly (i.e. are not in error
-    state), the cluster is configured anyway; otherwise, creation of
-    the cluster will fail.
+Options ``price`` and ``timeout`` (see their documentation in the
+"ec2_boto" cloud provider section) can be specified here as
+well, to place nodes on spot instances.
 
-``thread_pool_max_size``
 
-    The maximum number of process to be created when virtual machines
-    are started. Default is 10.
+Additional optional configuration keys for Google Cloud
+-------------------------------------------------------
 
 ``boot_disk_type``
-    Define the type of boot disk to use.
-    Only supported when the cloud provider is `google` or `openstack`.
-    Supported values are `pd-standard` and `pd-ssd` for Google,
-    or the types available in the OpenStack volume (cinder) configuration.
-    Default value is `pd-standard` for Google.
-    When using this option for OpenStack, it creates volumes to be used
-    as the root disks for the VM's of the specified size, when terminating
-    and instance the volume will be deleted automatically. Always specify
-    the boot_disk_size when using this with OpenStack.
+    Define the type of boot disk to use.  Supported values are
+    ``pd-standard`` (default) and ``pd-ssd``.
 
 ``boot_disk_size``
-    Define the size of boot disk to use.
-    Only supported when the cloud provider is `google` or `openstack`.
-    Values are specified in gigabytes.
-    Default value for Google is 10.
-    No default is given for OpenStack.
+    Define the size of boot disk to use; values are specified in gigabytes.
+    Default value is 10.
 
 ``tags``
     Comma-separated list of instance tags.
-    Only supported when the cloud provider is `google`.
 
 ``scheduling``
     Define the type of instance scheduling.
-    Only supported when the cloud provider is `google`.
-    Only supported value is `preemptible`.
+    Only supported value is ``preemptible``.
+
+
+Additional optional configuration keys for OpenStack clouds
+-----------------------------------------------------------
+
+``boot_disk_type``
+    Define the type of boot disk to use.  Supported values are types
+    available in the OpenStack volume ("cinder") configuration.
+
+    When using this option for OpenStack, it creates volumes to be used
+    as the root disks for the VM's of the specified size, when terminating
+    and instance the volume will be deleted automatically. Always specify
+    the ``boot_disk_size`` when using this with OpenStack.
+
+``boot_disk_size``
+    Define the size of boot disk to use.  Values are specified in
+    gigabytes.  There is no default; this option is mandatory of
+    ``boot_disk_type`` is also specified.
 
 
 Examples
 --------
 
-Some (working) examples::
+This basic example shows how to set up a SoGE_ cluster on Google
+Cloud.  (The example assumes that sections ``[setup/gridengine]``,
+``[cloud/google]`` and ``[login/google]`` have been defined elsewhere
+in the configuration file.)
 
-    [cluster/slurm]
-    cloud=hobbes
-    login=gc3-user
-    setup_provider=ansible-slurm
-    security_group=default
-    # Ubuntu image
-    image_id=ami-00000048
-    flavor=m1.small
-    frontend_nodes=1
-    compute_nodes=2
-    frontend_class=frontend
-    network_ids=subnet-one
+::
 
-    # Use a different flavor on the compute nodes
-    [cluster/slurm/compute]
-    flavor=m1.large
+  [cluster/gridengine-on-gce]
+  setup=gridengine
+  frontend_nodes=1
+  compute_nodes=2
 
-    [cluster/torque]
-    cloud=hobbes
-    frontend_nodes=1
-    compute_nodes=2
-    frontend_class=frontend
-    security_group=default
-    # CentOS image
-    image_id=ami-0000004f
-    flavor=m1.small
-    login=gc3-user
-    setup_provider=ansible-pbs
+  # this is cloud specific
+  cloud=google
+  security_group=default
+  flavor=n1-standard-1
 
-    [cluster/aws-slurm]
-    cloud=amazon-us-east-1
-    login=ubuntu
-    setup_provider=ansible-slurm
-    security_group=default
-    # ubuntu image
-    image_id=ami-90a21cf9
-    flavor=m1.small
-    frontend=1
-    compute=2
+  image_id=****REPLACE WITH OUTPUT FROM: gcloud compute images list | grep debian | cut -f 1 -d " "****
 
-    [cluster/matlab]
-    cloud=hobbes
-    setup_provider=ansible_matlab
-    security_group=default
-    image_id=ami-00000099
-    flavor=m1.medium
-    frontend_nodes=1
-    worker_nodes=10
-    image_userdata=
-    ssh_to=frontend
+  # on GCE, all images can use the same `login` section
+  login=google
 
+The following slightly more complex example shows how to set up a TORQUE
+cluster on a OpenStack cloud, using different VM flavors for the
+front-end node (less CPU and larger disk) and compute nodes (more CPU
+and memory).
 
-Cluster node section
-====================
+The rationale behind this configuration is as follows: for the
+front-end node more space is needed (since it's the NFS server for the
+whole cluster) and you don't need many cores or much memory, while the
+compute nodes may requires more memory and more cores but are not
+eager about disk space.  If your cloud provided, e.g., a "big disk"
+flavor for VMs with a large root disk space, and a "hpc" flavor for
+VMs optimized for running computational jobs, you could use the former
+for the frontend node and the latter for the compute nodes. Your
+configuration will thus look like the following::
 
-A `cluster node` for the node type ``<nodetype>`` of the cluster
-``<name>`` starts with::
+   [cluster/torque]
+   setup=pbs
+   frontend_nodes=1
+   compute_nodes=8
 
-    [cluster/<name>/<nodetype>]
+   # this is cloud-specific info (using OpenStack for the example)
+   cloud=openstack
+   network_ids=eaf06405-6dc2-43d1-9d5a-18bb266e36a8
+   security_group=default
 
-This section allows you to override some configuration values for
-specific group of nodes. Assume you have a standard slurm cluster
-with a frontend which is used as manager node and nfs server for the
-home directories, and a set of compute nodes.
+   # CentOS 7.4
+   image_id=bab386b3-2c21-4a67-a146-a658668ac096
 
-You may want to use different flavors for the frontend and the
-compute nodes, since for the first you need more space and you don't
-need many cores or much memory, while the compute nodes may requires
-more memory and more cores but are not eager about disk space.
+   # `login` info is -in theory- image-specific
+   login=centos
 
-This is achieved defining, for instance, a `bigdisk` flavor (the
-name is just fictional) for the frontend and `8cpu32g` for the
-compute nodes. Your configuration will thus look like::
+   [cluster/torque/frontend]
+   # front-end has less CPU and RAM but more disk
+   flavor=2cpu-4ram-largedisk
 
-    [cluster/slurm]
-    ...
-    flavor=8cpu32g
-    frontend_nodes=1
-    compute_nodes=10
+   [cluster/torque/compute]
+   # compute nodes have much CPU power and RAM
+   flavor=8cpu-64ram-hpc
 
-    [cluster/slurm/frontend]
-    flavor=bigdisk
+The following example shows how to set up a SLURM cluster on AWS which
+uses EC2 "spot instances" for the compute nodes, by specifying bidding
+price and maximum wait timeout.  The spot instance configuration
+applies only to the cluster nodes of class ``compute`` -- the
+front-end node runs on a regular instance so it is not terminated
+abruptly (which would lead to total job and data loss).  Since compute
+nodes are started on "spot instances", which may be not available at
+the bid price within the given timeout, you also want to set a
+*minimum* number of compute nodes (configuration item
+``compute_nodes_min``) that must be available in order to proceed to
+cluster setup::
 
+  [cluster/slurm-on-aws]
+  setup=slurm
+  frontend_nodes=1
+  compute_nodes=8
+  compute_nodes_min=2
 
-.. _`template configuration file`: https://raw.github.com/gc3-uzh-ch/elasticluster/master/elasticluster/share/etc/config.template
+  # this is cloud-specific info
+  cloud=amazon-us-east-1
+  image_id=ami-90a21cf9
+  security_group=default
+  flavor=m3.large
+
+  # login info is image-specific
+  login=ubuntu
+
+  [cluster/slurm-on-aws/compute]
+  # use spot instances for compute
+  price=0.08
+  timeout=600
+
+A larger set of commented examples can be found at:
+`<https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples>`_
+
 
 Storage section
 ===============
 
-This section is used to customize the way elasticluster saves the
+This section is used to customize the way ElastiCluster saves the
 state of your clusters on disk.
 
-By default, all persistent data is saved in
-``~/.elasticluster/storage``. This include two main files for each cluster:
+By default, all persisted data is saved in
+``~/.elasticluster/storage``. This includes two main files for each
+cluster:
 
 * ``<cluster>.yaml``: a file containing information about your cluster
 * ``<cluster>.known_hosts``: a file containing the ssh host keys of
   the nodes of your cluster.
 
-These files are very important, since if they are broken or missing,
-elasticluster will **not** be able to recover any information about
-your cluster.
+These files are very important: if they are broken or missing,
+ElastiCluster will **not** be able to recover any information about
+the cluster.
 
 In addition to these two files, the setup provider and the cloud
 provider might create other files in the storage directory, but these
-are not critical, as they are re-genereted if needed.
+are not critical, as they are re-generated if needed.
 
 To change the default path to the storage directory you can create a
 new `storage` section and set the ``storage_path`` value::
 
     [storage]
-    storage_path = /foo/bar
+    storage_path = $HOME/src/elasticluster/
 
 
 By default the status of the cluster is saved in YAML_ format, but
 also Pickle_ and Json_ formats are available. To save the cluster in a
-different fromat, add the option ``storage_type``::
+different fromat, use option ``storage_type``::
 
     [storage]
+    storage_path = $HOME/src/elasticluster/
     storage_type = json
 
-Please note that only newly created storage will honour this option!
+Please note that only newly-created files will honour the
+``storage_type`` option!  Existing files will keep their format.
+
 
 .. _YAML: http://yaml.org/
 .. _Pickle: http://en.wikipedia.org/wiki/Pickle_(Python)

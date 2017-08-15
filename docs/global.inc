@@ -25,7 +25,7 @@
 .. _`Ceph`: http://ceph.com/
 .. _`Debian GNU/Linux`: http://www.debian.org
 .. _`elasticluster`: http://gc3-uzh-ch.github.io/elasticluster/
-.. _`example configuration file`: https://github.com/gc3-uzh-ch/elasticluster/raw/develop/elasticluster/share/etc/config.template
+.. _`example configuration file`: https://github.com/gc3-uzh-ch/elasticluster/raw/master/elasticluster/share/etc/config.template
 .. _`Ganglia`: http://ganglia.info
 .. _`github elasticluster page`: https://github.com/gc3-uzh-ch/elasticluster
 .. _`github elasticluster repository`: https://github.com/gc3-uzh-ch/elasticluster
@@ -47,6 +47,7 @@
 .. _`python virtualenv`: https://pypi.python.org/pypi/virtualenv
 .. _`Python`: http://www.python.org
 .. _`Services and Support for Science IT`: http://www.s3it.uzh.ch/
+.. _`SoGE`: https://arc.liv.ac.uk/trac/SGE
 .. _`Spark`: http://spark.apache.org/
 .. _`SLURM`: https://slurm.schedmd.com/
 .. _`Torque/PBS`: http://www.adaptivecomputing.com/products/open-source/torque/
