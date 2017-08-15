@@ -70,18 +70,21 @@
     url: '{{ lmod_source_url }}'
     dest: '{{ lmod_build_dir }}'
 
-# XXX: See comment in `roles/lua/tasks/build.yml` about `unarchive` failing with
-# no apparent reason.
+
+# XXX: Ansible issues a warning message "Consider using unarchive module rather
+# than running tar"; however, `unarchive` seems to misteriously fail on CentOS
+# 7.2.1511, and there have been many reports of it failing when file names
+# contain "unexpected" characters (e.g., spaces or non-ASCII characters)
 #
 # If `unarchive` worked correctly, this would be the Ansible stanza to use::
 #
 #   - name: Extract sources
 #     unarchive:
-#       src='{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}.tar.bz2'
-#       dest='{{ lmod_build_dir }}/'
-#       creates='{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}/configure'
-#       copy=no
-
+#       src: '{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}.tar.gz'
+#       dest: '{{ lmod_build_dir }}/'
+#       creates: '{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}/configure'
+#       copy: no
+#
 - name: Extract sources
   command:
     'tar -xzf "{{ lmod_build_dir }}/Lmod-{{LMOD_VERSION}}.tar.gz" -C "{{ lmod_build_dir }}"'
@@ -90,7 +93,12 @@
 
 
 - name: Run `./configure`
-  command: './configure --prefix="{{ lmod_root }}" --with-module-root-path="{{ MODULES_ROOT }}" {{ lmod_configure_extra_opts }}'
+  shell: |
+    # may need to init the Lua environment
+    if [ -r /etc/profile.d/lua.sh ]; then
+      . /etc/profile.d/lua.sh
+    fi
+    ./configure --prefix="{{ lmod_root }}" --with-module-root-path="{{ MODULES_ROOT }}" {{ lmod_configure_extra_opts }}
   args:
     chdir:   '{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}'
     creates: 'makefile'
@@ -101,7 +109,12 @@
 # ATM rather pointless, as Lmod's `make all` just prints "done", but you never
 # know when they are going to introduce some real work here...
 - name: Run `make`
-  command: make
+  shell: |
+    # may need to init the Lua environment
+    if [ -r /etc/profile.d/lua.sh ]; then
+      . /etc/profile.d/lua.sh
+    fi
+    make
   args:
     chdir: '{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}'
   environment:
@@ -118,7 +131,12 @@
 
 
 - name: Run `make install`
-  command: make install
+  shell: |
+    # may need to init the Lua environment
+    if [ -r /etc/profile.d/lua.sh ]; then
+      . /etc/profile.d/lua.sh
+    fi
+    make install
   args:
     chdir:   '{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}'
     creates: '{{lmod_install_dir}}/libexec/lmod'
