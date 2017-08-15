@@ -1,49 +1,80 @@
 ---
-- name: Check if partition is ceph-active
-  when: ceph_devs.{{devs}}.state != "active"
-  action: shell umount {{devs}}; umount {{osd_disk}}; ceph-disk-prepare --zap-disk {{osd_disk}}
+
+- name: Local Ceph constants
   tags:
     - ceph
+  set_fact:
+    _ceph_osd_name: 'osd.{{ceph_idx}}'
+    _ceph_osd_data: '/var/lib/ceph/osd/{{ceph_cluster_name}}-{{ceph_idx}}'
 
-- name: create osd directory
-  action: file dest={{osd_data}} state=directory
+
+- name: Ensure OSD directory exists
   tags:
     - ceph
+  file:
+    dest: '{{_ceph_osd_data}}'
+    state: directory
+    owner: 'ceph'
+    group: 'ceph'
+    mode: 0755
 
-- name: Mount osd disk
-  action: shell mount | grep {{devs}} || mount {{devs}} {{osd_data}}
+
+- name: Format the OSD data directory
   tags:
     - ceph
+  # ceph-disk prepare does not create all the files needed by
+  # ceph-osd. Specifically, it does not create the whoami file
+  # (containing the id of the node) and the `current` dir. However, the
+  # ceph-osd --mkfs command does...
+  command: |
+    ceph-osd --cluster {{ceph_cluster_name}} --name {{_ceph_osd_name}} -c /etc/ceph/ceph.conf -d --mkfs --mkjournal --mkkey
+  args:
+    creates: '{{_ceph_osd_data}}/current'
+  become: yes
+  become_user: 'ceph'
 
-- name: Copying keyring from mon.0
-  action: shell scp root@{{groups.ceph_mon[0]}}:/etc/ceph/ceph.mon.keyring /etc/ceph/keyring
-          creates=/etc/ceph/keyring
+
+- name: Register the OSD authentication key
   tags:
     - ceph
+  shell: |
+    ceph --cluster {{ceph_cluster_name}} auth add {{_ceph_osd_name}} osd 'allow *' mon 'allow profile osd' -i {{_ceph_osd_data}}/keyring
 
-- name: Copy mon keyring
-  action: shell cp -a /etc/ceph/keyring {{osd_data}}/keyring
-          creates={{osd_data}}/keyring
-  tags:
-    - ceph
-
-# ceph-disk prepare does not create all the files needed by
-# ceph-osd. Specifically, it does not create the whoami file
-# (containing the id of the node) and the `current` dir. However, the
-# ceph-osd --mkfs command does...
-
-- name: 'Create (once more!) the fs on the osd data directory'
-  action: shell ceph-osd -i {{ceph_idx}}  -c /etc/ceph/ceph.conf -d --mkfs --mkjournal
-          creates={{osd_data}}/current
-  tags:
-    - ceph
 
 - name: Create OSD
-  action: shell ceph osd dump | grep ^osd.{{ceph_idx}} || ceph osd create
   tags:
     - ceph
+  shell: |
+    if ! (ceph --cluster {{ceph_cluster_name}} osd dump | grep -q '^{{_ceph_osd_name}}'); then
+      ceph --cluster {{ceph_cluster_name}} osd create
+    fi
 
-- name: Ensure ceph-osd is running
-  action: service name=ceph state=started
+
+- name: Add Ceph host to the CRUSH map
   tags:
     - ceph
+  command: |
+    ceph --cluster {{ceph_cluster_name}} osd crush add-bucket {{inventory_hostname}} host
+
+
+- name: Place OSD under the CRUSH root
+  tags:
+    - ceph
+  command: |
+    ceph --cluster {{ceph_cluster_name}} osd crush move {{inventory_hostname}} root=default
+
+
+- name: Add OSD to the CRUSH map
+  tags:
+    - ceph
+  command: |
+    ceph --cluster {{ceph_cluster_name}} osd crush add {{_ceph_osd_name}} 1.0 host={{inventory_hostname}}
+
+
+- name: Ensure `ceph-osd` is running and (re)started at boot
+  tags:
+    - ceph
+  service:
+    name: ceph
+    state: started
+    enabled: yes

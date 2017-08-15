@@ -73,9 +73,7 @@ class Tox(TestCommand):
 # conditional dependencies in Python packages, support for it is inconsistent
 # (at best) among the PyPA tools. An attempt to use the conditional syntax has
 # already caused issues #308, #249, #227, and many more headaches to me while
-# trying to find a combination of
-
-# `pip`, `setuptools`, `wheel`, and dependency
+# trying to find a combination of `pip`, `setuptools`, `wheel`, and dependency
 # specification syntax that would work reliably across all supported Linux
 # distributions. I give up, and revert to computing the dependencies via
 # explicit Python code in `setup.py`; this will possibly break wheels but it's
@@ -121,6 +119,8 @@ elif python_version == (2, 7):
         # which is not picked up by `pip` because it's not
         # a top-level dependency of ElastiCluster
         'Babel>=2.3.4,!=2.4.0',
+        'pbr>=2.0.0,!=2.1.0',
+        '',
     ]
 else:
     raise RuntimeError("ElastiCluster requires Python 2.6 or 2.7")
@@ -169,7 +169,7 @@ setup(
     },
     install_requires=([
         'PyCLI',
-        'ansible>=2.2.1',  ## see: https://www.computest.nl/advisories/CT-2017-0109_Ansible.txt
+        'ansible>=2.2.3,!=2.3.0',  ## whitelist only Ansible versions that fix know CVE exploits
         'click>=4.0',  ## click.prompt() added in 4.0
         'coloredlogs',
         'netaddr',

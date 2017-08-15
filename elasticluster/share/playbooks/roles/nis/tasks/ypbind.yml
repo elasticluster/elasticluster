@@ -39,6 +39,8 @@
     name: '{{item}}'
     state: started
     enabled: yes
+  notify:
+    - restart ypbind
   with_items: '{{nis_client_services}}'
 
 

@@ -4,6 +4,20 @@
 # Post-installation configuration for Lmod
 #
 
+# these directories are referenced in Lmod's default "profile" script;
+# although Lmod runs fine even if they're non-existent, ensuring they
+# are means that we can just drop files in there from other
+# roles/playbooks
+- name: Ensure modulefiles directories exist
+  file:
+    dest: '{{item}}'
+    state: directory
+  with_items:
+    - '/etc/modulefiles'
+    - '/etc/modulefiles/Core'
+    - '/etc/modulefiles/Linux'
+
+
 ## automatically load Lmod for profile shells
 
 - name: Check for existence of `/etc/profile.d`
@@ -15,14 +29,14 @@
   # validate the file by loading it: if it loads correctly, we
   # assume it also provides the functionality
   file:
-    state=link
-    src="{{ lmod_root }}/lmod/{{ LMOD_VERSION }}/init/{{item.shell}}"
-    path="/etc/profile.d/lmod.{{item.shell}}"
-    mode=0444
-    validate="{{item.shell}} -c '{{item.source_cmd}} %s'"
+    state: link
+    src: "{{ lmod_root }}/lmod/{{ LMOD_VERSION }}/init/{{item.script}}"
+    dest: '/etc/profile.d/modules.{{item.shell}}'
+    mode: 0444
+    validate: "{{item.shell}} -c '{{item.source_cmd}} %s'"
   with_items:
-    - { shell: 'sh',  source_cmd: '.' }
-    - { shell: 'csh', source_cmd: 'source' }
+    - { shell: 'sh',  script: 'profile', source_cmd: '.' }
+    - { shell: 'csh', script: 'cshrc',   source_cmd: 'source' }
   when: lmod_check_for__etc_profile_d|success
 
 

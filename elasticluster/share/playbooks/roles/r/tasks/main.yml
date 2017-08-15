@@ -5,11 +5,17 @@
   include: 'init-{{ansible_os_family}}.yml'
 
 
-- name: Install R packages
+- name: Install core R packages
   package:
     name='{{item}}'
     state=present
   with_items: '{{r_packages}}'
+
+
+- name: Create R etc directory
+  file:
+    path: /etc/R
+    state: directory
 
 
 - name: Set default CRAN repository
@@ -17,3 +23,26 @@
     dest: '/etc/R/Rprofile.site'
     src: 'etc/R/Rprofile.site.j2'
     mode: 0444
+
+    
+- name: Support running parallel computations with OpenMPI in R
+  include: rmpi.yml
+  when: 'r_cluster_support'
+
+
+- name: Install additional R libraries
+  shell: |
+    R --slave --no-save --no-restore-history <<-__EOF__
+        if (! ('{{item}}' %in% installed.packages()[,'Package']))
+          install.packages(pkgs='{{item}}', repos=c('https://cloud.r-project.org/'))
+          # `install.packages` may fail but does not throw an error condition
+          # so check whether the package was actually installed and exit accordingly
+          tryCatch({
+              library({{item}})
+            }, error = function(e) {
+              quit(save='no', status=1)  # error exit
+            })
+          quit(save='no', status=0)  # successful exit
+    __EOF__
+  with_items: '{{r_libraries}}'
+

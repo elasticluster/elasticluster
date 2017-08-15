@@ -1,84 +1,73 @@
 ---
-- action: file dest=/var/lib/ceph/mon/ceph-{{ceph_idx}} state=directory
+
+- name: Local Ceph constants
   tags:
     - ceph
+  set_fact:
+    _ceph_mon_name: 'mon.{{inventory_hostname}}'
+    _ceph_mon_data: '/var/lib/ceph/mon/{{ceph_cluster_name}}-{{inventory_hostname}}'
 
 
-# - name: Create key for MON.n on the first mon node
-#   action: shell idx=${hostvars.{$item}.ceph-idx};
-#           ceph-authtool /etc/ceph/ceph.mon.keyring --list | grep -A 1 "\[mon\.$idx\]" | 
-#           tail -1 |sed 's/\s*key\s*=\s*//g' | grep =$ ||
-#           ceph-authtool /etc/ceph/ceph.mon.keyring --gen-key -n mon.$idx -p --cap mon 'allow *' | grep =$
-#   only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
-#   with_items: ${groups.ceph_mon}
-#   tags:
-#     - ceph
-
-
-# - name: Copy keyring to the mon nodes
-#   action: shell scp /etc/ceph/ceph.mon.keyring root@$item:/etc/ceph/
-#   with_items: ${groups.ceph_mon}
-#   register: client_admin_key 
-#   only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
-#   tags:
-#     - ceph
-#     - test
-
-- name: copy keyring in /etc/ceph/ceph.mon.keyring
-  action: shell scp  root@{{groups.ceph_mon[0]}}:/etc/ceph/ceph.mon.keyring /etc/ceph/ceph.mon.keyring
-          creates=/etc/ceph/ceph.mon.keyring
+- name: Ensure Ceph MON directory is owned by `ceph` user
   tags:
     - ceph
+  file:
+    dest: '/var/lib/ceph/mon'
+    state: directory
+    owner: ceph
+    group: ceph
+    mode: 0755
 
-- name: copy keyring in /etc/ceph/keyring
-  action: shell cp  /etc/ceph/ceph.mon.keyring /etc/ceph/keyring
-          creates=/etc/ceph/keyring
+
+- name: Create monmap
   tags:
     - ceph
+  command: |
+    monmaptool --create --generate -c /etc/ceph/ceph.conf /etc/ceph/monmap
+  args:
+    creates: /etc/ceph/monmap
 
-- name: copy keyring in /var/lib/ceph/mon/ceph-<idx>
-  action: shell cp -a /etc/ceph/ceph.mon.keyring /var/lib/ceph/mon/ceph-{{ceph_idx}}/keyring 
-          creates=/var/lib/ceph/mon/ceph-{{ceph_idx}}/keyring
+
+- name: Populate MON data directory
   tags:
     - ceph
+  command: |
+    ceph-mon --cluster {{ceph_cluster_name}} --mkfs -n {{_ceph_mon_name}} --monmap /etc/ceph/monmap --keyring /etc/ceph/{{ceph_cluster_name}}.keyring
+  args:
+    creates: '{{_ceph_mon_data}}/store.db/CURRENT'
+  become: yes
+  become_user: 'ceph'
 
-# - name: Copy keyring to the osd nodes
-#   action: shell scp /etc/ceph/ceph.mon.keyring root@$item:/etc/ceph/keyring
-#   with_items: ${groups.ceph_osd}
-#   register: client_admin_key 
-#   only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
-#   tags:
-#     - ceph
 
-# - name: Copy keyring to the mds nodes
-#   action: shell scp /etc/ceph/ceph.mon.keyring root@$item:/etc/ceph/keyring
-#   with_items: ${groups.ceph_mds}
-#   register: client_admin_key 
-#   only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
-#   tags:
-#     - ceph
-
-- name: Create monmapfile
-  action: shell  monmaptool --create --generate -c /etc/ceph/ceph.conf /etc/ceph/monmap
-          creates=/etc/ceph/monmap
+- name: Copy keyring into MON working directory
   tags:
     - ceph
+  command: |
+    rsync -a /etc/ceph/{{ceph_cluster_name}}.keyring {{_ceph_mon_data}}/keyring
 
-- name: Create mon fs
-  action: shell ceph-mon --mkfs -i {{ceph_idx}} --monmap /etc/ceph/monmap --keyring /etc/ceph/ceph.mon.keyring
-          creates=/var/lib/ceph/mon/ceph-{{ceph_idx}}/store.db/CURRENT
+
+- name: Ensure keyring is readable by `ceph` user
   tags:
     - ceph
+  file:
+    path: '{{_ceph_mon_data}}/keyring'
+    owner: ceph
+    group: ceph
+    mode: 0600
 
-- name: Ensure ceph-mon is running
-  action: service name=ceph state=started
+
+- name: Mark MON configuration as done
   tags:
     - ceph
+  file:
+    path: '{{_ceph_mon_data}}/done'
+    state: touch
 
-# - name: Create OSDs
-#   action: shell ceph osd dump | egrep "^osd.${hostvars.{$item}.ceph-idx} " ||  ceph osd create; sleep 2
-#   with_items: ${groups.ceph_osd}
-#   only_if: '"$inventory_hostname" == "${groups.ceph_mon[0]}"'
-#   tags:
-#     - ceph
 
+- name: Ensure `ceph-mon` is running and (re)started at boot
+  tags:
+    - ceph
+  service:
+    name: ceph
+    state: started
+    enabled: yes

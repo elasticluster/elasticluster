@@ -21,11 +21,28 @@ A working set of default UNIX development tools: C compiler, `make` utility,
 etc. is needed to build and install packages using R's `install.packages`
 function.  They are currently *not* installed by this role.
 
+For parallel processing / cluster support, the OpenMPI library is
+needed, and the role makes the assumption that the MPI environment can
+be loaded by issuing ``module load mpi``.  This is provided by the
+`hpc-common role`_ which is automatically run as a dependency if R
+cluster support is to be installed.
+
 
 Role Variables
 --------------
 
 The following variables may be set to alter the role behavior:
+
+``r_libraries``
+  List of additional (non-core) libraries to install.
+
+``r_cluster_support``
+  Whether to install packages for parallel processing (multicore and MPI).
+  Default is to install parallel processing support only if installing R
+  on more than 1 host.
+  
+  Note that installing cluster support will run the `hpc-common role`_,
+  for the OpenMPI libraries and "environment modules" support.
 
 ``r_cran_mirror_url``
   Base URL for the `CRAN mirror`_ to use. Default is to use the
@@ -68,3 +85,4 @@ into the ElastiCluster_ playbook collection.
 .. _`0-Cloud mirror autoselect`: http://cloud.r-project.org/
 .. _`CRAN mirror`: https://cran.r-project.org/mirrors.html
 .. _`ETHZ CRAN mirror`: https://stat.ethz.ch/CRAN/
+.. _`hpc-common role`: https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/hpc-common

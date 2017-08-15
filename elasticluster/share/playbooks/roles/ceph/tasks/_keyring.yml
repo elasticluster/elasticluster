@@ -1,0 +1,38 @@
+---
+#
+# Create CephX authentication keys.  Should be run on the *first* MON node only.
+#
+
+
+- name: Create MON key if not existing
+  include: _create_key.yml
+  vars:
+    keyname: 'mon.'
+    capabilities: '--cap mon "allow *"'
+    keyring: '/etc/ceph/{{ceph_cluster_name}}.keyring'
+
+
+- name: Create ADMIN keys in own keyring if not existing
+  include: _create_key.yml
+  vars:
+    keyname: 'client.admin'
+    capabilities: '--cap mon "allow *" --cap osd "allow *" --cap mds "allow *" {% if ceph_requires_mgr %}--cap mgr "allow *"{% endif %}'
+    keyring: '/etc/ceph/{{ceph_cluster_name}}.client.admin.keyring'
+
+
+- name: Import ADMIN key into master keyring
+  command: |
+    ceph-authtool /etc/ceph/{{ceph_cluster_name}}.keyring --import-keyring /etc/ceph/{{ceph_cluster_name}}.client.admin.keyring
+
+
+# grab a copy of the keyring so we can later deploy it on all Ceph nodes
+# (the other half, i.e. copy *to* all, cannot be done here as this
+# playbook only runs on the first MON node)
+- name: Fetch master and ADMIN keyring files
+  fetch:
+    src: '/etc/ceph/{{item}}'
+    dest: '/tmp/{{item}}'
+    flat: yes
+  with_items:
+    - '{{ceph_cluster_name}}.keyring'
+    - '{{ceph_cluster_name}}.client.admin.keyring'

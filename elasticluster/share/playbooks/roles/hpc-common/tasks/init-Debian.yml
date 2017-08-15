@@ -1,0 +1,14 @@
+---
+
+- name: Load distribution-specific defaults (Debian/Ubuntu)
+  set_fact:
+    hpc_common_packages:
+      - build-essential
+      - gfortran
+      - libatlas-dev
+      - libhdf5-dev
+      - libhdf5-openmpi-dev
+      - libnetcdf-dev
+      - libopenmpi-dev
+      - openmpi-bin
+      - sqlite3

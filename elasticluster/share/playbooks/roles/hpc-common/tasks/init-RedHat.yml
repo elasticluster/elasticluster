@@ -1,0 +1,15 @@
+---
+
+- name: Load distribution-specific defaults (CentOS/RHEL)
+  set_fact:
+    hpc_common_packages:
+      - atlas-devel
+      - blas-devel
+      - gcc-c++
+      - gcc-gfortran
+      - hdf5
+      - hdf5-openmpi
+      - make
+      - netcdf-devel
+      - openmpi
+      - openmpi-devel

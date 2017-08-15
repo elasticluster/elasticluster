@@ -8,7 +8,7 @@
 if [ -z "$__Lmod_Init_Default_Modules" -o -z "$LD_LIBRARY_PATH" ]; then
     export __Lmod_Init_Default_Modules=1
     export LMOD_SYSTEM_DEFAULT_MODULES="{{ LMOD_DEFAULT_MODULES|join(':') }}"
-    module --initial_load restore
+    module --initial_load --no_redirect restore
 else
     module refresh
 fi

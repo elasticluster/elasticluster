@@ -1,0 +1,67 @@
+--
+-- THIS FILE IS CONTROLLED BY ELASTICLUSTER
+-- local modifications will be overwritten
+-- the next time `elasticluster setup` is run!
+--
+
+--
+-- OpenMPI module for use with 'environment-modules' package
+--
+help([[
+Load the version of OpenMPI that came with the base OS.
+
+Note that it is configured (via env. variables) to use TCP sockets for
+message passing, and avoid even probing for IB.
+
+To find out more about OpenMPI, visit: http://www.open-mpi.org/
+]])
+whatis("Load the version of OpenMPI that came with the base OS.")
+
+-- no two MPI packages can be loaded at the same time
+family("MPI")
+
+{% if ansible_os_family == 'Debian' -%}
+-- This is a straightforward port of the modulefile that is
+-- distributed with CentOS 7.x -- paths have been adapted
+-- to the Debian/Ubuntu package, and paths that no equivalent
+-- (e.g. the Python `openmpi` package) were removed.
+--
+prepend_path("LD_LIBRARY_PATH", "/usr/lib/openmpi/lib")
+setenv("MPI_BIN", "/usr/bin")
+setenv("MPI_SYSCONFIG", "/etc/openmpi")
+setenv("MPI_FORTRAN_MOD_DIR", "/usr/lib/openmpi/lib")
+setenv("MPI_INCLUDE", "/usr/lib/openmpi/include")
+setenv("MPI_LIB", "/usr/lib/openmpi/lib")
+setenv("MPI_MAN", "/usr/share/man/")
+setenv("MPI_SUFFIX", "_openmpi")
+setenv("MPI_HOME", "/usr/lib/openmpi")
+{%- elif ansible_os_family == 'RedHat' -%}
+prepend_path("PATH", 	        "/usr/lib64/openmpi/bin")
+prepend_path("LD_LIBRARY_PATH", "/usr/lib64/openmpi/lib")
+prepend_path("PYTHONPATH",      "/usr/lib64/python2.7/site-packages/openmpi")
+prepend_path("MANPATH",         "/usr/share/man/openmpi-x86_64")
+setenv("MPI_BIN",		"/usr/lib64/openmpi/bin")
+setenv("MPI_SYSCONFIG",	        "/etc/openmpi-x86_64")
+setenv("MPI_FORTRAN_MOD_DIR",	"/usr/lib64/gfortran/modules/openmpi-x86_64")
+setenv("MPI_INCLUDE",	        "/usr/include/openmpi-x86_64")
+setenv("MPI_LIB",	        "/usr/lib64/openmpi/lib")
+setenv("MPI_MAN",	        "/usr/share/man/openmpi-x86_64")
+setenv("MPI_PYTHON_SITEARCH",	"/usr/lib64/python2.7/site-packages/openmpi")
+setenv("MPI_COMPILER",		"openmpi-x86_64")
+setenv("MPI_SUFFIX",	        "_openmpi")
+setenv("MPI_HOME",	        "/usr/lib64/openmpi")
+{%- else -%}
+LmodError("ElastiCluster lacks support for this base OS in its `openmpi.lua` template.")
+{%- endif %}
+
+
+-- settings below this line are dependent solely on OpenMPI and not on the base OS
+
+-- it's unlikely there's Infiniband on cloud-based VMs,
+-- so disable it by default to avoid confusing warning
+-- messages from OpenMPI
+setenv("OMPI_MCA_btl", "self,sm,tcp")
+
+-- do not busy-wait while running MPI barriers; has a little impact on
+-- performance but saves money and energy on cloud "CPU burstable" instances
+setenv("OMPI_MCA_mpi_yield_when_idle", "1")

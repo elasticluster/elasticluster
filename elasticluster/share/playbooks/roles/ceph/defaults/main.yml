@@ -1,0 +1,74 @@
+---
+
+## name of Ceph release to install, e.g. "luminous" or "jewel"
+ceph_release: 'luminous'
+
+
+## Ceph storage cluster settings
+
+# default number of object replicas in a pool
+ceph_osd_pool_size: 2
+
+# default number of PGs in a pool
+ceph_osd_pg_num: >-
+    {#- see http://docs.ceph.com/docs/master/rados/operations/placement-groups/#a-preselection-of-pg-num -#}
+    {%- set osd_num = groups.ceph_osd|length -%}
+    {%- if osd_num < 5 -%}
+      128
+    {%- elif osd_num < 10 -%}
+      512
+    {%- elif osd_num < 50 -%}
+      1024
+    {%- else -%}
+      {{ ((groups.ceph_osd|length) * 100 / (ceph_osd_pool_size|int)) |log(2) |round(0, 'ceil') |int |pow(2) }}
+    {%- endif -%}
+
+
+## CephFS server-side settings
+#
+# We split the total PGs with a metadata:data ratio of 1:7,
+# see suggestions at:
+# http://lists.ceph.com/pipermail/ceph-users-ceph.com/2017-July/019085.html
+#
+
+# number of PGs for the metadata pool
+ceph_metadata_pg_num: '{{ (ceph_osd_pg_num|int * 1 / 8) |int }}'
+
+# number of PGs for the data pool
+ceph_data_pg_num: '{{ (ceph_osd_pg_num|int * 7 / 8) |int }}'
+
+
+## A list of CephFS filesystems to mount on CephFS clients.
+#
+# Each filesystem is defined by a dictionary with the following
+# key/value pairs:
+#
+# - mountpoint: path to the local mountpoint
+# - options: mount options, defaults to `rw` if not given
+# - state: see documentation for Ansible module `mount`; the default value here is `mounted`
+#
+# For example::
+#
+#     CEPH_MOUNTS:
+#       - mountpoint: '/cephfs'
+#         options: 'rw'
+#
+# Note there is no "device" or "source" parameter: the mount device for CephFS
+# is always the address of a MON host (which is known by other means and need
+# not be repeated here).
+#
+# By default, this parameter is the empty list, i.e., no CephFS filesystems are mounted.
+#
+CEPH_MOUNTS: []
+
+
+### No customization should be necessary or useful below this line ###
+
+# unique identifier for the filesystem
+ceph_fsid: '00baac7a-0ad4-4ab7-9d5e-fdaf7d122aee'
+
+# argument to the `--cluster` option for `ceph` commands;
+# there is little need to change it unless you're working with
+# multiple clusters at the same time
+ceph_cluster_name: 'ceph'
+

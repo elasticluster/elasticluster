@@ -1,0 +1,5 @@
+---
+
+# list the releases that do *not* require MGR,
+# as that list will not grow over time
+ceph_requires_mgr: '(ceph_release not in ["hammer", "infernalis", "jewel"])'

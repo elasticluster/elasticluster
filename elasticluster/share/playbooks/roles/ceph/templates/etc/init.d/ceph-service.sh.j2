@@ -1,0 +1,104 @@
+#! /bin/sh
+#
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+# Script template originally from:
+# http://www.thegeekstuff.com/2012/03/lsbinit-script/
+# Heavily modified for LSB-4.0 compliance by
+# Riccardo Murri <riccardo.murri@gmail.com>
+#
+
+### BEGIN INIT INFO
+# Provides:          {{_ceph_service}}
+# Required-Start:    $time $network $named
+# Required-Stop:     $time $network $named
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Ceph service {{_ceph_service}}
+# Description:       Ceph service {{_ceph_service}}
+#                    This should be handled by the main `ceph`
+#                    service startup script, but since it is not
+#                    (in the installed Ceph release), this simple
+#                    service init script is provided to guarantee
+#                    that the service is (re)started upon reboot.
+### END INIT INFO
+
+# Using the lsb functions to perform the operations.
+. /lib/lsb/init-functions
+
+# Process name ( For display )
+NAME={{_ceph_service}}
+
+# Daemon name, where is the actual executable
+DAEMON=/usr/bin/ceph-{{_ceph_service}}
+
+# pid file for the daemon
+PIDFILE=/var/run/{{_ceph_daemon_name}}.pid
+
+# If the daemon is not there, then exit.
+test -x "$DAEMON" || exit 5
+
+case "$1" in
+    start)
+        # Check whether the PID file exists and check the actual status of process
+        if [ -e "$PDIFILE" ]; then
+            if pidofproc -p "$PDIFILE" "$DAEMON" >/dev/null; then
+                # If the status is SUCCESS then don't need to start again.
+                log_success_msg "Service $NAME is already running"
+                exit 0
+            fi
+        fi
+        # Start the daemon.
+        start_daemon -p "$PDIFILE" "$DAEMON"
+        status="$?"
+        if [ "$status" -eq 0 ]; then
+            log_success_msg "Started service $NAME"
+            exit 0
+        else
+            log_failure_msg "Could not start service $NAME"
+            exit $status
+        fi
+        ;;
+
+    stop)
+        # Stop the daemon.
+        if [ -e "$PDIFILE" ]; then
+            killproc -p "$PDIFILE" "$DAEMON" >/dev/null
+            status="$?"
+            if [ "$status" -eq 0 ]; then
+                log_success_msg "Started service $NAME"
+                exit 0
+            else
+                log_failure_msg "Could not start service $NAME"
+                exit $status
+            fi
+        else
+            log_success_msg "Service $NAME is not running"
+            exit 0
+        fi
+        ;;
+
+    restart|force-reload)
+        # Restart the daemon.
+        "$0" stop && sleep 2 && "$0" start
+        ;;
+
+    try-restart)
+        # Restart the daemon if already running
+        "$0" status && "$0" restart
+        ;;
+
+    status)
+        # Check the status of the process.
+        status_of_proc -p "$PDIFILE" "$DAEMON" "$NAME service"
+        exit "$?"
+        ;;
+
+    *)
+        # For invalid arguments, print the usage message.
+        echo "Usage: $0 {start|stop|restart|force-reload|status}"
+        exit 2
+        ;;
+esac
