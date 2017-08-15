@@ -4,40 +4,51 @@
 # Install Lua plus all needed packages for running Lmod
 #
 
-# try installing from OS packages first...
 - name: Install Lua from the OS repository (Debian-compatible)
   apt:
-    name='{{ item }}'
-    state=present
-  ignore_errors: True
+    name: '{{ item }}'
+    state: present
   with_items:
-    # Lua 5.2 is the only interpreter for which all of the "filesystem",
-    # "posix", and "term" libraries have been packaged (as of Ubuntu 16.04)
-    - 'liblua5.2-0={{ LUA_VERSION }}*'
-    - 'liblua5.2-dev={{ LUA_VERSION }}*'
-    # these Lua libraries may support multiple Lua minor versions
-    # in a single package
-    - lua-filesystem
-    - lua-posix
-    - lua-term
-  register: lua_pkg_install_deb
+    # Luarocks requires Lua 5.1, at least on Ubuntu 16.04
+    - lua5.1
+    - liblua5.1-dev
+    - luarocks
   when: '{{ is_debian_compatible }}'
 
 - name: Install Lua from the OS repository (RHEL-compatible)
   yum:
-    name='{{ item }}'
-    state=present
+    name: '{{ item }}'
+    state: present
   with_items:
-    - 'lua-{{ LUA_VERSION }}*'
-    - lua-filesystem
-    - lua-posix
-    - lua-term
-  ignore_errors: True
-  register: lua_pkg_install_rpm
+    - lua
+    - lua-devel
+    - luarocks
   when: '{{ is_rhel_compatible }}'
 
 
-# ...if installing from OS packages failed, download and build sources
-- name: Build Lua from source
-  include: build.yml
-  when: '{{ lua_pkg_install_deb|failed or lua_pkg_install_rpm|failed }}'
+- name: Find out actual installed Lua version
+  command: |
+    lua -e 'print(string.sub(_VERSION, 5))'
+  register: _lua_version
+
+
+- name: Make installed Lua version available to playbooks
+  set_fact:
+    lua_version: '{{ _lua_version.stdout }}'
+
+
+- name: Load Lua-related settings at login time
+  template:
+    dest: /etc/profile.d/lua.sh
+    src: etc/profile.d/lua.sh.j2
+    mode: 0444
+
+
+- name: Install additional packages needed by Lmod
+  command: |
+    luarocks install {{item}}
+  with_items:
+    - bit32
+    - lua-term
+    - luafilesystem
+    - luaposix
