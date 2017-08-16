@@ -41,10 +41,6 @@ from elasticluster.exceptions import ClusterNotFound, ConfigurationError, \
 from elasticluster.utils import confirm_or_abort
 
 
-SSH_PORT = 22
-IPV6_RE = re.compile('\[([a-f:A-F0-9]*[%[0-z]+]?)\](?::(\d+))?')
-
-
 class AbstractCommand():
     """
     Defines the general contract every command has to fulfill in
@@ -681,17 +677,7 @@ class SshFrontend(AbstractCommand):
             sys.exit(1)
         host = frontend.connection_ip()
 
-        # check for nonstandard port, either IPv4 or IPv6
-        addr = host
-        port = str(SSH_PORT)
-        if ':' in host:
-            match = IPV6_RE.match(host)
-            if match:
-                addr = match.groups()[0]
-                port = match.groups()[1]
-            else:
-                addr, _, port = host.partition(':')
-
+        addr, port = parse_ip_address_and_port(host)
         username = frontend.image_user
         knownhostsfile = cluster.known_hosts_file if cluster.known_hosts_file \
                          else '/dev/null'

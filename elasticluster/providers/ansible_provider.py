@@ -43,8 +43,8 @@ import elasticluster
 from elasticluster import log
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers import AbstractSetupProvider
+from elasticluster.utils import parse_ip_address_and_port
 
-IPV6_RE = re.compile('\[([a-f:A-F0-9]*[%[0-z]+]?)\](?::(\d+))?')
 
 class AnsibleSetupProvider(AbstractSetupProvider):
     """This implementation uses ansible to configure and manage the cluster
@@ -82,9 +82,6 @@ class AnsibleSetupProvider(AbstractSetupProvider):
 
     #: to identify this provider type in messages
     HUMAN_READABLE_NAME = 'Ansible'
-
-    #: file ending of the generated inventory file
-    inventory_file_ending = 'ansible-inventory'
 
     def __init__(self, groups, playbook_path=None, environment_vars=None,
                  storage_path=None, sudo=True, sudo_user='root',
@@ -284,33 +281,36 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         :type cluster: :py:class:`elasticluster.cluster.Cluster`
         """
         inventory_data = defaultdict(list)
+
         for node in cluster.get_all_nodes():
+            if node.preferred_ip is None:
+                log.warning(
+                    "Ignoring node `{0}`: No IP address."
+                    .format(node.name))
+                continue
             if node.kind not in self.groups:
                 # FIXME: should this raise a `ConfigurationError` instead?
-                warn("Node kind `{0}` not defined in cluster!".format(node.kind))
+                log.warning(
+                    "Ignoring node `{0}`:"
+                    " Node kind `{1}` not defined in cluster!"
+                    .format(node.name, node.kind))
                 continue
+
             extra_vars = ['ansible_user=%s' % node.image_user]
-            # check for nonstandard port, either IPv4 or IPv6
-            if node.preferred_ip and ':' in node.preferred_ip:
-                match = IPV6_RE.match(node.preferred_ip)
-                if match:
-                    host_port = match.groups()[1]
-                else:
-                    _, _, host_port = node.preferred_ip.partition(':')
-                if host_port:
-                    extra_vars.append('ansible_port=%s' % host_port)
+
+            ip_addr, port = parse_ip_address_and_port(node.preferred_ip)
+            if port != 22:
+                extra_vars.append('ansible_port=%s' % port)
 
             if node.kind in self.environment:
                 extra_vars.extend('%s=%s' % (k, v) for k, v in
                                   self.environment[node.kind].items())
             for group in self.groups[node.kind]:
-                connection_ip = node.preferred_ip
-                if connection_ip:
-                    inventory_data[group].append(
-                        (node.name, connection_ip, str.join(' ', extra_vars)))
+                inventory_data[group].append(
+                    (node.name, ip_addr, str.join(' ', extra_vars)))
 
         if not inventory_data:
-            elasticluster.log.info("No inventory file was created.")
+            log.info("No inventory file was created.")
             return None
 
         # create a temporary file to pass to ansible, since the
@@ -332,15 +332,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 if hosts:
                     inventory_file.write("\n[" + section + "]\n")
                     for host in hosts:
-                        # don't want port, makes it look like ipv6
-                        if ':' in host[1]:
-                            match = IPV6_RE.match(node.preferred_ip)
-                            if match:
-                                host = (host[0], match.groups()[0], host[2])
-                            else:
-                                host = (host[0], host[1].partition(':')[0],
-                                        host[2])
-                        hostline = "%s ansible_host=%s %s\n" % host
+                        hostline = "{0} ansible_host={1} {2}\n".format(*host)
                         inventory_file.write(hostline)
         return inventory_path
 
@@ -352,9 +344,8 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         :type cluster: :py:class:`elasticluster.cluster.Cluster`
         """
         if self._storage_path and os.path.exists(self._storage_path):
-            fname = '%s.%s' % (AnsibleSetupProvider.inventory_file_ending,
-                               cluster.name)
-            inventory_path = os.path.join(self._storage_path, fname)
+            filename = (cluster.name + '.inventory')
+            inventory_path = os.path.join(self._storage_path, filename)
 
             if os.path.exists(inventory_path):
                 try:
