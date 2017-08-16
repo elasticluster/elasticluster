@@ -1,4 +1,5 @@
 # ElastiCluster-specific patterns
+.agignore
 elasticluster.egg-info/
 .noseids
 .tox/
