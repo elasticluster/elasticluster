@@ -41,20 +41,58 @@ class LibCloudProvider(AbstractCloudProvider):
                         be forwarded to the driver
         """
 
+    provider_args = {
+        'aliyun_ecs': ['access_key_id', 'access_key_secret'],
+        'bsnl': ['username', 'password'],
+        'cloudscale': ['token'],
+        'cloudsigma': ['username', 'password'],
+        'cloudwatt': ['email', 'password', 'tenant_id'],
+        'digitalocean': ['access_token'],
+        'dimensiondata': ['username', 'password'],
+        'ec2': ['access_key', 'secret_key'],
+        'exoscale': ['key'],
+        'gandi': ['api_key'],
+        'gce': ['service_account_email_or_client_id', 'pem_file_or_client_secret'],
+        'ikoula': ['key'],
+        'indosat': ['username', 'password'],
+        'internetsolutions': ['username', 'password'],
+        'medone': ['username', 'password'],
+        'nimbus': ['key'],
+        'ntta': ['username', 'password'],
+        'openstack': ['username', 'password'],
+        'outscale_inc': ['key'],
+        'outscale_sas': ['key'],
+        'ovh': ['app_key', 'app_secret', 'project_id', 'consumer_key'],
+        'packet': ['key'],
+        'rackspace': ['username', 'api_key'],
+        'vcloud': ['key'],
+        'vultr': ['api_key']
+    }
+
     def __init__(self, driver_name, storage_path=None, **options):
         self.storage_path = storage_path
-        if 'auth_url' in options and 'ex_force_auth_url' not in options:
-            options['ex_force_auth_url'] = options['auth_url'].rsplit('/', 1)[0]
-
+        args = None
+        if self.provider_args.has_key(driver_name.lower()):
+            log.debug('provider {0} requires arguments'.format(driver_name))
+            req_args = self.provider_args[driver_name.lower()]
+            if not set(req_args).issubset(options):
+                raise ValueError('{0} provider requires {1} to be set'.format(
+                    driver_name, ' '.join(req_args)
+                ))
+            args = ()
+            for r in req_args:
+                args += (options.pop(r),)
         try:
             driver_name = getattr(Provider, driver_name.upper())
         except AttributeError:
             raise ValueError("No libcloud driver for provider {name}".format(name=driver_name))
+        # fix for openstack
+        if 'auth_url' in options and 'ex_force_auth_url' not in options:
+            options['ex_force_auth_url'] = options['auth_url'].rsplit('/', 1)[0]
         driver_class = get_driver(driver_name)
-        log.debug('Using libcloud driver `%s` ...', driver_class.__name__)
-        auth_args = self.__pop_driver_auth_args(**options)
-        if auth_args:
-            self.driver = driver_class(*auth_args, **options)
+        log.debug('Initializing libcloud driver `%s` ...', driver_class.__name__)
+        if args:
+            self.driver = driver_class(*args, **options)
         else:
             self.driver = driver_class(**options)
 
@@ -245,23 +283,4 @@ class LibCloudProvider(AbstractCloudProvider):
             for item in [i for i in known if i.name == element or i.id == element]:
                 result.append(item)
         return result
-
-    @staticmethod
-    def __pop_driver_auth_args(**kwargs):
-        """
-        Try to construct the arguments that should be passed as initialization of a driver
-        :param kwargs: options passed to the class
-        :return: args or none
-        """
-        if 'username' in kwargs:
-            return [kwargs.pop('username'), kwargs.pop('password')]
-        elif 'access_token' in kwargs:
-            return kwargs.pop('access token')
-        elif 'access_id' in kwargs:
-            return kwargs.pop('access_id'), kwargs.pop('secret_key')
-        elif 'service_account_email' in kwargs:
-            return [kwargs.pop('service_account_email'), kwargs.pop('pem_file')]
-        elif 'client_id' in kwargs:
-            return [kwargs.pop('client_id'), kwargs.pop('client_secret')]
-        return None
 
