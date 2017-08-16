@@ -119,6 +119,7 @@ class LibCloudProvider(AbstractCloudProvider):
 
         if self.driver.get_key_pair(key_name):
             options['auth'] = NodeAuthSSHKey(self.driver.get_key_pair(key_name).public_key)
+            options['ex_keyname'] = key_name
         else:
             options['auth'] = NodeAuthPassword(options.get('image_user_password'))
 
@@ -283,4 +284,3 @@ class LibCloudProvider(AbstractCloudProvider):
             for item in [i for i in known if i.name == element or i.id == element]:
                 result.append(item)
         return result
-
