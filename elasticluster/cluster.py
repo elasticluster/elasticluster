@@ -1075,7 +1075,8 @@ class Node(Struct):
         `update_ips`:meth: methods should be used to further gather details
         about the state of the node.
         """
-        log.info("Starting node %s ...", self.name)
+        log.info("Starting node `%s` from image `%s` with flavor %s ...",
+                 self.name, self.image_id, self.flavor)
         self.instance_id = self._cloud_provider.start_instance(
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
