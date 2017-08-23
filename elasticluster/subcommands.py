@@ -774,14 +774,16 @@ class GC3PieConfig(AbstractCommand):
         """
         Load the cluster and build a GC3Pie configuration snippet.
         """
+        log.warning(
+            "Command `elasticluster gc3pie-config` is DEPRECATED"
+            " and will be removed in release 1.4 of ElastiCluster")
         creator = make_creator(self.params.config,
                                storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = creator.load_cluster(cluster_name)
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Listing nodes from cluster %s: %s\n" %
-                      (cluster_name, ex))
+            log.error("Listing nodes from cluster %s: %s", cluster_name, ex)
             return
 
         from elasticluster.gc3pie_config import create_gc3pie_config_snippet
