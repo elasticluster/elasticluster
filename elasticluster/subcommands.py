@@ -741,15 +741,19 @@ class SftpFrontend(AbstractCommand):
             log.error("No IP address known for node %s", frontend.name)
             sys.exit(1)
 
+        addr, port = parse_ip_address_and_port(host)
         username = frontend.image_user
-        knownhostsfile = cluster.known_hosts_file if cluster.known_hosts_file \
-                         else '/dev/null'
-        sftp_cmdline = ["sftp",
-                        "-o", "UserKnownHostsFile=%s" % knownhostsfile,
-                        "-o", "StrictHostKeyChecking=yes",
-                        "-o", "IdentityFile=%s" % frontend.user_key_private]
+        knownhostsfile = (cluster.known_hosts_file if cluster.known_hosts_file
+                          else '/dev/null')
+        sftp_cmdline = [
+            "sftp",
+            "-P", "{0:d}".format(port),
+            "-o", "UserKnownHostsFile={0}".format(knownhostsfile),
+            "-o", "StrictHostKeyChecking=yes",
+            "-o", "IdentityFile={0}".format(frontend.user_key_private),
+        ]
         sftp_cmdline.extend(self.params.sftp_args)
-        sftp_cmdline.append('%s@%s' % (username, host))
+        sftp_cmdline.append('{0}@{1}'.format(username, addr))
         os.execlp("sftp", *sftp_cmdline)
 
 
