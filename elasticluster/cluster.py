@@ -1208,7 +1208,7 @@ class Node(Struct):
         return ("name=`{name}`, id=`{id}`,"
                 " ips=[{ips}], connection_ip=`{preferred_ip}`"
                 .format(name=self.name, id=self.instance_id,
-                        ips=ips, preferred_id=self.preferred_ip))
+                        ips=ips, preferred_ip=self.preferred_ip))
 
     def pprint(self):
         """Pretty print information about the node.
