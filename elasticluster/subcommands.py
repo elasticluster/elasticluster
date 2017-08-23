@@ -93,8 +93,7 @@ def cluster_summary(cluster):
         frontend = cluster.get_frontend_node().name
     except NodeNotFound as ex:
         frontend = 'unknown'
-        log.error("Unable to get information on the frontend node: "
-                  "%s", str(ex))
+        log.error("Unable to get information on the frontend node: %s", ex)
     msg = """
 Cluster name:     %s
 Cluster template: %s
@@ -317,8 +316,7 @@ class ResizeCluster(AbstractCommand):
             cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Listing nodes from cluster %s: %s\n" %
-                      (cluster_name, ex))
+            log.error("Listing nodes from cluster %s: %s", cluster_name, ex)
             return
         for grp in self.params.nodes_to_add:
             print("Adding %d %s node(s) to the cluster"
@@ -424,16 +422,15 @@ class RemoveNode(AbstractCommand):
             cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Error loading cluster %s: %s\n" %
-                      (cluster_name, ex))
+            log.error("Error loading cluster %s: %s", cluster_name, ex)
             return
 
         # Find the node to remove.
         try:
             node = cluster.get_node_by_name(self.params.node)
         except NodeNotFound:
-            log.error("Node %s not found in cluster %s" % (
-                self.params.node, self.params.cluster))
+            log.error("Node %s not found in cluster %s",
+                      self.params.node, self.params.cluster)
             sys.exit(1)
 
         # Run
@@ -564,8 +561,7 @@ class ListNodes(AbstractCommand):
             if self.params.update:
                 cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Listing nodes from cluster %s: %s\n" %
-                      (cluster_name, ex))
+            log.error("Listing nodes from cluster %s: %s", cluster_name, ex)
             return
 
         if self.params.pretty_json:
@@ -609,8 +605,7 @@ class SetupCluster(AbstractCommand):
             cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Setting up cluster %s: %s\n" %
-                      (cluster_name, ex))
+            log.error("Setting up cluster %s: %s", cluster_name, ex)
             return
 
         print("Configuring cluster `%s`..." % cluster_name)
@@ -649,8 +644,7 @@ class SshFrontend(AbstractCommand):
             cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Setting up cluster %s: %s\n" %
-                      (cluster_name, ex))
+            log.error("Setting up cluster %s: %s", cluster_name, ex)
             return
 
         if self.params.ssh_to:
@@ -691,7 +685,7 @@ class SshFrontend(AbstractCommand):
                        "-p", "{0:d}".format(port),
                        '%s@%s' % (username, addr)]
         ssh_cmdline.extend(self.params.ssh_args)
-        log.debug("Running command `%s`" % str.join(' ', ssh_cmdline))
+        log.debug("Running command `%s`", str.join(' ', ssh_cmdline))
         os.execlp("ssh", *ssh_cmdline)
 
 
@@ -838,12 +832,12 @@ class ExportCluster(AbstractCommand):
         try:
             cluster = creator.load_cluster(self.params.cluster)
         except ClusterNotFound:
-            log.error("Cluster `%s` not found in storage dir %s."
-                      % (self.params.cluster, self.params.storage))
+            log.error("Cluster `%s` not found in storage dir %s.",
+                      self.params.cluster, self.params.storage)
             sys.exit(1)
 
         if os.path.exists(self.params.zipfile) and not self.params.overwrite:
-            log.error("ZIP file `%s` already exists." % self.params.zipfile)
+            log.error("ZIP file `%s` already exists.", self.params.zipfile)
             sys.exit(1)
 
         with ZipFile(self.params.zipfile, 'w') as zipfile:
@@ -863,7 +857,7 @@ class ExportCluster(AbstractCommand):
             #
             def verbose_add(fname, basedir='', comment=None):
                 zipname = basedir + os.path.basename(fname)
-                log.info("Adding '%s' as '%s'" % (fname, zipname))
+                log.info("Adding '%s' as '%s'", fname, zipname)
                 zipfile.write(fname, zipname)
                 if comment:
                     info = zipfile.getinfo(zipname)
@@ -909,8 +903,9 @@ where this private key has been deployed.
                                                        node.name))
             except OSError as ex:
                 # A file is probably missing!
-                log.error("Fatal error: cannot add file %s to zip archive: %s."
-                          % (ex.filename, ex))
+                log.error(
+                    "Fatal error: cannot add file %s to zip archive: %s.",
+                    ex.filename, ex)
                 sys.exit(1)
 
         print("Cluster '%s' correctly exported into %s" %
@@ -944,7 +939,7 @@ class ImportCluster(AbstractCommand):
                                storage_path=self.params.storage)
         repo = creator.create_repository()
         tmpdir = tempfile.mkdtemp()
-        log.debug("Using temporary directory %s" % tmpdir)
+        log.debug("Using temporary directory %s", tmpdir)
         tmpconf = make_creator(self.params.config, storage_path=tmpdir)
         tmprepo = tmpconf.create_repository()
 
@@ -954,7 +949,7 @@ class ImportCluster(AbstractCommand):
             with ZipFile(self.params.file, 'r') as zipfile:
                 # Find main cluster file
                 # create cluster object from it
-                log.debug("ZIP file %s opened" % self.params.file)
+                log.debug("ZIP file %s opened", self.params.file)
                 cluster = None
                 zipfile.extractall(tmpdir)
                 newclusters = tmprepo.get_all()
@@ -988,7 +983,7 @@ class ImportCluster(AbstractCommand):
                     keybase = os.path.basename(keyfile)
                     srcfile = os.path.join(tmpdir, keybase)
                     if os.path.isfile(srcfile):
-                        log.info("Importing key file %s" % keybase)
+                        log.info("Importing key file %s", keybase)
                         destfile = os.path.join(dest, keybase)
                         shutil.copy(srcfile, destfile)
                         setattr(cluster, attr, destfile)
@@ -1003,8 +998,9 @@ class ImportCluster(AbstractCommand):
                                                    node.kind,
                                                    node.name)
                             nodekeybase = os.path.basename(nodekeyfile)
-                            log.info("Importing key file %s for node %s" %
-                                     (nodekeybase, node.name))
+                            log.info(
+                                "Importing key file %s for node %s",
+                                nodekeybase, node.name)
                             if not os.path.isdir(destdir):
                                 os.makedirs(destdir)
                             # Path to key in zip file
@@ -1020,20 +1016,21 @@ class ImportCluster(AbstractCommand):
 
                 repo.save_or_update(cluster)
                 if not cluster:
-                    log.error("ZIP file %s does not contain a valid cluster."
-                              % self.params.file)
+                    log.error(
+                        "ZIP file %s does not contain a valid cluster.",
+                        self.params.file)
                     rc = 2
 
                 # Check if a cluster already exists.
                 # if not, unzip the needed files, and update ssh key path if needed.
         except Exception as ex:
-            log.error("Unable to import from zipfile %s: %s"
-                      % (self.params.file, ex))
+            log.error("Unable to import from zipfile `%s`: %s",
+                      self.params.file, ex)
             rc=1
         finally:
             if os.path.isdir(tmpdir):
                 shutil.rmtree(tmpdir)
-            log.info("Cleaning up directory %s" % tmpdir)
+            log.info("Cleaning up directory `%s`", tmpdir)
 
         if rc == 0:
             print("Successfully imported cluster from ZIP %s to %s"
