@@ -886,7 +886,36 @@ class Creator(object):
         provider_conf = cloud_conf.copy()
         provider_conf.pop('provider')
 
-        return ctor(storage_path=self.storage_path, **provider_conf)
+        # use a single keyword args dictionary for instanciating
+        # provider, so we can detect missing arguments in case of error
+        provider_conf['storage_path'] = self.storage_path
+        try:
+            return ctor(**provider_conf)
+        except TypeError:
+            # check that required parameters are given, and try to
+            # give a sensible error message if not; if we do not
+            # do this, users only see a message like this::
+            #
+            #   ERROR Error: __init__() takes at least 5 arguments (4 given)
+            #
+            # which gives no clue about what to correct!
+            import inspect
+            args, varargs, keywords, defaults = inspect.getargspec(ctor.__init__)
+            if defaults is not None:
+                # `defaults` is a list of default values for the last N args
+                defaulted = dict((argname, value)
+                                 for argname, value in zip(reversed(args),
+                                                           reversed(defaults)))
+            else:
+                # no default values at all
+                defaulted = {}
+            for argname in args[1:]:  # skip `self`
+                if argname not in provider_conf and argname not in defaulted:
+                    raise ConfigurationError(
+                        "Missing required configuration parameter `{0}`"
+                        " in cloud section for cluster `{1}`"
+                        .format(argname, cluster_template))
+
 
 
     def create_cluster(self, template, name=None, cloud=None, setup=None):
