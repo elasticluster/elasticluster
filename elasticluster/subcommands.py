@@ -38,7 +38,7 @@ from elasticluster import log
 from elasticluster.conf import make_creator
 from elasticluster.exceptions import ClusterNotFound, ConfigurationError, \
     ImageError, SecurityGroupError, NodeNotFound, ClusterError
-from elasticluster.utils import confirm_or_abort
+from elasticluster.utils import confirm_or_abort, parse_ip_address_and_port
 
 
 class AbstractCommand():
