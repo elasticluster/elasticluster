@@ -686,9 +686,9 @@ class SshFrontend(AbstractCommand):
                          else '/dev/null'
         ssh_cmdline = ["ssh",
                        "-i", frontend.user_key_private,
-                       "-o", "UserKnownHostsFile=%s" % knownhostsfile,
+                       "-o", "UserKnownHostsFile={0}".format(knownhostsfile),
                        "-o", "StrictHostKeyChecking=yes",
-                       "-p", port,
+                       "-p", ("{0:d}".format(port)),
                        '%s@%s' % (username, addr)]
         ssh_cmdline.extend(self.params.ssh_args)
         log.debug("Running command `%s`" % str.join(' ', ssh_cmdline))
