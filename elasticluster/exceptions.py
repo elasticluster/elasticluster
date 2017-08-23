@@ -70,7 +70,7 @@ class TimeoutError(Exception):
     pass
 
 
-class ClusterNotFound(Exception):
+class ClusterNotFound(LookupError):
     pass
 
 
@@ -78,7 +78,7 @@ class ClusterError(Exception):
     pass
 
 
-class NodeNotFound(Exception):
+class NodeNotFound(LookupError):
     pass
 
 
