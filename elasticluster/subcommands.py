@@ -673,9 +673,12 @@ class SshFrontend(AbstractCommand):
                 cluster.repository.save_or_update(cluster)
 
         except NodeNotFound as ex:
-            log.error("Unable to connect to the frontend node: %s" % str(ex))
+            log.error("Unable to connect to the frontend node: %s", ex)
             sys.exit(1)
         host = frontend.connection_ip()
+        if not host:
+            log.error("No IP address known for node %s", frontend.name)
+            sys.exit(1)
 
         addr, port = parse_ip_address_and_port(host)
         username = frontend.image_user
@@ -733,8 +736,11 @@ class SftpFrontend(AbstractCommand):
                     "Hostname %s not found in cluster %s" % (self.params.ssh_to, cluster_name))
         else:
             frontend = cluster.get_frontend_node()
-        host = f
-        rontend.connection_ip()
+        host = frontend.connection_ip()
+        if not host:
+            log.error("No IP address known for node %s", frontend.name)
+            sys.exit(1)
+
         username = frontend.image_user
         knownhostsfile = cluster.known_hosts_file if cluster.known_hosts_file \
                          else '/dev/null'
