@@ -1062,7 +1062,7 @@ class Node(Struct):
         self.extra.update(extra)
 
     def __setstate__(self, state):
-        self.__dict__ = state
+        self.__dict__.update(state)
         if 'image_id' not in state and 'image' in state:
             state['image_id'] = state['image']
 
