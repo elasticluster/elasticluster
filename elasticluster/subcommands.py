@@ -688,7 +688,7 @@ class SshFrontend(AbstractCommand):
                        "-i", frontend.user_key_private,
                        "-o", "UserKnownHostsFile={0}".format(knownhostsfile),
                        "-o", "StrictHostKeyChecking=yes",
-                       "-p", ("{0:d}".format(port)),
+                       "-p", "{0:d}".format(port),
                        '%s@%s' % (username, addr)]
         ssh_cmdline.extend(self.params.ssh_args)
         log.debug("Running command `%s`" % str.join(' ', ssh_cmdline))
@@ -723,8 +723,7 @@ class SftpFrontend(AbstractCommand):
             cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Setting up cluster %s: %s\n" %
-                      (cluster_name, ex))
+            log.error("Setting up cluster %s: %s", cluster_name, ex)
             return
 
         if self.params.ssh_to:
