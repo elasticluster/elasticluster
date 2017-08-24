@@ -647,33 +647,27 @@ class SshFrontend(AbstractCommand):
             log.error("Setting up cluster %s: %s", cluster_name, ex)
             return
 
-        if self.params.ssh_to:
-            try:
-                nodes = dict((n.name,n) for n in cluster.get_all_nodes())
-                frontend = nodes[self.params.ssh_to]
-            except KeyError:
-                raise ValueError(
-                    "Hostname %s not found in cluster %s" % (self.params.ssh_to, cluster_name))
-        else:
-            frontend = cluster.get_frontend_node()
+        # XXX: the default value of `self.params.ssh_to` should = the
+        # default value for `ssh_to` in `Cluster.get_ssh_to_node()`
+        frontend = cluster.get_ssh_to_node(self.params.ssh_to)
+
+        # ensure we can connect to the host
         try:
-            # ensure we can connect to the host
             if not frontend.preferred_ip:
                 # Ensure we can connect to the node, and save the value of `preferred_ip`
-
                 ssh = frontend.connect(keyfile=cluster.known_hosts_file)
                 if ssh:
                     ssh.close()
                 cluster.repository.save_or_update(cluster)
-
         except NodeNotFound as ex:
             log.error("Unable to connect to the frontend node: %s", ex)
             sys.exit(1)
+
+        # now delegate real connection to `ssh`
         host = frontend.connection_ip()
         if not host:
             log.error("No IP address known for node %s", frontend.name)
             sys.exit(1)
-
         addr, port = parse_ip_address_and_port(host)
         username = frontend.image_user
         knownhostsfile = cluster.known_hosts_file if cluster.known_hosts_file \
@@ -720,15 +714,10 @@ class SftpFrontend(AbstractCommand):
             log.error("Setting up cluster %s: %s", cluster_name, ex)
             return
 
-        if self.params.ssh_to:
-            try:
-                nodes = dict((n.name,n) for n in cluster.get_all_nodes())
-                frontend = nodes[self.params.ssh_to]
-            except KeyError:
-                raise ValueError(
-                    "Hostname %s not found in cluster %s" % (self.params.ssh_to, cluster_name))
-        else:
-            frontend = cluster.get_frontend_node()
+        # XXX: the default value of `self.params.ssh_to` should = the
+        # default value for `ssh_to` in `Cluster.get_ssh_to_node()`
+        frontend = cluster.get_ssh_to_node(self.params.ssh_to)
+
         host = frontend.connection_ip()
         if not host:
             log.error("No IP address known for node %s", frontend.name)
