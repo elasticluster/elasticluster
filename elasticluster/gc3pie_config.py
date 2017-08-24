@@ -206,7 +206,7 @@ def create_gc3pie_config_snippet(cluster):
     cfg = RawConfigParser()
     cfg.add_section(auth_section)
 
-    frontend_node = cluster.get_frontend_node()
+    frontend_node = cluster.get_ssh_to_node()
     cfg.set(auth_section, 'type', 'ssh')
     cfg.set(auth_section, 'username', frontend_node.image_user)
 

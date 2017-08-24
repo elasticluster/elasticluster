@@ -90,7 +90,7 @@ class AbstractCommand():
 
 def cluster_summary(cluster):
     try:
-        frontend = cluster.get_frontend_node().name
+        frontend = cluster.get_ssh_to_node().name
     except NodeNotFound as ex:
         frontend = 'unknown'
         log.error("Unable to get information on the frontend node: %s", ex)
