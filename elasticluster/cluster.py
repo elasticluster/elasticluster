@@ -874,7 +874,7 @@ class NodeNamingPolicy(object):
     :meth:`use` and :meth:`free` can parse the name back.  This
     implementation assumes that a node's numerical index is formed by
     the last digits in the name; to implement a more general/complex
-    scheme, override methods :meth:`_format` and :meth:`_parse`.
+    scheme, override methods :meth:`format` and :meth:`parse`.
 
     This class may seem over-engineered for the simple requirement
     that unique names be generated, but I've actually had to answer
@@ -893,19 +893,19 @@ class NodeNamingPolicy(object):
         self._top = defaultdict(int)
 
     @staticmethod
-    def _format(pattern, **args):
+    def format(pattern, **args):
         """
         Form a node name by interpolating `args` into `pattern`.
 
         This is actually nothing more than a call to
         `pattern.format(...)` but is provided as a separate
         overrideable method as it is logically paired with
-        :meth:`_parse`.
+        :meth:`parse`.
         """
         return pattern.format(**args)
 
     @staticmethod
-    def _parse(name):
+    def parse(name):
         """
         Return dict of parts forming `name`.  Raise `ValueError` if string
         `name` cannot be correctly parsed.
@@ -914,7 +914,7 @@ class NodeNamingPolicy(object):
         `NodeNamingPolicy._NODE_NAME_RE` to parse the name back into
         constituent parts.
 
-        This is ideally the inverse of :meth:`_format` -- it should be
+        This is ideally the inverse of :meth:`format` -- it should be
         able to parse a node name string into the parameter values
         that were used to form it.
         """
@@ -956,14 +956,14 @@ class NodeNamingPolicy(object):
         else:
             self._top[kind] += 1
             index = self._top[kind]
-        return self._format(self.pattern, kind=kind, index=index, **extra)
+        return self.format(self.pattern, kind=kind, index=index, **extra)
 
     def use(self, kind, name):
         """
         Mark a node name as used.
         """
         try:
-            params = self._parse(name)
+            params = self.parse(name)
             index = int(params['index'], 10)
             if index in self._free[kind]:
                 self._free[kind].remove(index)
@@ -983,14 +983,14 @@ class NodeNamingPolicy(object):
         It could thus be recycled to name a new node.
         """
         try:
-            params = self._parse(name)
+            params = self.parse(name)
             index = int(params['index'], 10)
             self._free[kind].add(index)
             assert index <= self._top[kind]
             if index == self._top[kind]:
                 self._top[kind] -= 1
         except ValueError:
-            # ignore failures in self._parse()
+            # ignore failures in self.parse()
             pass
 
 
