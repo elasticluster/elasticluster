@@ -152,9 +152,11 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._compute_api_version = compute_api_version
         self._image_api_version = image_api_version
         self._network_api_version = network_api_version
-        if os.getenv('OS_NETWORK_API_VERSION', None) != DEFAULT_OS_NETWORK_API_VERSION:
+        os_network_api_version = os.getenv('OS_NETWORK_API_VERSION', None)
+        if  (os_network_api_version
+             and os_network_api_version != DEFAULT_OS_NETWORK_API_VERSION):
             warn("Environment variable OS_NETWORK_API_VERSION set,"
-                 " but ElastiCluster does not supporting selecting"
+                 " but ElastiCluster does not support selecting"
                  " the OpenStack Networking API (Neutron) version yet.",
                  UserWarning)
         self._volume_api_version = volume_api_version
