@@ -783,7 +783,7 @@ class Cluster(Struct):
         # try getting first node of kind `ssh_to`
         if ssh_to:
             try:
-                nodes = self.nodes[ssh_to_class]
+                nodes = self.nodes[ssh_to]
             except KeyError:
                 raise ConfigurationError(
                     "Invalid configuration item `ssh_to={ssh_to}` in cluster `{name}`:"
