@@ -12,7 +12,7 @@
           clients: "{{groups.slurm_worker + groups.slurm_submit|default([])}}"
     - slurm-master
 
-      
+
 - name: Slurm worker nodes Playbook
   hosts: slurm_worker
   roles:
@@ -23,6 +23,7 @@
       NFS_MOUNTS:
         - fs: '{{groups.slurm_master[0]}}:/home'
           mountpoint: '/home'
+    - role: autofs
     - slurm-worker
 
 
@@ -36,9 +37,10 @@
       NFS_MOUNTS:
         - fs: '{{groups.slurm_master[0]}}:/home'
           mountpoint: '/home'
+    - role: autofs
     - slurm-client
 
-    
+
 - name: Restart SLURMd after all config is done
   hosts: slurm_worker
   tasks:

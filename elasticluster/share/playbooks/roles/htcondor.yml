@@ -9,7 +9,7 @@
     - include: common/handlers/main.yml
     - include: htcondor/handlers/common.yml
 
-      
+
 - name: HTCondor master Playbook
   hosts: condor_master
   roles:
@@ -36,6 +36,7 @@
       NFS_MOUNTS:
         fs: '{{groups.condor_master[0]}}:/home'
         mountpoint: '/home'
+    - role: autofs
   handlers:
     - include: common/handlers/main.yml
     - include: htcondor/handlers/common.yml

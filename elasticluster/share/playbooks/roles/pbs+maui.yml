@@ -12,7 +12,7 @@
         clients: '{{groups.pbs_clients}}'
         options: 'rw,no_root_squash,async'
     - role: hpc-common
-  tasks: 
+  tasks:
     - include: pbs+maui/tasks/master.yml
   handlers:
     - include: common/handlers/main.yml
@@ -20,7 +20,7 @@
 
 - name: MAUI masternode Playbook
   hosts: maui_master
-  tasks: 
+  tasks:
     - include: pbs+maui/tasks/maui.yml
   handlers:
     - include: pbs+maui/handlers/main.yml
@@ -36,8 +36,9 @@
       - fs: '{{groups.pbs_master[0]}}:/home'
         mountpoint: '/home'
         options: 'rw,async'
+    - role: autofs
     - role: hpc-common
-  tasks: 
+  tasks:
     - include: pbs+maui/tasks/clients.yml
   handlers:
     - include: pbs+maui/handlers/main.yml
