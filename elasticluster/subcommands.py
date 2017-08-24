@@ -165,7 +165,12 @@ class Start(AbstractCommand):
         creator = make_creator(self.params.config,
                                storage_path=self.params.storage)
 
-        # overwrite configuration
+        if cluster_template not in creator.cluster_conf:
+            raise ClusterNotFound(
+                "No cluster template named `{0}`"
+                .format(cluster_template))
+
+        # possibly overwrite node mix from config
         cluster_nodes_conf = creator.cluster_conf[cluster_template]['nodes']
         for kind, num in self.params.nodes_override.iteritems():
             if kind not in cluster_nodes_conf:
