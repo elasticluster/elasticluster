@@ -1,0 +1,12 @@
+---
+#
+# Provide Debian-specific values
+#
+
+- name: Provide Debian-specific values
+  set_fact:
+    # FIXME: replace `autofs5` with `autofs` when we stop supporting Debian 7
+    autofs_packages:
+      - autofs5
+    autofs_username: root
+    autofs_service: autofs
