@@ -53,7 +53,7 @@ from schema import Schema, SchemaError, Optional, Or, Regex, Use
 from elasticluster import log
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
-from elasticluster.cluster import Cluster
+from elasticluster.cluster import Cluster, NodeNamingPolicy
 from elasticluster.repository import MultiDiskRepository
 from elasticluster.utils import environment
 from elasticluster.validate import (
@@ -753,10 +753,16 @@ def _cross_validate_final_config(objtree, evict_on_error=True):
                 break
 
         # ensure `ssh_to` has a valid value
-        if 'ssh_to' in cluster and cluster['ssh_to'] not in cluster['nodes']:
+        ssh_to = cluster['ssh_to']
+        try:
+            # extract node kind if this is a node name (e.g., `master001` => `master`)
+            parts = NodeNamingPolicy.parse(ssh_to)
+            ssh_to = parts['kind']
+        except ValueError:
+            pass
+        if 'ssh_to' in cluster and ssh_to not in cluster['nodes']:
             log.error("Cluster `%s` is configured to SSH into nodes of kind `%s`,"
-                      " but no such kind is defined.",
-                      name, cluster['ssh_to'])
+                      " but no such kind is defined.", name, ssh_to)
             valid = False
 
         # EC2-specific checks

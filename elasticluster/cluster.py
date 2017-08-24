@@ -40,8 +40,14 @@ from binascii import hexlify
 
 # Elasticluster imports
 from elasticluster import log
-from elasticluster.exceptions import TimeoutError, NodeNotFound, \
-    InstanceError, InstanceNotFoundError, ClusterError
+from elasticluster.exceptions import (
+    ClusterError,
+    ConfigurationError,
+    InstanceError,
+    InstanceNotFoundError,
+    NodeNotFound,
+    TimeoutError,
+)
 from elasticluster.repository import MemRepository
 from elasticluster.utils import Struct, parse_ip_address_and_port, sighandler, timeout
 
@@ -660,7 +666,9 @@ class Cluster(Struct):
         try:
             return nodes[nodename]
         except KeyError:
-            raise NodeNotFound("Node %s not found" % nodename)
+            raise NodeNotFound(
+                "Node `{0}` not found in cluster `{1}`"
+                .format(nodename, self.name))
 
     def stop(self, force=False, wait=False):
         """
@@ -728,38 +736,85 @@ class Cluster(Struct):
                     node.name, node.instance_id, err, err.__class__)
         return failed
 
-    def get_frontend_node(self):
-        """Returns the first node of the class specified in the
-        configuration file as `ssh_to`, or the first node of
-        the first class in alphabetic order.
+
+    def get_ssh_to_node(self, ssh_to=None):
+        """
+        Return target node for SSH/SFTP connections.
+
+        The target node is the first node of the class specified in
+        the configuration file as ``ssh_to`` (but argument ``ssh_to``
+        can override this choice).
+
+        If not ``ssh_to`` has been specified in this cluster's config,
+        then try node class names ``ssh``, ``login``, ``frontend``,
+        and ``master``: if any of these is non-empty, return the first
+        node.
+
+        If all else fails, return the first node of the first class
+        (in alphabetic order).
 
         :return: :py:class:`Node`
-        :raise: :py:class:`elasticluster.exceptions.NodeNotFound` if no
-                valid frontend node is found
+        :raise: :py:class:`elasticluster.exceptions.NodeNotFound`
+          if no valid frontend node is found
         """
-        if self.ssh_to:
-            if self.ssh_to in self.nodes:
-                cls = self.nodes[self.ssh_to]
-                if cls:
-                    return cls[0]
-                else:
-                    log.warning(
-                        "preferred `ssh_to` `%s` is empty: unable to "
-                        "get the choosen frontend node from that class.",
-                        self.ssh_to)
-            else:
-                raise NodeNotFound(
-                    "Invalid ssh_to `%s`. Please check your "
-                    "configuration file." % self.ssh_to)
+        if ssh_to is None:
+            ssh_to = self.ssh_to
 
-        # If we reach this point, the preferred class was empty. Pick
-        # one using the default logic.
-        for cls in sorted(self.nodes.keys()):
-            if self.nodes[cls]:
-                return self.nodes[cls][0]
-        # Uh-oh, no nodes in this cluster.
-        raise NodeNotFound("Unable to find a valid frontend: "
-                           "cluster has no nodes!")
+        # first try to interpret `ssh_to` as a node name
+        if ssh_to:
+            try:
+                return self.get_node_by_name(ssh_to)
+            except NodeNotFound:
+                pass
+
+        # next, ensure `ssh_to` is a class name
+        if ssh_to:
+            try:
+                parts = self._naming_policy.parse(ssh_to)
+                log.warning(
+                    "Node `%s` not found."
+                    " Trying to find other node in class `%s` ...",
+                    ssh_to, parts['kind'])
+                ssh_to = parts['kind']
+            except ValueError:
+                # it's already a class name
+                pass
+
+        # try getting first node of kind `ssh_to`
+        if ssh_to:
+            try:
+                nodes = self.nodes[ssh_to_class]
+            except KeyError:
+                raise ConfigurationError(
+                    "Invalid configuration item `ssh_to={ssh_to}` in cluster `{name}`:"
+                    " node class `{ssh_to}` does not exist in this cluster."
+                    .format(ssh_to=ssh_to, name=self.name))
+            try:
+                return nodes[0]
+            except IndexError:
+                log.warning(
+                    "Chosen `ssh_to` class `%s` is empty: unable to "
+                    "get the choosen frontend node from that class.",
+                    ssh_to)
+
+        # If we reach this point, `ssh_to` was not set or the
+        # preferred class was empty. Try "natural" `ssh_to` values.
+        for kind in ['ssh', 'login', 'frontend', 'master']:
+            try:
+                nodes = self.nodes[kind]
+                return nodes[0]
+            except (KeyError, IndexError):
+                pass
+
+        # ... if all else fails, return first node
+        for kind in sorted(self.nodes.keys()):
+            if self.nodes[kind]:
+                return self.nodes[kind][0]
+
+        # Uh-oh, no nodes in this cluster!
+        raise NodeNotFound("Unable to find a valid frontend:"
+                           " cluster has no nodes!")
+
 
     def setup(self, extra_args=tuple()):
         """
