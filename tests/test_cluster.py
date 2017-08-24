@@ -167,13 +167,33 @@ def test_stop(tmpdir):
     cluster.repository.delete.assert_called_once_with(cluster)
 
 
-def test_get_frontend_node(tmpdir):
+def test_get_ssh_to_node_with_class(tmpdir):
     """
     Get frontend node
     """
     cluster = make_cluster(tmpdir)
     cluster.ssh_to = 'frontend'
-    frontend = cluster.get_frontend_node()
+    frontend = cluster.get_ssh_to_node()
+    assert cluster.nodes['frontend'][0] == frontend
+
+
+def test_get_ssh_to_node_with_nodename(tmpdir):
+    """
+    Get frontend node
+    """
+    cluster = make_cluster(tmpdir)
+    cluster.ssh_to = 'frontend001'
+    frontend = cluster.get_ssh_to_node()
+    assert frontend == 'frontend001'
+
+
+def test_get_ssh_to_node_with_defaults(tmpdir):
+    """
+    Get frontend node
+    """
+    cluster = make_cluster(tmpdir)
+    cluster.ssh_to = None
+    frontend = cluster.get_ssh_to_node()
     assert cluster.nodes['frontend'][0] == frontend
 
 
