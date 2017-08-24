@@ -184,7 +184,7 @@ def test_get_ssh_to_node_with_nodename(tmpdir):
     cluster = make_cluster(tmpdir)
     cluster.ssh_to = 'frontend001'
     frontend = cluster.get_ssh_to_node()
-    assert frontend == 'frontend001'
+    assert frontend.name == 'frontend001'
 
 
 def test_get_ssh_to_node_with_defaults(tmpdir):
