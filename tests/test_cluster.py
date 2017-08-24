@@ -33,6 +33,7 @@ from elasticluster.exceptions import ClusterError
 
 # local test imports
 from _helpers.config import make_cluster
+from _helpers.environ import clean_os_environ_openstack
 
 
 __author__ = (', '.join([
@@ -46,6 +47,7 @@ def test_add_node(tmpdir):
     """
     Add node and let ElastiCluster choose the name.
     """
+    clean_os_environ_openstack()
     cluster = make_cluster(tmpdir)
     size = len(cluster.nodes['compute'])
     cluster.add_node("compute", 'image_id', 'image_user', 'flavor',
