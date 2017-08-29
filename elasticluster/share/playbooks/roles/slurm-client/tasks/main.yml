@@ -52,8 +52,7 @@
     - slurm
     - slurm-devel
     - slurm-perlapi
-    - slurm-sjobexit
-    - slurm-sjstat
+    - slurm-contribs
     - slurm-torque
   when: 'is_rhel_compatible'
 
