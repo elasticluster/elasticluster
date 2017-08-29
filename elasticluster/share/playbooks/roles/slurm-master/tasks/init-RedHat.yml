@@ -6,7 +6,6 @@
     slurmctld_packages:
       - mailx
       - slurm-plugins
-      - slurm-slurmdb-direct
       - slurm
     slurmdbd_service_name: slurmdbd
     slurmdbd_packages:
@@ -22,7 +21,6 @@
     slurmctld_packages:
       - mailx
       - slurm-plugins
-      - slurm-slurmdb-direct
       - slurm
     slurmdbd_service_name: slurmdbd
     slurmdbd_packages:
