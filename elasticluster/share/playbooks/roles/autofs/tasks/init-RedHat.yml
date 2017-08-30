@@ -4,7 +4,7 @@
 #
 
 - name: Provide RHEL-specific values
-  set_facts:
+  set_fact:
     autofs_packages:
       - autofs
     autofs_username: root
