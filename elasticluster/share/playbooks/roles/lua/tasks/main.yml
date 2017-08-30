@@ -47,6 +47,8 @@
 - name: Install additional packages needed by Lmod
   command: |
     luarocks install {{item}}
+  args:
+    creates: '/usr/local/lib/luarocks/rocks/{{item}}'
   with_items:
     - bit32
     - lua-term
