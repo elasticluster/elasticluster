@@ -3,5 +3,4 @@
 
 dependencies:
   # install `lmod` to manage "environment module" files
-  - role: lua
   - role: lmod
