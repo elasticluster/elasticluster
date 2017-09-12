@@ -87,7 +87,7 @@
   shell:
     set -e
     . /etc/profile.d/easybuild.sh
-    . /etc/profile.d/lmod.sh
+    . /etc/profile.d/modules.sh
     module load EasyBuild
     eb {{ EASYBUILD_INSTALL|join(' ') }}
   when: '{{ EASYBUILD_INSTALL|length > 0 }}'

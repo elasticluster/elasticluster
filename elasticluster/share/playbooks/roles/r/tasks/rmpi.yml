@@ -12,7 +12,7 @@
 - name: Install R MPI library with OpenMPI
   shell: |
     # load the MPI environment
-    . /etc/profile.d/lmod.sh
+    . /etc/profile.d/modules.sh
     export MODULEPATH=${MODULEPATH:-/etc/modulefiles}
     module load mpi
     # install Rmpi; note it is assumed that env vars MPI_HOME etc. are defined in the module file above
@@ -34,7 +34,7 @@
           quit(save='no', status=0)  # successful exit
     __EOF__
 
-        
+
 - name: Install parallel R libraries
   shell: |
     # load the MPI environment (in case Rmpi is a dependency)
