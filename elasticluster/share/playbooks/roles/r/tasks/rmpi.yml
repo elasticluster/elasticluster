@@ -38,7 +38,7 @@
 - name: Install parallel R libraries
   shell: |
     # load the MPI environment (in case Rmpi is a dependency)
-    . /etc/profile.d/lmod.sh
+    . /etc/profile.d/modules.sh
     export MODULEPATH=${MODULEPATH:-/etc/modulefiles}
     module load mpi
     # install packages
