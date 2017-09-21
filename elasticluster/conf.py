@@ -119,7 +119,7 @@ SCHEMA = {
     },
     'login': {
         'image_user': nonempty_str,
-        'image_sudo': boolean,
+        Optional('image_sudo', default=True): boolean,
         Optional('image_user_sudo', default="root"): nonempty_str,
         Optional('image_userdata', default=''): str,
         'user_key_name': str,  # FIXME: are there restrictions? (e.g., alphanumeric)
