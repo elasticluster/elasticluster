@@ -118,17 +118,16 @@ class BotoCloudProvider(AbstractCloudProvider):
             vpc_connection = None
 
         try:
-            log.debug("Connecting to ec2 host %s", self._ec2host)
-            region = ec2.regioninfo.RegionInfo(name=self._region_name,
-                                               endpoint=self._ec2host)
+            log.debug("Connecting to EC2 endpoint %s", self._ec2host)
 
             # connect to webservice
-            ec2_connection = boto.connect_ec2(
+            ec2_connection = boto.ec2.connect_to_region(
+                self._region_name,
                 aws_access_key_id=self._access_key,
                 aws_secret_access_key=self._secret_key,
                 is_secure=self._secure,
                 host=self._ec2host, port=self._ec2port,
-                path=self._ec2path, region=region)
+                path=self._ec2path)
             log.debug("EC2 connection has been successful.")
 
             if self._vpc:
@@ -158,8 +157,7 @@ class BotoCloudProvider(AbstractCloudProvider):
             #           len(images), self._ec2host)
 
         except Exception as e:
-            log.error("connection to ec2 could not be "
-                      "established: message=`%s`", str(e))
+            log.error("Error connecting to EC2: %s", e)
             raise
 
         self._ec2_connection, self._vpc_connection = (

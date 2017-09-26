@@ -176,7 +176,7 @@ setup(
         'paramiko',
         'schema',
         # EC2 clouds
-        'boto',
+        'boto>=2.48',
         # GCE cloud
         'google-api-python-client',
         'google-compute-engine',
