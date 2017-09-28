@@ -467,9 +467,10 @@ Configuration keys
   default.
 
 ``user_key_name``
-  name of the *keypair* to use on the cloud provider. If the keypair
-  does not exist it will be created by ElastiCluster, uploading the
-  public SSH key pointed to by `user_key_public` (see below).
+  name of the *keypair* to use on the cloud provider. If the
+  (pre-generated) keypair does not exist on the cloud platform, it
+  will be added by ElastiCluster, uploading the public SSH key pointed
+  to by ``user_key_public`` (see below).
 
 ``user_key_private``
   file containing a valid SSH private key to be used to connect
@@ -847,7 +848,21 @@ node-level section take precedence over cluster-wide ones.
     ``ec2_boto`` or ``openstack``.
 
 ``security_group``
-   Security group to use when starting the instance.
+    Security group to use when starting the instance.
+
+    .. note::
+
+       On Amazon EC2, the *default* security group only allows network
+       communication among hosts in the group and does *not* allow SSH
+       connections from the outside.  This will make ElastiCluster
+       fail as it cannot connect to the cluster nodes (see, e.g.,
+       `issue #490`__).  You will need to add a rule to the *default*
+       security group to allow SSH connections from the network where
+       you run ElastiCluster, or create a new security group which
+       allows SSH and use that.
+
+       .. __: https://github.com/gc3-uzh-ch/elasticluster/issues/490
+
 
 
 Additional optional configuration keys for Amazon EC2
