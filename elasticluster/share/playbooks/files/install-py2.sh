@@ -1,27 +1,31 @@
 #! /bin/sh
 #
 
-## usage
-usage () {
-cat <<EOF
-Usage: $me [options]
-
-Ensure that Ansible's basic Python requirements are installed.
-
-Options:
-
-  --help, -h  Print this help text.
-
-EOF
-}
-
-
 ## defaults
 
 me="$(basename $0)"
 
 # where Ansible looks for a Python interpreter
-python='/usr/bin/python'
+default_python='/usr/bin/python'
+
+
+## usage
+usage () {
+cat <<EOF
+Usage: $me [options] [PATH]
+
+Ensure that Ansible's basic Python requirements are installed.
+If a Python 2.x interpreter does not exists at PATH (default:
+'$default_python'), then try to install one using distro-specific
+installation commands.
+
+Options:
+
+  --help, -h
+      Print this help text.
+
+EOF
+}
 
 
 ## helper functions
@@ -53,7 +57,7 @@ require_command () {
     fi
 }
 
-try () {
+do_or_die () {
     echo "Running installation command '$@' ..."
     "$@"; rc=$?
     if [ ${rc:-1} -ne 0 ]; then
@@ -64,8 +68,8 @@ try () {
 
 ## parse command-line
 
-short_opts='hp:'
-long_opts='help,python:'
+short_opts='h'
+long_opts='help'
 
 # test which `getopt` version is available:
 # - GNU `getopt` will generate no output and exit with status 4
@@ -91,12 +95,13 @@ fi
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --python|-p) python="$2"; shift ;;
         --help|-h) usage; exit 0 ;;
         --) shift; break ;;
     esac
     shift
 done
+
+python="${1:-$default_python}"
 
 
 ## main
@@ -133,12 +138,12 @@ if ! [ -x "$python" ]; then
     # try to install Python 2.7 (or 2.6 + simplejson)
     case "$os" in
         [Dd]ebian|[Uu]buntu)
-            try apt-get install -y python2.7 python-simplejson
+            do_or_die apt-get install -y python2.7 python-simplejson
             ;;
         [Rr]ed[Hh]at)
             case "$ver" in
-                7*) try yum install -y python2 python2-simplejson ;;
-                6*) try yum install -y python2 python-simplejson ;;
+                7*) do_or_die yum install -y python2 python2-simplejson ;;
+                6*) do_or_die yum install -y python2 python-simplejson ;;
             esac
             ;;
     esac
