@@ -5,7 +5,7 @@
   tasks:
     - name: Ensure Python is installed
       script: |
-        install-py2.sh --python {{ ansible_python_interpreter|default("/usr/bin/python") }}
+        install-py2.sh {{ ansible_python_interpreter|default("/usr/bin/python") }}
       args:
         creates: '{{ ansible_python_interpreter|default("/usr/bin/python") }}'
       become: yes
