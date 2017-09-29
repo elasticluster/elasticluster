@@ -1,4 +1,15 @@
 ---
+- name: Prepare VM for running Ansible
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Ensure Python is installed
+      script: |
+        install-py2.sh --python {{ ansible_python_interpreter|default("/usr/bin/python") }}
+      args:
+        creates: '{{ ansible_python_interpreter|default("/usr/bin/python") }}'
+      become: yes
+
 # for local customizations
 - include: before.yml
 
@@ -32,7 +43,7 @@
 
 # add-on software
 - include: roles/r.yml
-  
+
 # Jupyter installation comes last, to allow it to pick up any SW that's been
 # installed so far (e.g., for kernels, or for ipyparallel)
 - include: roles/jupyterhub.yml
