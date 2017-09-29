@@ -852,14 +852,16 @@ node-level section take precedence over cluster-wide ones.
 
     .. note::
 
-       On Amazon EC2, the *default* security group only allows network
+       On Amazon EC2, the "default" security group only allows network
        communication among hosts in the group and does *not* allow SSH
        connections from the outside.  This will make ElastiCluster
        fail as it cannot connect to the cluster nodes (see, e.g.,
-       `issue #490`__).  You will need to add a rule to the *default*
-       security group to allow SSH connections from the network where
-       you run ElastiCluster, or create a new security group which
-       allows SSH and use that.
+       `issue #490`__).  You will need to add rules to the "default"
+       security group (or create a new one and use that) such that:
+       *(1)* SSH connections from the network where you run
+       ElastiCluster are allowed, and *(2)* all TCP and UDP
+       connections among cluster nodes are allowed -- the "default"
+       security group only allows TCP, not UDP.
 
        .. __: https://github.com/gc3-uzh-ch/elasticluster/issues/490
 
