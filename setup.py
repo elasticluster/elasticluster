@@ -169,7 +169,7 @@ setup(
     },
     install_requires=([
         'PyCLI',
-        'ansible>=2.2.3,!=2.3.0',  ## whitelist only Ansible versions that fix know CVE exploits
+        'ansible>=2.2.3,!=2.3.0,<2.4',  ## whitelist only "known good" versions of Ansible
         'click>=4.0',  ## click.prompt() added in 4.0
         'coloredlogs',
         'netaddr',
