@@ -1,0 +1,25 @@
+---
+
+- name: Alluxio systemd service config
+  template:
+    src='alluxio.service.j2'
+    dest='/etc/systemd/system/alluxio.service'
+
+- name: enable and start alluxio service and ensure it is not masked
+  systemd:
+    name: alluxio
+    enabled: yes
+    masked: no
+    state: restarted
+
+- name: Spark slave systemd service config
+  template:
+    src='spark-slave.service.j2'
+    dest='/etc/systemd/system/spark-slave.service'
+
+- name: enable and start spark worker and ensure it is not masked
+  systemd:
+    name: spark-slave
+    enabled: yes
+    masked: no
+    state: restarted

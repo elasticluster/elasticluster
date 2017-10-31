@@ -3,4 +3,4 @@
 
 dependencies:
   - { role: hadoop-common }
-  - { role: spark }
+  - { role: spark-hadoop }

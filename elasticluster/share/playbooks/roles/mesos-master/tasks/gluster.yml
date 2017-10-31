@@ -1,0 +1,54 @@
+---
+
+- name: Check if volume gvol0 already mounted
+  shell: 'cat /proc/mounts | grep -q {{mesos_gluster_mount}}'
+  register: already_mounted
+  ignore_errors: yes
+
+- name: Check if volume gvol0 already exists
+  command:
+    gluster volume info gvol0
+  register: gluster_volume_info
+  ignore_errors: yes
+  when: already_mounted|failed and inventory_hostname == (groups.mesos_master|first)
+
+- name: Configure peers (only on the first host)
+  shell: |
+    gluster peer probe '{{item}}'
+  with_items: groups.mesos_master|difference([inventory_hostname])
+  when: already_mounted|failed and inventory_hostname == (groups.mesos_master|first) and groups.mesos_master|length > 1
+
+- name: Create glusterdir
+  file:
+    path='/gluster'
+    state=directory
+  ignore_errors: yes
+  when: already_mounted|failed
+
+- name: Build list of bricks
+  set_fact:
+    _glusterfs_bricks: "{{ (groups.mesos_master + [' '])|join(':/gluster ') }}"
+
+- name: Create a Single Node gluster volume
+  command: 'gluster volume create gvol0 {{_glusterfs_bricks}} force'
+  when: already_mounted|failed and gluster_volume_info|failed and inventory_hostname == (groups.mesos_master|first) and groups.mesos_master|length == 1
+
+- name: Create gluster volume (only on the first host)
+  command: 'gluster volume create gvol0 replica {{groups.mesos_master|length}} {{_glusterfs_bricks}} force'
+  when: already_mounted|failed and gluster_volume_info|failed and inventory_hostname == (groups.mesos_master|first) and groups.mesos_master|length > 1
+
+- name: Mount gluster as Alluxio journal path
+  command: gluster volume start gvol0
+  ignore_errors: yes
+  when: already_mounted|failed and inventory_hostname == (groups.mesos_master|first)
+
+- name: Mount gluster
+  command: 'mount -t glusterfs {{inventory_hostname}}:/gvol0 {{mesos_gluster_mount}}'
+  ignore_errors: yes
+  when: already_mounted|failed
+
+- name: add gluster mount to fstab
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^{{inventory_hostname}}:/gvol0'
+    line: '{{inventory_hostname}}:/gvol0 {{mesos_gluster_mount}}  defaults,_netdev 0 0'

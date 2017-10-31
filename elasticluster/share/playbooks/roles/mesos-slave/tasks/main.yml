@@ -1,0 +1,59 @@
+---
+
+- name: Mesos slave configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/etc/mesos-slave/{{item}}'
+  with_items:
+    - hostname
+    - ip
+    - containerizers
+    - image_providers
+    - isolation
+
+- name: Create Mesos Slave Resouces directory
+  file:
+    path='/etc/mesos-slave/resources'
+    state=directory
+
+- name: Mesos slave resources configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/etc/mesos-slave/resources/{{item}}'
+  with_items:
+    - ports
+
+- name: Mesos slave systemd service config
+  template:
+    src='mesos.service.j2'
+    dest='/etc/systemd/system/mesos.service'
+
+- name: disable and stop mesos master service and ensure it is not masked
+  systemd:
+    name: mesos-master
+    enabled: yes
+    masked: no
+    state: stopped
+
+- name: enable and start mesos slave service and ensure it is not masked
+  systemd:
+    name: mesos-slave
+    enabled: yes
+    masked: no
+    state: restarted
+
+- name: Check if volume gvol0 already mounted
+  shell: 'cat /proc/mounts | grep -q {{mesos_gluster_mount}}'
+  register: already_mounted
+  ignore_errors: yes
+
+- name: Mount gluster
+  command: 'mount -t glusterfs {{inventory_hostname}}:/gvol0 {{mesos_gluster_mount}}'
+  ignore_errors: yes
+  when: already_mounted|failed
+
+- name: add gluster mount to fstab
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^{{inventory_hostname}}:/gvol0'
+    line: '{{inventory_hostname}}:/gvol0 {{mesos_gluster_mount}}  defaults,_netdev 0 0'

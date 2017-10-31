@@ -1,5 +1,0 @@
-{% for server in groups['mesos'] %}
-{% if server == inventory_hostname %}
-{{ loop.index }}
-{% endif %}
-{% endfor %}

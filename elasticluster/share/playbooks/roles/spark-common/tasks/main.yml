@@ -1,0 +1,163 @@
+---
+
+- name: Fail if not Ubuntu 16 or greater
+  fail:
+    msg: "Ubuntu is 16 or greater is required for mesos playbook"
+  when: not( ansible_distribution == 'Ubuntu' and ansible_distribution_major_version|int >= 16)
+
+- name: Fail if more than 1 master
+  fail:
+    msg: "Only single master supported when running Spark, for HA use Hadoop or Mesos"
+  when: not(groups.spark_master|length == 1)
+
+- name: Create Apache Alluxio group
+  group:
+    name: alluxio
+    state: present
+
+- name: Create Apache Alluxio user
+  user:
+    name: alluxio
+    group: alluxio
+    system: True
+
+- name: Add limited sudo rights for alluxio user
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^alluxio'
+    line: 'alluxio ALL=(ALL) NOPASSWD: /bin/mount * /mnt/ramdisk, /bin/umount * /mnt/ramdisk, /bin/mkdir * /mnt/ramdisk, /bin/chmod * /mnt/ramdisk'
+
+- name: Download Alluxio
+  get_url:
+    url: '{{spark_alluxio_uri}}'
+    dest: '/tmp/{{spark_alluxio_package}}'
+
+- name: Unpack Alluxio
+  unarchive:
+    src: '/tmp/{{spark_alluxio_package}}'
+    dest: /usr/lib/
+    owner: alluxio
+    group: alluxio
+    remote_src: True
+
+- name: Create Alluxio symlink
+  file: src="/usr/lib/{{spark_alluxio_package_root}}" dest="/usr/lib/alluxio" state=link
+
+- name: Create Alluxio log directory
+  file:
+    path='/var/log/alluxio'
+    state=directory
+    owner=alluxio
+    group=alluxio
+
+- name: Create Alluxio RAM directory
+  file:
+    path='/mnt/ramdisk'
+    state=directory
+    owner=alluxio
+    group=alluxio
+
+- name: Create Alluxio underFS directory
+  file:
+    path='/usr/lib/alluxio/underFSStorage'
+    state=directory
+    owner=alluxio
+    group=alluxio
+
+- name: Create Alluxio Configuration symlink
+  file: src="/usr/lib/alluxio/conf" dest="/etc/alluxio" state=link
+
+- name: Alluxio configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/usr/lib/alluxio/conf/{{item}}'
+    owner=alluxio
+    group=alluxio
+  with_items:
+    - alluxio-site.properties
+    - alluxio-env.sh
+    - masters
+    - workers
+
+- name: Set ALLUXIO_HOME in environment
+  lineinfile: dest=/etc/environment line='export ALLUXIO_HOME=/usr/lib/alluxio' insertafter='EOF' state=present
+
+- name: Create Apache Spark group
+  group:
+    name: spark
+    state: present
+
+- name: Create Apache Spark user
+  user:
+    name: spark
+    group: spark
+    system: True
+    createhome: False
+
+- name: Download Spark
+  get_url:
+    url: '{{spark_uri}}'
+    dest: '/tmp/{{spark_package}}'
+
+- name: Unpack Spark
+  unarchive:
+    src: '/tmp/{{spark_package}}'
+    dest: /usr/lib/
+    owner: spark
+    group: spark
+    remote_src: True
+
+- name: Create Spark symlink
+  file: src="/usr/lib/{{spark_package_root}}" dest="/usr/lib/spark" state=link
+
+- name: Check if Py4J version-independent `.zip` archive exist
+  stat:
+    path='/usr/lib/spark/python/lib/py4j-src.zip'
+    follow=no
+  register: p
+
+- name: Symlink Py4J `.zip` archive under a version-independent name
+  shell: |
+    cd /usr/lib/spark/python/lib
+    ln -s py4j-*-src.zip py4j-src.zip
+  when: not p.stat.exists
+
+- name: Create Spark Configuration symlink
+  file: src="/usr/lib/spark/conf" dest="/etc/spark" state=link
+
+- name: Spark configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/usr/lib/spark/conf/{{item}}'
+    owner=spark
+    group=spark
+  with_items:
+    - spark-defaults.conf
+    - spark-env.sh
+
+- name: Create Spark log directory
+  file:
+    path='/var/log/spark'
+    state=directory
+    owner=spark
+    group=spark
+
+- name: Set SPARK_HOME in environment
+  lineinfile: dest=/etc/environment line='export SPARK_HOME=/usr/lib/spark' insertafter='EOF' state=present
+
+- name: Deploy profile configuration files
+  copy:
+    src='{{item}}'
+    dest='/{{item}}'
+  with_items:
+    - etc/profile.d/spark.sh
+    - etc/profile.d/alluxio.sh
+
+- name: Set correct mode for Hive Temp storage
+  file:
+    path='/tmp/hive'
+    state=directory
+    owner=spark
+    group=spark
+    mode=0777

@@ -1,0 +1,28 @@
+---
+
+- name: Install Spark master node
+  hosts: spark_master
+  tags:
+    - alluxio
+    - spark
+    - master
+    - zeppelin
+  vars:
+    # spark python version should never differ between master and workers
+    anaconda_version: '5.0.1'
+  roles:
+    - spark-master
+    - role: jupyterhub
+      jupyter_spark_master: 'spark://master001:7077'
+
+- name: Install Spark slave node
+  hosts: spark_slave
+  tags:
+    - alluxio
+    - spark
+    - slave
+  vars:
+    # spark python version should never differ between master and workers
+    anaconda_version: '5.0.1'
+  roles:
+    - spark-slave

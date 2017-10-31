@@ -1,0 +1,29 @@
+---
+
+spark_hadoop_version: 2.7
+spark_version: 2.1.1
+spark_uri_root: 'https://d3kbcqa49mib13.cloudfront.net/'
+spark_package: 'spark-{{spark_version}}-bin-hadoop{{spark_hadoop_version}}.tgz'
+spark_package_root: 'spark-{{spark_version}}-bin-hadoop{{spark_hadoop_version}}'
+
+spark_uri: '{{spark_uri_root}}{{spark_package}}'
+
+spark_alluxio_version: 1.6.0
+spark_alluxio_uri_root: 'http://downloads.alluxio.org/downloads/files/{{spark_alluxio_version}}/'
+spark_alluxio_package: 'alluxio-{{spark_alluxio_version}}-hadoop-{{spark_hadoop_version}}-bin.tar.gz'
+spark_alluxio_package_root: 'alluxio-{{spark_alluxio_version}}-hadoop-{{spark_hadoop_version}}'
+
+spark_alluxio_uri: '{{spark_alluxio_uri_root}}{{spark_alluxio_package}}'
+
+spark_alluxio_storage_protocol: swift
+spark_alluxio_storage_root: default
+spark_alluxio_storage_region: RegionOne
+spark_alluxio_storage_auth_method: keystone
+# note that the appendix (/tokens) is only for keystoneV2
+spark_alluxio_storage_auth_url: "{{ lookup('env','OS_AUTH_URL') }}/tokens"
+spark_alluxio_storage_tenant: "{{ lookup('env','OS_PROJECT_NAME') }}"
+spark_alluxio_storage_user:  "{{ lookup('env','OS_USERNAME') }}"
+spark_alluxio_storage_password: "{{ lookup('env','OS_PASSWORD') }}"
+spark_alluxio_storage_use_public_url: false
+
+spark_alluxio_memory: '1GB'

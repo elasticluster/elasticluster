@@ -9,7 +9,7 @@
 - name: Fail if not Debian/Ubuntu compatible
   fail:
     msg: The JupyterHub role currently only supports Debian/Ubuntu
-  when: 'not {{is_debian_compatible}}'
+  when: not ansible_os_family == 'Debian'
 
 
 - name: Create directories

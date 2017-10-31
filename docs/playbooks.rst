@@ -687,38 +687,81 @@ master and 2 worker nodes, and additionally installs flannel for the networking
 
 SSH into the cluster and execute 'sudo kubectl --kubeconfig /etc/kubernetes/admin.conf get nodes' to view the cluster.
 
-Mesos + Alluxio + Spark
+Mesos + Marathon + Chronos
 ============================
 
 Supported on:
 
 * Ubuntu 16.04
 
-This playbook installs a Mesos_ cluster with Zookeeper_,  Alluxio_
-and Spark_. The cluster comprises a Zookeeper quorum, Mesos nodes
-(mixed master and slave), Alluxio and Spark. The cluster runs docker
-containers by default. Not that due to the mixed mode install this
-scales to about 99 nodes. Try to choose an odd number of servers
-(otherwise zookeeper complains a lot).
+This playbook installs a Mesos_ cluster with Zookeeper_,  GlusterFS_,
+Marathon_ and Chronos_. The cluster comprises a Zookeeper quorum and
+Mesos nodes. The cluster runs docker containers by default. Try to
+choose an odd number of master servers (otherwise zookeeper complains
+a lot). The minimal recommended size of a master node is 4 vCPU,
+64GB RAM, 120GB disk space. The minimal recommended size of a slave node
+is 4 vCPU, 16GB RAM, 100GB disk space.
 
 =================  ==================================================
 Ansible group      Action
 =================  ==================================================
-``mesos``          Install the Mesos cluster node: Mesos, Alluxio,
-                   docker, Zookeeper and Spark.
+``mesos_master``   Install the Mesos cluster node: Mesos Master,
+                   docker, Zookeeper, GlusterFS, Marathon and Chronos.
+``mesos_slave``    Install the Mesos cluster node: Mesos Slave and
+                   docker.
 =================  ==================================================
 
-The following example configuration sets up a Mesos cluster using 9
+The following example configuration sets up a Mesos cluster using 15
  nodes::
 
     [cluster/mesos]
     setup_provider=mesos
-    mesos_nodes=9
-    ssh_to=mesos
+    master_nodes=3
+    slave_nodes=12
+    ssh_to=master
 
     [setup/mesos]
     provider=ansible
     mesos_groups=mesos
+
+
+It is recommended that all web interfaces are behind reverse tunnel,
+because 'others' can easily mess up the configuration with these interfaces.
+
+Spark + Alluxio + JupyterHub
+============================
+
+Supported on:
+
+* Ubuntu 16.04
+
+This playbook installs a Stand Alone Spark_ cluster with Alluxio_ and
+Jupyter_. The cluster comprises a Spark Master node (only 1 supported)
+and Spark Slave nodes.
+
+=================  ==================================================
+Ansible group      Action
+=================  ==================================================
+``spark_master``   Install the Spark Master node: Spark Master,
+                   Alluxio Master and JupyterHub.
+``spark_slave``    Install the Spark Slave node: Spark Slave and
+                   Alluxio Worker.
+=================  ==================================================
+
+The following example configuration sets up a Spark cluster using 4
+ nodes::
+
+    [cluster/spark]
+    setup_provider=spark
+    master_nodes=1
+    slave_nodes=3
+    ssh_to=master
+
+    [setup/mesos]
+    provider=ansible
+    master_groups=spark_master
+    slave_groups=spark_slave
+
 
 By default Alluxio connects to a Swift backend, but it supports way more:
 http://www.alluxio.org/docs/master/en/Configuring-Alluxio-with-Swift.html
@@ -727,9 +770,12 @@ the configuration but not all are sensible defaults. Note that your connection
 settings are pushed to the Alluxio config, which will then contain your plain
 text secrets. So it is recommended to only use such a system for yourself.
 
-Use `global_var_mesos_alluxio_storage_root`=<container name> to connect
-to a specific container. `global_var_mesos_alluxio_storage_protocol` can
+Use `global_var_spark_alluxio_storage_root`=<container name> to connect
+to a specific container. `global_var_spark_alluxio_storage_protocol` can
 be used to switch to a different protocol than 'swift'.
+
+It is recommended that all web interfaces are behind reverse tunnel,
+because 'others' can easily mess up the configuration with these interfaces.
 
 Kafka
 ==============

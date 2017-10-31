@@ -35,6 +35,7 @@
 - include: roles/pbs+maui.yml
 - include: roles/pvfs2.yml
 - include: roles/slurm.yml
+- include: roles/spark.yml
 - include: roles/zfs.yml
 
 # add-on software

@@ -1,0 +1,42 @@
+---
+
+- name: Configure Apache2
+  apt:
+    name: apache2
+    state: present
+
+- name: configure help page
+  template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+
+- name: enable and start help page
+  systemd:
+    name: apache2
+    enabled: yes
+    masked: no
+    state: restarted
+
+- name: Alluxio systemd service config
+  template:
+    src='alluxio.service.j2'
+    dest='/etc/systemd/system/alluxio.service'
+
+- name: enable and start alluxio service and ensure it is not masked
+  systemd:
+    name: alluxio
+    enabled: yes
+    masked: no
+    state: restarted
+
+- name: Spark Master systemd service config
+  template:
+    src='spark-master.service.j2'
+    dest='/etc/systemd/system/spark-master.service'
+
+- name: enable and start spark master service and ensure it is not masked
+  systemd:
+    name: spark-master
+    enabled: yes
+    masked: no
+    state: restarted

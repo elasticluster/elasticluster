@@ -1,0 +1,21 @@
+---
+
+- name: Fail if not Ubuntu 16 or greater
+  fail:
+    msg: "Ubuntu is 16 or greate is required for mesos playbook"
+  when: not( ansible_distribution == 'Ubuntu' and ansible_distribution_major_version|int >= 16)
+
+- name: Install Mesos
+  include: mesos.yml
+
+- name: Install GlusterFS
+  include: gluster.yml
+
+- name: Deploy profile configuration files
+  copy:
+    src='{{item}}'
+    dest='/{{item}}'
+  with_items:
+    - etc/profile.d/spark.sh
+    - etc/profile.d/pyspark.sh
+    - etc/profile.d/alluxio.sh

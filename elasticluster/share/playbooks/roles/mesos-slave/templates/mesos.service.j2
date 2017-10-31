@@ -1,0 +1,12 @@
+Unit]
+Description=Apache Mesos Slave
+After=zookeeper.target
+
+[Service]
+Type=forking
+User=mesos
+Group=mesos
+ExecStart=/usr/lib/mesos/bin/mesos-slave.sh --log_dir=/var/log/mesos
+
+[Install]
+WantedBy=multi-user.target

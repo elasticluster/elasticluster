@@ -1,0 +1,12 @@
+[Unit]
+Description=Apache Spark Master Service
+After=network.target
+
+[Service]
+Type=forking
+User=spark
+Group=spark
+ExecStart=/usr/lib/spark/sbin/start-master.sh
+
+[Install]
+WantedBy=multi-user.target
