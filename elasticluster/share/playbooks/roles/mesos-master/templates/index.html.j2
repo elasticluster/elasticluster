@@ -35,7 +35,7 @@
         <li>enable, and browse to one of the links</li>
     </ol>
 </div>
-<p style="text-align: center;"><strong><a href="http://master001:5050">Mesos</a></strong></p>
-<p style="text-align: center;"><strong><a href="http://master001:8080">Marathon</strong></a></p>
-<p style="text-align: center;"><strong><a href="http://master001:4400">Chronos</strong></a></p>
+<p style="text-align: center;"><strong><a href="http://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}:5050">Mesos</a></strong></p>
+<p style="text-align: center;"><strong><a href="http://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}:8080">Marathon</strong></a></p>
+<p style="text-align: center;"><strong><a href="http://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}:4400">Chronos</strong></a></p>
 </html>

@@ -35,7 +35,7 @@
         <li>enable, and browse to one of the links</li>
     </ol>
 </div>
-<p style="text-align: center;"><strong><a href="https://master001">Jupyter Hub</strong></a></p>
-<p style="text-align: center;"><strong><a href="http://master001:8080">Spark Master</strong></a></p>
-<p style="text-align: center;"><strong><a href="http://master001:19999">Alluxio</a></strong></p>
+<p style="text-align: center;"><strong><a href="https://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}">Jupyter Hub</strong></a></p>
+<p style="text-align: center;"><strong><a href="http://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}:8080">Spark Master</strong></a></p>
+<p style="text-align: center;"><strong><a href="http://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}:19999">Alluxio</a></strong></p>
 </html>
