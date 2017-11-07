@@ -10,10 +10,9 @@
   vars:
     # spark python version should never differ between master and workers
     anaconda_version: '5.0.1'
+    anaconda_python_version: '2'
   roles:
     - spark-master
-    - role: jupyterhub
-      jupyter_spark_master: 'spark://master001:7077'
 
 - name: Install Spark slave node
   hosts: spark_slave
@@ -24,5 +23,6 @@
   vars:
     # spark python version should never differ between master and workers
     anaconda_version: '5.0.1'
+    anaconda_python_version: '2'
   roles:
     - spark-slave

@@ -774,6 +774,15 @@ Use `global_var_spark_alluxio_storage_root`=<container name> to connect
 to a specific container. `global_var_spark_alluxio_storage_protocol` can
 be used to switch to a different protocol than 'swift'.
 
+Use `global_var_spark_ubuntu_password`=<some password> to specifiy the
+password for the ubuntu user (default user for Jupyter).
+
+Use `global_var_spark_anaconda_aux_packages`=<package1, package2> to install
+auxiliary python packages on the cluster.
+
+By default we use Anaconda Python 3 as interpreter. If you want to use Anaconda
+Python 2 specify `global_var_anaconda_python_version`='2'.
+
 It is recommended that all web interfaces are behind reverse tunnel,
 because 'others' can easily mess up the configuration with these interfaces.
 

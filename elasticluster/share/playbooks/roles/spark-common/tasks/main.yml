@@ -10,16 +10,22 @@
     msg: "Only single master supported when running Spark, for HA use Hadoop or Mesos"
   when: not(groups.spark_master|length == 1)
 
+- stat:
+    path: /usr/lib/alluxio
+  register: alluxio_symlink
+
 - name: Create Apache Alluxio group
   group:
     name: alluxio
     state: present
+  when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Apache Alluxio user
   user:
     name: alluxio
     group: alluxio
     system: True
+  when: alluxio_symlink.stat.islnk is not defined
 
 - name: Add limited sudo rights for alluxio user
   lineinfile:
@@ -27,11 +33,13 @@
     state: present
     regexp: '^alluxio'
     line: 'alluxio ALL=(ALL) NOPASSWD: /bin/mount * /mnt/ramdisk, /bin/umount * /mnt/ramdisk, /bin/mkdir * /mnt/ramdisk, /bin/chmod * /mnt/ramdisk'
+  when: alluxio_symlink.stat.islnk is not defined
 
 - name: Download Alluxio
   get_url:
     url: '{{spark_alluxio_uri}}'
     dest: '/tmp/{{spark_alluxio_package}}'
+  when: alluxio_symlink.stat.islnk is not defined
 
 - name: Unpack Alluxio
   unarchive:
@@ -40,9 +48,11 @@
     owner: alluxio
     group: alluxio
     remote_src: True
+  when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio symlink
   file: src="/usr/lib/{{spark_alluxio_package_root}}" dest="/usr/lib/alluxio" state=link
+  when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio log directory
   file:
@@ -50,6 +60,7 @@
     state=directory
     owner=alluxio
     group=alluxio
+  when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio RAM directory
   file:
@@ -57,6 +68,7 @@
     state=directory
     owner=alluxio
     group=alluxio
+  when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio underFS directory
   file:
@@ -64,9 +76,11 @@
     state=directory
     owner=alluxio
     group=alluxio
+  when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio Configuration symlink
   file: src="/usr/lib/alluxio/conf" dest="/etc/alluxio" state=link
+  when: alluxio_symlink.stat.islnk is not defined
 
 - name: Alluxio configuration files
   template:
@@ -79,14 +93,21 @@
     - alluxio-env.sh
     - masters
     - workers
+  when: alluxio_symlink.stat.islnk is not defined
 
 - name: Set ALLUXIO_HOME in environment
   lineinfile: dest=/etc/environment line='export ALLUXIO_HOME=/usr/lib/alluxio' insertafter='EOF' state=present
+  when: alluxio_symlink.stat.islnk is not defined
+
+- stat:
+    path: /usr/lib/spark
+  register: spark_symlink
 
 - name: Create Apache Spark group
   group:
     name: spark
     state: present
+  when: spark_symlink.stat.islnk is not defined
 
 - name: Create Apache Spark user
   user:
@@ -94,11 +115,13 @@
     group: spark
     system: True
     createhome: False
+  when: spark_symlink.stat.islnk is not defined
 
 - name: Download Spark
   get_url:
     url: '{{spark_uri}}'
     dest: '/tmp/{{spark_package}}'
+  when: spark_symlink.stat.islnk is not defined
 
 - name: Unpack Spark
   unarchive:
@@ -107,24 +130,28 @@
     owner: spark
     group: spark
     remote_src: True
+  when: spark_symlink.stat.islnk is not defined
 
 - name: Create Spark symlink
   file: src="/usr/lib/{{spark_package_root}}" dest="/usr/lib/spark" state=link
+  when: spark_symlink.stat.islnk is not defined
 
 - name: Check if Py4J version-independent `.zip` archive exist
   stat:
     path='/usr/lib/spark/python/lib/py4j-src.zip'
     follow=no
   register: p
+  when: spark_symlink.stat.islnk is not defined
 
 - name: Symlink Py4J `.zip` archive under a version-independent name
   shell: |
     cd /usr/lib/spark/python/lib
     ln -s py4j-*-src.zip py4j-src.zip
-  when: not p.stat.exists
+  when: spark_symlink.stat.islnk is not defined and not p.stat.exists
 
 - name: Create Spark Configuration symlink
   file: src="/usr/lib/spark/conf" dest="/etc/spark" state=link
+  when: spark_symlink.stat.islnk is not defined
 
 - name: Spark configuration files
   template:
@@ -135,6 +162,7 @@
   with_items:
     - spark-defaults.conf
     - spark-env.sh
+  when: spark_symlink.stat.islnk is not defined
 
 - name: Create Spark log directory
   file:
@@ -142,9 +170,11 @@
     state=directory
     owner=spark
     group=spark
+  when: spark_symlink.stat.islnk is not defined
 
 - name: Set SPARK_HOME in environment
   lineinfile: dest=/etc/environment line='export SPARK_HOME=/usr/lib/spark' insertafter='EOF' state=present
+  when: spark_symlink.stat.islnk is not defined
 
 - name: Deploy profile configuration files
   copy:
@@ -153,11 +183,36 @@
   with_items:
     - etc/profile.d/spark.sh
     - etc/profile.d/alluxio.sh
+  when: alluxio_symlink.stat.islnk is not defined or spark_symlink.stat.islnk is not defined
 
-- name: Set correct mode for Hive Temp storage
-  file:
-    path='/tmp/hive'
-    state=directory
+- name: Override default Spark Shell behaviour (disable hive)
+  copy:
+    src='usr/lib/spark/python/pyspark/shell.py'
+    dest='/usr/lib/spark/python/pyspark/shell.py'
     owner=spark
     group=spark
-    mode=0777
+  when: spark_symlink.stat.islnk is not defined
+
+- name: Install Auxiliary Python Packages using pip
+  pip:
+    name='{{item}}'
+    state=present
+    executable='{{spark_jupyter_python|dirname}}/pip'
+  with_items: '{{spark_anaconda_aux_packages}}'
+  register: pip_install
+  ignore_errors: yes
+
+- name: Install Auxiliary Python Packages using conda
+  conda:
+    name='{{item}}'
+    state=present
+    executable='{{spark_jupyter_python|dirname}}/conda'
+  with_items: '{{spark_anaconda_aux_packages}}'
+  register: conda_install
+  ignore_errors: yes
+  when: pip_install|failed
+
+- name: Fail if packages could not be installed with pip or conda
+  fail:
+    msg: 'could not install all packages, please check if they are avaible for Python {{anaconda_python_version}} (pip or conda)'
+  when: conda_install|failed

@@ -27,3 +27,7 @@ spark_alluxio_storage_password: "{{ lookup('env','OS_PASSWORD') }}"
 spark_alluxio_storage_use_public_url: false
 
 spark_alluxio_memory: '1GB'
+
+spark_jupyter_python: '/opt/anaconda{{anaconda_python_version}}/bin/python'
+
+spark_anaconda_aux_packages: {}

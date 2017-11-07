@@ -27,7 +27,7 @@
                 <li>New pattern
                     <ol>
                         <li>pattern name: master</li>
-                        <li>url pattern:&nbsp;https?://master001*</li>
+                        <li>url pattern:&nbsp;https?://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}*</li>
                     </ol>
                 </li>
             </ol>

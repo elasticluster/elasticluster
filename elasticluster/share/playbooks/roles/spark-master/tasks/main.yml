@@ -7,8 +7,8 @@
 
 - name: configure help page
   template:
-    src: index.html.j2
-    dest: /var/www/html/index.html
+    src=index.html.j2
+    dest=/var/www/html/index.html
 
 - name: enable and start help page
   systemd:
@@ -40,3 +40,123 @@
     enabled: yes
     masked: no
     state: restarted
+
+- name: Install Jupyter
+  conda:
+    name=jupyter
+    state=present
+    executable='{{spark_jupyter_python|dirname}}/conda'
+
+- name: Install PySpark {{spark_jupyter_python}} kernel (directory)
+  file:
+    path='/usr/local/share/jupyter/kernels/pyspark{{anaconda_python_version}}'
+    mode=0555
+    state=directory
+
+- name: Install PySpark{{anaconda_python_version}} kernel (kernel spec)
+  template:
+    src='pyspark.kernel.json.j2'
+    dest='/usr/local/share/jupyter/kernels/pyspark{{anaconda_python_version}}/kernel.json'
+    mode=0444
+
+- name: Install PySpark{{anaconda_python_version}} kernel (startup file)
+  template:
+    src='startup.py.j2'
+    dest='/usr/local/share/jupyter/kernels/pyspark{{anaconda_python_version}}/startup.py'
+    mode=0444
+
+- name: Create directories
+  file:
+    path: '{{item}}'
+    state: directory
+    mode: 0755
+  with_items:
+    - /etc/jupyterhub
+    - /var/lib/jupyterhub
+
+- name: Install SW dependencies
+  apt:
+    name='{{item}}'
+    state=present
+  with_items:
+    - nodejs-legacy
+    - npm
+    - supervisor
+
+# FIXME: Could this be replaced by Ansible's `npm` module?
+- name: Install HTTP proxy service
+  command: |
+    npm install -g configurable-http-proxy
+  args:
+    creates: /usr/local/lib/node_modules/configurable-http-proxy/bin/configurable-http-proxy
+
+- name: Install JupyterHub SW
+  pip:
+    name: 'jupyterhub'
+    state: present
+    executable: '/opt/anaconda3/bin/pip'
+
+- name: Create cookie secret file
+  shell: |
+    openssl rand -base64 2048 | tr -d '\n' > /var/lib/jupyterhub/jupyterhub_cookie_secret
+  args:
+    creates: /var/lib/jupyterhub/jupyterhub_cookie_secret
+
+- name: Create proxy auth token file
+  shell: |
+    openssl rand -hex 32 | tr -d '\n' > /var/lib/jupyterhub/jupyterhub_proxy_auth_token
+  args:
+    creates: /var/lib/jupyterhub/jupyterhub_proxy_auth_token
+
+- name: Deploy configuration file
+  copy:
+    src='etc/jupyterhub/jupyterhub_config.py'
+    dest='/etc/jupyterhub/jupyterhub_config.py'
+    mode=0400
+
+# see: https://serialized.net/2013/04/simply-generating-self-signed-ssl-certs-with-ansible/
+- name: Create self-signed SSL cert
+  command: |
+    openssl req -x509 -new -batch -days 3650 -subj "/O=ElastiCluster/OU=JupyterHub/CN={{ansible_fqdn}}"  -newkey rsa:2048 -nodes -outform PEM -keyout /etc/jupyterhub/jupyterhub.key.pem -out /etc/jupyterhub/jupyterhub.crt.pem -extensions usr_cert
+  args:
+    creates: /etc/jupyterhub/jupyterhub.key.pem
+
+# FIXME: should the following be reworked into an independent `supervisord` role?
+- name: Manage JupyterHub with `supervisord`
+  template:
+    src='jupyterhub.conf.j2'
+    dest='/etc/supervisor/conf.d/jupyterhub.conf'
+    mode=0444
+  notify:
+    - reread supervisord configuration
+
+- name: Ensure supervisord is running and starts again at boot
+  service:
+    name: supervisor
+    enabled: yes
+    state: started
+
+- name: Ensure JupyterHub has been started by supervisord
+  command: |
+    supervisorctl start jupyterhub
+
+- name: Allow inbound HTTPS connections
+  iptables:
+    action: insert
+    chain: INPUT
+    protocol: tcp
+    destination_port: 443
+    jump: ACCEPT
+    state: present
+  become: yes
+
+- name: Restart supervisor
+  service:
+    name: supervisor
+    state: restarted
+    enabled: yes
+
+- name: set ubuntu user password
+  user:
+    name: "ubuntu"
+    password: "{{ spark_ubuntu_password | password_hash('sha512') }}"
