@@ -91,19 +91,23 @@ class GoogleCloudProvider(AbstractCloudProvider):
                  gce_client_id,
                  gce_client_secret,
                  gce_project_id,
+                 accelerator_count=0,
+                 accelerator_type='default',  ## only used if accelerator_count>0
+                 email=GCE_DEFAULT_SERVICE_EMAIL,
+                 network='default',
                  noauth_local_webserver=False,
                  zone=GCE_DEFAULT_ZONE,
-                 network='default',
-                 email=GCE_DEFAULT_SERVICE_EMAIL,
                  storage_path=None):
         self._client_id = gce_client_id
         self._client_secret = gce_client_secret
         self._project_id = gce_project_id
-        self._zone = zone
-        self._network = network
+
         self._email = email
-        self._storage_path = storage_path
+        self._network = network
         self._noauth_local_webserver = noauth_local_webserver
+        self._zone = zone
+
+        self._storage_path = storage_path
 
         # will be initialized upon first connect
         self._gce = None
@@ -219,6 +223,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        boot_disk_size=10,
                        tags=None,
                        scheduling=None,
+                       accelerator_count=0,
+                       accelerator_type='default',
                        **kwargs):
         """Starts a new instance with the given properties and returns
         the instance id.
@@ -233,12 +239,17 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str image_userdata: command to execute after startup
         :param str username: username for the given ssh key, default None
         :param str node_name: name of the instance
-        :param str tags: comma-separated list of "tags" to label the instance
-        :param str scheduling: scheduling option to use for the instance ("preemptible")
         :param str|Sequence tags: "Tags" to label the instance.
+          Can be either a single string (individual tags are comma-separated),
+          or a sequence of strings (each string being a single tag).
+        :param str scheduling: scheduling option to use for the instance ("preemptible")
+        :param int accelerator_count: Number of accelerators (e.g., GPUs) to make available in instance
+        :param str accelerator_type: Type of accelerator to request.  Can be one of:
 
-        Can be either a single string (individual tags are comma-separated),
-        or a sequence of strings (each string being a single tag).
+          * Full URL specifying an accelerator type valid for the zone and project VMs are being created in.  For example, ``https://www.googleapis.com/compute/v1/projects/[PROJECT_ID]/zones/[ZONE]/acceleratorTypes/[ACCELERATOR_TYPE]``
+          * An accelerator type name (any string which is not a valid URL).  This is internally prefixed with the string ``https://www.googleapis.com/compute/v1/projects/[PROJECT_ID]/zones/[ZONE]/acceleratorTypes/`` to form a full URL.
+
+          Only used if ``accelerator_count`` is > 0.
 
         :return: str - instance id of the started instance
         """
@@ -280,14 +291,10 @@ class GoogleCloudProvider(AbstractCloudProvider):
             image_url = '%s%s/global/images/%s' % (
                 GCE_URL, os_cloud, image_id)
 
-        if scheduling is None:
-            # use GCE's default
-            scheduling_option = {}
-        elif scheduling == 'preemptible':
-            scheduling_option = {
-              'preemptible': True
-            }
-        else:
+        scheduling_option = {}
+        if scheduling == 'preemptible':
+            scheduling_option['preemptible'] = True
+        elif scheduling is not None:
             raise InstanceError("Unknown scheduling option: '%s'" % scheduling)
 
         if isinstance(tags, types.StringTypes):
@@ -349,6 +356,40 @@ class GoogleCloudProvider(AbstractCloudProvider):
                 ]
             }
         }
+
+        # add accelerators/GPUs if requested
+        if accelerator_count > 0:
+            if (accelerator_type.startswith('https://')
+                or accelerator_type.startswith('http://')):
+                # use URL as-is
+                accelerator_type_url = accelerator_type
+            else:
+                accelerator_type_url = (
+                    'https://www.googleapis.com/compute/{api_version}/'
+                    'projects/{project_id}/zones/{zone}/'
+                    'acceleratorTypes/{accelerator_type}'
+                    .format(
+                        api_version=GCE_API_VERSION,
+                        project_id=self._project_id,
+                        zone=self._zone,
+                        accelerator_type=accelerator_type
+                    ))
+            log.debug(
+                "VM instance `%s`:"
+                " Requesting %d accelerator%s of type '%s'",
+                instance_id, accelerator_count,
+                ('s' if accelerator_count > 1 else ''),
+                accelerator_type_url)
+            instance['guestAccelerators'] = [
+             {
+                 'acceleratorCount': accelerator_count,
+                 'acceleratorType': accelerator_type_url,
+             }
+            ]
+            # no live migration with GPUs,
+            # see: https://cloud.google.com/compute/docs/gpus#restrictions
+            instance['scheduling']['onHostMaintenance'] = 'TERMINATE'
+            instance['scheduling']['automaticRestart'] = True
 
         # create the instance
         gce = self._connect()
