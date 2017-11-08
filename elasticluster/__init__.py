@@ -21,7 +21,7 @@ __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 import logging
 
 log = logging.getLogger("gc3.elasticluster")
-log.DO_NOT_FORK = False
+
 
 # API
 from elasticluster.cluster import Cluster

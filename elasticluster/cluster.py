@@ -362,7 +362,7 @@ class Cluster(Struct):
             except ValueError:
                 raise NodeNotFound("Node %s not found in cluster" % node.name)
 
-    def start(self, min_nodes=None):
+    def start(self, min_nodes=None, parallel=True):
         """
         Starts up all the instances in the cloud.
 
@@ -383,15 +383,17 @@ class Cluster(Struct):
         :param min_nodes: minimum number of nodes to start in case the quota
                           is reached before all instances are up
         :type min_nodes: dict [node_kind] = number
+        :param bool parallel: Whether issue multiple requests to start
+          VMs (``parallel=True``, default) or not.
         """
 
         nodes = self.get_all_nodes()
 
         log.info("Starting cluster nodes ...")
-        if log.DO_NOT_FORK:
-            nodes = self._start_nodes_sequentially(nodes)
-        else:
+        if parallel:
             nodes = self._start_nodes_parallel(nodes, self.thread_pool_max_size)
+        else:
+            nodes = self._start_nodes_sequentially(nodes)
 
         # checkpoint cluster state
         self.repository.save_or_update(self)
