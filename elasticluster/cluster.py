@@ -1393,7 +1393,9 @@ class Node(Struct):
         for ip in itertools.chain([self.preferred_ip], ips):
             if not ip:
                 continue
-            log.debug("Trying to connect to host %s (%s) ...", self.name, ip)
+            log.debug(
+                "Trying to connect to host %s using IP address %s ...",
+                self.name, ip)
             try:
                 addr, port = parse_ip_address_and_port(ip, SSH_PORT)
                 extra = {
