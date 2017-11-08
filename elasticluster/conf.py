@@ -59,6 +59,7 @@ from elasticluster.utils import environment
 from elasticluster.validate import (
     boolean,
     executable_file,
+    existing_file,
     hostname,
     nonempty_str,
     nova_api_version,
@@ -178,6 +179,7 @@ CLOUD_PROVIDER_SCHEMAS = {
     'openstack': {
         "provider": 'openstack',
         Optional("auth_url"): url,
+        Optional("cacert"): existing_file,
         Optional("username"): nonempty_str,
         Optional("password"): nonempty_str,
         Optional("user_domain_name"): nonempty_str,
