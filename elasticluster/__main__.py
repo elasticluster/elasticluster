@@ -137,10 +137,12 @@ class ElastiCluster(cli.app.CommandLineApp):
         coloredlogs.install(logger=log, level=loglevel)
         log.setLevel(loglevel)
 
-        # In debug mode, avoid forking
+        # In debug mode, avoid parallel requests
+        self.parallel = True
         if self.params.verbose > 3:
-            log.DO_NOT_FORK = True
             log.raiseExceptions = True
+            self.parallel = False
+            log.warning("DEBUG mode: will not issue parallel requests to cloud API.")
 
         if not os.path.isdir(self.params.storage):
             # We do not create *all* the parents, but we do create the

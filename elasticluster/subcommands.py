@@ -198,7 +198,7 @@ class Start(AbstractCommand):
             print("(This may take a while...)")
             min_nodes = dict((kind, cluster_nodes_conf[kind]['min_num'])
                              for kind in cluster_nodes_conf)
-            cluster.start(min_nodes=min_nodes)
+            cluster.start(min_nodes=min_nodes, parallel=self.parallel)
             if self.params.no_setup:
                 print("NOT configuring the cluster as requested.")
             else:
