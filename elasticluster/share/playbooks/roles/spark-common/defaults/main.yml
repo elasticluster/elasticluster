@@ -1,8 +1,8 @@
 ---
 
 spark_hadoop_version: 2.7
-spark_version: 2.1.1
-spark_uri_root: 'https://d3kbcqa49mib13.cloudfront.net/'
+spark_version: 2.2.0
+spark_uri_root: 'http://mirror.switch.ch/mirror/apache/dist/spark/spark-{{spark_version}}/'
 spark_package: 'spark-{{spark_version}}-bin-hadoop{{spark_hadoop_version}}.tgz'
 spark_package_root: 'spark-{{spark_version}}-bin-hadoop{{spark_hadoop_version}}'
 
