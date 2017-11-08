@@ -109,6 +109,7 @@ if python_version == (2, 6):
     ]
 elif python_version == (2, 7):
     version_dependent_requires = [
+        # OpenStack
         'python-keystoneclient',
         'python-glanceclient',
         'python-neutronclient',
@@ -120,6 +121,16 @@ elif python_version == (2, 7):
         # a top-level dependency of ElastiCluster
         'Babel>=2.3.4,!=2.4.0',
         'pbr>=2.0.0,!=2.1.0',
+        # MS-Azure
+        'azure',
+        ## the following 6 are all required dependencies
+        ## which are not picked up, see issue #500
+        'enum34',
+        'functools32',
+        'ipaddress',
+        'pathlib2',
+        'scandir',
+        'secretstorage',
     ]
 else:
     raise RuntimeError("ElastiCluster requires Python 2.6 or 2.7")
@@ -184,20 +195,12 @@ setup(
         'pytz',   ## required by `positional` but somehow not picked up
         'httplib2>=0.9.1',  ## required by `oauth2client` but somehow not picked up
         # Azure cloud
-        'azure',
-        ## the following 6 are all required dependencies
-        ## which are not picked up, see issue #500
-        'enum34',
-        'functools32',
-        'ipaddress',
-        'pathlib2',
-        'scandir',
-        'secretstorage',
+        #'azure',  ## only available on Py 2.7, see `version_dependent_requires`
         # OpenStack clouds
         'netifaces',
         'apache-libcloud',
         'requests~=2.14.1',  ## see issue #441
-        #'python-novaclient' ## this needs special treatment depending on Python version, see below
+        #'python-novaclient' ## this needs special treatment depending on Python version
     ] + version_dependent_requires),
     tests_require=['tox', 'mock', 'pytest>=2.10'],  # read right-to-left
     cmdclass={'test': Tox},
