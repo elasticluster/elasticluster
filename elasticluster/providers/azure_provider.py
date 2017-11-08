@@ -5,6 +5,7 @@
 # it by causing "import azure" to look for a system library module.
 from __future__ import absolute_import
 
+
 # System imports
 import os
 import pickle
@@ -17,6 +18,10 @@ import threading
 import traceback
 import random
 import xml.etree.ElementTree as xmltree
+
+python_version = sys.version_info[:2]
+if python_version < (2, 7):
+    raise ImportError("ElastiCluster's Azure support only available on Python 2.7+")
 
 # External imports
 import azure
