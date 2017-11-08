@@ -31,34 +31,39 @@ the following command::
     elasticluster list-templates
 
 If no configuration file is found, it will copy an `example
-configuration file`_ in `~/.elasticluster/config`:file:. The example is
-fully commented and self-documenting.
+configuration file`_ in `~/.elasticluster/config`:file:. The example
+is fully commented and references back to appropriate sections in this
+document.
 
 However, the example configuration file is not complete, as it does
 not contain any authentication information, so you will get an error
-similar to the following::
+log similar to the following::
 
-    WARNING:gc3.elasticluster:Deploying default configuration file to /home/antonio/.elasticluster/config.
-    WARNING:gc3.elasticluster:Ignoring Cluster `ipython`: required key not provided @ data['image_user']
-    WARNING:gc3.elasticluster:Ignoring cluster `ipython`.
-    Error validating configuration file '/home/antonio/.elasticluster/config': `required key not provided @ data['image_user']`
+    WARNING Deploying default configuration file to /home/rmurri/.elasticluster/config.
+    ERROR In section `cluster/gridengine-on-gce`: Key 'nodes' error: ...
+    ERROR Dropping configuration section `cluster/gridengine-on-gce` because of the above errors
+    ERROR In section `cloud/openstack`: Missing keys: <type 'str'>
+    ERROR Dropping configuration section `cloud/openstack` because of the above errors
+    ERROR Configuration section `cluster/slurm-on-ubuntu14` references non-existing cloud section `openstack`. Dropping cluster definition.
+    0 cluster templates found in configuration file.
 
-You will have to edit the configuration file in
-``~/.elasticluster/config`` and update it with the correct values.
+You will have to edit :file:`~/.elasticluster/config` and update it
+with the correct values.
 
-Please refer to the following section to understand the syntax of the
+Please refer to the following sections to understand the syntax of the
 configuration file and to know which options you need to set in order
-to use `elasticluster`.
+to use ``elasticluster``.
 
 
 Basic syntax of the configuration file
 ======================================
 
-The file is parsed by ConfigParser module and has a syntax similar
-to Microsoft Windows INI files.
+ElastiCluster's configuration files are written similar to Microsoft
+Windows INI files.  They will be read using Python's `ConfigParser`
+module, which see for more information on the supported syntax.
 
-It consists of `sections` led by a ``[sectiontype/name]`` header and
-followed by lines in the form::
+A configuration file consists of *sections* led by a
+``[sectiontype/name]`` header and followed by lines in the form::
 
     key=value
 
@@ -77,8 +82,8 @@ Section names have the form ``[type/name]`` where `type` is one of:
   define the composition of a cluster. It contains references to
   the other sections.
 
-``cluster/<clustername>``
-  override configuration for specific group of nodes within a cluster
+``cluster/<clustername>/<class>``
+  override configuration for specific class of nodes within a cluster
 
 ``storage``
   usually not needed, allow to specify a custom path for the storage
@@ -91,19 +96,19 @@ of the ``cloud``, ``login``, ``cluster``, and ``setup`` sections.
 Processing of configuration values
 ==================================
 
-Within each ``key=value`` assignment, the *value* part undergoes the following
-transformations:
+Within each ``key=value`` assignment, the *value* part undergoes the
+following transformations:
 
 * References to enviromental variables of the form ``$VARNAME`` or
   ``${VARNAME}`` are replaced by the content of the named environmental
   variable, wherever they appear in a *value*.
 
   For instance, the following configuration snippet would set the OpenStack user
-  name equal to the Linux user name on the computer where ElastiCluster is
+  name equal to the login name on the computer where ElastiCluster is
   running::
 
       [cloud/openstack]
-      username = $USER
+      username = ${LOGNAME}
       # ...
 
 * The following special strings are substituted, wherever they appear in a
