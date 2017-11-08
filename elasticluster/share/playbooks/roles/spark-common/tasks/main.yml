@@ -93,7 +93,6 @@
     - alluxio-env.sh
     - masters
     - workers
-  when: alluxio_symlink.stat.islnk is not defined
 
 - name: Set ALLUXIO_HOME in environment
   lineinfile: dest=/etc/environment line='export ALLUXIO_HOME=/usr/lib/alluxio' insertafter='EOF' state=present
@@ -162,7 +161,6 @@
   with_items:
     - spark-defaults.conf
     - spark-env.sh
-  when: spark_symlink.stat.islnk is not defined
 
 - name: Create Spark log directory
   file:
@@ -183,15 +181,6 @@
   with_items:
     - etc/profile.d/spark.sh
     - etc/profile.d/alluxio.sh
-  when: alluxio_symlink.stat.islnk is not defined or spark_symlink.stat.islnk is not defined
-
-- name: Override default Spark Shell behaviour (disable hive)
-  copy:
-    src='usr/lib/spark/python/pyspark/shell.py'
-    dest='/usr/lib/spark/python/pyspark/shell.py'
-    owner=spark
-    group=spark
-  when: spark_symlink.stat.islnk is not defined
 
 - name: Install Auxiliary Python Packages using pip
   pip:

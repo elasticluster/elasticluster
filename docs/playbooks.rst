@@ -728,7 +728,7 @@ The following example configuration sets up a Mesos cluster using 15
 It is recommended that all web interfaces are behind reverse tunnel,
 because 'others' can easily mess up the configuration with these interfaces.
 
-Spark + Alluxio + JupyterHub
+Spark + Alluxio + Zeppelin
 ============================
 
 Supported on:
@@ -736,14 +736,14 @@ Supported on:
 * Ubuntu 16.04
 
 This playbook installs a Stand Alone Spark_ cluster with Alluxio_ and
-Jupyter_. The cluster comprises a Spark Master node (only 1 supported)
+Zeppelin_. The cluster comprises a Spark Master node (only 1 supported)
 and Spark Slave nodes.
 
 =================  ==================================================
 Ansible group      Action
 =================  ==================================================
 ``spark_master``   Install the Spark Master node: Spark Master,
-                   Alluxio Master and JupyterHub.
+                   Alluxio Master and Zeppelin.
 ``spark_slave``    Install the Spark Slave node: Spark Slave and
                    Alluxio Worker.
 =================  ==================================================
@@ -774,14 +774,11 @@ Use `global_var_spark_alluxio_storage_root`=<container name> to connect
 to a specific container. `global_var_spark_alluxio_storage_protocol` can
 be used to switch to a different protocol than 'swift'.
 
-Use `global_var_spark_ubuntu_password`=<some password> to specifiy the
-password for the ubuntu user (default user for Jupyter).
-
 Use `global_var_spark_anaconda_aux_packages`=<package1, package2> to install
 auxiliary python packages on the cluster.
 
-By default we use Anaconda Python 3 as interpreter. If you want to use Anaconda
-Python 2 specify `global_var_anaconda_python_version`='2'.
+By default we use Anaconda Python 2 as interpreter. If you want to use Anaconda
+Python 2 specify `global_var_anaconda_python_version`='3'.
 
 It is recommended that all web interfaces are behind reverse tunnel,
 because 'others' can easily mess up the configuration with these interfaces.
