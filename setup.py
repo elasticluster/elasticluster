@@ -120,7 +120,6 @@ elif python_version == (2, 7):
         # a top-level dependency of ElastiCluster
         'Babel>=2.3.4,!=2.4.0',
         'pbr>=2.0.0,!=2.1.0',
-        '',
     ]
 else:
     raise RuntimeError("ElastiCluster requires Python 2.6 or 2.7")
@@ -186,6 +185,14 @@ setup(
         'httplib2>=0.9.1',  ## required by `oauth2client` but somehow not picked up
         # Azure cloud
         'azure',
+        ## the following 6 are all required dependencies
+        ## which are not picked up, see issue #500
+        'enum34',
+        'functools32',
+        'ipaddress',
+        'pathlib2',
+        'scandir',
+        'secretstorage',
         # OpenStack clouds
         'netifaces',
         'apache-libcloud',
