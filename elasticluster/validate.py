@@ -123,6 +123,15 @@ def positive_int(v):
     else:
         raise ValueError("value must be integer > 0")
 
+
+@validator
+def nonnegative_int(v):
+    converted = int(v)
+    if converted < 0:
+        raise ValueError("value must be a non-negative integer")
+    return converted
+
+
 @validator
 def nova_api_version(version):
     """

@@ -252,11 +252,11 @@ Valid configuration keys for `google`
 ``gce_project_id``
     The project ID of your Google Compute Engine project
 
-``zone``
-    The GCE zone to be used. Default is ``us-central1-a``.
-
 ``network``
     The GCE network to be used. Default is ``default``.
+
+``zone``
+    The GCE zone to be used. Default is ``us-central1-a``.
 
 
 Obtaining your ``gce_client_id`` and ``gce_client_secret``
@@ -882,6 +882,21 @@ well, to place nodes on spot instances.
 
 Additional optional configuration keys for Google Cloud
 -------------------------------------------------------
+
+``accelerator_count``
+    If set to an integer number > 0, then request instances
+    equipped with this number of accelerators (typically, GPUs)
+    of the kind specified by ``accelerator_type``.
+
+    Default is 0, i.e., do not request GPU accelerators.
+
+``accelerator_type``
+    Type of accelerator to request.  Can be one of the following options:
+
+    * Full URL specifying an accelerator type valid for the zone and project VMs are being created in.  For example, ``https://www.googleapis.com/compute/v1/projects/[PROJECT_ID]/zones/[ZONE]/acceleratorTypes/[ACCELERATOR_TYPE]``
+    * An accelerator type name (any string which is not a valid URL).  This is internally prefixed with the string ``https://www.googleapis.com/compute/v1/projects/[PROJECT_ID]/zones/[ZONE]/acceleratorTypes/`` to form a full URL.
+
+    Only used if ``accelerator_count`` is > 0.
 
 ``boot_disk_type``
     Define the type of boot disk to use.  Supported values are

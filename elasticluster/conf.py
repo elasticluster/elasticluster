@@ -62,6 +62,7 @@ from elasticluster.validate import (
     existing_file,
     hostname,
     nonempty_str,
+    nonnegative_int,
     nova_api_version,
     positive_int,
     readable_file,
@@ -112,10 +113,16 @@ SCHEMA = {
                 'login': nonempty_str,
                 'num': int,
                 'min_num': int,
+                # only on Google Cloud
+                Optional("accelerator_count", default=0): nonnegative_int,
+                Optional("accelerator_type"): nonempty_str,
                 # allow other keys w/out restrictions
                 Optional(str): str,
             },
         },
+        # only on Google Cloud
+        Optional("accelerator_count", default=0): nonnegative_int,
+        Optional("accelerator_type"): nonempty_str,
         # allow other keys w/out restrictions
         Optional(str): str,
     },
@@ -173,9 +180,9 @@ CLOUD_PROVIDER_SCHEMAS = {
         "gce_client_id": nonempty_str,
         "gce_client_secret": nonempty_str,
         "gce_project_id": nonempty_str,
+        Optional("network", default="default"): nonempty_str,
         Optional("noauth_local_webserver"): boolean,
         Optional("zone", default="us-central1-a"): nonempty_str,
-        Optional("network", default="default"): nonempty_str,
     },
 
     'openstack': {
@@ -643,6 +650,9 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'network_ids',
             'security_group',
             'node_name',
+            # Google Cloud only
+            'accelerator_count',
+            'accelerator_type',
             'boot_disk_size',
             'boot_disk_type',
             'scheduling',
