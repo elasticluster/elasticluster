@@ -98,6 +98,13 @@ DEFAULT_OS_IMAGE_API_VERSION='2'
 DEFAULT_OS_NETWORK_API_VERSION='2.0'  # no choice as of Aug. 2017
 DEFAULT_OS_VOLUME_API_VERSION='2'
 
+_NO_DEFAULT = object()
+"""
+Special value used in `_get_os_config_value` to indicate that a
+value *must* be provided.
+"""
+
+
 
 class OpenStackCloudProvider(AbstractCloudProvider):
     """
@@ -178,7 +185,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._cached_instances = {}
 
     @staticmethod
-    def _get_os_config_value(thing, value, varnames, default=None):
+    def _get_os_config_value(thing, value, varnames, default=_NO_DEFAULT):
         assert varnames, "List of env variable names cannot be empty"
         for varname in varnames:
             env_value = os.getenv(varname, None)
@@ -195,15 +202,15 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 return env_value
         if value:
             return value
-        elif default is not None:
-            return default
-        else:
+        elif default is _NO_DEFAULT:
             # first variable name is preferred; others are for backwards-compatibility only
             raise RuntimeError(
                 "There is no default value for OpenStack {0};"
                 " please specify one in the config file"
                 " or using environment variable {1}."
                 .format(thing, varnames[0]))
+        else:
+            return default
 
     def _init_os_api(self):
         """
