@@ -121,7 +121,11 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         Valid values are the strings `"v2"` or `"v3"`,
         or `None` (default, meaning try v3 first and fall-back to v2).
     """
-    __node_start_lock = threading.Lock()  # lock used for node startup
+
+    __node_start_lock = threading.Lock()
+    """
+    Lock used for node startup.
+    """
 
     def __init__(self, username, password, project_name, auth_url,
                  user_domain_name="default", project_domain_name="default",
