@@ -3,7 +3,7 @@
 # Check for mandatory parameters
 
 - fail: msg="systemd required for this installation"
-  when: not init_is_systemd
+  when: not (ansible_service_mgr == 'systemd')
 
 - fail: msg="es_proxy_port must be specified and cannot be blank when es_proxy_host is defined"
   when: (es_proxy_port is not defined or es_proxy_port == '') and (es_proxy_host is defined and es_proxy_host != '')

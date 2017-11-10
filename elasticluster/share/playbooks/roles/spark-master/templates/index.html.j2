@@ -4,38 +4,20 @@
     <strong>Welcome, this is the links page for your ElastiCluster Spark installation.</strong>
 </p>
 <div style="margin: auto; width: 800;">
-    <p><em><strong>It is strongly recommended that you set up an SSH tunnel to the master node using dynamic port forwarding instead of simply opening up the network firewall for connecting with Spark Master or Alluxio.</strong></em></p>
+    <p><em><strong>It is strongly recommended that you set up an SSH tunnel to the master node using port forwarding instead of simply opening up the network firewall for connecting with Spark Master or Alluxio.</strong></em></p>
     <ol>
-        <li>Install FoxyProxy (or similar) as browser extension</li>
-        <li>Open a terminal</li>
-        <li>Type the following command to open an SSH tunnel on your local machine. Replace&nbsp;<em class="replaceable"><code>~/mykeypair.pem</code></em>&nbsp;with the location and file name of your&nbsp;<code>.pem/ssh</code>&nbsp;file, replace&nbsp;<em class="replaceable"><code>8157</code></em>&nbsp;with an unused, local port number.
-            <ul>
-                <li><code>ssh -i ~/mykeypair.pem -N -D 8157 ubuntu@{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}</code></li>
-            </ul>
-        </li>
-        <li>Configure foxyproxy
-            <ol>
-                <li>Options</li>
-                <li>Add new proxy</li>
-                <li>Proxy Details:
-                    <ol>
-                        <li>hostname: localhost</li>
-                        <li>port: 8157 (or whatever you've chosen)</li>
-                    </ol>
-                </li>
-                <li>Url patterns</li>
-                <li>New pattern
-                    <ol>
-                        <li>pattern name: master</li>
-                        <li>url pattern:&nbsp;https?://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}*</li>
-                    </ol>
-                </li>
-            </ol>
-        </li>
-        <li>enable, and browse to one of the links</li>
+        <li>Open a terminal and run the following command (when on Linux or Mac, for Windows google for the PuTTy equivalent):</li>
+        <li><code>ssh -f ubuntu@{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}} -L {{spark_zeppelin_server_port}}:localhost:{{spark_zeppelin_server_port}} -N</code></li>
+        <li><code>ssh -f ubuntu@{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}} -L 8080:localhost:8080 -N</code></li>
+        <li><code>ssh -f ubuntu@{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}} -L 19999:localhost:19999 -N</code></li>
+        <li>You should be able to connect to Zeppelin when clicking <a href="http://localhost:{{spark_zeppelin_server_port}}">here</a></li>
+        <li>You should be able to connect to the Spark Master UI when clicking <a href="http://localhost:8080">here</a></li>
+        <li>You should be able to connect to Alluxio when clicking <a href="http://localhost:19999">here</a></li>
+    </ol>
+    <ol>
+        <li>You will need to kill the background processes in order to terminate these tunnels</li>
+        <li><code>ps aux | grep ssh| grep {{spark_zeppelin_server_port}}</code></li>
+        <li>should give you the pid for the tunnel in use for Zeppelin, use <code>kill `pid`</code> to disconnect the tunnel. The same can be done for the other tunnels.</li>
     </ol>
 </div>
-<p style="text-align: center;"><strong><a href="http://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}:{{spark_zeppelin_server_port}}">Zeppelin</strong></a></p>
-<p style="text-align: center;"><strong><a href="http://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}:8080">Spark Master</strong></a></p>
-<p style="text-align: center;"><strong><a href="http://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}:19999">Alluxio</a></strong></p>
 </html>
