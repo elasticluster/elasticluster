@@ -135,6 +135,14 @@ class Start(AbstractCommand):
                                  'N2 of GROUP2 etc...')
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Only start the cluster, do not configure it")
+        parser.add_argument(
+            '-p', '--max-concurrent-requests', default=0,
+            dest='max_concurrent_requests', type=int, metavar='NUM',
+            help=("Try to start at most NUM nodes at the same time."
+                  " Set to 1 to avoid making multiple requests"
+                  " to the cloud controller and start nodes sequentially."
+                  " The special value `0` (default) means: start up to"
+                  " 4 independent requests per CPU core."))
 
     def pre_run(self):
         self.params.nodes_override = {}
@@ -198,7 +206,7 @@ class Start(AbstractCommand):
             print("(This may take a while...)")
             min_nodes = dict((kind, cluster_nodes_conf[kind]['min_num'])
                              for kind in cluster_nodes_conf)
-            cluster.start(min_nodes=min_nodes, parallel=self.parallel)
+            cluster.start(min_nodes, self.params.max_concurrent_requests)
             if self.params.no_setup:
                 print("NOT configuring the cluster as requested.")
             else:
