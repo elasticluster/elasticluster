@@ -98,7 +98,6 @@ class BotoCloudProvider(AbstractCloudProvider):
         self._ec2_connection = None
         self._vpc_connection = None
         self._vpc_id = None
-        self._region = None
 
         self._instances = {}
         self._cached_instances = []
@@ -136,7 +135,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                     aws_secret_access_key=self._secret_key,
                     is_secure=self._secure,
                     host=self._ec2host, port=self._ec2port,
-                    path=self._ec2path, region=region)
+                    path=self._ec2path, region=self._region_name)
                 log.debug("VPC connection has been successful.")
 
                 for vpc in vpc_connection.get_all_vpcs():
