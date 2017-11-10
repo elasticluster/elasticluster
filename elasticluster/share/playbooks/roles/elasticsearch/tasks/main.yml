@@ -23,15 +23,15 @@
 
 - name: Download elasticsearch from url (Debian/Ubuntu)
   get_url: url={{ es_package_url }}-{{ es_version }}.deb dest=/tmp/elasticsearch-{{ es_version }}.deb validate_certs=no
-  when: is_debian_compatible
+  when: ansible_os_family == 'Debian'
 
 - name: Ensure elasticsearch is installed from downloaded package (Debian/Ubuntu)
   apt: deb=/tmp/elasticsearch-{{ es_version }}.deb
-  when: is_debian_compatible
+  when: ansible_os_family == 'Debian'
 
 - name: Install Elasticsearch from url (RedHat/CentOS)
   yum: name={{ es_package_url }}-{{ es_version }}.noarch.rpm state=present
-  when: is_rhel_compatible
+  when: ansible_os_family == 'RedHat'
 
 - name: Create Directories
   file: path={{ item }} state=directory owner={{ es_user }} group={{ es_group }}
