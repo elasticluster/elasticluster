@@ -85,6 +85,48 @@ def environment(**kv):
         os.environ[key] = changed[key]
 
 
+def get_num_processors():
+    """
+    Return number of online processor cores.
+    """
+    # try different strategies and use first one that succeeeds
+    try:
+        return os.cpu_count()  # Py3 only
+    except AttributeError:
+        pass
+    try:
+        import multiprocessing
+        return multiprocessing.cpu_count()
+    except ImportError:  # no multiprocessing?
+        pass
+    except NotImplementedError:
+        # multiprocessing cannot determine CPU count
+        pass
+    try:
+        from subprocess32 import check_output
+        ncpus = check_output('nproc')
+        return int(ncpus)
+    except CalledProcessError:  # no `/usr/bin/nproc`
+        pass
+    except (ValueError, TypeError):
+        # unexpected output from `nproc`
+        pass
+    except ImportError:  # no subprocess32?
+        pass
+    try:
+        from subprocess import check_output
+        ncpus = check_output('nproc')
+        return int(ncpus)
+    except CalledProcessError:  # no `/usr/bin/nproc`
+        pass
+    except (ValueError, TypeError):
+        # unexpected output from `nproc`
+        pass
+    except ImportError:  # no subprocess.check_call (Py 2.6)
+        pass
+    raise RuntimeError("Cannot determine number of processors")
+
+
 def has_nested_keys(mapping, k1, *more):
     """
     Return ``True`` if `mapping[k1][k2]...[kN]` is valid.

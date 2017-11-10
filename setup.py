@@ -189,6 +189,7 @@ setup(
         'netaddr',
         'paramiko',
         'schema',
+        'subprocess32',  ## stdlib subprocess but correct under multithreading
         # EC2 clouds
         'boto>=2.48',
         # GCE cloud

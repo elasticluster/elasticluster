@@ -49,7 +49,13 @@ from elasticluster.exceptions import (
     TimeoutError,
 )
 from elasticluster.repository import MemRepository
-from elasticluster.utils import Struct, parse_ip_address_and_port, sighandler, timeout
+from elasticluster.utils import (
+    Struct,
+    get_num_processors,
+    parse_ip_address_and_port,
+    sighandler,
+    timeout,
+)
 
 SSH_PORT = 22
 
@@ -362,7 +368,7 @@ class Cluster(Struct):
             except ValueError:
                 raise NodeNotFound("Node %s not found in cluster" % node.name)
 
-    def start(self, min_nodes=None, parallel=True):
+    def start(self, min_nodes=None, max_concurrent_requests=0):
         """
         Starts up all the instances in the cloud.
 
@@ -383,15 +389,26 @@ class Cluster(Struct):
         :param min_nodes: minimum number of nodes to start in case the quota
                           is reached before all instances are up
         :type min_nodes: dict [node_kind] = number
-        :param bool parallel: Whether issue multiple requests to start
-          VMs (``parallel=True``, default) or not.
+        :param int max_concurrent_requests:
+          Issue at most this number of requests to start
+          VMs; if 1 or less, start nodes one at a time (sequentially).
+          The special value ``0`` means run 4 threads for each available
+          processor.
         """
 
         nodes = self.get_all_nodes()
 
         log.info("Starting cluster nodes ...")
-        if parallel:
-            nodes = self._start_nodes_parallel(nodes, self.thread_pool_max_size)
+        if max_concurrent_requests == 0:
+            try:
+                max_concurrent_requests = 4 * get_num_processors()
+            except RuntimeError:
+                log.warning(
+                    "Cannot determine number of processors!"
+                    " will start nodes sequentially...")
+                max_concurrent_requests = 1
+        if max_concurrent_requests > 1:
+            nodes = self._start_nodes_parallel(nodes, max_concurrent_requests)
         else:
             nodes = self._start_nodes_sequentially(nodes)
 
@@ -426,6 +443,7 @@ class Cluster(Struct):
 
         Return set of nodes that were actually started.
         """
+        log.debug("Note: will *not* issue parallel requests to cloud API.")
         started_nodes = set()
         for node in copy(nodes):
             started = self._start_node(node)
@@ -444,7 +462,7 @@ class Cluster(Struct):
         # Create one thread for each node to start
         thread_pool_size = min(len(nodes), max_thread_pool_size)
         thread_pool = Pool(processes=thread_pool_size)
-        log.debug("Created pool of %d threads", thread_pool_size)
+        log.debug("Note: starting %d nodes concurrently.", thread_pool_size)
 
         # pressing Ctrl+C flips this flag, which in turn stops the main loop
         # down below

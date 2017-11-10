@@ -56,7 +56,8 @@ from elasticluster.migration_tools import MigrationCommand
 
 __author__ = ', '.join([
     'Nicolas Baer <nicolas.baer@uzh.ch>',
-    'Antonio Messina <antonio.s.messina@gmail.com>'
+    'Antonio Messina <antonio.s.messina@gmail.com>',
+    'Riccardo Murri <riccardo.murri@gmail.com>',
 ])
 
 
@@ -137,12 +138,9 @@ class ElastiCluster(cli.app.CommandLineApp):
         coloredlogs.install(logger=log, level=loglevel)
         log.setLevel(loglevel)
 
-        # In debug mode, avoid parallel requests
-        self.parallel = True
+        # ensure we print tracebacks in DEBUG mode
         if self.params.verbose > 3:
             log.raiseExceptions = True
-            self.parallel = False
-            log.warning("DEBUG mode: will not issue parallel requests to cloud API.")
 
         if not os.path.isdir(self.params.storage):
             # We do not create *all* the parents, but we do create the
