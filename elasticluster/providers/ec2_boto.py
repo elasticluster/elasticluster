@@ -140,16 +140,19 @@ class BotoCloudProvider(AbstractCloudProvider):
                 log.debug("VPC connection has been successful.")
 
                 for vpc in vpc_connection.get_all_vpcs():
-                    log.debug("Checking whether %s matches %s/%s" %
-                        (self._vpc, vpc.tags['Name'], vpc.id))
-                    if self._vpc in [vpc.tags['Name'], vpc.id]:
+                    matches = [vpc.id]
+                    if 'Name' in vpc.tags:
+                        matches.append(vpc.tags['Name'])
+                    if self._vpc in matches:
                         self._vpc_id = vpc.id
                         if self._vpc != self._vpc_id:
-                            log.debug("VPC %s matches %s" %
-                                (self._vpc, self._vpc_id))
+                            # then `self._vpc` is the VPC's name
+                            log.debug(
+                                "VPC `%s` has ID `%s`",
+                                self._vpc, self._vpc_id)
                         break
                 else:
-                    raise VpcError('VPC %s does not exist.' % self._vpc)
+                    raise VpcError('Cannot find VPC `{0}`.'.format(self._vpc))
 
             # list images to see if the connection works
             # images = self._ec2_connection.get_all_images()
