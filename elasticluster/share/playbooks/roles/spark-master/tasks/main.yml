@@ -106,6 +106,20 @@
     dest='/etc/systemd/system/zeppelin.service'
   when: zeppelin_symlink.stat.islnk is not defined
 
+- name: Find Zeppelin Apache Commons Lang3 jar
+  find:
+    paths: /usr/lib/zeppelin/lib/
+    patterns: 'commons-lang3*.jar'
+  register: zeppelin_apache_commons_lang3
+
+- name: Add Apache Commons Lang3 in interpreter path
+  copy:
+    src: '/usr/lib/zeppelin/lib/{{ item.path | basename }}'
+    dest: '/usr/lib/zeppelin/lib/interpreter/{{ item.path | basename }}'
+    remote_src: yes
+  with_items:
+    - '{{zeppelin_apache_commons_lang3.files}}'
+
 - name: enable and start zeppelin service and ensure it is not masked
   systemd:
     name: zeppelin
