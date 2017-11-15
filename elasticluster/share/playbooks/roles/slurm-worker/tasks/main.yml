@@ -4,6 +4,18 @@
 - name: Load distribution-specific parameters
   include: 'init-{{ansible_os_family}}.yml'
 
+- name: Deploy SLURM configuration files
+  tags:
+    - slurm
+  template:
+    src: '{{item}}.j2'
+    dest: '/etc/slurm/{{item}}'
+    owner: root
+    group: root
+    mode: 0444
+  with_items:
+    - gres.conf
+
 - name: Deploy SLURM cgroup configuration
   tags:
     - slurm

@@ -17,19 +17,19 @@
   group:
     name=slurm
     system=yes
-  tags: 
+  tags:
     - slurm
 
 
-- name: Create `slurm` system user 
+- name: Create `slurm` system user
   user:
     name=slurm
     group=slurm
     system=yes
-  tags: 
+  tags:
     - slurm
 
-  
+
 - name: Create work directory {{item}}
   file:
     path='{{item}}'
@@ -45,7 +45,7 @@
     - /var/log/slurm
     - /var/run/slurm
     - /var/spool/slurm
-  tags: 
+  tags:
     - slurm
 
 
@@ -65,13 +65,13 @@
     - { from: '/var/log/slurm', to: '/var/log/slurm-llnl' }
     - { from: '/var/run/slurm', to: '/var/run/slurm-llnl' }
   when: is_debian_compatible
-  tags: 
+  tags:
     - slurm
     - debian
 
 
 - name: Enable Copr SLURM repo by verdurin
-  tags: 
+  tags:
     - slurm
   template:
     src=copr-slurm.repo.j2
@@ -83,15 +83,17 @@
 - include: munge.yml
 
 
-- name: Deploy SLURM configuration file
-  tags: 
+- name: Deploy SLURM configuration files
+  tags:
     - slurm
   template:
-    src=slurm.conf.j2
-    dest=/etc/slurm/slurm.conf
-    owner=root
-    group=root
-    mode=0444
+    src: '{{item}}.j2'
+    dest: '/etc/slurm/{{item}}'
+    owner: root
+    group: root
+    mode: 0444
+  with_items:
+    - slurm.conf
 
 
 - name: Install support packages (Debian/Ubuntu)
