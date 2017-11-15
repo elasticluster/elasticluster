@@ -5,10 +5,22 @@
 
 # **Note:** This file needs to have identical contents on all nodes of
 # the cluster.  See the `slurm.conf` man page for more information.
-# 
+#
 
 # Unique name for identifying this cluster entries in the DB
 ClusterName=elasticluster
+
+
+## Cluster nodes
+#
+{% for host in groups.slurm_worker %}
+NodeName={{host}} RealMemory={{hostvars[host].ansible_memtotal_mb|int - 384}} CPUs={{hostvars[host].ansible_processor_vcpus}} Sockets={{hostvars[host]ansible_processor_vcpus}} CoresPerSocket=1 ThreadsPerCore=1
+{% endfor %}
+
+
+## Cluster partitions
+#
+PartitionName=main Nodes={% for host in groups.slurm_worker %}{{host}},{%endfor%} MaxTime=INFINITE State=UP Default=YES
 
 
 ## scheduler settings
@@ -112,17 +124,17 @@ VSizeFactor=101
 #
 BatchStartTimeout=60
 CompleteWait=35
-#EpilogMsgTime=2000 
-#HealthCheckInterval=0 
-#HealthCheckProgram= 
+#EpilogMsgTime=2000
+#HealthCheckInterval=0
+#HealthCheckProgram=
 InactiveLimit=0
 KillWait=30
-#MessageTimeout=10 
-#ResvOverRun=0 
+#MessageTimeout=10
+#ResvOverRun=0
 MinJobAge=300
-#OverTimeLimit=0 
-#UnkillableStepTimeout=60 
-#VSizeFactor=0 
+#OverTimeLimit=0
+#UnkillableStepTimeout=60
+#VSizeFactor=0
 Waittime=0
 
 
@@ -158,15 +170,3 @@ AuthType=auth/munge
 CryptoType=crypto/munge
 
 DisableRootJobs=NO
-
-
-## Cluster nodes
-# 
-{% for host in groups.slurm_worker %}
-NodeName={{host}} RealMemory={{hostvars[host]['ansible_memtotal_mb']|int - 384}} CPUs={{hostvars[host]['ansible_processor_vcpus']}} Sockets={{hostvars[host]['ansible_processor_vcpus']}} CoresPerSocket=1 ThreadsPerCore=1
-{% endfor %}
-
-
-## Cluster partitions
-#
-PartitionName=main Nodes={% for host in groups.slurm_worker %}{{host}},{%endfor%} MaxTime=INFINITE State=UP Default=YES
