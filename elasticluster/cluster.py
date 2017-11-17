@@ -511,8 +511,7 @@ class Cluster(Struct):
         # in a starting state, it will start another node here, since the
         # `is_alive` method will only check for running nodes (see issue #13)
         if node.is_alive():
-            log.info("Not starting node `%s` which is "
-                     "already up&running.", node.name)
+            log.info("Not starting node `%s` which is already up.", node.name)
             return True
         else:
             try:
@@ -1198,7 +1197,7 @@ class Node(Struct):
             log.debug("Ignoring error while looking for vm id %s: %s",
                       self.instance_id, str(ex))
         if running:
-            log.debug("node `%s` (instance id %s) is up and running",
+            log.debug("node `%s` (instance id %s) is up.",
                       self.name, self.instance_id)
             self.update_ips()
         else:
