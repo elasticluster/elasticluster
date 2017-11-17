@@ -87,6 +87,8 @@ if python_version == (2, 6):
         'argparse',
         # - OpenStack's "keystoneclient" requires `importlib`
         'importlib',
+        # Paramiko ceased support for Python 2.6 in version 2.4.0
+        'paramiko<2.4',
         # - support for Python 2.6 was removed from `novaclient` in commit
         #   81f8fa655ccecd409fe6dcda0d3763592c053e57 which is contained in
         #   releases 3.0.0 and above; however, we also need to pin down
@@ -109,6 +111,8 @@ if python_version == (2, 6):
     ]
 elif python_version == (2, 7):
     version_dependent_requires = [
+        # Paramiko ceased support for Python 2.6 so we need it here
+        'paramiko',
         # OpenStack
         'python-keystoneclient',
         'python-glanceclient',
@@ -187,7 +191,6 @@ setup(
         'click>=4.0',  ## click.prompt() added in 4.0
         'coloredlogs',
         'netaddr',
-        'paramiko',
         'schema',
         'subprocess32',  ## stdlib subprocess but correct under multithreading
         # EC2 clouds
