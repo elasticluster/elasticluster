@@ -1,0 +1,6 @@
+---
+
+- name: Set SLURM common playbook params (RHEL 7.x compatible)
+  set_fact:
+    slurm_pid_dir: /var/run
+  when: 'is_rhel_compatible'

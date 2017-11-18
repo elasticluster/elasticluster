@@ -24,10 +24,10 @@
     - role: ntpd
       ntp_server: '{{groups.ntp_master|default([])}}'
     - role: pdsh
-  tasks:
+    - role: cuda
+  tasks:  
     - name: Gather information about GPUs
       action: gpus
-
 # Run all other playbooks one by one, so they get a chance of doing
 # their setup depending on configured host groups
 
