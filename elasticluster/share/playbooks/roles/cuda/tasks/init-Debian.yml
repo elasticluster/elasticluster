@@ -1,0 +1,7 @@
+---
+
+- name: Set SLURM common playbook params (Debian/Ubuntu)
+  set_fact:
+    slurm_pid_dir: /var/run/slurm-llnl
+  when:
+    '{{is_debian_compatible}}'
