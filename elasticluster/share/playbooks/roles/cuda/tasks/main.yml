@@ -1,0 +1,59 @@
+---
+#
+# Set up the cuda 
+#
+- name: Check prior installation of cuda-8-0
+  command: dpkg-query -W cuda-8-0
+  register: cuda_repo_ubuntu_install_check
+  ignore_errors: yes
+  changed_when: "{{cuda_repo_ubuntu_install_check | failed}}"
+- name: Download deb package for Ubuntu 16.04
+  get_url:
+    url: http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/cuda-repo-ubuntu1604_8.0.61-1_amd64.deb
+    dest: /tmp/cuda_install.deb
+    checksum: md5:1f4dffe1f79061827c807e0266568731
+  when: "{{cuda_repo_ubuntu_install_check | failed}}"
+- name: Install downloaded deb package for Ubuntu 16.04
+  apt:
+    deb: /tmp/cuda_install.deb
+  ignore_errors: yes
+  when: "{{cuda_repo_ubuntu_install_check | failed}}" 
+- name: Update and upgrade apt packages
+  become: true
+  apt:
+     upgrade: yes
+     update_cache: yes  
+- name: Install cuda-8-0
+  apt:
+    name={{item}}
+    state=latest
+  with_items:
+    - cuda-8-0
+  when: "{{cuda_repo_ubuntu_install_check | failed}}" 
+  become: yes
+#- name: CUDA | check /dev/nvidia* exists
+# fill later. if it does, no need to restart
+# if it doesnt something must have gone wrong
+
+- name: Add /usr/local/cuda-8.0/bin to PATH
+  vars:
+    cuda_path: /usr/local/cuda-8.0
+  lineinfile:
+    dest: /etc/environment
+    state: present
+    backrefs: yes
+    regexp: 'PATH=(["]*)((?!.*?{{cuda_path}}/bin).*?)(["]*)$'
+    line: 'PATH=\1"{{cuda_path}}/bin":\2\3'
+- name: restart server for NVIDIA driver
+  shell: sleep 2 && /sbin/shutdown -r now "Rebooting for CUDA driver"
+  async: 1
+  poll: 0
+  become: yes
+  become_method: sudo
+  ignore_errors: true
+  when: "{{cuda_repo_ubuntu_install_check | failed}}" 
+- set_fact: wait_host="{{ ansible_host }}"
+- name: waiting for server to come back after reboot
+  local_action: wait_for host={{wait_host}} port=22 state=started delay=60 timeout=300 search_regex=OpenSSH
+  become: false
+  when: "{{cuda_repo_ubuntu_install_check | failed}}"
