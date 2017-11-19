@@ -8,7 +8,9 @@
 if ( ! $?__Lmod_Init_Default_Modules || ! $?LD_LIBRARY_PATH ) then
     setenv __Lmod_Init_Default_Modoules 1
     setenv LMOD_SYSTEM_DEFAULT_MODULES "{{ LMOD_DEFAULT_MODULES|join(':') }}"
-    module --initial_load --no_redirect restore
+    if ( "$LMOD_SYSTEM_DEFAULT_MODULES" == "" ) then
+        module --initial_load --no_redirect restore
+    endif
 else
     module refresh
 endif
