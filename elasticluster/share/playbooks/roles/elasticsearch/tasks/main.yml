@@ -43,7 +43,7 @@
   service: name={{instance_init_script | basename}} state=started enabled=yes
   when: es_start_service
 
-- name: Wait for elasticsearch to startup
+- name: Wait for elasticsearch to start
   wait_for: host={{es_api_host}} port={{es_api_port}} delay=5 connect_timeout=1
   when: es_restarted is defined and es_restarted.changed and es_start_service
 
