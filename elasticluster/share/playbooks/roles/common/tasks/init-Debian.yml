@@ -51,7 +51,7 @@
     state: present
   with_items:
     - dbus
-  when: 'is_debian_8'
+  when: 'is_debian_8_or_later'
 
 
 - name: Provide workaround for https://github.com/ansible/ansible-modules-core/issues/4472
