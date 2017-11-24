@@ -9,7 +9,7 @@
       es_config:
         cluster.name: "elasticluster"
         network.host: "{{ inventory_hostname }}"
-        discovery.zen.ping.unicast.hosts: "{{ groups.elasticsearch_master[0] }}:9300"
+        discovery.zen.ping.unicast.hosts: "{{ (['localhost'] + groups.elasticsearch_master + groups.elasticsearch_data|default([]))|join(',') }}"
         http.port: 9200
         transport.tcp.port: 9300
         node.data: false
@@ -31,7 +31,7 @@
       es_config:
         cluster.name: "elasticluster"
         network.host: "{{ inventory_hostname }}"
-        discovery.zen.ping.unicast.hosts: "{{ groups.elasticsearch_master[0] }}:9300"
+        discovery.zen.ping.unicast.hosts: "{{ (['localhost'] + groups.elasticsearch_master + groups.elasticsearch_data|default([]))|join(',') }}"
         http.port: 9200
         transport.tcp.port: 9300
         node.data: true
