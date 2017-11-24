@@ -84,6 +84,9 @@
   notify:
     - reread supervisord configuration
 
+- name: Ensure supervisord re-reads config
+  meta: flush_handlers
+
 - name: Ensure supervisord is running and starts again at boot
   service:
     name: supervisor
