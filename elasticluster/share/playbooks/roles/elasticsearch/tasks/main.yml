@@ -44,7 +44,11 @@
   when: es_start_service
 
 - name: Wait for elasticsearch to start
-  wait_for: host={{es_api_host}} port={{es_api_port}} delay=5 connect_timeout=1
+  wait_for:
+    port: '{{es_api_port}}'
+    host: '{{ansible_default_ipv4.address}}'
+    delay: 5
+    timeout: 60
   when: es_restarted is defined and es_restarted.changed and es_start_service
 
 - set_fact: manage_native_realm=false
