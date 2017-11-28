@@ -30,9 +30,6 @@ GLUSTERFS_VOLUMES:
     stripes: ''
     transport: 'tcp'
 
-    
-# which version of GlusterFS to install
-glusterfs_version: '3.8'
 
 # GlusterFS setup commands should be issued on one single server in
 # the whole cluster; name that host here.  (I'm not sure there is a

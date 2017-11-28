@@ -13,7 +13,7 @@
 - block:
   - name: Download GlusterFS package signing key
     get_url:
-      url='http://download.gluster.org/pub/gluster/glusterfs/{{glusterfs_version}}/LATEST/rsa.pub'
+      url='http://download.gluster.org/pub/gluster/glusterfs/{{glusterfs_version}}/rsa.pub'
       dest=/root/glusterfs.pub
     become: yes
     become_user: root
