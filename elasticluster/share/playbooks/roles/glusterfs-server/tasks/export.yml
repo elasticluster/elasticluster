@@ -32,7 +32,7 @@
 - name: Check consistency of volume options (maximum redundancy)
   fail:
     msg: "Maximum value for redundancy of a volume with {{groups.glusterfs_server|length}} bricks is {{groups.glusterfs_server|length / 2}}"
-  when: '_gluster_option_dispersed|length > 0 and 2*(item.redundancy|int) > groups.glusterfs_server|length'
+  when: '_gluster_option_dispersed|length > 0 and 2*(item.redundancy|int) >= groups.glusterfs_server|length'
 
 - name: Create volume {{item.name}}
   command: |
