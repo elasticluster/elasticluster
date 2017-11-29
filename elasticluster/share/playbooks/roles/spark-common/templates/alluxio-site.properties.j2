@@ -36,6 +36,10 @@ alluxio.integration.mesos.jdk.url=LOCAL
 # disable security
 alluxio.security.authorization.permission.enabled=false
 
+{% if spark_alluxio_small_files %}
+alluxio.user.block.size.bytes.default=32MB
+{% endif %}
+
 # connection configuration
 alluxio.underfs.address={{spark_alluxio_storage_protocol}}://{{spark_alluxio_storage_root}}
 fs.swift.user={{spark_alluxio_storage_user}}

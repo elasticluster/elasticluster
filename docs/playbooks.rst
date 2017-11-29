@@ -771,8 +771,13 @@ settings are pushed to the Alluxio config, which will then contain your plain
 text secrets. So it is recommended to only use such a system for yourself.
 
 Use `global_var_spark_alluxio_storage_root`=<container name> to connect
-to a specific container. `global_var_spark_alluxio_storage_protocol` can
-be used to switch to a different protocol than 'swift'.
+to a specific container. `global_var_spark_alluxio_storage_user` and
+`global_var_spark_alluxio_storage_password` can be used for supplying
+the credentials. `spark_alluxio_storage_auth_url` and
+`global_var_spark_alluxio_storage_tenant` can be used to specify the endpoint.
+`global_var_spark_alluxio_storage_protocol` can be used to switch to a
+different protocol than 'swift'. The connection details default to running
+on an OpenStack environment.
 
 Use `global_var_spark_anaconda_aux_packages`=<package1, package2> to install
 auxiliary python packages on the cluster.

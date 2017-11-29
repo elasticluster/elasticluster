@@ -16,13 +16,13 @@
 
 - name: Fail if we do not have sufficient memory for Master
   fail:
-    msg: "Memory size for master insufficient, minimally {{minimum_master_memory}}MB required"
-  when: inventory_hostname in groups.spark_master and (ansible_memtotal_mb < minimum_master_memory)
+    msg: "Memory size for master insufficient, required: {{minimum_master_memory}}, available: ({{ansible_memtotal_mb}}"
+  when: inventory_hostname in groups.spark_master and spark_master_memory < (minimum_master_memory|int)
 
 - name: Fail if we do not have sufficient memory for Slaves
   fail:
-    msg: "Memory size for slaves insufficient, minimally {{minimum_slave_memory}}MB required"
-  when: inventory_hostname in groups.spark_slave and (ansible_memtotal_mb < minimum_slave_memory)
+    msg: "Memory size for slaves insufficient, required: {{minimum_slave_memory}}, available: ({{ansible_memtotal_mb}}"
+  when: inventory_hostname in groups.spark_slave and spark_worker_memory < (minimum_slave_memory|int)
 
 - stat:
     path: /usr/lib/spark
@@ -86,6 +86,15 @@
     state=directory
     owner=alluxio
     group=spark
+  when: alluxio_symlink.stat.islnk is not defined
+
+- name: Mount RAMDISK on RAM directory
+  mount:
+    path=/mnt/ramdisk
+    src=tmpfs
+    fstype=tmpfs
+    opts='size={{spark_alluxio_memory}}M'
+    state=present
   when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio underFS directory
@@ -194,7 +203,7 @@
   pip:
     name='{{item}}'
     state=present
-    executable='{{spark_jupyter_python|dirname}}/pip'
+    executable='{{spark_python|dirname}}/pip'
   with_items: '{{spark_anaconda_aux_packages}}'
   register: pip_install
   ignore_errors: yes
@@ -203,7 +212,7 @@
   conda:
     name='{{item}}'
     state=present
-    executable='{{spark_jupyter_python|dirname}}/conda'
+    executable='{{spark_python|dirname}}/conda'
   with_items: '{{spark_anaconda_aux_packages}}'
   register: conda_install
   ignore_errors: yes

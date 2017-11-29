@@ -1,13 +1,13 @@
 # Default system properties included when running spark-submit or interactive.
 
-spark.driver.memory              {{ ((ansible_memtotal_mb - spark_alluxio_memory - spark_alluxio_jvm_memory - spark_jvm_memory - spark_zeppelin_jvm_memory - spark_python_worker_memory) * system_reservation_factor)|int }}m
-spark.driver.maxResultSize       {{ ((ansible_memtotal_mb - spark_alluxio_memory - spark_alluxio_jvm_memory - spark_jvm_memory - spark_zeppelin_jvm_memory - spark_python_worker_memory) * system_reservation_factor)|int }}m
+spark.driver.memory              {{spark_driver_memory}}m
+spark.driver.maxResultSize       {{spark_driver_memory|int * 0.6}}m
 spark.driver.extraJavaOptions    "-Xms{{spark_jvm_memory}}M -Xmx{{spark_jvm_memory}}M"
 
-spark.executor.memory            {{ ((ansible_memtotal_mb - spark_alluxio_memory - spark_alluxio_jvm_memory - spark_jvm_memory - spark_python_worker_memory) * system_reservation_factor)|int }}m
+spark.executor.memory            {{spark_executor_memory}}m
 spark.executor.extraJavaOptions  "-Xms{{spark_jvm_memory}}M -Xmx{{spark_jvm_memory}}M"
 
-spark.python.worker.memory       {{ spark_python_worker_memory }}m
+spark.python.worker.memory       {{spark_python_worker_memory}}m
 
 # our alluxio jars
 spark.driver.extraClassPath      /usr/lib/alluxio/core/client/runtime/target/alluxio-core-client-runtime-{{spark_alluxio_version}}-jar-with-dependencies.jar
@@ -19,3 +19,6 @@ spark.scheduler.maxRegisteredResourcesWaitingTime 5s
 spark.eventLog.enabled           true
 spark.eventLog.dir               {{spark_history_path}}
 spark.history.fs.logDirectory    {{spark_history_path}}
+
+# Increase the maximum rpc message size from 128 to 512
+spark.rpc.message.maxSize        512
