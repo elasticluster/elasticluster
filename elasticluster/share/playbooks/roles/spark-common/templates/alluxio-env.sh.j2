@@ -49,6 +49,7 @@ ALLUXIO_RAM_FOLDER=${ALLUXIO_RAM_FOLDER:-"/mnt/ramdisk"}
 # Config properties set for Alluxio master, worker and shell. (Default: "")
 # E.g. "-Dalluxio.master.port=39999"
 # ALLUXIO_JAVA_OPTS -Dalluxio.master.port=39999
+ALLUXIO_JAVA_OPTS -Xms{{spark_alluxio_jvm_memory}}M -Xmx{{spark_alluxio_jvm_memory}}M
 
 # Config properties set for Alluxio master daemon. (Default: "")
 # E.g. "-Dalluxio.master.port=39999"

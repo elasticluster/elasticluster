@@ -1,29 +1,21 @@
-# Default system properties included when running spark-submit.
-# This is useful for setting default environmental settings.
+# Default system properties included when running spark-submit or interactive.
 
-# this is local to the master node, so use its memory and vcpu values for computing
-spark.driver.memory              {{ ((ansible_memory_mb.nocache.free * 0.8) / ansible_processor_vcpus)|int }}m
+spark.driver.memory              {{ ((ansible_memtotal_mb - spark_alluxio_memory - spark_alluxio_jvm_memory - spark_jvm_memory - spark_zeppelin_jvm_memory - spark_python_worker_memory) * system_reservation_factor)|int }}m
+spark.driver.maxResultSize       {{ ((ansible_memtotal_mb - spark_alluxio_memory - spark_alluxio_jvm_memory - spark_jvm_memory - spark_zeppelin_jvm_memory - spark_python_worker_memory) * system_reservation_factor)|int }}m
+spark.driver.extraJavaOptions    "-Xms{{spark_jvm_memory}}M -Xmx{{spark_jvm_memory}}M"
 
-# This value depends more on the intended usage of the cluster than on its
-# features; still, ElastiCluster has to provide a default. Ideally one woulda use
-# the *minimum* RAM-per-core ratio (as that would give the largest compatibility)
-# but Ansible and Jinja currently lack filters to allow us to compute the RAM/core
-# quotient across all nodes. So use the (max memory) / (average nr. of cores) as a
-# "reasonable" approximation...
-spark.executor.memory            {{ ((ansible_memory_mb.nocache.free * 0.8) / ansible_processor_vcpus)|int }}m
+spark.executor.memory            {{ ((ansible_memtotal_mb - spark_alluxio_memory - spark_alluxio_jvm_memory - spark_jvm_memory - spark_python_worker_memory) * system_reservation_factor)|int }}m
+spark.executor.extraJavaOptions  "-Xms{{spark_jvm_memory}}M -Xmx{{spark_jvm_memory}}M"
 
-# Limit of total size of serialized results of all partitions for each Spark action (e.g. collect)
-spark.driver.maxResultSize       {{(ansible_memory_mb.nocache.free * 0.8)|int}}m
+spark.python.worker.memory       {{ spark_python_worker_memory }}m
 
-# Amount of memory to use per python worker process during
-# aggregation, in the same format as JVM memory strings (e.g. 512m, 2g).
-# If the memory used during aggregation goes above this amount, it will
-# spill the data into disks. 
-#
-spark.python.worker.memory       {{((ansible_memory_mb.nocache.free * 0.875) * 0.5)|int}}m
-
+# our alluxio jars
 spark.driver.extraClassPath      /usr/lib/alluxio/core/client/runtime/target/alluxio-core-client-runtime-{{spark_alluxio_version}}-jar-with-dependencies.jar
 spark.executor.extraClassPath    /usr/lib/alluxio/core/client/runtime/target/alluxio-core-client-runtime-{{spark_alluxio_version}}-jar-with-dependencies.jar
 
 # Maximum amount of time to wait for resources to register before scheduling begins
 spark.scheduler.maxRegisteredResourcesWaitingTime 5s
+
+spark.eventLog.enabled           true
+spark.eventLog.dir               {{spark_history_path}}
+spark.history.fs.logDirectory    {{spark_history_path}}

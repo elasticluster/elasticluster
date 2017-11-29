@@ -9,15 +9,19 @@
         <li>Open a terminal and run the following command (when on Linux or Mac, for Windows google for the PuTTy equivalent):</li>
         <li><code>ssh -f ubuntu@{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}} -L {{spark_zeppelin_server_port}}:localhost:{{spark_zeppelin_server_port}} -N</code></li>
         <li><code>ssh -f ubuntu@{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}} -L 8080:localhost:8080 -N</code></li>
+        <li><code>ssh -f ubuntu@{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}} -L 4040:localhost:4040 -N</code></li>
         <li><code>ssh -f ubuntu@{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}} -L 19999:localhost:19999 -N</code></li>
+        <li><code>ssh -f ubuntu@{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}} -L 18080:localhost:18080 -N</code></li>
         <li>You should be able to connect to Zeppelin when clicking <a href="http://localhost:{{spark_zeppelin_server_port}}">here</a></li>
         <li>You should be able to connect to the Spark Master UI when clicking <a href="http://localhost:8080">here</a></li>
+        <li>You should be able to connect to the Spark Application UI when clicking <a href="http://localhost:4040">here</a></li>
         <li>You should be able to connect to Alluxio when clicking <a href="http://localhost:19999">here</a></li>
+        <li>You should be able to connect to the Spark History Server when clicking <a href="http://localhost:18080">here</a></li>
     </ol>
     <ol>
         <li>You will need to kill the background processes in order to terminate these tunnels</li>
-        <li><code>ps aux | grep ssh| grep {{spark_zeppelin_server_port}}</code></li>
-        <li>should give you the pid for the tunnel in use for Zeppelin, use <code>kill `pid`</code> to disconnect the tunnel. The same can be done for the other tunnels.</li>
+        <li><code>ps aux | grep ssh | grep {{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}</code></li>
+        <li>should give you the pids for the tunnels in use for our cluster, use <code>kill `pid`</code> to disconnect the tunnels.</li>
     </ol>
 </div>
 </html>

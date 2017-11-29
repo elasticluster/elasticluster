@@ -29,6 +29,26 @@
     masked: no
     state: restarted
 
+- name: Create Spark History log directory
+  file:
+    path='{{spark_history_path}}'
+    state=directory
+    owner=spark
+    group=spark
+    mode=0777
+
+- name: Spark History systemd service config
+  template:
+    src='spark-history.service.j2'
+    dest='/etc/systemd/system/spark-history.service'
+
+- name: enable and start spark history service and ensure it is not masked
+  systemd:
+    name: spark-history
+    enabled: yes
+    masked: no
+    state: restarted
+
 - name: Spark Master systemd service config
   template:
     src='spark-master.service.j2'
@@ -45,16 +65,10 @@
     path: /usr/lib/zeppelin
   register: zeppelin_symlink
 
-- name: Create Apache Zeppelin group
-  group:
-    name: zeppelin
-    state: present
-  when: zeppelin_symlink.stat.islnk is not defined
-
 - name: Create Apache Zeppelin user
   user:
     name: zeppelin
-    group: zeppelin
+    group: spark
     system: True
     createhome: False
   when: zeppelin_symlink.stat.islnk is not defined
@@ -70,7 +84,7 @@
     src: '/tmp/{{spark_zeppelin_package}}'
     dest: /usr/lib/
     owner: zeppelin
-    group: zeppelin
+    group: spark
     remote_src: True
   when: zeppelin_symlink.stat.islnk is not defined
 
@@ -83,7 +97,7 @@
     src='{{item}}.j2'
     dest='/usr/lib/zeppelin/conf/{{item}}'
     owner=zeppelin
-    group=zeppelin
+    group=spark
   with_items:
     - zeppelin-site.xml
     - zeppelin-env.sh
@@ -93,7 +107,7 @@
     path='/var/log/zeppelin'
     state=directory
     owner=zeppelin
-    group=zeppelin
+    group=spark
   when: zeppelin_symlink.stat.islnk is not defined
 
 - name: Create Zeppelin Configuration symlink

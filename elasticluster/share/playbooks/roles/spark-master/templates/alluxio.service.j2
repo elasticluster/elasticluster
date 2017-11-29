@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=forking
 User=alluxio
-Group=alluxio
+Group=spark
 ExecStart=/usr/lib/alluxio/bin/alluxio-start.sh master
 ExecStop=/usr/lib/alluxio/bin/alluxio-stop.sh master
 Restart=on-failure

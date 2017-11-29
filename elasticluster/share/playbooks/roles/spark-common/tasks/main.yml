@@ -10,20 +10,38 @@
     msg: "Only single master supported when running Spark, for HA use Hadoop or Mesos"
   when: not(groups.spark_master|length == 1)
 
+- set_fact:
+    minimum_master_memory: "{{((spark_alluxio_memory + spark_alluxio_jvm_memory + spark_jvm_memory + spark_zeppelin_jvm_memory + spark_python_worker_memory) * 2)|int}}"
+    minimum_slave_memory: "{{((spark_alluxio_memory + spark_alluxio_jvm_memory + spark_jvm_memory + spark_python_worker_memory) * 2)|int}}"
+
+- name: Fail if we do not have sufficient memory for Master
+  fail:
+    msg: "Memory size for master insufficient, minimally {{minimum_master_memory}}MB required"
+  when: inventory_hostname in groups.spark_master and (ansible_memtotal_mb < minimum_master_memory)
+
+- name: Fail if we do not have sufficient memory for Slaves
+  fail:
+    msg: "Memory size for slaves insufficient, minimally {{minimum_slave_memory}}MB required"
+  when: inventory_hostname in groups.spark_slave and (ansible_memtotal_mb < minimum_slave_memory)
+
+- stat:
+    path: /usr/lib/spark
+  register: spark_symlink
+
+- name: Create Apache Spark group
+  group:
+    name: spark
+    state: present
+  when: spark_symlink.stat.islnk is not defined
+
 - stat:
     path: /usr/lib/alluxio
   register: alluxio_symlink
 
-- name: Create Apache Alluxio group
-  group:
-    name: alluxio
-    state: present
-  when: alluxio_symlink.stat.islnk is not defined
-
 - name: Create Apache Alluxio user
   user:
     name: alluxio
-    group: alluxio
+    group: spark
     system: True
   when: alluxio_symlink.stat.islnk is not defined
 
@@ -46,7 +64,7 @@
     src: '/tmp/{{spark_alluxio_package}}'
     dest: /usr/lib/
     owner: alluxio
-    group: alluxio
+    group: spark
     remote_src: True
   when: alluxio_symlink.stat.islnk is not defined
 
@@ -59,7 +77,7 @@
     path='/var/log/alluxio'
     state=directory
     owner=alluxio
-    group=alluxio
+    group=spark
   when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio RAM directory
@@ -67,7 +85,7 @@
     path='/mnt/ramdisk'
     state=directory
     owner=alluxio
-    group=alluxio
+    group=spark
   when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio underFS directory
@@ -75,7 +93,7 @@
     path='/usr/lib/alluxio/underFSStorage'
     state=directory
     owner=alluxio
-    group=alluxio
+    group=spark
   when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio Configuration symlink
@@ -87,7 +105,7 @@
     src='{{item}}.j2'
     dest='/usr/lib/alluxio/conf/{{item}}'
     owner=alluxio
-    group=alluxio
+    group=spark
   with_items:
     - alluxio-site.properties
     - alluxio-env.sh
@@ -97,16 +115,6 @@
 - name: Set ALLUXIO_HOME in environment
   lineinfile: dest=/etc/environment line='export ALLUXIO_HOME=/usr/lib/alluxio' insertafter='EOF' state=present
   when: alluxio_symlink.stat.islnk is not defined
-
-- stat:
-    path: /usr/lib/spark
-  register: spark_symlink
-
-- name: Create Apache Spark group
-  group:
-    name: spark
-    state: present
-  when: spark_symlink.stat.islnk is not defined
 
 - name: Create Apache Spark user
   user:
