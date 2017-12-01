@@ -1,0 +1,14 @@
+#! /bin/sh
+
+username="$1"
+if [ -z "$username" ]; then
+    echo "$0: missing mandatory 'username' argument" 1>&2
+    exit 1
+fi
+
+# Automatically remove user from `/etc/samba/smbpasswd`
+if ! command -v smbpasswd >/dev/null; then
+    echo "$0: cannot run the 'smbpasswd' command" 1>&2
+    exit 2
+fi
+exec smbpasswd -x "$username"

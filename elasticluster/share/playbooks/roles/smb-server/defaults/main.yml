@@ -1,0 +1,5 @@
+---
+
+SMB_SERVER_NAME: '{{ansible_hostname}}'
+
+SMB_WORKGROUP: 'workgroup'
