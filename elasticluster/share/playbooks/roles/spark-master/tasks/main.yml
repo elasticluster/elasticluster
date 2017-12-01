@@ -94,12 +94,8 @@
     - zeppelin-site.xml
     - zeppelin-env.sh
 
-- name: Create Zeppelin log directory
-  file:
-    path='/var/log/zeppelin'
-    state=directory
-    owner=zeppelin
-    group=spark
+- name: Create Zeppelin Log symlink
+  file: src="/usr/lib/zeppelin/logs" dest="/var/log/zeppelin" state=link
   when: zeppelin_symlink.stat.islnk is not defined
 
 - name: Create Zeppelin Configuration symlink
