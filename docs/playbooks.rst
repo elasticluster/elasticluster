@@ -737,7 +737,7 @@ Supported on:
 
 This playbook installs a Stand Alone Spark_ cluster with Alluxio_ and
 Zeppelin_. The cluster comprises a Spark Master node (only 1 supported)
-and Spark Slave nodes.
+and Spark Slave nodes the home folder is shared as NFS_ from master.
 
 =================  ==================================================
 Ansible group      Action

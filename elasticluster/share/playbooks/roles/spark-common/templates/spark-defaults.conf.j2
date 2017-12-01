@@ -1,11 +1,9 @@
 # Default system properties included when running spark-submit or interactive.
 
 spark.driver.memory              {{spark_driver_memory}}m
-spark.driver.maxResultSize       {{spark_driver_memory|int * 0.6}}m
-spark.driver.extraJavaOptions    "-Xms{{spark_jvm_memory}}M -Xmx{{spark_jvm_memory}}M"
+spark.driver.maxResultSize       {{(spark_driver_memory|int * 0.6)|int}}m
 
 spark.executor.memory            {{spark_executor_memory}}m
-spark.executor.extraJavaOptions  "-Xms{{spark_jvm_memory}}M -Xmx{{spark_jvm_memory}}M"
 
 spark.python.worker.memory       {{spark_python_worker_memory}}m
 

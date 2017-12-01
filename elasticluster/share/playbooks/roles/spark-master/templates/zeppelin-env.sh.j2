@@ -4,7 +4,6 @@
 export JAVA_HOME=${JAVA_HOME:-"/usr/lib/jvm/default-java"}
 export MASTER=${MASTER:-"spark://{{(groups.spark_master|first)}}:7077"}
 export ZEPPELIN_MEM="-Xms{{spark_zeppelin_jvm_memory}}m -Xmx{{spark_zeppelin_jvm_memory}}m -XX:MaxPermSize=1024m"
-export ZEPPELIN_LOG_DIR=${ZEPPELIN_LOG_DIR:-"/var/log/zeppelin"}
 
 #### Spark interpreter configuration ####
 export SPARK_HOME=${SPARK_HOME:-"/usr/lib/spark"}

@@ -2,8 +2,8 @@
 
 system_reservation_factor: 0.85
 
-spark_master_memory: hostvars[(groups.spark_master|first)].ansible_memtotal_mb|int
-spark_worker_memory: hostvars[(groups.spark_slave|first)].ansible_memtotal_mb|int
+spark_master_memory: '{{hostvars[(groups.spark_master|first)].ansible_memtotal_mb|int}}'
+spark_worker_memory: '{{hostvars[(groups.spark_slave|first)].ansible_memtotal_mb|int}}'
 
 spark_hadoop_version: 2.7
 spark_version: 2.2.0
@@ -11,7 +11,6 @@ spark_uri_root: 'http://mirror.switch.ch/mirror/apache/dist/spark/spark-{{spark_
 spark_package: 'spark-{{spark_version}}-bin-hadoop{{spark_hadoop_version}}.tgz'
 spark_package_root: 'spark-{{spark_version}}-bin-hadoop{{spark_hadoop_version}}'
 spark_uri: '{{spark_uri_root}}{{spark_package}}'
-spark_jvm_memory: 1024
 spark_history_path: '/var/log/spark-events'
 
 spark_alluxio_version: 1.6.0
@@ -40,5 +39,5 @@ spark_anaconda_aux_packages: {}
 
 spark_zeppelin_jvm_memory: 2048
 
-spark_driver_memory: ((spark_master_memory - spark_alluxio_memory - spark_alluxio_jvm_memory - spark_jvm_memory - spark_zeppelin_jvm_memory - spark_python_worker_memory) * system_reservation_factor)
-spark_executor_memory: ((spark_worker_memory - spark_alluxio_memory - spark_alluxio_jvm_memory - spark_jvm_memory - spark_python_worker_memory) * system_reservation_factor)
+spark_driver_memory: '{{((spark_master_memory|int - spark_alluxio_memory|int - spark_alluxio_jvm_memory|int - spark_zeppelin_jvm_memory|int - spark_python_worker_memory|int) * system_reservation_factor|float)|int}}'
+spark_executor_memory: '{{((spark_worker_memory|int - spark_alluxio_memory|int - spark_alluxio_jvm_memory|int - spark_python_worker_memory|int) * system_reservation_factor|float)|int}}'

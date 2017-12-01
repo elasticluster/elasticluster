@@ -12,6 +12,10 @@
     anaconda_version: '5.0.1'
     anaconda_python_version: '2'
   roles:
+    - role: 'nfs-server'
+      NFS_EXPORTS:
+        - path: '/home'
+          clients: "{{groups.spark_slave + groups.spark_master|default([])}}"
     - spark-master
 
 - name: Install Spark slave node
@@ -25,4 +29,8 @@
     anaconda_version: '5.0.1'
     anaconda_python_version: '2'
   roles:
+    - role: 'nfs-client'
+      NFS_MOUNTS:
+        - fs: '{{groups.spark_master|first}}:/home'
+          mountpoint: '/home'
     - spark-slave

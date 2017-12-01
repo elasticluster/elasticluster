@@ -11,8 +11,8 @@
   when: not(groups.spark_master|length == 1)
 
 - set_fact:
-    minimum_master_memory: "{{((spark_alluxio_memory + spark_alluxio_jvm_memory + spark_jvm_memory + spark_zeppelin_jvm_memory + spark_python_worker_memory) * 2)|int}}"
-    minimum_slave_memory: "{{((spark_alluxio_memory + spark_alluxio_jvm_memory + spark_jvm_memory + spark_python_worker_memory) * 2)|int}}"
+    minimum_master_memory: "{{((spark_alluxio_memory + spark_alluxio_jvm_memory + spark_zeppelin_jvm_memory + spark_python_worker_memory) * 2)|int}}"
+    minimum_slave_memory: "{{((spark_alluxio_memory + spark_alluxio_jvm_memory + spark_python_worker_memory) * 2)|int}}"
 
 - name: Fail if we do not have sufficient memory for Master
   fail:
@@ -24,6 +24,10 @@
     msg: "Memory size for slaves insufficient, required: {{minimum_slave_memory}}, available: ({{ansible_memtotal_mb}}"
   when: inventory_hostname in groups.spark_slave and spark_worker_memory < (minimum_slave_memory|int)
 
+- name: Spark configuration information
+  debug:
+    msg: "Master memory: minimally {{minimum_master_memory}} of {{spark_master_memory}}\nWorker memory: minimally {{minimum_slave_memory}} of {{spark_worker_memory}}\nSpark driver: {{spark_driver_memory}}\nSpark executor: {{spark_executor_memory}}"
+
 - stat:
     path: /usr/lib/spark
   register: spark_symlink
@@ -33,6 +37,12 @@
     name: spark
     state: present
   when: spark_symlink.stat.islnk is not defined
+
+- name: Add Ubuntu user to Spark group
+  user:
+    name: ubuntu
+    group: spark
+    append: yes
 
 - stat:
     path: /usr/lib/alluxio
@@ -86,15 +96,6 @@
     state=directory
     owner=alluxio
     group=spark
-  when: alluxio_symlink.stat.islnk is not defined
-
-- name: Mount RAMDISK on RAM directory
-  mount:
-    path=/mnt/ramdisk
-    src=tmpfs
-    fstype=tmpfs
-    opts='size={{spark_alluxio_memory}}M'
-    state=present
   when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio underFS directory

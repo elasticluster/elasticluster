@@ -17,4 +17,4 @@
 - name: Allow NFS homes through SELinux
   command: |
     setsebool -P use_nfs_home_dirs=1
-  when: '{{is_rhel_compatible}} and "{{fs.mountpoint}}" == "/home"'
+  when: ansible_os_family == 'RedHat' and fs.mountpoint == "/home"

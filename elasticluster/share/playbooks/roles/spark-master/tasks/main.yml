@@ -65,14 +65,6 @@
     path: /usr/lib/zeppelin
   register: zeppelin_symlink
 
-- name: Create Apache Zeppelin user
-  user:
-    name: zeppelin
-    group: spark
-    system: True
-    createhome: False
-  when: zeppelin_symlink.stat.islnk is not defined
-
 - name: download Zeppelin installer
   get_url:
     url: '{{spark_zeppelin_uri}}'
