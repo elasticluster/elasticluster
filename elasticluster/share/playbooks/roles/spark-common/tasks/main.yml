@@ -39,10 +39,7 @@
   when: spark_symlink.stat.islnk is not defined
 
 - name: Add Ubuntu user to Spark group
-  user:
-    name: ubuntu
-    group: spark
-    append: yes
+  user: name=ubuntu group=spark append=yes
 
 - stat:
     path: /usr/lib/alluxio
@@ -126,14 +123,6 @@
   lineinfile: dest=/etc/environment line='export ALLUXIO_HOME=/usr/lib/alluxio' insertafter='EOF' state=present
   when: alluxio_symlink.stat.islnk is not defined
 
-- name: Create Apache Spark user
-  user:
-    name: spark
-    group: spark
-    system: True
-    createhome: False
-  when: spark_symlink.stat.islnk is not defined
-
 - name: Download Spark
   get_url:
     url: '{{spark_uri}}'
@@ -144,7 +133,7 @@
   unarchive:
     src: '/tmp/{{spark_package}}'
     dest: /usr/lib/
-    owner: spark
+    owner: ubuntu
     group: spark
     remote_src: True
   when: spark_symlink.stat.islnk is not defined
@@ -174,7 +163,7 @@
   template:
     src='{{item}}.j2'
     dest='/usr/lib/spark/conf/{{item}}'
-    owner=spark
+    owner=ubuntu
     group=spark
   with_items:
     - spark-defaults.conf
@@ -184,7 +173,7 @@
   file:
     path='/var/log/spark'
     state=directory
-    owner=spark
+    owner=ubuntu
     group=spark
   when: spark_symlink.stat.islnk is not defined
 

@@ -33,7 +33,7 @@
   file:
     path='{{spark_history_path}}'
     state=directory
-    owner=spark
+    owner=ubuntu
     group=spark
     mode=0777
 
@@ -75,7 +75,7 @@
   unarchive:
     src: '/tmp/{{spark_zeppelin_package}}'
     dest: /usr/lib/
-    owner: zeppelin
+    owner: ubuntu
     group: spark
     remote_src: True
   when: zeppelin_symlink.stat.islnk is not defined
@@ -88,15 +88,11 @@
   template:
     src='{{item}}.j2'
     dest='/usr/lib/zeppelin/conf/{{item}}'
-    owner=zeppelin
+    owner=ubuntu
     group=spark
   with_items:
     - zeppelin-site.xml
     - zeppelin-env.sh
-
-- name: Create Zeppelin Log symlink
-  file: src="/usr/lib/zeppelin/logs" dest="/var/log/zeppelin" state=link
-  when: zeppelin_symlink.stat.islnk is not defined
 
 - name: Create Zeppelin Configuration symlink
   file: src="/usr/lib/zeppelin/conf" dest="/etc/zeppelin" state=link
@@ -128,3 +124,7 @@
     enabled: yes
     masked: no
     state: restarted
+
+- name: Create Zeppelin Log symlink
+  file: src="/usr/lib/zeppelin/logs" dest="/var/log/zeppelin" state=link
+  when: zeppelin_symlink.stat.islnk is not defined

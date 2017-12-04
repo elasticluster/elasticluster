@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=forking
-User=spark
+User=ubuntu
 Group=spark
 ExecStart=/usr/lib/spark/sbin/start-slave.sh {{groups.spark_master|first}}:7077
 

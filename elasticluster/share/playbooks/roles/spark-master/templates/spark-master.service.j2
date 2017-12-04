@@ -4,7 +4,7 @@ After=alluxio.target
 
 [Service]
 Type=forking
-User=spark
+User=ubuntu
 Group=spark
 ExecStart=/usr/lib/spark/sbin/start-master.sh
 ExecStop=/usr/lib/spark/sbin/stop-master.sh
