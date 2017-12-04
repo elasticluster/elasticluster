@@ -39,7 +39,10 @@
   when: spark_symlink.stat.islnk is not defined
 
 - name: Add Ubuntu user to Spark group
-  user: name=ubuntu group=spark append=yes
+  user:
+    name: ubuntu
+    group: spark
+    append: yes
 
 - stat:
     path: /usr/lib/alluxio
