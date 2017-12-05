@@ -5,7 +5,7 @@ After=spark-master.target
 [Service]
 Type=forking
 User=ubuntu
-Group=spark
+Group=ubuntu
 ExecStart=/usr/lib/zeppelin/bin/zeppelin-daemon.sh start
 ExecStop=/usr/lib/zeppelin/bin/zeppelin-daemon.sh stop
 Restart=on-failure

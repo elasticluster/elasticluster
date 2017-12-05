@@ -7,8 +7,8 @@
 
 - name: configure help page
   template:
-    src=index.html.j2
-    dest=/var/www/html/index.html
+    src: index.html.j2
+    dest: /var/www/html/index.html
 
 - name: enable and start help page
   systemd:
@@ -19,8 +19,8 @@
 
 - name: Alluxio systemd service config
   template:
-    src='alluxio.service.j2'
-    dest='/etc/systemd/system/alluxio.service'
+    src: 'alluxio.service.j2'
+    dest: '/etc/systemd/system/alluxio.service'
 
 - name: enable and start alluxio service and ensure it is not masked
   systemd:
@@ -31,16 +31,16 @@
 
 - name: Create Spark History log directory
   file:
-    path='{{spark_history_path}}'
-    state=directory
-    owner=ubuntu
-    group=spark
-    mode=0777
+    path: '{{spark_history_path}}'
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: 0777
 
 - name: Spark History systemd service config
   template:
-    src='spark-history.service.j2'
-    dest='/etc/systemd/system/spark-history.service'
+    src: 'spark-history.service.j2'
+    dest: '/etc/systemd/system/spark-history.service'
 
 - name: enable and start spark history service and ensure it is not masked
   systemd:
@@ -51,8 +51,8 @@
 
 - name: Spark Master systemd service config
   template:
-    src='spark-master.service.j2'
-    dest='/etc/systemd/system/spark-master.service'
+    src: 'spark-master.service.j2'
+    dest: '/etc/systemd/system/spark-master.service'
 
 - name: enable and start spark master service and ensure it is not masked
   systemd:
@@ -76,32 +76,38 @@
     src: '/tmp/{{spark_zeppelin_package}}'
     dest: /usr/lib/
     owner: ubuntu
-    group: spark
+    group: ubuntu
     remote_src: True
   when: zeppelin_symlink.stat.islnk is not defined
 
 - name: Create Zeppelin symlink
-  file: src="/usr/lib/{{spark_zeppelin_package_root}}" dest="/usr/lib/zeppelin" state=link
+  file:
+    src: '/usr/lib/{{spark_zeppelin_package_root}}'
+    dest: '/usr/lib/zeppelin'
+    state: link
   when: zeppelin_symlink.stat.islnk is not defined
 
 - name: Zeppelin configuration files
   template:
-    src='{{item}}.j2'
-    dest='/usr/lib/zeppelin/conf/{{item}}'
-    owner=ubuntu
-    group=spark
+    src: '{{item}}.j2'
+    dest: '/usr/lib/zeppelin/conf/{{item}}'
+    owner: ubuntu
+    group: ubuntu
   with_items:
     - zeppelin-site.xml
     - zeppelin-env.sh
 
 - name: Create Zeppelin Configuration symlink
-  file: src="/usr/lib/zeppelin/conf" dest="/etc/zeppelin" state=link
+  file:
+    src: '/usr/lib/zeppelin/conf'
+    dest: '/etc/zeppelin'
+    state: link
   when: zeppelin_symlink.stat.islnk is not defined
 
 - name: Zeppelin Server systemd service config
   template:
-    src='zeppelin.service.j2'
-    dest='/etc/systemd/system/zeppelin.service'
+    src: 'zeppelin.service.j2'
+    dest: '/etc/systemd/system/zeppelin.service'
   when: zeppelin_symlink.stat.islnk is not defined
 
 - name: Find Zeppelin Apache Commons Lang3 jar
@@ -126,5 +132,8 @@
     state: restarted
 
 - name: Create Zeppelin Log symlink
-  file: src="/usr/lib/zeppelin/logs" dest="/var/log/zeppelin" state=link
+  file:
+    src: '/usr/lib/zeppelin/logs'
+    dest: '/var/log/zeppelin'
+    state: link
   when: zeppelin_symlink.stat.islnk is not defined

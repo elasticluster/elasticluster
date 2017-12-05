@@ -32,36 +32,9 @@
     path: /usr/lib/spark
   register: spark_symlink
 
-- name: Create Apache Spark group
-  group:
-    name: spark
-    state: present
-  when: spark_symlink.stat.islnk is not defined
-
-- name: Add Ubuntu user to Spark group
-  user:
-    name: ubuntu
-    group: spark
-    append: yes
-
 - stat:
     path: /usr/lib/alluxio
   register: alluxio_symlink
-
-- name: Create Apache Alluxio user
-  user:
-    name: alluxio
-    group: spark
-    system: True
-  when: alluxio_symlink.stat.islnk is not defined
-
-- name: Add limited sudo rights for alluxio user
-  lineinfile:
-    dest: /etc/sudoers
-    state: present
-    regexp: '^alluxio'
-    line: 'alluxio ALL=(ALL) NOPASSWD: /bin/mount * /mnt/ramdisk, /bin/umount * /mnt/ramdisk, /bin/mkdir * /mnt/ramdisk, /bin/chmod * /mnt/ramdisk'
-  when: alluxio_symlink.stat.islnk is not defined
 
 - name: Download Alluxio
   get_url:
@@ -73,49 +46,55 @@
   unarchive:
     src: '/tmp/{{spark_alluxio_package}}'
     dest: /usr/lib/
-    owner: alluxio
-    group: spark
+    owner: ubuntu
+    group: ubuntu
     remote_src: True
   when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio symlink
-  file: src="/usr/lib/{{spark_alluxio_package_root}}" dest="/usr/lib/alluxio" state=link
+  file:
+    src: '/usr/lib/{{spark_alluxio_package_root}}'
+    dest: '/usr/lib/alluxio'
+    state: link
   when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio log directory
   file:
-    path='/var/log/alluxio'
-    state=directory
-    owner=alluxio
-    group=spark
+    path: '/var/log/alluxio'
+    state: directory
+    owner: ubuntu
+    group: ubuntu
   when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio RAM directory
   file:
-    path='/mnt/ramdisk'
-    state=directory
-    owner=alluxio
-    group=spark
+    path: '/mnt/ramdisk'
+    state: directory
+    owner: ubuntu
+    group: ubuntu
   when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio underFS directory
   file:
-    path='/usr/lib/alluxio/underFSStorage'
-    state=directory
-    owner=alluxio
-    group=spark
+    path: '/usr/lib/alluxio/underFSStorage'
+    state: directory
+    owner: ubuntu
+    group: ubuntu
   when: alluxio_symlink.stat.islnk is not defined
 
 - name: Create Alluxio Configuration symlink
-  file: src="/usr/lib/alluxio/conf" dest="/etc/alluxio" state=link
+  file:
+    src: '/usr/lib/alluxio/conf'
+    dest: '/etc/alluxio'
+    state: link
   when: alluxio_symlink.stat.islnk is not defined
 
 - name: Alluxio configuration files
   template:
-    src='{{item}}.j2'
-    dest='/usr/lib/alluxio/conf/{{item}}'
-    owner=alluxio
-    group=spark
+    src: '{{item}}.j2'
+    dest: '/usr/lib/alluxio/conf/{{item}}'
+    owner: ubuntu
+    group: ubuntu
   with_items:
     - alluxio-site.properties
     - alluxio-env.sh
@@ -123,7 +102,11 @@
     - workers
 
 - name: Set ALLUXIO_HOME in environment
-  lineinfile: dest=/etc/environment line='export ALLUXIO_HOME=/usr/lib/alluxio' insertafter='EOF' state=present
+  lineinfile:
+    dest: /etc/environment
+    line: 'export ALLUXIO_HOME=/usr/lib/alluxio'
+    insertafter: 'EOF'
+    state: present
   when: alluxio_symlink.stat.islnk is not defined
 
 - name: Download Spark
@@ -137,18 +120,21 @@
     src: '/tmp/{{spark_package}}'
     dest: /usr/lib/
     owner: ubuntu
-    group: spark
+    group: ubuntu
     remote_src: True
   when: spark_symlink.stat.islnk is not defined
 
 - name: Create Spark symlink
-  file: src="/usr/lib/{{spark_package_root}}" dest="/usr/lib/spark" state=link
+  file:
+    src: '/usr/lib/{{spark_package_root}}'
+    dest: '/usr/lib/spark'
+    state: link
   when: spark_symlink.stat.islnk is not defined
 
 - name: Check if Py4J version-independent `.zip` archive exist
   stat:
-    path='/usr/lib/spark/python/lib/py4j-src.zip'
-    follow=no
+    path: '/usr/lib/spark/python/lib/py4j-src.zip'
+    follow: no
   register: p
   when: spark_symlink.stat.islnk is not defined
 
@@ -159,53 +145,60 @@
   when: spark_symlink.stat.islnk is not defined and not p.stat.exists
 
 - name: Create Spark Configuration symlink
-  file: src="/usr/lib/spark/conf" dest="/etc/spark" state=link
+  file:
+    src: '/usr/lib/spark/conf'
+    dest: '/etc/spark'
+    state: link
   when: spark_symlink.stat.islnk is not defined
 
 - name: Spark configuration files
   template:
-    src='{{item}}.j2'
-    dest='/usr/lib/spark/conf/{{item}}'
-    owner=ubuntu
-    group=spark
+    src: '{{item}}.j2'
+    dest: '/usr/lib/spark/conf/{{item}}'
+    owner: ubuntu
+    group: ubuntu
   with_items:
     - spark-defaults.conf
     - spark-env.sh
 
 - name: Create Spark log directory
   file:
-    path='/var/log/spark'
-    state=directory
-    owner=ubuntu
-    group=spark
+    path: '/var/log/spark'
+    state: directory
+    owner: ubuntu
+    group: ubuntu
   when: spark_symlink.stat.islnk is not defined
 
 - name: Set SPARK_HOME in environment
-  lineinfile: dest=/etc/environment line='export SPARK_HOME=/usr/lib/spark' insertafter='EOF' state=present
+  lineinfile:
+    dest: /etc/environment
+    line: 'export SPARK_HOME=/usr/lib/spark'
+    insertafter: 'EOF'
+    state: present
   when: spark_symlink.stat.islnk is not defined
 
 - name: Deploy profile configuration files
   copy:
-    src='{{item}}'
-    dest='/{{item}}'
+    src: '{{item}}'
+    dest: '/{{item}}'
   with_items:
     - etc/profile.d/spark.sh
     - etc/profile.d/alluxio.sh
 
 - name: Install Auxiliary Python Packages using pip
   pip:
-    name='{{item}}'
-    state=present
-    executable='{{spark_python|dirname}}/pip'
+    name: '{{item}}'
+    state: present
+    executable: '{{spark_python|dirname}}/pip'
   with_items: '{{spark_anaconda_aux_packages}}'
   register: pip_install
   ignore_errors: yes
 
 - name: Install Auxiliary Python Packages using conda
   conda:
-    name='{{item}}'
-    state=present
-    executable='{{spark_python|dirname}}/conda'
+    name: '{{item}}'
+    state: present
+    executable: '{{spark_python|dirname}}/conda'
   with_items: '{{spark_anaconda_aux_packages}}'
   register: conda_install
   ignore_errors: yes

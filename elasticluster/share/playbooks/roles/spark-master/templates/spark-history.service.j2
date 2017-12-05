@@ -5,7 +5,7 @@ After=alluxio.target
 [Service]
 Type=forking
 User=ubuntu
-Group=spark
+Group=ubuntu
 ExecStart=/usr/lib/spark/sbin/start-history-server.sh
 ExecStop=/usr/lib/spark/sbin/stop-history-server.sh
 Restart=on-failure

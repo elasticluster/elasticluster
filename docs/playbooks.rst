@@ -737,7 +737,7 @@ Supported on:
 
 This playbook installs a Stand Alone Spark_ cluster with Alluxio_ and
 Zeppelin_. The cluster comprises a Spark Master node (only 1 supported)
-and Spark Slave nodes the home folder is shared as NFS_ from master.
+and Spark Slave nodes.
 
 =================  ==================================================
 Ansible group      Action
@@ -781,9 +781,6 @@ on an OpenStack environment.
 
 Use `global_var_spark_anaconda_aux_packages`=<package1, package2> to install
 auxiliary python packages on the cluster.
-
-By default we use Anaconda Python 2 as interpreter. If you want to use Anaconda
-Python 2 specify `global_var_anaconda_python_version`='3'.
 
 It is recommended that all web interfaces are behind reverse tunnel,
 because 'others' can easily mess up the configuration with these interfaces.
