@@ -1,16 +1,18 @@
 {% for host in groups.all %}
-{%- set facts = hostvars[host] -%}
-{%- set ip_addr = facts.ansible_default_ipv4.address -%}
-{% if 'ansible_ssh_host_key_dsa_public' in facts %}
+{%-  set facts = hostvars[host] -%}
+{%   if 'ansible_default_ipv4' in facts %}
+{%-    set ip_addr = facts.ansible_default_ipv4.address -%}
+{%     if 'ansible_ssh_host_key_dsa_public' in facts %}
 {{ host }},{{ ip_addr }} ssh-dsa {{ facts.ansible_ssh_host_key_dsa_public }}
-{% endif %}
-{% if 'ansible_ssh_host_key_rsa_public' in facts %}
+{%     endif %}
+{%     if 'ansible_ssh_host_key_rsa_public' in facts %}
 {{ host }},{{ ip_addr }} ssh-rsa {{ facts.ansible_ssh_host_key_rsa_public }}
-{% endif %}
-{% if 'ansible_ssh_host_key_ecdsa_public' in facts %}
+{%     endif %}
+{%     if 'ansible_ssh_host_key_ecdsa_public' in facts %}
 {{ host }},{{ ip_addr }} ecdsa-sha2-nistp256 {{ facts.ansible_ssh_host_key_ecdsa_public }}
-{% endif %}
-{% if 'ansible_ssh_host_key_ed25519_public' in facts %}
+{%     endif %}
+{%     if 'ansible_ssh_host_key_ed25519_public' in facts %}
 {{ host }},{{ ip_addr }} ssh-ed25519 {{ facts.ansible_ssh_host_key_ed25519_public }}
-{% endif %}
+{%     endif %}
+{%   endif %}
 {% endfor %}
