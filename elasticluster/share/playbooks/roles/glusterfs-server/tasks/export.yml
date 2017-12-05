@@ -19,10 +19,10 @@
 
 - name: Set GlusterFS volume options
   set_fact:
-    _gluster_option_dispersed: '{%- if item.redundancy is defined and item.redundancy|length > 0 and item.redundancy|int > 1 -%}dispersed redundancy {{item.redundancy}}{%- endif -%}'
-    _gluster_option_stripes:   '{%- if item.stripes is defined and item.stripes|length > 0 and item.stripes|int > 1 -%}stripe {{item.stripes}}{%- endif -%}'
-    _gluster_option_replicas:  '{%- if item.replicas is defined and item.replicas|length > 0 and item.replicas|int > 1 -%}replica {{item.replicas}}{%- endif -%}'
-    _gluster_option_transport: 'transport {{item.transport|default(tcp)}}'
+    _gluster_option_dispersed: '{%- if item.redundancy is defined and item.redundancy|int > 1 -%}disperse redundancy {{item.redundancy}}{%- endif -%}'
+    _gluster_option_stripes:   '{%- if item.stripes is defined and item.stripes|int > 1 -%}stripe {{item.stripes}}{%- endif -%}'
+    _gluster_option_replicas:  '{%- if item.replicas is defined and item.replicas|int > 1 -%}replica {{item.replicas}}{%- endif -%}'
+    _gluster_option_transport: 'transport {{item.transport|default("tcp")}}'
 
 - name: Check consistency of volume options (striped/replicated vs dispersed)
   fail:
