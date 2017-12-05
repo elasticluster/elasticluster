@@ -1,0 +1,11 @@
+---
+
+- name: Configure Samba servers
+  tags:
+    - samba
+  hosts: samba
+  become: yes
+  roles:
+    - role: smb-server
+      SMB_WORKGROUP: '{{ smb_workgroup|default("elasticluster") }}'
+      SMB_SHARES: '{{ smb_shares|default([]) }}'

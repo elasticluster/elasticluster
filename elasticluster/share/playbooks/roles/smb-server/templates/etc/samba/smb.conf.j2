@@ -100,11 +100,7 @@ printcap cache time = 0
 # create dirs. with group=rw permissions, set next parameter to 0775.
    directory mask = 0700
 
-# By default, \\server\username shares can be connected to by anyone
-# with access to the samba server.
-# Un-comment the following parameter to make sure that only "username"
-# can connect to \\server\username
-# This might need tweaking when using external authentication schemes
+# Make sure that only "username" can connect to \\server\username
    valid users = %S
 
 # some MacOSX report slowness especially in directory listings
@@ -135,5 +131,10 @@ printcap cache time = 0
 #
    vfs objects = fruit streams_xattr
 
+# By default, \\server\username shares can be connected to by anyone
+# with access to the samba server.
+# Un-comment the following parameter to make sure that only "username"
+# can connect to \\server\username
+#valid users = username
 
 {% endfor %}
