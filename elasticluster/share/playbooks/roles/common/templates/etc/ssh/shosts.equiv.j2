@@ -1,8 +1,4 @@
 {% for host in groups.all %}
 {{ host }}
-{%-  set facts = hostvars[host] -%}
-{%   if 'ansible_default_ipv4' in facts %}
-{%-    set ip_addr = facts.ansible_default_ipv4.address -%}
-{{ ip_addr }}
-{%   endif %}
+{{ hostvars[host].ansible_default_ipv4.address | default('') }}
 {% endfor %}
