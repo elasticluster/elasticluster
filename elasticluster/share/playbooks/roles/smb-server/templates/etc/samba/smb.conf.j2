@@ -114,6 +114,9 @@ printcap cache time = 0
 
 {% for item in SMB_SHARES %}
 [{{item.name}}]
+   {% if item.description is defined %}
+   comment = {{ item.description|default(item.path) }}
+   {% endif %}
    path = {{item.path}}
    browsable =yes
    writable = {% if item.readonly|default(false) %}no{% else %}yes{% endif %}
