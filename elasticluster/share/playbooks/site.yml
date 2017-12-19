@@ -43,6 +43,7 @@
 
 # add-on software
 - include: roles/r.yml
+- include: roles/samba.yml
 
 # Jupyter installation comes last, to allow it to pick up any SW that's been
 # installed so far (e.g., for kernels, or for ipyparallel)
