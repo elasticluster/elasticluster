@@ -23,11 +23,11 @@ Role Variables
 
 The following variables may be set to alter the role behavior:
 
-``SMB_SERVER_NAME``
+``smb_server_name``
   The NetBIOS name the server should advertise.
   (Default: the internet host name)
 
-``SMB_SHARES``
+``smb_shares``
   List of additional shares to serve.  For each share,
   the following fields must be defined:
 
@@ -51,7 +51,7 @@ The following variables may be set to alter the role behavior:
   ``readonly`` (optional, default ``false``)
     If true, no writes are allowed to the share. Default is false.
 
-``SMB_WORKGROUP``
+``smb_workgroup``
   The NetBIOS workgroup the server should join.
   (default: ``ELASTICLUSTER``)
 
@@ -66,8 +66,8 @@ directory tree ``/data/active`` as an additional share named
   - hosts: servers
     roles:
     - role: smb-server
-      SMB_WORKGROUP: 'LAB'
-      SMB_SHARES:
+      smb_workgroup: 'LAB'
+      smb_shares:
         - name: active
           path: /data/active
           comment: Active experiment data

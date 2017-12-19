@@ -9,9 +9,9 @@
 #======================= Global Settings =====================================
 
 [global]
-workgroup = {{SMB_WORKGROUP}}
+workgroup = {{smb_workgroup}}
 server string = SAMBA Server %v
-netbios name = {{SMB_SERVER_NAME}}
+netbios name = {{smb_server_name}}
 
 log level = 0
 syslog only = yes
@@ -112,7 +112,7 @@ printcap cache time = 0
    vfs objects = fruit streams_xattr
 
 
-{% for item in SMB_SHARES %}
+{% for item in smb_shares %}
 [{{item.name}}]
    {% if item.description is defined %}
    comment = {{ item.description|default(item.path) }}

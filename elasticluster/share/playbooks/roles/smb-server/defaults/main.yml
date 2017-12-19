@@ -1,5 +1,5 @@
 ---
 
-SMB_SERVER_NAME: '{{ansible_hostname}}'
+smb_server_name: '{{ansible_hostname}}'
 
-SMB_WORKGROUP: 'ELASTICLUSTER'
+smb_workgroup: 'ELASTICLUSTER'
