@@ -716,3 +716,73 @@ master and 2 worker nodes, and additionally installs flannel for the networking
     # ...
 
 SSH into the cluster and execute 'sudo kubectl --kubeconfig /etc/kubernetes/admin.conf get nodes' to view the cluster.
+
+
+SAMBA
+=====
+
+Supported on:
+
+* Ubuntu 16.04, 14.04
+* Debian 8 ("jessie"), 9 ("stretch")
+* CentOS 6.x and 7.x
+
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``samba``       Install and configure the SAMBA suite for serving
+                local files over the network with the SMB/CIFS protocol
+==============  =======================================================
+
+This playbook installs the `SAMBA`_ server suite, which implements a
+server for the SMB/CIFS network filesystem, plus other utilities for
+integrating Linux/UNIX systems in a Windows environment.  Note that
+ElastiCluster only configures the ``smbd`` daemon for serving files as
+a "standalone SMB server" -- no other integration with Windows
+services is included here.
+
+The following extra variables can be set to control the way the SMB server is set up:
+
+=================== ========================== =================================================
+Variable name       Default                    Description
+=================== ========================== =================================================
+``smb_workgroup``   ``elasticluster``          NetBIOS workgroup name
+``smb_shares``      *(no additional shares)*   Define additional SMB shares (see example below)
+=================== ========================== =================================================
+
+By default, ElastiCluster only configures sharing users' home
+directories over SMB/CIFS.  Additional shares can be defined by adding
+a ``smb_shares`` variable in the ``setup/`` section.  The value of
+this variable should be a list (comma-separated, enclosed in ``[`` and
+``]``) of share definitions; a share definition is enclosed in ``{``
+and ``}`` and is comprised of comma-separated *key:value* pair; the
+following *key:value* pair will be acted upon:
+
+``name``
+  The SMB share name; the string that clients must use to connect to this share
+
+``path``
+  Local path to the root directory being served
+
+``readonly``
+  Whether writes are allowed to the share.  If ``no`` (default), then no
+  writes are allowed by any client.
+
+``public``
+  If ``yes``, any user that can connect to the server can read (and
+  also write, depending on the ``readonly`` setting above) files in
+  the share.  If ``no`` (default), only authenticated users can access
+  the share.
+
+For instance, the following ElastiCluster configuration snippet
+configures two *additional* shares, one named ``public`` which serves
+files off local path ``/data/public`` to any user who can connect, and
+one named ``secret`` which serves files off local path
+``/data/secret`` to authenticated users::
+
+  [setup/samba]
+  server_groups=samba
+  server_smb_shares=[
+    { name: 'public', path: '/data/public',  readonly: yes, public: yes },
+    { name: 'secret', path: '/data/secret',  readonly: yes, public: no },
+    ]
