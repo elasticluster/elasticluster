@@ -40,6 +40,18 @@
     creates: '{{SGE_CELL}}/common/cluster_name'
   when: is_rhel_compatible
 
+- name: Create GridEngine accounting file
+  tags:
+    - gridengine
+    - gridengine-master
+  file:
+    dest: '{{SGE_VAR}}/{{SGE_CELL}}/common/accounting'
+    state: present
+    mode: 0644
+    # FIXME: should we stat other files and re-use the same owner/group?
+    owner: sgeadmin
+    group: sgeadmin
+
 - name: Load GridEngine settings at login (RHEL/CentOS)
   tags:
     - gridengine
