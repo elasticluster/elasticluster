@@ -38,6 +38,8 @@
     - role: gridengine-common
     - role: nfs-client
       NFS_MOUNTS:
+        - fs: '{{groups.gridengine_master[0]}}:/home'
+          mountpoint: '/home'
         - fs: '{{groups.gridengine_master[0]}}:{{SGE_VAR}}/{{SGE_CELL}}/common'
           mountpoint: '{{SGE_VAR}}/{{SGE_CELL}}/common'
     - role: autofs
