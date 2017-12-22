@@ -75,17 +75,22 @@
   args:
     creates: /etc/jupyterhub/jupyterhub.key.pem
 
+
 # FIXME: should the following be reworked into an independent `supervisord` role?
 - name: Manage JupyterHub with `supervisord`
   copy:
     dest: '/etc/supervisor/conf.d/jupyterhub.conf'
     src: 'etc/supervisor/conf.d/jupyterhub.conf'
     mode: 0444
-  notify:
-    - reread supervisord configuration
+  register: _deploy_supervisord_conf_for_jupyterhub
+
 
 - name: Ensure supervisord re-reads config
-  meta: flush_handlers
+  shell: |
+    supervisorctl reread
+    supervisorctl update
+  when: _deploy_supervisord_conf_for_jupyterhub|changed
+
 
 - name: Ensure supervisord is running and starts again at boot
   service:
@@ -93,9 +98,11 @@
     enabled: yes
     state: started
 
+
 - name: Ensure JupyterHub has been started by supervisord
   command: |
     supervisorctl start jupyterhub
+
 
 - name: Allow inbound HTTPS connections
   iptables:
