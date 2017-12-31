@@ -1,0 +1,10 @@
+---
+
+# the cgroup-v1 controllers that SLURM can/will use
+slurm_cgroup_controllers:
+  - blkio
+  - cpuacct
+  - cpuset
+  - devices
+  - freezer
+  - memory
