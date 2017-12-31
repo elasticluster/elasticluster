@@ -5,18 +5,19 @@
     msg="PySpark/Hadoop installation only works on Debian/Ubuntu presently."
   when: not is_debian_or_ubuntu
 
-  
+
 - name: add signing key for Apache Bigtop repository
   apt_key:
     url: "http://www.apache.org/dist/bigtop/bigtop-{{ bigtop_release }}/repos/GPG-KEY-bigtop"
     state: present
 
-  
+
 - name: add Apache Bigtop repository
   apt_repository:
     # download from: http://www.apache.org/dist/bigtop/bigtop-1.2.1/repos/ubuntu16.04/bigtop.list
-    repo='deb http://repos.bigtop.apache.org/releases/{{bigtop_release}}/{{ansible_distribution|lower}}/{{ansible_distribution_version}}/x86_64 bigtop contrib'
-    state=present
+    repo: 'deb http://repos.bigtop.apache.org/releases/{{bigtop_release}}/{{ansible_distribution|lower}}/{{ansible_distribution_version}}/x86_64 bigtop contrib'
+    state: present
+  register: _bigtop_add_apt_repo
 
 
 # this is run as task and not as a handler, since handlers are all
@@ -25,5 +26,6 @@
 # tasks to succeed...
 - name: update APT cache
   apt:
-    update_cache=yes
-    cache_valid_time=86400
+    update_cache: yes
+    cache_valid_time: 86400
+  when: '_bigtop_add_apt_repo|changed'
