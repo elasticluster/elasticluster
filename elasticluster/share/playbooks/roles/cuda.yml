@@ -1,0 +1,14 @@
+---
+
+- name: Install CUDA
+  hosts: cuda
+  tags:
+    - cuda
+
+  pre_tasks:
+    - name: Gather information about GPUs
+      action: gpus
+
+  roles:
+    - role: cuda
+      when: 'gpu_count_total > 0'
