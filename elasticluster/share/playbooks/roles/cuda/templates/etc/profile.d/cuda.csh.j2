@@ -1,0 +1,7 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+
+
+setenv CUDA_HOME "/usr/local/cuda-{{ cuda_version_major }}.{{ cuda_version_minor }}"
+setenv PATH "${CUDA_HOME}/bin:${PATH}"

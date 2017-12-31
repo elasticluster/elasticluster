@@ -24,10 +24,11 @@
     - role: ntpd
       ntp_server: '{{groups.ntp_master|default([])}}'
     - role: pdsh
-    - role: cuda
-  tasks:  
-    - name: Gather information about GPUs
-      action: gpus
+
+# This needs to be run as early as possible as it may need to reboot
+# the VM to install driver support
+- include: roles/cuda.yml
+
 # Run all other playbooks one by one, so they get a chance of doing
 # their setup depending on configured host groups
 
