@@ -17,6 +17,21 @@ options read from the configuration file.  This chapter describes the
 Ansible playbooks bundled [#]_ with ElastiCluster and how to
 use them.
 
+.. [#]
+
+   ElastiCluster playbooks can be found in the
+   ``elasticluster/share/playbooks`` directory of the source code. You
+   are free to copy, customize and redistribute them under the terms
+   of the `GNU General Public License version 3`_ or (at your option)
+   any later version.
+
+
+.. contents::
+
+
+Setup variables
+===============
+
 In some cases, extra variables can be set to playbooks to modify its
 default behavior. In these cases, you can either define a variable
 global to the cluster using::
@@ -28,48 +43,38 @@ hosts::
 
     <groupname>_var_<varname>=<value>
 
+For example::
 
-.. [#]
-
-   The playbooks can be found in the ``elasticluster/share/playbooks``
-   directory of the source code. You are free to copy,
-   customize and redistribute them under the terms of the `GNU General
-   Public License version 3`_ or (at your option) any later version.
+  slurm_worker_allow_reboot=yes
 
 
-Ansible
-=======
+General setup variables
+-----------------------
 
-Supported on:
+The following customization variables apply to all ElastiCluster playbooks.
 
-* Ubuntu 12.04 and later
-* RHEL/CentOS 6.x and 7.x
+================================== =================== =================================================
+Variable name                      Default             Description
+================================== =================== =================================================
+``allow_reboot``                   no                  Allow rebooting nodes if needed.  Be careful
+                                                       if this is set when resizing clusters, as you
+                                                       may lose running jobs.
+``multiuser_cluster``              no                  Install NIS/YP.  The first node in the ``master``
+                                                       class will be assigned the role of the YP master
+                                                       server; additional nodes in the "master" class
+                                                       (if any) will be YP slave servers.
+================================== =================== =================================================
 
-This playbook installs the `Ansible`_ orchestration and configuration management
-system on each host.  There is not much clustering happening here; this playbook
-is provided in case you want to be able to run Ansible playbooks from inside the
-cluster (as opposed to always running them from the ElastiCluster host).
 
-To force the playbook to run, add the Ansible group ``ansible`` to any node. The
-following example configuration sets up a SLURM batch-queuing cluster using 1
-front-end and 4 execution nodes, and additionally installs `Ansible`_ on the
-front-end::
+Compute clusters
+================
 
-    [cluster/slurm]
-    master_nodes=1
-    worker_nodes=4
-    ssh_to=master
-    setup_provider=slurm+ansible
-    # ...
-
-    [setup/slurm+ansible]
-    master_groups=slurm_master,ansible
-    worker_groups=slurm_worker
-    # ...
+The following playbooks are available for installing compute clusters
+(batch-queuing or otherwise) with ElastiCluster.
 
 
 SLURM
-=====
+-----
 
 Supported on:
 
@@ -131,7 +136,6 @@ Variable name                      Default             Description
 ``slurm_maxarraysize``             1000                Maximum size of an array job
 ``slurm_maxjobcount``              10000               Maximum nr. of jobs actively managed by the
                                                        SLURM controller (i.e., pending and running)
-``multiuser_cluster``              yes                 Install NIS/YP
 ================================== =================== =================================================
 
 Note that the ``slurm_*`` extra variables need to be set *globally*
@@ -154,8 +158,9 @@ available:
 In order for the NFS exported home directory to be mountable from the cluster's compute nodes,
 security groups on OpenStack need to permit all UDP traffic between all cluster nodes.
 
+
 GridEngine
-==========
+----------
 
 Tested on:
 
@@ -211,128 +216,8 @@ are NIS slaves) to make it easier to add users to the cluster (just run the
 ``adduser`` command on the master).
 
 
-HTCondor
-========
-
-Tested on:
-
-* Ubuntu 12.04
-
-+-------------------+----------------------------------+
-| ansible groups    | role                             |
-+===================+==================================+
-|``condor_master``  | Act as scheduler, submission and |
-|                   | execution host.                  |
-+-------------------+----------------------------------+
-|``condor_workers`` | Act as execution host only.      |
-+-------------------+----------------------------------+
-
-This playbook will install the `HTCondor`_ workload management system
-using the packages provided by the Center for High Throughput
-Computing at UW-Madison.
-
-The ``/home`` filesystem is exported *from* the condor master to the
-compute nodes.
-
-A *snippet* of a typical configuration for a slurm cluster is::
-
-    [cluster/condor]
-    setup_provider=ansible_condor
-    frontend_nodes=1
-    compute_nodes=2
-    ssh_to=frontend
-    ...
-
-    [setup/ansible_condor]
-    frontend_groups=condor_master
-    compute_groups=condor_workers
-    ...
-
-
-Ganglia
-=======
-
-Tested on:
-
-* Ubuntu 12.04
-* CentOS 6.3
-* Debian 7.1 (GCE)
-* CentOS 6.2 (GCE)
-
-+--------------------+---------------------------------+
-| ansible groups     | role                            |
-+====================+=================================+
-|``ganglia_master``  | Run gmetad and web interface.   |
-|                    | It also run the monitor daemon. |
-+--------------------+---------------------------------+
-|``ganglia_monitor`` | Run ganglia monitor daemon.     |
-+--------------------+---------------------------------+
-
-This playbook will install `Ganglia`_ monitoring tool using the
-packages distributed with Ubuntu or CentOS and will configure frontend
-and monitors.
-
-You should run only one ``ganglia_master``. This will install the
-``gmetad`` daemon to collect all the metrics from the monitored nodes
-and will also run apache.
-
-If the machine in which you installed ``ganglia_master`` has IP
-``10.2.3.4``, the ganglia web interface will be available at the
-address http://10.2.3.4/ganglia/
-
-This playbook is supposed to be compatible with all the other available playbooks.
-
-
-IPython cluster
-===============
-
-Tested on:
-
-* Ubuntu 12.04
-* CentOS 6.3
-* Debian 7.1 (GCE)
-* CentOS 6.2 (GCE)
-
-+------------------------+------------------------------------+
-| ansible groups         | role                               |
-+========================+====================================+
-| ``ipython_controller`` | Run an IPython cluster controller  |
-+------------------------+------------------------------------+
-| ``ipython_engine``     | Run a number of ipython engine for |
-|                        | each core                          |
-+------------------------+------------------------------------+
-
-This playbook will install an `IPython cluster`_ to run python code in
-parallel on multiple machines.
-
-One of the nodes should act as *controller* of the cluster
-(``ipython_controller``), running the both the *hub* and the
-*scheduler*. Other nodes will act as *engine*, and will run one
-"ipython engine" per core. You can use the *controller* node for
-computation too by assigning the  ``ipython_engine`` class to it as
-well.
-
-A *snippet* of typical configuration for an Hadoop cluster is::
-
-    [cluster/ipython]
-    setup_provider=ansible_ipython
-    controller_nodes=1
-    worker_nodes=4
-    ssh_to=controller
-    ...
-
-    [setup/ansible_ipython]
-    controller_groups=ipython_controller,ipython_engine
-    worker_groups=ipython_engine
-    ...
-
-In order to use the IPython cluster, using the default configuration,
-you are supposed to connect to the controller node via ssh and run
-your code from there.
-
-
 Hadoop + Spark
-==============
+--------------
 
 Supported on:
 
@@ -396,8 +281,87 @@ are NIS slaves) to make it easier to add users to the cluster (just run the
 ``adduser`` command on the master).
 
 
+HTCondor
+--------
+
+Tested on:
+
+* Ubuntu 12.04
+
++-------------------+----------------------------------+
+| ansible groups    | role                             |
++===================+==================================+
+|``condor_master``  | Act as scheduler, submission and |
+|                   | execution host.                  |
++-------------------+----------------------------------+
+|``condor_workers`` | Act as execution host only.      |
++-------------------+----------------------------------+
+
+This playbook will install the `HTCondor`_ workload management system
+using the packages provided by the Center for High Throughput
+Computing at UW-Madison.
+
+The ``/home`` filesystem is exported *from* the condor master to the
+compute nodes.
+
+A *snippet* of a typical configuration for a slurm cluster is::
+
+    [cluster/condor]
+    setup_provider=ansible_condor
+    frontend_nodes=1
+    compute_nodes=2
+    ssh_to=frontend
+    ...
+
+    [setup/ansible_condor]
+    frontend_groups=condor_master
+    compute_groups=condor_workers
+    ...
+
+
+Kubernetes
+----------
+
+Supported on:
+
+* Ubuntu 16.04
+* RHEL/CentOS 7.x
+
+This playbook installs the `Kubernetes`_ container management system on each host.
+It is configured using kubeadm. Currently only 1 master node is supported.
+
+To force the playbook to run, add the Ansible group ``kubernetes``. The
+following example configuration sets up a kubernetes cluster using 1
+master and 2 worker nodes, and additionally installs flannel for the networking
+(canal is also available)::
+
+    [cluster/kubernetes]
+    master_nodes=1
+    worker_nodes=2
+    ssh_to=master
+    setup_provider=kubernetes
+    # ...
+
+    [setup/kubernetes]
+    master_groups=kubernetes_master
+    worker_groups=kubernetes_worker
+    # ...
+
+SSH into the cluster and execute 'sudo kubectl --kubeconfig
+/etc/kubernetes/admin.conf get nodes' to view the cluster.
+
+
+Filesystems and storage
+=======================
+
+The following playbooks are available for installing storage clusters
+and distributed filesystems with ElastiCluster.  These can be used
+standalone, or mixed with compute clusters to provide additional
+storage space or more performant cluster filesystems.
+
+
 CephFS
-======
+------
 
 Supported on:
 
@@ -543,7 +507,7 @@ data::
 
 
 GlusterFS
-=========
+---------
 
 Supported on:
 
@@ -645,7 +609,7 @@ available:
 
 
 OrangeFS/PVFS2
-==============
+--------------
 
 Tested on:
 
@@ -687,35 +651,126 @@ This configuration will create a SLURM cluster with 10 compute nodes,
 10 data nodes and a frontend, and will mount the ``/pvfs2`` directory
 from the data nodes to both the compute nodes and the frontend.
 
-Kubernetes
-==========
+
+Add-on software
+===============
+
+The following playbooks add functionality or software on top of a
+cluster (e.g., monitoring with web-based dashboard).  They can also be
+used stand-alone (e.g., JupyterHub).
+
+
+Ansible
+-------
 
 Supported on:
 
-* Ubuntu 16.04
-* RHEL/CentOS 7.x
+* Ubuntu 12.04 and later
+* RHEL/CentOS 6.x and 7.x
 
-This playbook installs the `Kubernetes`_ container management system on each host.
-It is configured using kubeadm. Currently only 1 master node is supported.
+This playbook installs the `Ansible`_ orchestration and configuration management
+system on each host.  There is not much clustering happening here; this playbook
+is provided in case you want to be able to run Ansible playbooks from inside the
+cluster (as opposed to always running them from the ElastiCluster host).
 
-To force the playbook to run, add the Ansible group ``kubernetes``. The
-following example configuration sets up a kubernetes cluster using 1
-master and 2 worker nodes, and additionally installs flannel for the networking
-(canal is also available)::
+To force the playbook to run, add the Ansible group ``ansible`` to any node. The
+following example configuration sets up a SLURM batch-queuing cluster using 1
+front-end and 4 execution nodes, and additionally installs `Ansible`_ on the
+front-end::
 
-    [cluster/kubernetes]
+    [cluster/slurm]
     master_nodes=1
-    worker_nodes=2
+    worker_nodes=4
     ssh_to=master
-    setup_provider=kubernetes
+    setup_provider=slurm+ansible
     # ...
 
-    [setup/kubernetes]
-    master_groups=kubernetes_master
-    worker_groups=kubernetes_worker
+    [setup/slurm+ansible]
+    master_groups=slurm_master,ansible
+    worker_groups=slurm_worker
     # ...
 
-SSH into the cluster and execute 'sudo kubectl --kubeconfig /etc/kubernetes/admin.conf get nodes' to view the cluster.
+
+Ganglia
+-------
+
+Tested on:
+
+* Ubuntu 12.04
+* CentOS 6.3
+* Debian 7.1 (GCE)
+* CentOS 6.2 (GCE)
+
++--------------------+---------------------------------+
+| ansible groups     | role                            |
++====================+=================================+
+|``ganglia_master``  | Run gmetad and web interface.   |
+|                    | It also run the monitor daemon. |
++--------------------+---------------------------------+
+|``ganglia_monitor`` | Run ganglia monitor daemon.     |
++--------------------+---------------------------------+
+
+This playbook will install `Ganglia`_ monitoring tool using the
+packages distributed with Ubuntu or CentOS and will configure frontend
+and monitors.
+
+You should run only one ``ganglia_master``. This will install the
+``gmetad`` daemon to collect all the metrics from the monitored nodes
+and will also run apache.
+
+If the machine in which you installed ``ganglia_master`` has IP
+``10.2.3.4``, the ganglia web interface will be available at the
+address http://10.2.3.4/ganglia/
+
+This playbook is supposed to be compatible with all the other available playbooks.
+
+
+IPython cluster
+---------------
+
+Tested on:
+
+* Ubuntu 12.04
+* CentOS 6.3
+* Debian 7.1 (GCE)
+* CentOS 6.2 (GCE)
+
++------------------------+------------------------------------+
+| ansible groups         | role                               |
++========================+====================================+
+| ``ipython_controller`` | Run an IPython cluster controller  |
++------------------------+------------------------------------+
+| ``ipython_engine``     | Run a number of ipython engine for |
+|                        | each core                          |
++------------------------+------------------------------------+
+
+This playbook will install an `IPython cluster`_ to run python code in
+parallel on multiple machines.
+
+One of the nodes should act as *controller* of the cluster
+(``ipython_controller``), running the both the *hub* and the
+*scheduler*. Other nodes will act as *engine*, and will run one
+"ipython engine" per core. You can use the *controller* node for
+computation too by assigning the  ``ipython_engine`` class to it as
+well.
+
+A *snippet* of typical configuration for an Hadoop cluster is::
+
+    [cluster/ipython]
+    setup_provider=ansible_ipython
+    controller_nodes=1
+    worker_nodes=4
+    ssh_to=controller
+    ...
+
+    [setup/ansible_ipython]
+    controller_groups=ipython_controller,ipython_engine
+    worker_groups=ipython_engine
+    ...
+
+In order to use the IPython cluster, using the default configuration,
+you are supposed to connect to the controller node via ssh and run
+your code from there.
 
 
 SAMBA
