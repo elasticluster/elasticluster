@@ -128,15 +128,21 @@ the ``setup`` stanza will look like::
 
 Extra variables can be set by editing the `setup/` section:
 
-================================== =================== =================================================
-Variable name                      Default             Description
-================================== =================== =================================================
-``slurm_selecttype``               ``select/cons_res`` Value of `SelectType` in `slurm.conf`
-``slurm_selecttypeparameters``     ``CR_Core_Memory``  Value of `SelectTypeParameters` in `slurm.conf`
-``slurm_maxarraysize``             1000                Maximum size of an array job
-``slurm_maxjobcount``              10000               Maximum nr. of jobs actively managed by the
-                                                       SLURM controller (i.e., pending and running)
-================================== =================== =================================================
+================================== ======================== =====================================================
+Variable name                      Default                  Description
+================================== ======================== =====================================================
+``slurm_fastschedule``             1                        Value of ``FastSchedule`` in ``slurm.conf``
+``slurm_jobacctgatherfrequency``   60                       Value of ``JobAcctGatherFrequency`` in ``slurm.conf``
+``slurm_jobacctgathertype``        ``jobacct_gather/linux`` Value of ``JobAcctGratherType`` in ``slurm.conf``
+``slurm_maxarraysize``             1000                     Maximum size of an array job
+``slurm_maxjobcount``              10000                    Maximum nr. of jobs actively managed by the
+                                                            SLURM controller (i.e., pending and running)
+``slurm_proctracktype``            ``proctrack/linuxproc``  Value of ``ProcTrackType`` in ``slurm.conf``
+``slurm_returntoservice``          1                        Value of ``ReturnToService`` in ``slurm.conf``
+``slurm_selecttype``               ``select/cons_res``      Value of ``SelectType`` in ``slurm.conf``
+``slurm_selecttypeparameters``     ``CR_Core_Memory``       Value of ``SelectTypeParameters`` in ``slurm.conf``
+``slurm_taskplugin``               ``task/none``            Value of ``TaskPlugin`` in ``slurm.conf``
+================================== ======================== =====================================================
 
 The following extra variable can used to further customize the SLURM's
 ``task/cgroup`` plugin (activated by setting
