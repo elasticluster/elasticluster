@@ -118,12 +118,34 @@ cluster using 1 front-end and 4 execution nodes::
     worker_groups=slurm_worker
     # ...
 
-You can combine the SLURM playbook with the Ganglia one; in this case
-the ``setup`` stanza will look like::
+You can combine the SLURM playbook with other add-on software.  For
+instance, you can install the Ganglia monitoring system alongside with
+SLURM; in this case the ``setup`` stanza will look like::
 
-    [setup/ansible_slurm]
+    [setup/slurm+ganglia]
     frontend_groups=slurm_master,ganglia_master
     compute_groups=slurm_worker,ganglia_monitor
+    ...
+
+When combined with the CUDA add-on, and if any actual NVIDIA GPU
+devices are found on the compute nodes, SLURM will be configured with
+the GPU devices are GRES__ resources so that you can request the use
+of GPUs in your jobs by passing the ``--gres=gpu:...`` option to
+``sbatch``::
+
+  # request 2 GPU devices
+  sbatch --gres=gpu:2 my_gpgpu_job.sh
+
+.. __: https://slurm.schedmd.com/gres.html
+
+Note that compute nodes need to be given the `cuda` add-on playbook in
+order for CUDA GPU detection and configuration to work.  For eaxmple,
+the following configuration will detect and configure NVIDIA GPUs on
+all compute nodes (but not on the front-end)::
+
+    [setup/slurm+gpu]
+    frontend_groups=slurm_master
+    compute_groups=slurm_worker,cuda
     ...
 
 Extra variables can be set by editing the `setup/` section:
@@ -786,6 +808,42 @@ front-end::
     master_groups=slurm_master,ansible
     worker_groups=slurm_worker
     # ...
+
+
+CUDA
+----
+
+Tested on:
+
+* Ubuntu 14.04, 16.04
+* CentOS 6.x, 7.x
+
++----------------+---------------------------------------+
+| ansible groups | role                                  |
++================+=======================================+
+|``cuda``        | Install the NVIDIA device drivers and |
+|                | the CUDA toolkit and runtime.         |
++----------------+---------------------------------------+
+
+This playbook will detect NVIDIA GPU devices on every host where it is
+run, and install the CUDA toolkit and runtime software, thus enabling
+the use of GPU accelerators.
+
+Note that in some cases a reboot is necessary in order to correctly
+install the NVIDIA GPU device drivers; this is only allowed if the
+global variable ``allow_reboot`` is ``true`` -- by default, reboots
+are not allowed so the playbook will fail if a reboot is needed.
+
+A variable can be used to control the version of the CUDA toolkit that
+will be installed on the nodes:
+
+================ ============= ============================================
+Variable name    Default value Description
+---------------- ------------- --------------------------------------------
+``cuda_version`` 8.0           What version of the CUDA toolkit to install
+================ ============= ============================================
+
+The default is to install CUDA tooklit and runtime version 8.0
 
 
 EasyBuild

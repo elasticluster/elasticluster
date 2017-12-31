@@ -1,0 +1,7 @@
+---
+
+# Split version specifier into separate "major" and "minor" variables,
+# as sometimes the version is written as "major.minor" and some other
+# times "major-minor"..
+cuda_version_major: '{{ (cuda_version|string).split(".")[0]|default(8) }}'
+cuda_version_minor: '{{ (cuda_version|string).split(".")[1]|default(0) }}'

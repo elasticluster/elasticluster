@@ -57,11 +57,15 @@
 
 
 - name: Reboot to enable swap accounting
-  command: |
-    /sbin/shutdown -r now "Rebooting to enable swap accounting ..."
+  # the initial `sleep` command is there to give time to Ansible to
+  # background the task and disconnect; otherwise the SSH connection
+  # is torn by the reboot and Ansible marks the host as "unreachable"
+  shell: |
+    sleep 3;
+    /sbin/shutdown -r now "Rebooting to enable swap accounting ...";
   async: 1
   poll: 0
-  register: _reboot
+  register: _cgroup_reboot
   when: 'allow_reboot|default(false) and _memsw_limit|failed and _bootparam_swapaccounting'
 
 
@@ -74,7 +78,7 @@
     delay: 10
     timeout: 300
   delegate_to: localhost
-  when: 'not _reboot|skipped'
+  when: 'not _cgroup_reboot|skipped'
 
 
 - name: Ensure release agent directory exists
