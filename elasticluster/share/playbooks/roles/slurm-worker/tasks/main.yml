@@ -4,13 +4,21 @@
 - name: Load distribution-specific parameters
   include: 'init-{{ansible_os_family}}.yml'
 
+- name: Deploy SLURM cgroup configuration
+  tags:
+    - slurm
+    - slurm-worker
+    - cgroups
+  include: cgroup.yml
+  when: '"cgroup" in slurm_taskplugin or "cgroup" in slurm_proctracktype or "cgroup" in slurm_jobacctgathertype'
+
 - name: Install SLURM worker packages
   package:
-    name={{item}}
-    state=latest
+    name: {{item}}
+    state: latest
   with_items: '{{slurmd_packages}}'
 
 - name: Ensure SLURMd starts at boot
   service:
-    name='{{slurmd_service}}'
-    enabled=yes
+    name: '{{slurmd_service}}'
+    enabled: yes

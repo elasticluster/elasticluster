@@ -138,6 +138,33 @@ Variable name                      Default             Description
                                                        SLURM controller (i.e., pending and running)
 ================================== =================== =================================================
 
+The following extra variable can used to further customize the SLURM's
+``task/cgroup`` plugin (activated by setting
+``slurm_taskplugin=task/cgroup``, see above):
+
+================================== ======================== =====================================================
+Variable name                      Default                  Description
+================================== ======================== =====================================================
+``slurm_constrainramspace``        no                       If set to ``yes`` then SLURM constrains the job's RAM
+                                                            usage by setting the memory soft limit to the
+                                                            allocated memory and the hard limit to the allocated
+                                                            memory * ``slurm_allowedramspace`` (see below).  This
+                                                            can add stability to a system when there are multiple
+                                                            misbehaving jobs that allocate large amounts of
+                                                            memory, but can be problematic with jobs using GPUs
+                                                            (since the memory used on the GPU seems to be
+                                                            accounted against the job's own CPU RAM consumption)
+``slurm_constrainswapspace``       no                       If set to ``yes`` then SLURM constrains the job's
+                                                            additional virtual memory usage to the allocated
+                                                            memory * ``slurm_allowedswapspace`` (see below).
+``slurm_allowedramspace``          100                      Max percentage of RAM that can be allocated to a job.
+                                                            Only used if ``slurm_constrainramspace`` (see above)
+                                                            is ``yes``.
+``slurm_allowedswapspace``         0                        Max percentage of additional virtual memory that can
+                                                            be allocated to a job.  Only used if
+                                                            ``slurm_constrainramspace`` (see above) is ``yes``.
+================================== ======================== =====================================================
+
 Note that the ``slurm_*`` extra variables need to be set *globally*
 (e.g., ``global_var_slurm_selectype``) because the SLURM configuration
 file must be identical across the whole cluster.
