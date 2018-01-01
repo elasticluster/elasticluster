@@ -138,6 +138,9 @@ if ! [ -x "$python" ]; then
     # try to install Python 2.7 (or 2.6 + simplejson)
     case "$os" in
         [Dd]ebian|[Uu]buntu)
+            # need to update otherwise the following `apt-get install`
+            # may fail as the local DB of package versions is outdated
+            apt-get update
             do_or_die apt-get install -y python2.7 python-simplejson
             ;;
         [Rr]ed[Hh]at)
