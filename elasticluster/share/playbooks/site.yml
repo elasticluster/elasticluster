@@ -42,6 +42,7 @@
 - include: roles/htcondor.yml
 
 # add-on software
+- include: roles/easybuild.yml
 - include: roles/r.yml
 - include: roles/samba.yml
 

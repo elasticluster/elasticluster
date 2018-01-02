@@ -1,0 +1,8 @@
+---
+- name: Install EasyBuild
+  hosts: easybuild
+  tags:
+    - easybuild
+
+  roles:
+    - easybuild
