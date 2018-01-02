@@ -2,7 +2,7 @@
 ---
 
 # What release of Apache Bigtop to get packages from
-bigtop_release: '1.1.0'
+bigtop_release: '1.2.1'
 
 # identifier for GnuPG key(s) used to sign packages from the Apache Bigtop repo
 bigtop_signing_key:
