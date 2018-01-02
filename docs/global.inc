@@ -24,6 +24,7 @@
 .. _`CentOS`: http://www.centos.org/
 .. _`Ceph`: http://ceph.com/
 .. _`Debian GNU/Linux`: http://www.debian.org
+.. _EasyBuild: http://easybuild.readthedocs.io/
 .. _`elasticluster`: http://gc3-uzh-ch.github.io/elasticluster/
 .. _`example configuration file`: https://github.com/gc3-uzh-ch/elasticluster/raw/master/elasticluster/share/etc/config.template
 .. _`Ganglia`: http://ganglia.info
@@ -39,6 +40,8 @@
 .. _`Hive`: http://hive.apache.org/
 .. _`HTCondor`: http://research.cs.wisc.edu/htcondor/
 .. _`IPython cluster`: http://ipython.org/ipython-doc/dev/parallel/
+.. _Lmod: http://lmod.readthedocs.io/en/latest/
+.. _Lua: http://www.lua.org/
 .. _`mailing-list`: https://groups.google.com/forum/#!forum/elasticluster
 .. _`OpenStack`: http://www.openstack.org/
 .. _`OrangeFS`: http://orangefs.org/

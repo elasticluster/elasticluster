@@ -691,15 +691,87 @@ front-end::
     # ...
 
 
+EasyBuild
+---------
+
+Supported on:
+
+* Ubuntu 16.04, 14.04
+* Debian 8 ("jessie"), 9 ("stretch")
+* CentOS 6.x and 7.x
+
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``easybuild``   Install the EasyBuild_ HPC package manager.
+==============  =======================================================
+
+This playbook installs EasyBuild_ and its dependencies to provide
+a working build environment for HPC clusters.
+
+EasyBuild is configured with the following options:
+
+* use Lmod_ as the "environment modules" tool,
+  and generate module files with Lua_ syntax.
+* use `minimal toolchains`_ (including the "dummy" / system compiler toolchain)
+* use `generic optimization flags`_ for maximum compatibility
+
+.. _`minimal toolchains`: http://easybuild.readthedocs.io/en/latest/Manipulating_dependencies.html#using-minimal-toolchains-for-dependencies
+.. _`generic optimization flags`: http://easybuild.readthedocs.io/en/latest/Controlling_compiler_optimization_flags.html#optimizing-for-a-generic-processor-architecture-via-optarch-generic
+
+The following variables may be set to alter the role behavior:
+
+.. list-table::
+   :widths: 15 10 75
+   :header-rows: 1
+
+   * - Variable name
+     - Default
+     - Description
+
+   * - ``EASYBUILD_VERSION``
+     - 2.8.2
+     - The version of EasyBuild_ to install. Interpolated into the
+       (default) source archive name.
+
+   * - ``EASYBUILD_PREFIX``
+     - ``/opt/easybuild``
+     - Root directory of all the EasyBuild-related paths: source
+       archive, ``.eb``` files repository, installed software, etc.
+
+   * - ``EASYBUILD_INSTALL``
+     - Build no software during cluster setup.
+     - List of ``.eb`` recipes to build.  This is a *YAML list*, i.e.,
+       a comma-separated list of recipe names enclosed in square
+       brackets; for example::
+
+         global_var_EASYBUILD_INSTALL=[RELION,OpenMPI]
+
+       *Beware:* the initial EasyBuild invocation will have to build
+       the entire toolchain, so it can take a couple of hours even to
+       install a small and relatively simple package. For this reason,
+       the default value of this variable is the empty list (i.e., do
+       not install any software through EasyBuild).
+
+    * - ``EASYBUILD_OPTARCH``
+      - ``GENERIC``
+      - Optimization flags for building software, see:
+        http://easybuild.readthedocs.io/en/latest/Controlling_compiler_optimization_flags.html#controlling-target-architecture-specific-optimizations-via-optarch
+        By default the "GENERIC" value is used which should produce
+        code compatible with any x86-64 processor.
+
+It is advised to install EasyBuild on the master/frontend node only,
+and export the software directories from there to compute nodes via
+NFS, to cut down on build times and to avoid coherency issues.
+
+
 Ganglia
 -------
 
 Tested on:
 
-* Ubuntu 12.04
-* CentOS 6.3
-* Debian 7.1 (GCE)
-* CentOS 6.2 (GCE)
+* Ubuntu 12.04, 14.04, 16.04
+* CentOS 6.x, 7.x
 
 +--------------------+---------------------------------+
 | ansible groups     | role                            |
