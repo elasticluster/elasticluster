@@ -845,6 +845,66 @@ you are supposed to connect to the controller node via ssh and run
 your code from there.
 
 
+JupyterHub
+----------
+
+Supported on:
+
+* Ubuntu 16.04, 14.04
+* Debian 8 ("jessie"), 9 ("stretch")
+* CentOS 6.x and 7.x
+
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``jupyterhub``  Install Jupyter_ and JupyterHub_ to work with interactive
+                computational notebooks.
+==============  =======================================================
+
+Install JupyterHub_ to grant multiple users access to Jupyter_
+notebooks thorugh a web interface.  Kernels are installed to run code
+written in Python 2.7 and 3.x (with Ananconda_ Python), BASH (using
+the OS-provided shell), PySpark (in conjunction with the Hadoop+Spark
+playbook), `R language`_ (if the R add-on is installed, see below),
+and MATLAB (if installed).
+
+.. note::
+
+   JupyterHub is configured to authenticate users with the GNU/Linux
+   ``/etc/passwd`` database.  So, in order to log in you need to
+   create users first (or set passwords to existing users).
+
+   In order to create a new user, run the following commands at the
+   node's shell prompt::
+
+     # replace `user_name` with an actual name (e.g. `jsmith`)
+     sudo adduser user_name
+
+   In order to set the password for an existing user, run the
+   following commands at the node's shell prompt::
+
+     # replace `user_name` with an actual name (e.g. `jsmith`)
+     sudo passwd user_name
+
+To use the JupyterHub server:
+
+1. Note down the IP address of the server VM created by ElastiCluster
+2. In your browser, open https://server.ip/
+3. Accept the self-signed SSL certificate in the browser
+4. Log in using username and password
+
+.. note::
+
+   You must edit the VM security group to allow connections to port
+   443!  (ElastiCluster will not do this automatically.)
+
+The JupyterHub role can be combined with other playbooks (it is
+advised to add it to the frontend/master node), or can be used to
+install a stand-alone server.  A full example of how to install a
+JupyterHub stand-alone server can be found at:
+`<https://github.com/gc3-uzh-ch/elasticluster/blob/master/examples/jupyterhub-on-google.conf>`_
+
+
 R language
 ----------
 
