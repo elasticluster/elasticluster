@@ -44,6 +44,7 @@
 - include: roles/slurm.yml
 
 # add-on software
+- include: roles/anaconda.yml
 - include: roles/ansible.yml
 - include: roles/easybuild.yml
 - include: roles/ganglia.yml
