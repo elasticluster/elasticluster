@@ -46,6 +46,7 @@
 .. _`PyPI`: https://pypi.python.org/pypi
 .. _`python virtualenv`: https://pypi.python.org/pypi/virtualenv
 .. _`Python`: http://www.python.org
+.. _`R language`: http://www.r-project.org/
 .. _`Services and Support for Science IT`: http://www.s3it.uzh.ch/
 .. _`SoGE`: https://arc.liv.ac.uk/trac/SGE
 .. _`Spark`: http://spark.apache.org/

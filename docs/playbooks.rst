@@ -773,8 +773,63 @@ you are supposed to connect to the controller node via ssh and run
 your code from there.
 
 
+R language
+----------
+
+Supported on:
+
+* Ubuntu 16.04, 14.04
+* Debian 8 ("jessie"), 9 ("stretch")
+* CentOS 6.x and 7.x
+
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``r``           Install the interpreter and a basic libraries
+                for the GNU `R language`_ and statistical system.
+==============  =======================================================
+
+This playbook installs the `R language`_ interpreter and a few
+additional libraries.  R binaries installed by ElastiCluster come from
+3rd-party repositories which (normally) provide more up-to-date
+releases compared to the OS packages.
+
+The following extra variables can be set to control installation of
+additional R libraries:
+
+===================== ========================== ==============================
+Variable name         Default                    Description
+===================== ========================== ==============================
+``r_libraries``       ``[devtools]``             List of R packages to install
+``r_cluster_support`` "yes" if installing R on   Whether to install ``Rmpi ``
+                      more then 1 node,          and other packages for
+                      "no" otherwise             distributing work
+                                                 across a computing cluster
+===================== ========================== ==============================
+
+By default, the ``devtools`` library is installed so that R packages
+can be installed directly from their GitHub location.  Additionally, R
+support for MPI and distribution of work across a cluster is available
+if R support is being deployed to more than 1 host.
+
+.. note::
+
+   Note that the ``r_libraries`` variable is a *YAML list*.  In order
+   to customize its value, you must provide a comma-separated list of
+   library names, enclosed in square brackets.
+
+   For instance, the following configuration snippet requests that
+   ElastiCluster and Ansible install R libraries ``devtools`` and
+   ``doSnow`` on the compute nodes of a SLURM cluster::
+
+       [setup/slurm+r]
+       # ...
+       compute_groups=slurm_worker,r
+       compute_r_libraries=[devtools,doSnow]
+
+
 SAMBA
-=====
+-----
 
 Supported on:
 
