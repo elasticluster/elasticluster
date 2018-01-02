@@ -660,6 +660,73 @@ cluster (e.g., monitoring with web-based dashboard).  They can also be
 used stand-alone (e.g., JupyterHub).
 
 
+Anaconda
+--------
+
+Supported on:
+
+* Ubuntu 14.04 and later
+* RHEL/CentOS 6.x and 7.x
+
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``anaconda``    Install the Anaconda_ Python distribution
+==============  =======================================================
+
+This playbook installs the `Anaconda`_ Python distribution.  Using
+customization variables you can choose whether to install the Python
+2.7 or Python 3 version, and whether to make the Anaconda Python
+interpreter the default Python interpreter for logged-in users.
+
+The following variables may be set to alter the role behavior:
+
+.. list-table::
+   :widths: 15 10 75
+   :header-rows: 1
+
+   * - Variable name
+     - Default
+     - Description
+
+   * - ``anaconda_version``
+     - ``4.3.0``
+      - Version of the Anaconda Python distribution to install
+
+   * - ``anaconda_python_version``
+     - ``2``
+     - Anaconda comes with either a Python2 or a Python3 interpreter
+       -- choose which one you want here.
+
+   * - ``anaconda_in_path``
+     - ``yes``
+     - whether the Python interpreter from Anaconda should be made the
+       first match in users' shell ``$PATH``
+
+For instance, the following configuration snippet requests that
+ElastiCluster and Ansible install Anaconda Python3 on a SLURM cluster,
+and make it the default interpreter on the frontend node only::
+
+     [setup/slurm+anaconda]
+     # ... same as usual SLURM setup, but:
+     master_groups=slurm_master,anaconda
+     worker_groups=slurm_worker,anaconda
+
+     # use Anaconda Python3 flavor
+     global_var_anaconda_python_version=3
+
+     # make it default for logged-in users on master node only
+     master_var_anaconda_in_path=yes
+     worker_var_anaconda_in_path=no
+
+The code from this role is a minor modification of the
+`ansible-anaconda`__ playbook written by Andrew Rothstein, and as
+such maintains the original distribution license.  See the
+accompanying `LICENSE` file for details.
+
+.. __: https://github.com/andrewrothstein/ansible-anaconda
+
+
 Ansible
 -------
 
