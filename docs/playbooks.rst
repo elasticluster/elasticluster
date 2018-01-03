@@ -407,7 +407,7 @@ The Ceph and CephFS behavior can be changed by defining the
 following variables in the `setup/` section:
 
 .. list-table:: Ceph/CephFS variables in ElastiCluster
-   :widths: 30 20 50
+   :widths: 10 15 75
    :header-rows: 1
 
    * - Variable
@@ -681,23 +681,20 @@ interpreter the default Python interpreter for logged-in users.
 
 The following variables may be set to alter the role behavior:
 
-.. list-table::
-   :widths: 15 10 75
+.. list-table:: Anaconda role variables in ElastiCluster
+   :widths: 10 15 75
    :header-rows: 1
 
-   * - Variable name
-     - Default
+   * - Variable
+     - Default value
      - Description
-
    * - ``anaconda_version``
      - ``4.3.0``
-      - Version of the Anaconda Python distribution to install
-
+     - Version of the Anaconda Python distribution to install
    * - ``anaconda_python_version``
      - ``2``
      - Anaconda comes with either a Python2 or a Python3 interpreter
        -- choose which one you want here.
-
    * - ``anaconda_in_path``
      - ``yes``
      - whether the Python interpreter from Anaconda should be made the
@@ -788,24 +785,21 @@ EasyBuild is configured with the following options:
 
 The following variables may be set to alter the role behavior:
 
-.. list-table::
-   :widths: 15 10 75
+.. list-table:: EasyBuild role variables in ElastiCluster
+   :widths: 10 15 75
    :header-rows: 1
 
-   * - Variable name
-     - Default
+   * - Variable
+     - Default value
      - Description
-
    * - ``EASYBUILD_VERSION``
      - 2.8.2
      - The version of EasyBuild_ to install. Interpolated into the
        (default) source archive name.
-
    * - ``EASYBUILD_PREFIX``
      - ``/opt/easybuild``
      - Root directory of all the EasyBuild-related paths: source
        archive, ``.eb``` files repository, installed software, etc.
-
    * - ``EASYBUILD_INSTALL``
      - Build no software during cluster setup.
      - List of ``.eb`` recipes to build.  This is a *YAML list*, i.e.,
@@ -819,13 +813,12 @@ The following variables may be set to alter the role behavior:
        install a small and relatively simple package. For this reason,
        the default value of this variable is the empty list (i.e., do
        not install any software through EasyBuild).
-
-    * - ``EASYBUILD_OPTARCH``
-      - ``GENERIC``
-      - Optimization flags for building software, see:
-        http://easybuild.readthedocs.io/en/latest/Controlling_compiler_optimization_flags.html#controlling-target-architecture-specific-optimizations-via-optarch
-        By default the "GENERIC" value is used which should produce
-        code compatible with any x86-64 processor.
+   * - ``EASYBUILD_OPTARCH``
+     - ``GENERIC``
+     - Optimization flags for building software, see:
+       `<http://easybuild.readthedocs.io/en/latest/Controlling_compiler_optimization_flags.html#controlling-target-architecture-specific-optimizations-via-optarch>`_
+       By default the "GENERIC" value is used which should produce
+       code compatible with any x86-64 processor.
 
 It is advised to install EasyBuild on the master/frontend node only,
 and export the software directories from there to compute nodes via
@@ -930,7 +923,7 @@ Ansible group   Action
 
 Install JupyterHub_ to grant multiple users access to Jupyter_
 notebooks thorugh a web interface.  Kernels are installed to run code
-written in Python 2.7 and 3.x (with Ananconda_ Python), BASH (using
+written in Python 2.7 and 3.x (with Anaconda_ Python), BASH (using
 the OS-provided shell), PySpark (in conjunction with the Hadoop+Spark
 playbook), `R language`_ (if the R add-on is installed, see below),
 and MATLAB (if installed).
@@ -1000,7 +993,7 @@ additional R libraries:
 Variable name         Default                    Description
 ===================== ========================== ==============================
 ``r_libraries``       ``[devtools]``             List of R packages to install
-``r_cluster_support`` "yes" if installing R on   Whether to install ``Rmpi ``
+``r_cluster_support`` "yes" if installing R on   Whether to install ``Rmpi``
                       more then 1 node,          and other packages for
                       "no" otherwise             distributing work
                                                  across a computing cluster
