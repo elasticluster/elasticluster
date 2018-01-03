@@ -87,8 +87,8 @@
 
 - name: Ensure supervisord re-reads config
   shell: |
-    supervisorctl reread
-    supervisorctl update
+    supervisorctl reread;
+    supervisorctl update;
   when: _deploy_supervisord_conf_for_jupyterhub|changed
 
 
