@@ -689,7 +689,7 @@ The following variables may be set to alter the role behavior:
      - Default value
      - Description
    * - ``anaconda_version``
-     - ``4.3.0``
+     - ``5.0.1``
      - Version of the Anaconda Python distribution to install
    * - ``anaconda_python_version``
      - ``2``
