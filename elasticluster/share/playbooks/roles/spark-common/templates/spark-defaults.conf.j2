@@ -9,7 +9,7 @@
 spark.driver.memory              {{ (ansible_memory_mb.nocache.free / ansible_processor_vcpus)|int }}m
 
 # This value depends more on the intended usage of the cluster than on its
-features; still, ElastiCluster has to provide a default. Ideally one woulda use
+# features; still, ElastiCluster has to provide a default. Ideally one would use
 # the *minimum* RAM-per-core ratio (as that would give the largest compatibility)
 # but Ansible and Jinja currently lack filters to allow us to compute the RAM/core
 # quotient across all nodes. So use the (max memory) / (average nr. of cores) as a
@@ -36,7 +36,7 @@ spark.yarn.appMasterEnv.PATH {{anaconda_home}}/bin:/usr/local/sbin:/usr/local/bi
 # Amount of memory to use per python worker process during
 # aggregation, in the same format as JVM memory strings (e.g. 512m, 2g).
 # If the memory used during aggregation goes above this amount, it will
-# spill the data into disks. 
+# spill the data into disks.
 #
 spark.python.worker.memory       {{(ansible_memory_mb.nocache.free * 0.5)|int}}m
 
@@ -53,11 +53,11 @@ spark.scheduler.maxRegisteredResourcesWaitingTime 5s
 # Specified as a double between 0.0 and 1.0. Regardless of whether the
 # minimum ratio of resources has been reached, the maximum amount of
 # time it will wait before scheduling begins is controlled by config
-# spark.scheduler.maxRegisteredResourcesWaitingTime. 
+# spark.scheduler.maxRegisteredResourcesWaitingTime.
 #
-spark.scheduler.minRegisteredResourcesRatio 0.5 
+spark.scheduler.minRegisteredResourcesRatio 0.5
 
 
 # Max out message size for those who do not care much about slowing
 # down computation due to too much communication
-spark.akka.frameSize	2000
+spark.akka.frameSize    2000
