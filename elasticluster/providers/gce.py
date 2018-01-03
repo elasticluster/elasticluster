@@ -228,7 +228,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str private_key_path: path to ssh private key
         :param str security_group: firewall rule definition to apply on the
                                    instance
-        :param str flavor: machine type to use for the instance
+        :param str flavor: machine type to use for the instance; accelrator type and number can be specified using space delimited list
         :param str image_id: image type (os) to use for the instance
         :param str image_userdata: command to execute after startup
         :param str username: username for the given ssh key, default None
@@ -242,6 +242,17 @@ class GoogleCloudProvider(AbstractCloudProvider):
 
         :return: str - instance id of the started instance
         """
+        tokens = flavor.split()
+        accelerator_url = None
+        accelerator_num = 1
+        if len(tokens) > 1:
+            flavor = tokens[0]
+            accelerator = tokens[1]
+            #the following will have to change once gpus are out of beta
+            accelerator_url = 'https://www.googleapis.com/compute/beta/projects/%s/zones/%s/acceleratorTypes/%s' % (self._project_id, self._zone, accelerator)
+            if len(tokens) > 2:
+                accelerator_num = int(tokens[2])
+            
         # construct URLs
         project_url = '%s%s' % (GCE_URL, self._project_id)
         machine_type_url = '%s/zones/%s/machineTypes/%s' \
@@ -350,6 +361,16 @@ class GoogleCloudProvider(AbstractCloudProvider):
             }
         }
 
+        if accelerator_url:
+            instance['guestAccelerators'] = [{
+                'acceleratorCount': accelerator_num,
+                'acceleratorType': accelerator_url
+            }]
+            instance['scheduling'] = {
+              'automaticRestart': True,
+              'onHostMaintenance': "TERMINATE",
+              "preemtible": False
+            }
         # create the instance
         gce = self._connect()
         request = gce.instances().insert(
