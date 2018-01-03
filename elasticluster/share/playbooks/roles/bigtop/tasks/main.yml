@@ -8,15 +8,14 @@
   
 - name: add signing key for Apache Bigtop repository
   apt_key:
-    keyserver=keys.gnupg.net
-    id='{{item}}'
-  with_items: '{{bigtop_signing_key}}'
+    url: "http://www.apache.org/dist/bigtop/bigtop-{{ bigtop_release }}/repos/GPG-KEY-bigtop"
+    state: present
 
   
 - name: add Apache Bigtop repository
   apt_repository:
-    # download from: http://www.apache.org/dist/bigtop/bigtop-1.0.0/repos/trusty/bigtop.list
-    repo='deb http://bigtop-repos.s3.amazonaws.com/releases/{{bigtop_release}}/{{ansible_distribution|lower}}/{{ansible_distribution_major_version}}/x86_64 bigtop contrib'
+    # download from: http://www.apache.org/dist/bigtop/bigtop-1.2.1/repos/ubuntu16.04/bigtop.list
+    repo='deb http://repos.bigtop.apache.org/releases/{{bigtop_release}}/{{ansible_distribution|lower}}/{{ansible_distribution_version}}/x86_64 bigtop contrib'
     state=present
 
 
