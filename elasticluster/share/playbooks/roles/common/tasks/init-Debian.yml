@@ -45,7 +45,7 @@
 # Apparently some systemd commands (e.g., `hostnamectl` -- possibly others)
 # *require* D-Bus but the Debian 8 cloud VM image does not have it installed
 # (see issues #392, #393).  So, ensure it is installed.
-- name: Ensure additional packages are installed (Debian 8 "jessie")
+- name: Ensure additional packages are installed (Debian 8)
   apt:
     name: '{{item}}'
     state: present
@@ -58,14 +58,15 @@
   set_fact:
     __at__: '='
 
-- block:
-    - name: Install policy package for service autostart
-      apt:
-        name: 'policyrcd-script-zg2'
-        state: present
-    - name: Install policy script for service autostart
-      copy:
-        dest: '/etc/policy-rc.d'
-        src: 'etc/policy-rc.d'
-        mode: 0555
-  when: 'not {{init_is_systemd}}'
+
+- name: Install policy package for service autostart
+  apt:
+    name: 'policyrcd-script-zg2'
+    state: present
+
+
+- name: Install policy script for service autostart
+  copy:
+    dest: '/etc/policy-rc.d'
+    src: 'etc/policy-rc.d'
+    mode: 0555
