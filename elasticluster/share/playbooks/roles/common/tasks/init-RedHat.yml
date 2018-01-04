@@ -17,6 +17,13 @@
   when: 'not epel_repo_file.stat.exists'
 
 
+- name: Upgrade all installed packages to latest version
+  yum:
+    name: '*'
+    state: latest
+    update_cache: yes
+
+
 - name: Provide workaround for https://github.com/ansible/ansible-modules-core/issues/4472
   set_fact:
     __at__: '-'
