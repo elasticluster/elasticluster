@@ -67,19 +67,25 @@
   register: ssh_keysign
 
 
-# In theory this should work; in practice Ansible's `with_fileglob`
-# does not work as advertised so we use a quick shell piece to do the
-# same job...
-#
-# - name: Ensure SSH host keys can be read by `ssh-keysign`
-#   file:
-#     dest: '{{ item }}'
-#     group: '{{ ssh_keysign.stat.gr_name }}'
-#     mode: 'g+r'
-#   with_fileglob: '/etc/ssh/ssh_host*key*'
+- name: List all SSH host keys
+  find:
+    path: '/etc/ssh'
+    pattern: 'ssh_host_[a-z0-9]+_key(.pub|.pem)?'
+    use_regex: yes
+  register: _find_ssh_host_keys
+
 
 - name: Ensure SSH host keys can be read by `ssh-keysign`
-  shell: |
-    chgrp -v '{{ ssh_keysign.stat.gid }}' /etc/ssh/ssh_host*key*
-    chmod -v 'g+r' /etc/ssh/ssh_host*key*
+  file:
+    dest: '{{ item.path }}'
+    group: '{{ ssh_keysign.stat.gr_name }}'
+    mode: 'g+r'
+  with_items: '{{ _find_ssh_host_keys.files }}'
   notify: 'restart sshd {{ansible_os_family}}'
+
+# Alternatively:
+# - name: Ensure SSH host keys can be read by `ssh-keysign`
+#   shell: |
+#     chgrp -v '{{ ssh_keysign.stat.gid }}' /etc/ssh/ssh_host*key*
+#     chmod -v 'g+r' /etc/ssh/ssh_host*key*
+#   notify: 'restart sshd {{ansible_os_family}}'
