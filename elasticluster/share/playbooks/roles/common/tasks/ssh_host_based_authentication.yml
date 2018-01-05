@@ -48,7 +48,7 @@
   with_items:
     - { key: "HostbasedAuthentication", value: 'yes' }
     - { key: "IgnoreRhosts",            value: 'no'  }
-  notify: restart sshd
+  notify: 'restart sshd {{ansible_os_family}}'
 
 
 - name: Setup SSH host based authentication (server configuration file)
@@ -82,4 +82,4 @@
   shell: |
     chgrp -v '{{ ssh_keysign.stat.gid }}' /etc/ssh/ssh_host*key*
     chmod -v 'g+r' /etc/ssh/ssh_host*key*
-  notify: restart sshd
+  notify: 'restart sshd {{ansible_os_family}}'
