@@ -1,4 +1,19 @@
 ---
+#
+# Set up SSH host-based authentication
+#
+
+- name: Load distribution-dependent values (Debian/Ubuntu)
+  set_fact:
+    ssh_keysign_path: '/usr/lib/openssh/ssh-keysign'
+  when: '{{ is_debian_compatible }}'
+
+
+- name: Load distribution-dependent values (CentOS/RHEL)
+  set_fact:
+    ssh_keysign_path: '/usr/libexec/openssh/ssh-keysign'
+  when: '{{ is_rhel_compatible }}'
+
 
 - name: Setup SSH known hosts file
   template:
@@ -8,7 +23,7 @@
     group=root
     mode=0644
 
-    
+
 - name: Setup /etc/ssh/shosts.equiv file
   template:
     dest=/etc/ssh/shosts.equiv
@@ -24,7 +39,7 @@
     owner=root
     group=root
 
-    
+
 - name: Setup SSH host based authentication (server configuration file)
   lineinfile:
     dest=/etc/ssh/sshd_config
@@ -35,7 +50,7 @@
     - { key: "IgnoreRhosts",            value: 'no'  }
   notify: restart sshd
 
-  
+
 - name: Setup SSH host based authentication (server configuration file)
   lineinfile:
     dest=/etc/ssh/ssh_config
@@ -44,3 +59,27 @@
   with_items:
     - { key: 'HostbasedAuthentication', value: 'yes' }
     - { key: 'EnableSSHKeysign',        value: 'yes' }
+
+
+- name: Load info about the `ssh-keysign` executable
+  stat:
+    path: '{{ ssh_keysign_path }}'
+  register: ssh_keysign
+
+
+# In theory this should work; in practice Ansible's `with_fileglob`
+# does not work as advertised so we use a quick shell piece to do the
+# same job...
+#
+# - name: Ensure SSH host keys can be read by `ssh-keysign`
+#   file:
+#     dest: '{{ item }}'
+#     group: '{{ ssh_keysign.stat.gr_name }}'
+#     mode: 'g+r'
+#   with_fileglob: '/etc/ssh/ssh_host*key*'
+
+- name: Ensure SSH host keys can be read by `ssh-keysign`
+  shell: |
+    chgrp -v '{{ ssh_keysign.stat.gid }}' /etc/ssh/ssh_host*key*
+    chmod -v 'g+r' /etc/ssh/ssh_host*key*
+  notify: restart sshd

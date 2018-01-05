@@ -1,11 +1,11 @@
 ---
 - name: restart sshd
   action: service name=ssh state=restarted
-  when: is_debian_or_ubuntu
+  when: '{{ is_debian_compatible }}'
 
 - name: restart sshd
   action: service name=sshd state=restarted
-  when: is_centos
+  when: '{{ is_rhel_compatible }}'
 
 - name: reload exports
   action: shell exportfs -r
