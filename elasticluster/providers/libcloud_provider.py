@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013-2017 S3IT, University of Zurich
+#   Copyright (C) 2013-2018 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ from libcloud.compute.base import NodeAuthSSHKey, NodeAuthPassword
 from libcloud.compute.providers import get_driver
 from libcloud.compute.types import NodeState, Provider
 
-from elasticluster import AbstractCloudProvider
+from elasticluster.providers import AbstractCloudProvider
 from elasticluster import log
 from elasticluster.exceptions import KeypairError, UnsupportedError
 
