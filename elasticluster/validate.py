@@ -1,6 +1,6 @@
 #! /usr/bin/python
 #
-# Copyright (C) 2016 University of Zurich.
+# Copyright (C) 2016, 2018 University of Zurich.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -114,6 +114,14 @@ def nonempty_str(v):
         raise ValueError("value must be a non-empty string")
     return converted
 
+
+@validator
+def positive_int(v):
+    converted = int(v)
+    if converted > 0:
+        return converted
+    else:
+        raise ValueError("value must be integer > 0")
 
 @validator
 def nova_api_version(version):
