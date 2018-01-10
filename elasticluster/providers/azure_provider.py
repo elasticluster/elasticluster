@@ -17,6 +17,7 @@ import re
 import threading
 import traceback
 import random
+import sys
 import xml.etree.ElementTree as xmltree
 
 python_version = sys.version_info[:2]
@@ -221,7 +222,7 @@ class AzureGlobalConfig(object):
         self._cs_per_sub = None
         self._sa_per_sub = None
         self._security_group = None
-        self._wait_timeout = None
+        self._wait_timeout = DEFAULT_WAIT_TIMEOUT
         self._vm_per_cs = None
         self._vm_per_sub = None
         self._vm_per_sa = None
