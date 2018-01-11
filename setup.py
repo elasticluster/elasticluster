@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-#
 #
 #
-# Copyright (C) 2013-2017 University of Zurich. All rights reserved.
+# Copyright (C) 2013-2018 University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -209,7 +209,7 @@ setup(
         #'azure',  ## only available on Py 2.7, see `version_dependent_requires`
         # OpenStack clouds
         'netifaces',
-        'apache-libcloud',
+        'apache-libcloud>=0.14.0',
         'requests~=2.14.1',  ## see issue #441
         #'python-novaclient' ## this needs special treatment depending on Python version
     ] + version_dependent_requires),
