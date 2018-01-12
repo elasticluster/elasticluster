@@ -150,48 +150,79 @@ all compute nodes (but not on the front-end)::
 
 Extra variables can be set by editing the `setup/` section:
 
-================================== ======================== =====================================================
-Variable name                      Default                  Description
-================================== ======================== =====================================================
-``slurm_fastschedule``             1                        Value of ``FastSchedule`` in ``slurm.conf``
-``slurm_jobacctgatherfrequency``   60                       Value of ``JobAcctGatherFrequency`` in ``slurm.conf``
-``slurm_jobacctgathertype``        ``jobacct_gather/linux`` Value of ``JobAcctGratherType`` in ``slurm.conf``
-``slurm_maxarraysize``             1000                     Maximum size of an array job
-``slurm_maxjobcount``              10000                    Maximum nr. of jobs actively managed by the
-                                                            SLURM controller (i.e., pending and running)
-``slurm_proctracktype``            ``proctrack/linuxproc``  Value of ``ProcTrackType`` in ``slurm.conf``
-``slurm_returntoservice``          1                        Value of ``ReturnToService`` in ``slurm.conf``
-``slurm_selecttype``               ``select/cons_res``      Value of ``SelectType`` in ``slurm.conf``
-``slurm_selecttypeparameters``     ``CR_Core_Memory``       Value of ``SelectTypeParameters`` in ``slurm.conf``
-``slurm_taskplugin``               ``task/none``            Value of ``TaskPlugin`` in ``slurm.conf``
-================================== ======================== =====================================================
+.. list-table:: cgroup-related SLURM settings
+   :widths: 30 20 50
+   :header-rows: 1
+
+   * - Variable
+     - Default value
+     - Description
+   * - ``slurm_fastschedule``
+     - 1
+     - Value of ``FastSchedule`` in ``slurm.conf``
+   * - ``slurm_jobacctgatherfrequency``
+     - 60
+     - Value of ``JobAcctGatherFrequency`` in ``slurm.conf``
+   * - ``slurm_jobacctgathertype``
+     - ``jobacct_gather/linux``
+     - Value of ``JobAcctGratherType`` in ``slurm.conf``
+   * - ``slurm_maxarraysize``
+     - 1000
+     - Maximum size of an array job
+   * - ``slurm_maxjobcount``
+     - 10000
+     - Maximum nr. of jobs actively managed by the SLURM controller (i.e., pending and running)
+   * - ``slurm_proctracktype``
+     - ``proctrack/linuxproc``
+     - Value of ``ProcTrackType`` in ``slurm.conf``
+   * - ``slurm_returntoservice``
+     - 1
+     - Value of ``ReturnToService`` in ``slurm.conf``
+   * - ``slurm_selecttype``
+     - ``select/cons_res``
+     - Value of ``SelectType`` in ``slurm.conf``
+   * - ``slurm_selecttypeparameters``
+     - ``CR_Core_Memory``
+     - Value of ``SelectTypeParameters`` in ``slurm.conf``
+   * - ``slurm_taskplugin``
+     - ``task/none``
+     - Value of ``TaskPlugin`` in ``slurm.conf``
 
 The following extra variable can used to further customize the SLURM's
 ``task/cgroup`` plugin (activated by setting
 ``slurm_taskplugin=task/cgroup``, see above):
 
-================================== ======================== =====================================================
-Variable name                      Default                  Description
-================================== ======================== =====================================================
-``slurm_constrainramspace``        no                       If set to ``yes`` then SLURM constrains the job's RAM
-                                                            usage by setting the memory soft limit to the
-                                                            allocated memory and the hard limit to the allocated
-                                                            memory * ``slurm_allowedramspace`` (see below).  This
-                                                            can add stability to a system when there are multiple
-                                                            misbehaving jobs that allocate large amounts of
-                                                            memory, but can be problematic with jobs using GPUs
-                                                            (since the memory used on the GPU seems to be
-                                                            accounted against the job's own CPU RAM consumption)
-``slurm_constrainswapspace``       no                       If set to ``yes`` then SLURM constrains the job's
-                                                            additional virtual memory usage to the allocated
-                                                            memory * ``slurm_allowedswapspace`` (see below).
-``slurm_allowedramspace``          100                      Max percentage of RAM that can be allocated to a job.
-                                                            Only used if ``slurm_constrainramspace`` (see above)
-                                                            is ``yes``.
-``slurm_allowedswapspace``         0                        Max percentage of additional virtual memory that can
-                                                            be allocated to a job.  Only used if
-                                                            ``slurm_constrainramspace`` (see above) is ``yes``.
-================================== ======================== =====================================================
+.. list-table:: cgroup-related SLURM settings
+   :widths: 30 20 50
+   :header-rows: 1
+
+   * - Variable
+     - Default value
+     - Description
+   * - ``slurm_constrainramspace``
+     - no
+     - If set to ``yes`` then SLURM constrains the job's RAM usage by
+       setting the memory soft limit to the allocated memory and the
+       hard limit to the allocated memory * ``slurm_allowedramspace``
+       (see below).  This can add stability to a system when there are
+       multiple misbehaving jobs that allocate large amounts of
+       memory, but can be problematic with jobs using GPUs (since the
+       memory used on the GPU seems to be accounted against the job's
+       own CPU RAM consumption)
+    * - ``slurm_constrainswapspace``
+      - no
+      - If set to ``yes`` then SLURM constrains the job's additional
+        virtual memory usage to the allocated memory *
+        ``slurm_allowedswapspace`` (see below).
+    * - ``slurm_allowedramspace``          1
+      - 100
+      - Max percentage of RAM that can be allocated to a job.  Only
+        used if ``slurm_constrainramspace`` (see above) is ``yes``.
+    * - ``slurm_allowedswapspace``
+      - 0
+      - Max percentage of additional virtual memory that can be
+        allocated to a job.  Only used if ``slurm_constrainramspace``
+        (see above) is ``yes``.
 
 Note that the ``slurm_*`` extra variables need to be set *globally*
 (e.g., ``global_var_slurm_selectype``) because the SLURM configuration
