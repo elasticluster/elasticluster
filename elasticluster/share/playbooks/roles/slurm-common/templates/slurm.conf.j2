@@ -126,8 +126,8 @@ TaskPlugin={{slurm_taskplugin|default('task/none')}}
 
 TmpFs=/tmp
 
-# limit virtual mem usage to 101% of real mem usage
-VSizeFactor=101
+# limit virtual mem usage to this% of real mem usage
+VSizeFactor={{ slurm_allowedramspace|default(100)|int + slurm_allowedswapspace|default(1)|int }}
 
 
 # misc timeout settings (commented lines show the default)

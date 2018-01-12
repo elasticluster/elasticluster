@@ -10,8 +10,8 @@
 # See man slurm.conf and man cgroup.conf for further
 # information on cgroup configuration parameters
 #
-ConstrainRAMSpace={{ slurm_constrainramspace|default("no") }}
-ConstrainSwapSpace={{ slurm_constrainramspace|default("no") }}
+ConstrainRAMSpace={{ slurm_constrainramspace|default("yes") }}
+ConstrainSwapSpace={{ slurm_constrainramspace|default("yes") }}
 AllowedRAMSpace={{ slurm_allowedramspace|default(100) }}
 AllowedSwapSpace={{ slurm_allowedswapspace|default(1) }}
 
