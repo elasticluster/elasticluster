@@ -1,0 +1,28 @@
+# Files to include in an ElastiCluster Docker build
+#
+# Exclude everything and selectively include what needs to be there for build.
+# This allows building the Docker image from working directories, where a lot
+# of cruft tends to accumulate.
+#
+
+# exclude everything
+**/*
+
+# include what we really need
+!elasticluster/*.py
+!elasticluster/providers/*.py
+!elasticluster/share/**/*
+!elasticluster/examples/README.rst
+!elasticluster/examples/*.conf
+!etc/docker/*
+!ez_setup.py
+!LICENSE
+!MANIFEST.in
+!README.rst
+!setup.cfg
+!setup.py
+!tox.ini
+!version.txt
+
+# exclude private directories etc
+elasticluster/share/playbooks/private/
