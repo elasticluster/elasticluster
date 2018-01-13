@@ -1,6 +1,7 @@
 # ElastiCluster-specific patterns
 .agignore
 elasticluster.egg-info/
+elasticluster/share/playbooks/private/
 .noseids
 .tox/
 
