@@ -40,7 +40,7 @@ features at the moment:
 * INI-style configuration file to define cluster templates
 * Can start and manage multiple independent clusters at the same time
 * Automated setup of:
- * HPC clusters using SLURM_ or GridEngine_;
+ * HPC clusters using SLURM_ or GridEngine_ (incl. support for CUDA-enabled GPUs);
  * Spark_ / Hadoop_ clusters with HDFS and Hive/SQL;
  * distributed storage clusters using GlusterFS_, OrangeFS_, or Ceph_;
  * ...or anything that you can install with an Ansible_ playbook!
@@ -57,15 +57,44 @@ use the *master* branch as starting point.
 Quickstart
 ==========
 
-The 1.3 release is nearing, which has seen quite some changes from the
-1.2 code that's on PyPI. For the moment, you are therefore encouraged to run the
-`development code from GitHub`__ (click to see installation instructions) and
-report on any bugs you find!
+The simplest way to run ElastiCluster is to use the official Docker
+image.  If you cannot or want not to use Docker, please see alternate
+installation instructions on `ElastiCluster's Read The Docs
+<http://elasticluster.readthedocs.io/en/latest/install.html>`_ website.
 
-.. __: http://elasticluster.readthedocs.io/en/master/install.html#installing-development-code-from-github
+To install ElastiCluster over Docker: (1) download the `elasticluster.sh`_ script
+script into a file `elastiucluster.sh`, then (2) type this at your terminal
+prompt::
 
-**Note:** ElastiCluster_ is a Python_ program; Python version 2.6 or 2.7 is
-required to run it. Python 3 is not (yet) supported.
+    chmod +x elasticluster.sh
+
+That's it!  You can now check that ElastiCluster is ready by running::
+
+    elasticluster.sh --help
+
+The first time it is run, the `elasticluster.sh`_ script will check if
+Docker is installed, and ask for permission to install it if Docker is
+not found. Follow the on-screen instructions; see section `Getting
+Help`_ if you're in trouble.
+
+You can also rename file ``elasticluster.sh`` to ``elasticluster``, if
+you so like, to be consistent with the rest of the documentation.
+
+.. _`elasticluster.sh`: https://raw.githubusercontent.com/gc3-uzh-ch/elasticluster/master/elasticluster.sh
+
+Alternatively, you can also perform both steps at the terminal prompt::
+
+    # use this if the `wget` command is installed
+    wget -O elasticluster.sh https://raw.githubusercontent.com/gc3-uzh-ch/elasticluster/master/elasticluster.sh
+    chmod +x elasticluster.sh
+
+    # use this if the `curl` command is installed instead
+    curl -O https://raw.githubusercontent.com/gc3-uzh-ch/elasticluster/master/elasticluster.sh
+    chmod +x elasticluster.sh
+
+Choose either one of the two methods above, depending on whether
+``wget`` or ``curl`` is installed on your system (Linux systems
+normally have ``wget``; MacOSX normally uses ``curl``).
 
 After ElastiCluster is installed, run this command to deploy an `example
 configuration file`_::
@@ -76,6 +105,18 @@ The configuration file is located in `.elasticluster/config`; adjust it
 to your liking using the `configuration reference`__.
 
 .. __: http://elasticluster.readthedocs.io/en/master/configure.html
+
+
+Getting help
+============
+
+For anything concerning ElastiCluster, including trouble running the
+installation script, please send an email to
+`elasticluster@googlegroups.com
+<mailto:elasticluster@googlegroups.com>`_ or post a message on the web
+forum `<https://groups.google.com/forum/#!forum/elasticluster>`_.
+Include the full output of the script in your email, in order to help
+us to identify the problem.
 
 
 .. References
