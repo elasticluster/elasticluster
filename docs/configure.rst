@@ -906,6 +906,11 @@ Additional optional configuration keys for Google Cloud
     Define the size of boot disk to use; values are specified in gigabytes.
     Default value is 10.
 
+``min_cpu_platform``
+    Require that VMs run on CPUs with this platform (see
+    `<https://cloud.google.com/compute/docs/instances/specify-min-cpu-platform#availablezones>`_
+    for a list) or better.
+
 ``tags``
     Comma-separated list of instance tags.
 

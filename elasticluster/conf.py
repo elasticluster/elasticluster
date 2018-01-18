@@ -116,6 +116,7 @@ SCHEMA = {
                 # only on Google Cloud
                 Optional("accelerator_count", default=0): nonnegative_int,
                 Optional("accelerator_type"): nonempty_str,
+                Optional("min_cpu_platform"): nonempty_str,
                 # allow other keys w/out restrictions
                 Optional(str): str,
             },
@@ -123,6 +124,7 @@ SCHEMA = {
         # only on Google Cloud
         Optional("accelerator_count", default=0): nonnegative_int,
         Optional("accelerator_type"): nonempty_str,
+        Optional("min_cpu_platform"): nonempty_str,
         # allow other keys w/out restrictions
         Optional(str): str,
     },
@@ -655,6 +657,7 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'accelerator_type',
             'boot_disk_size',
             'boot_disk_type',
+            'min_cpu_platform',
             'scheduling',
             'tags'
             #'user_key_name',    ## from `login/*`

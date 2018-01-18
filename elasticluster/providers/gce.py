@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich
+# Copyright (C) 2013, 2015, 2016, 2018 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -225,6 +225,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        scheduling=None,
                        accelerator_count=0,
                        accelerator_type='default',
+                       min_cpu_platform=None,
                        **kwargs):
         """Starts a new instance with the given properties and returns
         the instance id.
@@ -248,6 +249,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
 
           * Full URL specifying an accelerator type valid for the zone and project VMs are being created in.  For example, ``https://www.googleapis.com/compute/v1/projects/[PROJECT_ID]/zones/[ZONE]/acceleratorTypes/[ACCELERATOR_TYPE]``
           * An accelerator type name (any string which is not a valid URL).  This is internally prefixed with the string ``https://www.googleapis.com/compute/v1/projects/[PROJECT_ID]/zones/[ZONE]/acceleratorTypes/`` to form a full URL.
+        :param str min_cpu_platform: require CPUs of this type or better (e.g., "Intel Skylake")
 
           Only used if ``accelerator_count`` is > 0.
 
@@ -356,6 +358,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
                 ]
             }
         }
+
+        if min_cpu_platform is not None:
+            instance['minCpuPlatform'] = min_cpu_platform
 
         # add accelerators/GPUs if requested
         if accelerator_count > 0:
