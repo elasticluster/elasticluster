@@ -29,12 +29,13 @@
 
 - name: Upgrade all installed packages to latest version
   apt:
-    upgrade=safe
+    upgrade: safe
+  when: 'upgrade_packages|default(True)'
 
 - name: Ensure additional packages are installed
   apt:
-    name={{item}}
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - apt-transport-https
     # these are required by Ansible's `debconf` module
@@ -48,7 +49,7 @@
 - name: Ensure additional packages are installed (Debian 8)
   apt:
     name: '{{item}}'
-    state: present
+    state: '{{ pkg_install_state }}'
   with_items:
     - dbus
   when: 'is_debian_8_or_later'
@@ -62,7 +63,7 @@
 - name: Install policy package for service autostart
   apt:
     name: 'policyrcd-script-zg2'
-    state: present
+    state: '{{ pkg_install_state }}'
 
 
 - name: Install policy script for service autostart

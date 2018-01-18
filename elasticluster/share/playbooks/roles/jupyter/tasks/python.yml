@@ -9,7 +9,7 @@
     path='{{python_exe}}'
   register: python_exe_path
 
-  
+
 - name: Determine version of Python interpreter {{python_exe}}
   tags:
     - jupyter
@@ -19,8 +19,8 @@
     '{{python_exe}} -c "import sys; sys.stdout.write(str(sys.version_info.major))"'
   register: python_version
   when: python_exe_path.stat.exists
-  
-  
+
+
 - name: Install Python{{python_version.stdout}} Jupyter kernel
   tags:
     - jupyter
@@ -51,13 +51,13 @@
 - name: Install additional %-magic modules and plugins (OS dependencies)
   package:
     name: '{{item}}'
-    state: present
+    state: '{{ pkg_install_state }}'
   with_items: '{{jupyter_additional_os_packages[ansible_os_family]}}'
 
 
 - name: Install additional %-magic modules and plugins (Python package)
   pip:
     name: '{{item}}'
-    state: present
+    state: '{{ pkg_install_state }}'
     executable: '{{python_exe|dirname}}/pip'
   with_items: '{{jupyter_additional_python_packages}}'

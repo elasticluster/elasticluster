@@ -12,8 +12,8 @@
 
 - name: Install commonly needed software (RHEL-family)
   package:
-    name={{item}}
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     # compression and archivers
     - bzip2
@@ -47,8 +47,8 @@
 
 - name: Install commonly needed software (RHEL7-family)
   package:
-    name={{item}}
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     # other "standard" utilities
     - moreutils

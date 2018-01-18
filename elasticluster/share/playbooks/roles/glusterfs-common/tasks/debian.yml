@@ -5,8 +5,8 @@
     - gluster
     - glusterfs-common
   apt:
-    name='apt-transport-https'
-    state=present
+    name: 'apt-transport-https'
+    state: '{{ pkg_install_state }}'
   when: is_debian_compatible
 
 
@@ -46,8 +46,8 @@
 
 - name: Install GlusterFS packages (Debian/Ubuntu)
   apt:
-    name='{{item}}'
-    state=installed
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - attr
   when: is_debian_or_ubuntu

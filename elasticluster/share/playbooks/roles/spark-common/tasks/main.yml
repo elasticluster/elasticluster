@@ -7,8 +7,8 @@
     - spark
     - common
   package:
-    name='{{item}}'
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - spark-core # Lightning-Fast Cluster Computing
     - spark-datanucleus # DataNucleus libraries for Apache Spark
@@ -29,7 +29,7 @@
 
 - name: Symlink Py4J `.zip` archive under a version-independent name
   # XXX: We use shell globbing to find out what source file to link,
-  # assuming there is one and only one Py4J `.zip` file.  
+  # assuming there is one and only one Py4J `.zip` file.
   shell: |
     cd /usr/lib/spark/python/lib
     ln -s py4j-*-src.zip py4j-src.zip
@@ -46,8 +46,8 @@
   file:
     path='{{SPARK_CONF_DIR}}'
     state=directory
-    
-    
+
+
 - name: Copy Spark/BigTop default configuration files
   tags:
     - hadoop
@@ -55,7 +55,7 @@
   command:
     'rsync -ax --update --backup /etc/spark/conf.dist/ {{SPARK_CONF_DIR}}/'
 
-  
+
 - name: Deploy Spark/ElastiCluster configuration files
   tags:
     - hadoop

@@ -16,7 +16,9 @@
   handlers:
     - include: common/handlers/main.yml
   tasks:
-    - action: apt name={{item}} state=installed update_cache=yes
+    - apt:
+        name: '{{item}}'
+        state: '{{ pkg_install_state }}'
       with_items:
         - build-essential
         - libdb-dev
@@ -43,13 +45,13 @@
     - is_client: '"{{inventory_hostname}}" in {{groups.pvfs2_client}}'
   tasks:
     - action: shell scp /etc/pvfs2-fs.conf root@{{item}}:/etc/pvfs2-fs.conf
-      with_items: 
+      with_items:
         - "{{groups.pvfs2_meta}}"
         - "{{groups.pvfs2_data}}"
       when: inventory_hostname == groups.pvfs2_meta[0]
 
     - name: ensure the storage path is correct
-      action: 'lineinfile dest=/etc/pvfs2-fs.conf regexp="StorageSpace {{pvfs2_storage}}" line="	StorageSpace {{pvfs2_storage}}"'
+      action: 'lineinfile dest=/etc/pvfs2-fs.conf regexp="StorageSpace {{pvfs2_storage}}" line="        StorageSpace {{pvfs2_storage}}"'
 
     - shell: pvfs2-server /etc/pvfs2-fs.conf -f creates=/{{pvfs2_storage}}/collections.db
 
