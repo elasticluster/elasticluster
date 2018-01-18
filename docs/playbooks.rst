@@ -9,7 +9,7 @@
 .. _playbooks:
 
 ============================================
-  Playbooks distributed with elasticluster
+  Playbooks distributed with ElastiCluster
 ============================================
 
 ElastiCluster uses `Ansible`_ to configure the VM cluster based on the
@@ -63,6 +63,12 @@ Variable name                      Default             Description
                                                        class will be assigned the role of the YP master
                                                        server; additional nodes in the "master" class
                                                        (if any) will be YP slave servers.
+``upgrade_packages``               yes                 Upgrade all installed to the latest available
+                                                       version.  Setting this to ``no`` allows speedier
+                                                       setup when starting from cluster snapshots.
+                                                       *Note:* even when set to ``no``, some packages
+                                                       may still be upgraded to satisfy dependencies
+                                                       of other packages that need to be installed.
 ================================== =================== =================================================
 
 

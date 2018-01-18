@@ -36,7 +36,7 @@
 - name: Install Jupyter/IPython kernel for MATLAB (module)
   pip:
     name: '{{item}}'
-    state: present
+    state: '{{ pkg_install_state }}'
     executable: '{{PYTHON2_EXE|dirname}}/pip'
   with_items:
     - matlab_kernel

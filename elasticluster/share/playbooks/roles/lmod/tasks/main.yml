@@ -7,9 +7,9 @@
 
 # try installing from OS packages first...
 - name: Install Lmod from the OS repository (Debian-compatible)
-  package: 
+  package:
     name: 'lmod{{__at__}}{{ LMOD_VERSION }}*'
-    state: present
+    state: '{{ pkg_install_state }}'
   ignore_errors: True
   register: lmod_pkg_install
 

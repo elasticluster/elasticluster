@@ -5,7 +5,7 @@
 - name: PostgreSQL | Make sure the CA certificates are available
   apt:
     pkg: ca-certificates
-    state: present
+    state: '{{ pkg_install_state }}'
 
 - name: PostgreSQL | Add PostgreSQL repository apt-key
   apt_key:
@@ -29,7 +29,7 @@
 - name: PostgreSQL | Make sure the dependencies are installed
   apt:
     pkg: "{{item}}"
-    state: present
+    state: '{{ pkg_install_state }}'
     update_cache: yes
     cache_valid_time: "{{apt_cache_valid_time | default (3600)}}"
   with_items: ["python-psycopg2", "python-pycurl", "locales"]
@@ -37,7 +37,7 @@
 - name: PostgreSQL | Install PostgreSQL
   apt:
     name: "{{item}}"
-    state: present
+    state: '{{ pkg_install_state }}'
     update_cache: yes
     cache_valid_time: "{{apt_cache_valid_time | default (3600)}}"
   environment: "{{postgresql_env}}"
@@ -49,7 +49,7 @@
 - name: PostgreSQL | PGTune
   apt:
     name: pgtune
-    state: present
+    state: '{{ pkg_install_state }}'
     update_cache: yes
     cache_valid_time: "{{apt_cache_valid_time | default (3600)}}"
   environment: "{{postgresql_env}}"

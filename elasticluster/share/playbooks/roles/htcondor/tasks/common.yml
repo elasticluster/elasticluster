@@ -4,7 +4,7 @@
 # the repository file.
 
 - name: add HTCondor public package repositories
-  action: template 
+  action: template
           src=htcondor/templates/etc/apt/sources.list.d/htcondor.list.j2
           dest=/etc/apt/sources.list.d/htcondor.list
           owner=root group=root mode=0644
@@ -26,18 +26,18 @@
           src=htcondor/templates/htcondor.debconf.j2
           dest=/tmp/htcondor.debconf
           owner=root group=root mode=0644
-  tags: 
+  tags:
     - htcondor
   when: is_debian_or_ubuntu
 
 - name: install HTCondor w/ preconfigured template
   apt:
-    name=condor
-    state=present
-    force=yes
+    name: condor
+    state: '{{ pkg_install_state }}'
+    force: yes
   environment:
     DEBCONF_DB_FALLBACK: 'File{/tmp/htcondor.debconf}'
-  tags: 
+  tags:
     - htcondor
   when: is_debian_or_ubuntu
 
@@ -46,10 +46,10 @@
           src=htcondor/templates/etc/condor/condor_config.local.j2
           dest=/etc/condor/condor_config.local
           owner=nobody group=nogroup mode=0644
-  tags: 
+  tags:
     - htcondor
 
 - name: start HTCondor daemon
   action: service name=condor state=started
-  tags: 
+  tags:
     - htcondor

@@ -6,8 +6,8 @@
 
 - name: Install build-time dependencies (Debian-compatible)
   package:
-    name='{{item}}'
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - gcc
     - libc6-dev
@@ -17,8 +17,8 @@
 
 - name: Install build-time dependencies (RHEL-compatible)
   package:
-    name='{{item}}'
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - "@Development tools"
   when: '{{is_rhel_compatible}}'
@@ -26,8 +26,8 @@
 
 - name: Install required dependencies of Lmod (Debian-compatible)
   package:
-    name='{{ item }}'
-    state=present
+    name: '{{ item }}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - pkg-config
     - tcl
@@ -36,8 +36,8 @@
 
 - name: Install required dependencies of Lmod (RHEL-compatible)
   package:
-    name='{{ item }}'
-    state=present
+    name: '{{ item }}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - pkgconfig
     - tcl
@@ -46,8 +46,8 @@
 
 # - name: Install optional dependencies of Lmod
 #   package:
-#     name='{{ item }}'
-#     state=present
+#     name: '{{ item }}'
+#     state: '{{ pkg_install_state }}'
 #   with_items:
 #     - lua-term
 #   ignore_errors: True

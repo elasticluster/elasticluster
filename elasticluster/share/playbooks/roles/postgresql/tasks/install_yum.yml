@@ -5,24 +5,24 @@
 - name: PostgreSQL | Make sure the CA certificates are available
   yum:
     name: ca-certificates
-    state: present
+    state: '{{ pkg_install_state }}'
 
 - name: PostgreSQL | Add PostgreSQL repository
   yum:
     name: "{{ postgresql_yum_repository_url }}"
-    state: present
+    state: '{{ pkg_install_state }}'
 
 - name: PostgreSQL | Make sure the dependencies are installed
   yum:
     name: "{{ item }}"
-    state: present
+    state: '{{ pkg_install_state }}'
     update_cache: yes
   with_items: ["python-psycopg2", "python-pycurl", "glibc-common"]
 
 - name: PostgreSQL | Install PostgreSQL
   yum:
     name: "{{ item }}"
-    state: present
+    state: '{{ pkg_install_state }}'
   environment: "{{ postgresql_env }}"
   with_items:
     - "postgresql{{ postgresql_version_terse }}-server"
@@ -31,6 +31,6 @@
 - name: PostgreSQL | PGTune
   yum:
     name: pgtune
-    state: present
+    state: '{{ pkg_install_state }}'
   environment: "{{ postgresql_env }}"
   when: postgresql_pgtune

@@ -5,9 +5,9 @@
   tags:
     - jupyter
   conda:
-    name=jupyter
-    state=present
-    executable='{{jupyter_python|dirname}}/conda'
+    name: jupyter
+    state: '{{ pkg_install_state }}'
+    executable: '{{jupyter_python|dirname}}/conda'
 
 # install BASH kernel
 - include: bash.yml

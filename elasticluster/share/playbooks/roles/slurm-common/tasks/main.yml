@@ -17,19 +17,19 @@
   group:
     name=slurm
     system=yes
-  tags: 
+  tags:
     - slurm
 
 
-- name: Create `slurm` system user 
+- name: Create `slurm` system user
   user:
     name=slurm
     group=slurm
     system=yes
-  tags: 
+  tags:
     - slurm
 
-  
+
 - name: Create work directory {{item}}
   file:
     path='{{item}}'
@@ -45,7 +45,7 @@
     - /var/log/slurm
     - /var/run/slurm
     - /var/spool/slurm
-  tags: 
+  tags:
     - slurm
 
 
@@ -65,13 +65,13 @@
     - { from: '/var/log/slurm', to: '/var/log/slurm-llnl' }
     - { from: '/var/run/slurm', to: '/var/run/slurm-llnl' }
   when: is_debian_compatible
-  tags: 
+  tags:
     - slurm
     - debian
 
 
 - name: Enable Copr SLURM repo by verdurin
-  tags: 
+  tags:
     - slurm
   template:
     src=copr-slurm.repo.j2
@@ -84,7 +84,7 @@
 
 
 - name: Deploy SLURM configuration file
-  tags: 
+  tags:
     - slurm
   template:
     src=slurm.conf.j2
@@ -96,8 +96,8 @@
 
 - name: Install support packages (Debian/Ubuntu)
   package:
-    pkg={{item}}
-    state=latest
+    pkg: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - dmtcp
     - libopenmpi-dev
@@ -107,8 +107,8 @@
 
 - name: Install SLURM packages (RHEL-compatible)
   package:
-    name={{item}}
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - openmpi-devel
   when: 'is_rhel_compatible'
