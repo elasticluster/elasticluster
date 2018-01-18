@@ -22,7 +22,7 @@ slurm_jobacctgathertype: 'jobacct_gather/linux'
 slurm_maxarraysize: 1000
 slurm_maxjobcount: 10000
 slurm_proctracktype: 'proctrack/linuxproc'
-slurm_returntoservice: 1
+slurm_returntoservice: 2
 slurm_selecttype: 'select/cons_res'
 slurm_selecttypeparameters: 'CR_Core_Memory'
 slurm_taskplugin: 'task/none'
