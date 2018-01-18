@@ -29,6 +29,18 @@
   register: _cuda_uname_r
 
 
+- name: Install new kernel headers (Ubuntu)
+  apt:
+    name: 'linux-headers-{{ _cuda_uname_r.stdout }}'
+    state: present
+  when: 'is_ubuntu'
+
+
+- name: Trigger recompilation by DKMS
+  command: |
+    dkms autoinstall
+
+
 - name: Wait for DKMS to compile NVIDIA kernel modules (max 15 minutes)
   become: yes
   wait_for:
