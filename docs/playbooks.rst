@@ -209,7 +209,7 @@ Extra variables can be set by editing the `setup/` section:
      - ``proctrack/linuxproc``
      - Value of ``ProcTrackType`` in ``slurm.conf``
    * - ``slurm_returntoservice``
-     - 1
+     - 2
      - Value of ``ReturnToService`` in ``slurm.conf``
    * - ``slurm_selecttype``
      - ``select/cons_res``
