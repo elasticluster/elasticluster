@@ -22,8 +22,8 @@
     - time
     - common
   package:
-    name='{{ntpd_package}}'
-    state=present
+    name: '{{ntpd_package}}'
+    state: '{{ pkg_install_state }}'
 
 
 # - name: Allow incoming NTP traffic (CentOS7)

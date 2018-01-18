@@ -15,7 +15,7 @@
 - name: Install kubeadm packages
   yum:
     name: "{{ item }}"
-    state: latest
+    state: '{{ pkg_install_state }}'
   with_items:
     - docker
     - kubelet

@@ -34,8 +34,8 @@
     - munge
     - debian
   package:
-    pkg=munge
-    state=latest
+    pkg: munge
+    state: '{{ pkg_install_state }}'
   when:
     is_debian_compatible
 
@@ -46,8 +46,8 @@
     - munge
     - rhel
   package:
-    pkg=slurm-munge
-    state=latest
+    pkg: slurm-munge
+    state: '{{ pkg_install_state }}'
   when:
     is_rhel_compatible
 
@@ -97,7 +97,7 @@
     state=present
   when: '{{is_ubuntu_14_04}} or {{is_ubuntu_14_10}}'
 
-  
+
 - name: Configure MUNGE
   tags:
     - slurm
@@ -110,7 +110,7 @@
     mode=0400
   notify: restart munge
 
-  
+
 - name: Ensure the MUNGE service is running
   tags:
     - slurm

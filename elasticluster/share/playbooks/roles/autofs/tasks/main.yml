@@ -34,7 +34,7 @@
 - name: Install Autofs
   package:
     name: '{{ item }}'
-    state: latest
+    state: '{{ pkg_install_state }}'
   with_items: '{{autofs_packages}}'
 
 

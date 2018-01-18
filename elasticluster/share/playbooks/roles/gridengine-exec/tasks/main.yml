@@ -12,8 +12,8 @@
 
 - name: Install GridEngine execd packages
   package:
-    pkg='{{item}}'
-    state=present
+    pkg: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items: '{{gridengine_execd_packages}}'
 
 

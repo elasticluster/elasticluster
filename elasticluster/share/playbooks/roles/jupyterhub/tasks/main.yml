@@ -24,8 +24,8 @@
 
 - name: Install SW dependencies
   apt:
-    name='{{item}}'
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - nodejs-legacy
     - npm
@@ -43,7 +43,7 @@
 - name: Install JupyterHub SW
   pip:
     name: 'jupyterhub'
-    state: present
+    state: '{{ pkg_install_state }}'
     executable: '/opt/anaconda3/bin/pip'
 
 

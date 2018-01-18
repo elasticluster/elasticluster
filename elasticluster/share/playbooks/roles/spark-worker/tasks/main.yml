@@ -25,8 +25,8 @@
     - spark
     - worker
   package:
-    name='{{item}}'
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - spark-worker # Server for Spark worker
 

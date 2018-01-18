@@ -6,8 +6,8 @@
     - hadoop
     - hive
   package:
-    name='{{item}}'
-    state=present
+    name: '{{item}}'
+    state: present
   with_items:
     - hive
     # Java JDBC support for PostgreSQL
@@ -21,8 +21,8 @@
   file:
     path='{{HIVE_CONF_DIR}}'
     state=directory
-    
-    
+
+
 - name: Copy Hive/BigTop default configuration files
   tags:
     - hadoop
@@ -30,7 +30,7 @@
   command:
     'rsync -ax --update --backup /etc/hive/conf.dist/ {{HIVE_CONF_DIR}}/'
 
-  
+
 - name: Deploy Hive/ElastiCluster configuration files
   tags:
     - hadoop
