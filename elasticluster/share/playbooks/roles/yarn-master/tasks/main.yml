@@ -8,8 +8,8 @@
     - master
     - resourcemanager
   package:
-    name='{{item}}'
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - hadoop-mapreduce # The Hadoop MapReduce (MRv2)
     - hadoop-mapreduce-historyserver # MapReduce History Server

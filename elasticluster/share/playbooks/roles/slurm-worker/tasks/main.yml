@@ -27,7 +27,7 @@
 - name: Install SLURM worker packages
   package:
     name: '{{item}}'
-    state: latest
+    state: '{{ pkg_install_state }}'
   with_items: '{{slurmd_packages}}'
 
 - name: Ensure SLURMd starts at boot

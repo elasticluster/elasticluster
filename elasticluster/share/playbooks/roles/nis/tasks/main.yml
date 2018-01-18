@@ -39,7 +39,7 @@
 - name: Install NIS common packages
   package:
     name: '{{item}}'
-    state: present
+    state: '{{ pkg_install_state }}'
   with_items: '{{nis_common_packages}}'
 
 

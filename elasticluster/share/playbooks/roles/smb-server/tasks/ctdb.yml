@@ -52,7 +52,7 @@
 - name: Install CTDB
   package:
     name: ctdb
-    state: present
+    state: '{{ pkg_install_state }}'
 
 
 - name: Disable IP takeover scripts

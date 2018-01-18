@@ -22,7 +22,7 @@
 - name: Install NIS master server packages
   package:
     name: '{{item}}'
-    state: present
+    state: '{{ pkg_install_state }}'
   with_items: '{{nis_master_packages}}'
 
 

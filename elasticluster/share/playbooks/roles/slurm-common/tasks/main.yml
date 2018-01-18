@@ -83,7 +83,7 @@
 - include: munge.yml
 
 
-- name: Deploy SLURM configuration files
+- name: Deploy SLURM configuration file
   tags:
     - slurm
   template:
@@ -98,8 +98,8 @@
 
 - name: Install support packages (Debian/Ubuntu)
   package:
-    pkg={{item}}
-    state=latest
+    pkg: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - libopenmpi-dev
     - openmpi-bin
@@ -108,8 +108,8 @@
 
 - name: Install SLURM packages (RHEL-compatible)
   package:
-    name={{item}}
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - openmpi-devel
   when: 'is_rhel_compatible'

@@ -5,8 +5,8 @@
     - nfs
     - nfs-client
   package:
-    pkg='{{item}}'
-    state=present
+    pkg: '{{item}}'
+    state: '{{pkg_install_state}}'
   with_items:
     - nfs-common
   when: is_debian_compatible
@@ -16,8 +16,8 @@
     - nfs
     - nfs-client
   package:
-    pkg='{{item}}'
-    state=present
+    pkg: '{{item}}'
+    state: '{{pkg_install_state}}'
   with_items:
     - nfs-utils
   when: is_rhel_compatible
@@ -53,9 +53,8 @@
 
 
 - name: Mount NFS filesystems
-  tags: 
+  tags:
     - nfs
     - nfs-client
   include: nfsmount.yml fs='{{item}}'
   with_items: '{{NFS_MOUNTS}}'
-    

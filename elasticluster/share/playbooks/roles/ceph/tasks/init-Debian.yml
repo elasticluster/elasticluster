@@ -26,7 +26,7 @@
     - server
   apt:
     pkg: '{{item}}'
-    state: present
+    state: '{{ pkg_install_state }}'
   with_items:
     - ceph
     #- linux-image-extra-{{ansible_kernel}}
@@ -39,7 +39,7 @@
     - client
   package:
     name: '{{item}}'
-    state: present
+    state: '{{ pkg_install_state }}'
   with_items:
     - ceph-common
     - ceph-fuse
@@ -52,5 +52,5 @@
     - ceph
   apt:
     pkg: 'ceph-mds'
-    state: present
+    state: '{{ pkg_install_state }}'
   when: 'is_ceph_mds'
