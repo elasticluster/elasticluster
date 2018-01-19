@@ -244,7 +244,7 @@ if [ -z "$envfile" ]; then
     die 1 "Cannot create temporary file."
 fi
 trap "rm -f '$envfile';" EXIT INT QUIT ABRT TERM
-env HOME=/home SSH_AUTH_SOCK=/home/.ssh-agent.sock > "$envfile"
+env HOME="$HOME" SSH_AUTH_SOCK=/home/.ssh-agent.sock > "$envfile"
 
 # go!
 exec docker run --rm --interactive --tty --env-file "$envfile" $volumes $elasticluster_docker_image "$@"

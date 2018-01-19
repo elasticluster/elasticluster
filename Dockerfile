@@ -16,7 +16,7 @@ FROM python:2.7-slim
 #    the corresponding host directories where user data resides
 # 2. create mountpoints for volumes
 RUN : \
-    && mkdir -p /usr/src/elasticluster /home/.ssh /home/.elasticluster \
+    && mkdir -p /home /home/.ssh /home/.elasticluster \
     && sed -re '1s|:/root:|:/home:|' -i /etc/passwd \
     ;
 VOLUME /home/.ssh
@@ -24,9 +24,8 @@ VOLUME /home/.elasticluster
 
 
 # Copy ElastiCluster sources
-COPY ./ /usr/src/elasticluster/
+COPY ./ /home
 COPY ./etc/docker/sitecustomize.py /usr/local/lib/python2.7/site-packages/sitecustomize.py
-COPY ./etc/docker/environment /etc/environment
 
 
 # Install ElastiCluster
@@ -40,7 +39,7 @@ COPY ./etc/docker/environment /etc/environment
 # 2. install ElastiCluster and dependent Python packages (with `pip install`)
 # 3. cleanup and remove software used for installation to get a leaner image
 #
-WORKDIR /usr/src/elasticluster/
+WORKDIR /home
 RUN : \
     && apt-get update \
     && apt-get install --yes --no-install-recommends \
@@ -68,8 +67,6 @@ RUN : \
     && rm -rf /var/cache/debconf/*.dat-old \
     ;
 
-
 # Run this command by default
-WORKDIR /home
 ENTRYPOINT ["/usr/local/bin/python", "-m", "elasticluster"]
 CMD ["--help"]
