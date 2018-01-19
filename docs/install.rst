@@ -12,20 +12,77 @@
   Installation
 ================
 
-ElastiCluster_ is a `Python`_ program; Python version 2.6 or 2.7 is
-required to run it.
+There are three ways to install ElastiCluster:
 
-The easiest way to install elasticluster is by using `pip`_, this will
-install the latest *stable* code release from the `PyPI`_ package
-repository.  Section `Installing released code from PyPI`_ will
-explain you how to do it.
+* Use the ElastiCluster Docker image: this is the quickest and easiest
+  option if you just want to use ElastiCluster.  See section
+  `Quickstart`_ for instructions.
 
-If you instead want to test the *development* version, go to the
-`Installing development code from GitHub`_ section.
+* Run ElastiCluster from the Python source code.  This is the
+  recommended option if you want to develop or customize
+  ElastiCluster.  See section `Installing development code from
+  GitHub`_ for instructions.
+
+* Install the ``elasticluster`` Python package from PyPI_.  See
+  section `Installing released code from PyPI`_ for instructions.
+
+  .. warning::
+
+    The code currently available on PyPI (ElastiCluster 1.2) is quite
+    old and is lacking a number of important fixes and updates. Until
+    ElastiCluster 1.3 is released, we suggest that you install from
+    GitHub_ instead (see section `Installing development code from
+    GitHub`_ below)
+
+
+.. _quickstart:
+
+Quickstart
+----------
+
+To install ElastiCluster over Docker: (1) download the `elasticluster.sh`_ script
+script into a file `elastiucluster.sh`, then (2) type this at your terminal
+prompt::
+
+    chmod +x elasticluster.sh
+
+That's it!  You can now check that ElastiCluster is ready by running::
+
+    elasticluster.sh --help
+
+The first time it is run, the `elasticluster.sh`_ script will check if
+Docker is installed, and ask for permission to install it if Docker is
+not found. Follow the on-screen instructions; see section `Getting
+Help`_ if you're in trouble.
+
+You can also rename file ``elasticluster.sh`` to ``elasticluster``, if
+you so like, to be consistent with the rest of the documentation.
+
+.. _`elasticluster.sh`: https://raw.githubusercontent.com/gc3-uzh-ch/elasticluster/master/elasticluster.sh
+
+Alternatively, you can also perform both steps at the terminal prompt::
+
+    # use this if the `wget` command is installed
+    wget -O elasticluster.sh https://raw.githubusercontent.com/gc3-uzh-ch/elasticluster/master/elasticluster.sh
+    chmod +x elasticluster.sh
+
+    # use this if the `curl` command is installed instead
+    curl -O https://raw.githubusercontent.com/gc3-uzh-ch/elasticluster/master/elasticluster.sh
+    chmod +x elasticluster.sh
+
+Choose either one of the two methods above, depending on whether
+``wget`` or ``curl`` is installed on your system (Linux systems
+normally have ``wget``; MacOSX normally uses ``curl``).
 
 
 Prepare the environment for installation
 ----------------------------------------
+
+*Note:* this section is only relevant if you are installing
+ ElastiCluster from source code (see `Installing development code from
+ GitHub`_) or from the PyPI_ package (see `Installing released code
+ from PyPI`_).  None of these instructions are needed when running
+ ElastiCluster from the Docker image.
 
 The following sections document preliminary steps that need to be carried out in
 order to install ElastiCluster on a GNU/Linux or MacOSX computer.
@@ -74,7 +131,7 @@ It's free and you can install it directly from the `AppStore`_.
 
 
 Create a Python "virtualenv"
-----------------------------
+++++++++++++++++++++++++++++
 
 Assuming you already have ``virtualenv`` installed on your machine (see section
 `Install required dependencies`_ if not), create a virtualenv and activate one
@@ -159,6 +216,20 @@ To build PDF documentation, use `make latexpdf` instead.
 Note that building documentation files requires that the Python module
 Sphinx_ (click on the link for install instructions) is available in
 the same virtual environment where ElastiCluster is installed.
+
+
+.. _`getting help`:
+
+Getting help
+------------
+
+In case you have trouble running the installation script, please send
+an email to `elasticluster@googlegroups.com
+<mailto:elasticluster@googlegroups.com>`_ or post a message on the web forum
+`<https://groups.google.com/forum/#!forum/elasticluster>`_.  Include the full
+output of the script in your email, in order to help us to identify
+the problem.
+
 
 .. References:
 
