@@ -9,11 +9,23 @@
 #
 
 import os
+import pwd
 
 # read user and group ID of the configuration and storage directory
 si = os.stat('/home/.elasticluster')
 uid = si.st_uid
 gid = si.st_gid
+
+try:
+    pwd.getpwuid(uid)
+except KeyError:
+    # create entry in /etc/passwd
+    with open('/etc/passwd', 'a') as etc_passwd:
+        etc_passwd.write(
+            "{username}:x:{uid}:{gid}::/home:/bin/sh\n"
+            .format(
+                username=os.environ.get('USER', 'user'),
+                uid=uid, gid=gid))
 
 # set real and effective user ID so that we can read/write in there
 if uid != os.getgid():
