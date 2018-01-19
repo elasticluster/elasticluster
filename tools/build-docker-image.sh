@@ -179,4 +179,11 @@ fi
 $maybe set -ex
 $maybe git clone "$PWD" "$build_dir"
 $maybe cd "$build_dir"
-$maybe docker build .
+if [ -z "$maybe" ]; then
+    docker build . | tee build.log
+    id=$(egrep -o 'Successfully built ([[:xdigit:]]+)' build.log \
+             | cut -d' ' -f3)
+    docker tag "$id" riccardomurri/elasticluster:latest
+else
+    $maybe docker build .
+fi

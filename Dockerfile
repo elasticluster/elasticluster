@@ -43,13 +43,15 @@ WORKDIR /home
 RUN : \
     && apt-get update \
     && apt-get install --yes --no-install-recommends \
-           make \
+           ca-certificates \
+           curl \
            g++ \
            gcc \
            libc6 libc6-dev \
            libexpat1 libexpat1-dev \
            libffi6 libffi-dev \
            libssl1.0.0 libssl-dev \
+           make \
            openssh-client \
     && pip install -e . \
     && rm -rf /home/.cache \
