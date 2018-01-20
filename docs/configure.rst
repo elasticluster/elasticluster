@@ -909,7 +909,9 @@ Additional optional configuration keys for Google Cloud
 ``min_cpu_platform``
     Require that VMs run on CPUs with this platform (see
     `<https://cloud.google.com/compute/docs/instances/specify-min-cpu-platform#availablezones>`_
-    for a list) or better.
+    for a list) or better.  Setting a minum CPU platform may be
+    necessary to get access to instance types with special features
+    (e.g., high number of cores)
 
 ``tags``
     Comma-separated list of instance tags.
