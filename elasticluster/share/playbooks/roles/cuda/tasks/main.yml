@@ -19,21 +19,6 @@
     state: present
 
 
-# FIXME: this is temporary, until Ubuntu bug #1742160 is solved.
-# See https://bugs.launchpad.net/ubuntu/+source/nvidia-graphics-drivers-384/+bug/1742160
-- name: Force install of ``nvidia-384` kernel driver
-  package:
-    name: '{{ item }}'
-    state: present
-  with_items:
-    # `nvidia-384` fails to install if `ubuntu-drivers-common` is not
-    # there (actually, it wants to place files in directory
-    # `/usr/lib/nvidia` which is provided by `ubuntu-drivers-common`)
-    - ubuntu-drivers-common
-    - 'cuda-drivers=384.111-1'
-  when: 'is_ubuntu_16_04'
-
-
 - name: Install CUDA packages
   package:
     name: 'cuda-{{cuda_version_major}}-{{cuda_version_minor}}'
