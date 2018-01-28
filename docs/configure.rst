@@ -813,6 +813,38 @@ The following configuration keys can only be specified in a top-level
     order).  If the cluster has no node in all these classes, then the
     first found node is used.
 
+``ssh_probe_timeout`` (optional; default: 5)
+    Maximum time (in seconds) to wait for the initial SSH connection
+    to a node to be established.
+
+    This timeout is used during ``elasticluster start``: each of the
+    nodes' IP addresses will be probed with an SSH connection until
+    one responds; each attempt will time out after this number of
+    seconds.  If no attempt succeeds within ``start_timeout`` seconds
+    (see below), then the node is marked as "down" and skipped
+    in the ``elasticluster setup`` phase.
+
+    You may want to increase this parameter only in case the TCP
+    round-trip-time to the cluster is terribly slow.
+
+``start_timeout`` (optional; default: 300)
+    Only used when running ``elasticluster start``: maximum time (in
+    seconds) to wait for nodes to be up and running.  A node is
+    considered "up and running" if ElastiCluster can open an SSH
+    connection to it.
+
+    Nodes that are not up and running after this interval has elapsed,
+    will be ignored in the following ``elasticluster setup`` phase.
+    If not enough nodes of any class are available (see
+    ``<class>_nodes_min``), then ``elasticluster start`` aborts with
+    an error.
+
+    Sensible values for this parameter vary much depending on the
+    cloud provider and the size of the cluster.  The default value is
+    600 seconds (10 minutes), which is normally enough for clusters up
+    to a few tens of nodes running on public commercial cloud
+    providers, but may need to be increased for larger clusters.
+
 ``thread_pool_max_size`` (optional)
     Maximum number of Python worker threads to create for starting VMs
     in parallel.  Default is 10.
@@ -869,7 +901,6 @@ node-level section take precedence over cluster-wide ones.
        security group only allows TCP, not UDP.
 
        .. __: https://github.com/gc3-uzh-ch/elasticluster/issues/490
-
 
 
 Additional optional configuration keys for Amazon EC2
