@@ -71,7 +71,8 @@ class IgnorePolicy(paramiko.MissingHostKeyPolicy):
 
 
 class Cluster(Struct):
-    """This is the heart of elasticluster and handles all cluster relevant
+    """
+    This is the heart of elasticluster and handles all cluster relevant
     behavior. You can basically start, setup and stop a cluster. Also it
     provides factory methods to add nodes to the cluster.
     A typical workflow is as follows:
@@ -96,6 +97,17 @@ class Cluster(Struct):
 
     :param str user_key_private: path to ssh private key file
 
+    :param int start_timeout:
+        Maximum time (in seconds) to wait for all cluster nodes to be
+        up and running. Nodes that are not up and running (i.e., an
+        SSH connection can be successfully established) within this
+        time lapse are marked as "down".
+
+    :param int ssh_probe_timeout: Maximum time (in seconds) to wait
+        for each SSH connection attempt to succeed. If no attempt
+        succeed within `start_timeout`, then the node is marked as
+        "down".
+
     :param repository: by default the
                        :py:class:`elasticluster.repository.MemRepository` is
                        used to store the cluster in memory. Provide another
@@ -108,20 +120,24 @@ class Cluster(Struct):
     :ivar nodes: dict [node_type] = [:py:class:`Node`] that represents all
                  nodes in this cluster
     """
-    startup_timeout = 60 * 10  #: timeout in seconds to start all nodes
     polling_interval = 10  #: how often to ask the cloud provider for node state
 
     def __init__(self, name, user_key_name='elasticluster-key',
                  user_key_public='~/.ssh/id_rsa.pub',
                  user_key_private='~/.ssh/id_rsa',
                  cloud_provider=None, setup_provider=None,
-                 repository=None, thread_pool_max_size=10,
+                 repository=None,
+                 start_timeout=600,
+                 ssh_probe_timeout=5,
+                 thread_pool_max_size=10,
                  **extra):
         self.name = name
         self.template = extra.pop('template', None)
-        self.thread_pool_max_size = thread_pool_max_size
         self._cloud_provider = cloud_provider
         self._setup_provider = setup_provider
+        self.ssh_probe_timeout = ssh_probe_timeout
+        self.start_timeout = start_timeout
+        self.thread_pool_max_size = thread_pool_max_size
         self.user_key_name = user_key_name
         self.repository = repository if repository else MemRepository()
 
@@ -398,7 +414,9 @@ class Cluster(Struct):
 
         nodes = self.get_all_nodes()
 
-        log.info("Starting cluster nodes ...")
+        log.info(
+            "Starting cluster nodes (timeout: %d seconds) ...",
+            self.start_timeout)
         if max_concurrent_requests == 0:
             try:
                 max_concurrent_requests = 4 * get_num_processors()
@@ -415,15 +433,18 @@ class Cluster(Struct):
         # checkpoint cluster state
         self.repository.save_or_update(self)
 
-        not_started_nodes = self._check_starting_nodes(nodes, self.startup_timeout)
+        not_started_nodes = self._check_starting_nodes(nodes, self.start_timeout)
 
         # now that all nodes are up, checkpoint cluster state again
         self.repository.save_or_update(self)
 
         # Try to connect to each node to gather IP addresses and SSH host keys
-        log.info("Checking SSH connection to nodes ...")
+        log.info(
+            "Checking SSH connection to nodes (timeout: %d seconds) ...",
+            self.start_timeout)
         pending_nodes = nodes - not_started_nodes
-        self._gather_node_ip_addresses(pending_nodes, self.startup_timeout)
+        self._gather_node_ip_addresses(
+            pending_nodes, self.start_timeout, self.ssh_probe_timeout)
 
         # It might be possible that the node.connect() call updated
         # the `preferred_ip` attribute, so, let's save the cluster
@@ -543,7 +564,7 @@ class Cluster(Struct):
         # so we can exclude them from coming rounds
         return nodes
 
-    def _gather_node_ip_addresses(self, nodes, lapse):
+    def _gather_node_ip_addresses(self, nodes, lapse, ssh_timeout):
         """
         Connect via SSH to each node.
 
@@ -570,7 +591,9 @@ class Cluster(Struct):
             try:
                 while nodes:
                     for node in copy(nodes):
-                        ssh = node.connect(keyfile=known_hosts_path)
+                        ssh = node.connect(
+                            keyfile=known_hosts_path,
+                            timeout=ssh_timeout)
                         if ssh:
                             log.info("Connection to node `%s` successful,"
                                      " using IP address %s to connect.",
@@ -1106,11 +1129,10 @@ class Node(Struct):
 
     :ivar ips: list of all the IPs defined for this node.
     """
-    connection_timeout = 5  #: timeout in seconds to connect to host via ssh
 
     def __init__(self, name, cluster_name, kind, cloud_provider, user_key_public,
                  user_key_private, user_key_name, image_user, security_group,
-                 image_id, flavor, image_userdata=None, **extra):
+                 image_id, flavor, image_userdata=None, ssh_timeout=5, **extra):
         self.name = name
         self.cluster_name = cluster_name
         self.kind = kind
@@ -1213,8 +1235,13 @@ class Node(Struct):
         """
         return self.preferred_ip
 
-    def connect(self, keyfile=None):
-        """Connect to the node via ssh using the paramiko library.
+    def connect(self, keyfile=None, timeout=5):
+        """
+        Connect to the node via SSH.
+
+        :param keyfile: Path to the SSH host key.
+        :param timeout: Maximum time to wait (in seconds) for the TCP
+            connection to be established.
 
         :return: :py:class:`paramiko.SSHClient` - ssh connection or None on
                  failure
@@ -1244,12 +1271,11 @@ class Node(Struct):
                 log.debug("Trying to connect to host %s (%s)",
                           self.name, ip)
                 addr, port = parse_ip_address_and_port(ip, SSH_PORT)
-                ssh.connect(str(addr),
+                ssh.connect(str(addr), port=port,
                             username=self.image_user,
                             allow_agent=True,
                             key_filename=self.user_key_private,
-                            timeout=Node.connection_timeout,
-                            port=port)
+                            timeout=timeout)
                 log.debug("Connection to %s succeeded on port %d!", ip, port)
                 if ip != self.preferred_ip:
                     log.debug("Setting `preferred_ip` to %s", ip)
@@ -1257,8 +1283,9 @@ class Node(Struct):
                 # Connection successful.
                 return ssh
             except socket.error as ex:
-                log.debug("Host %s (%s) not reachable: %s.",
-                          self.name, ip, ex)
+                log.debug(
+                    "Host %s (%s) not reachable within %d seconds: %s.",
+                    self.name, ip, timeout, ex)
             except paramiko.BadHostKeyException as ex:
                 log.error("Invalid host key: host %s (%s); check keyfile: %s",
                           self.name, ip, keyfile)

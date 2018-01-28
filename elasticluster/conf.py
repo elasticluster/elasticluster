@@ -121,6 +121,8 @@ SCHEMA = {
                 Optional(str): str,
             },
         },
+        Optional("ssh_probe_timeout", default=5): positive_int,
+        Optional("start_timeout", default=600): positive_int,
         # only on Google Cloud
         Optional("accelerator_count", default=0): nonnegative_int,
         Optional("accelerator_type"): nonempty_str,
