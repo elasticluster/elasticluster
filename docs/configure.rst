@@ -904,6 +904,32 @@ The following configuration keys can only be specified in a top-level
     You may want to increase this parameter only in case the TCP
     round-trip-time to the cluster is terribly slow.
 
+``ssh_proxy_command``
+    Command to use to set up a TCP connection to the remote host; SSH
+    will use this to communicate with the target host. See man page
+    `ssh_config(5)`__ for details.
+
+    .. __: https://man.openbsd.org/ssh_config#ProxyCommand
+
+    The following sequences of characters have special meaning:
+
+    * ``%%h`` will be replaced with the destination IP address;
+    * ``%%p`` will be replaced with the destination port number;
+    * ``%%r`` will be replaced with the user name on the destination host;
+    * ``%%%%`` will be replaced with a single ``%`` character.
+
+    Note that, due to variable interpolation syntax, most other
+    characters sequences starting with ``%%`` are invalid and will
+    cause an error.
+
+    Proxy commands may be required in cases where a firewall is
+    blocking direct SSH connections.  For example, you could use the
+    following command to access hosts that are located on a private
+    cloud behind a bastion host::
+
+      ssh_proxy_command = ssh -T bastion.example.org nc -q0 %%%h %%%p
+
+
 ``start_timeout`` (optional; default: 300)
     Only used when running ``elasticluster start``: maximum time (in
     seconds) to wait for nodes to be up and running.  A node is

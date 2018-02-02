@@ -130,6 +130,7 @@ class Cluster(Struct):
                  repository=None,
                  start_timeout=600,
                  ssh_probe_timeout=5,
+                 ssh_proxy_command='',
                  thread_pool_max_size=10,
                  **extra):
         self.name = name
@@ -137,6 +138,7 @@ class Cluster(Struct):
         self._cloud_provider = cloud_provider
         self._setup_provider = setup_provider
         self.ssh_probe_timeout = ssh_probe_timeout
+        self.ssh_proxy_command = ssh_proxy_command
         self.start_timeout = start_timeout
         self.thread_pool_max_size = thread_pool_max_size
         self.user_key_name = user_key_name
@@ -1133,7 +1135,8 @@ class Node(Struct):
 
     def __init__(self, name, cluster_name, kind, cloud_provider, user_key_public,
                  user_key_private, user_key_name, image_user, security_group,
-                 image_id, flavor, image_userdata=None, ssh_timeout=5, **extra):
+                 image_id, flavor, image_userdata=None, ssh_proxy_command='',
+                 **extra):
         self.name = name
         self.cluster_name = cluster_name
         self.kind = kind
@@ -1146,7 +1149,7 @@ class Node(Struct):
         self.image_id = image_id
         self.image_userdata = image_userdata
         self.flavor = flavor
-
+        self.ssh_proxy_command = ssh_proxy_command
         self.instance_id = extra.pop('instance_id', None)
         self.preferred_ip = extra.pop('preferred_ip', None)
         self.ips = extra.pop('ips', [])
@@ -1262,39 +1265,96 @@ class Node(Struct):
                 ips.remove(self.preferred_ip)
             else:
                 # Preferred is changed?
-                log.debug("IP %s does not seem to belong to %s anymore. Ignoring!", self.preferred_ip, self.name)
+                log.debug(
+                    "IP address %s does not seem to belong to %s anymore."
+                    " Ignoring it.", self.preferred_ip, self.name)
                 self.preferred_ip = ips[0]
 
         for ip in itertools.chain([self.preferred_ip], ips):
             if not ip:
                 continue
+            log.debug("Trying to connect to host %s (%s) ...", self.name, ip)
             try:
-                log.debug("Trying to connect to host %s (%s)",
-                          self.name, ip)
                 addr, port = parse_ip_address_and_port(ip, SSH_PORT)
-                ssh.connect(str(addr), port=port,
-                            username=self.image_user,
-                            allow_agent=True,
-                            key_filename=self.user_key_private,
-                            timeout=timeout)
-                log.debug("Connection to %s succeeded on port %d!", ip, port)
+                extra = {
+                    'allow_agent':   True,
+                    'key_filename':  self.user_key_private,
+                    'look_for_keys': False,
+                    'timeout':       timeout,
+                    'username':      self.image_user,
+                }
+                if self.ssh_proxy_command:
+                    proxy_command = self.expand_proxy_command(
+                        self.ssh_proxy_command,
+                        self.image_user, addr, port)
+                    from paramiko.proxy import ProxyCommand
+                    extra['sock'] = ProxyCommand(proxy_command)
+                    log.debug("Using proxy command `%s`.", proxy_command)
+                ssh.connect(str(addr), port=port, **extra)
+                log.debug(
+                    "Connection to %s succeeded on port %d,"
+                    " will use this IP address for future connections.",
+                    ip, port)
                 if ip != self.preferred_ip:
-                    log.debug("Setting `preferred_ip` to %s", ip)
                     self.preferred_ip = ip
                 # Connection successful.
                 return ssh
             except socket.error as ex:
                 log.debug(
-                    "Host %s (%s) not reachable within %d seconds: %s.",
-                    self.name, ip, timeout, ex)
+                    "Host %s (%s) not reachable within %d seconds: %s -- %r",
+                    self.name, ip, timeout, ex, type(ex))
             except paramiko.BadHostKeyException as ex:
-                log.error("Invalid host key: host %s (%s); check keyfile: %s",
-                          self.name, ip, keyfile)
+                log.error(
+                    "Invalid SSH host key for %s (%s): %s.",
+                    self.name, ip, ex)
             except paramiko.SSHException as ex:
-                log.debug("Ignoring error %s connecting to %s",
-                          str(ex), self.name)
+                log.debug(
+                    "Ignoring error connecting to %s: %s -- %r",
+                    self.name, ex, type(ex))
 
         return None
+
+    @staticmethod
+    def expand_proxy_command(command, user, addr, port=22):
+        """
+        Expand spacial digraphs ``%h``, ``%p``, and ``%r``.
+
+        Return a copy of `command` with the following string
+        substitutions applied:
+
+        * ``%h`` is replaced by *addr*
+        * ``%p`` is replaced by *port*
+        * ``%r`` is replaced by *user*
+        * ``%%`` is replaced by ``%``.
+
+        See also: man page ``ssh_config``, section "TOKENS".
+        """
+        translated = []
+        subst = {
+            'h': list(str(addr)),
+            'p': list(str(port)),
+            'r': list(str(user)),
+            '%': ['%'],
+        }
+        escaped = False
+        for char in command:
+            if char == '%':
+                escaped = True
+                continue
+            if escaped:
+               try:
+                   translated.extend(subst[char])
+                   escaped = False
+                   continue
+               except KeyError:
+                   raise ValueError(
+                       "Unknown digraph `%{0}`"
+                       " in proxy command string `{1}`"
+                       .format(char, command))
+            else:
+                translated.append(char)
+                continue
+        return str.join('', translated)
 
     def update_ips(self):
         """Retrieves the public and private ip of the instance by using the
