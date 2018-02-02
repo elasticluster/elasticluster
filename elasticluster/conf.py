@@ -123,6 +123,7 @@ SCHEMA = {
             },
         },
         Optional("ssh_probe_timeout", default=5): positive_int,
+        Optional("ssh_proxy_command", default=''): str,
         Optional("start_timeout", default=600): positive_int,
         # only on Google Cloud
         Optional("accelerator_count", default=0): nonnegative_int,
@@ -666,6 +667,7 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'network_ids',
             'security_group',
             'node_name',
+            'ssh_proxy_command',
             # Google Cloud only
             'accelerator_count',
             'accelerator_type',
