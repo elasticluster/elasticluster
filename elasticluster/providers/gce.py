@@ -91,8 +91,6 @@ class GoogleCloudProvider(AbstractCloudProvider):
                  gce_client_id,
                  gce_client_secret,
                  gce_project_id,
-                 accelerator_count=0,
-                 accelerator_type='default',  ## only used if accelerator_count>0
                  email=GCE_DEFAULT_SERVICE_EMAIL,
                  network='default',
                  noauth_local_webserver=False,
@@ -225,9 +223,11 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        scheduling=None,
                        accelerator_count=0,
                        accelerator_type='default',
+                       allow_project_ssh_keys=True,
                        min_cpu_platform=None,
                        **kwargs):
-        """Starts a new instance with the given properties and returns
+        """
+        Starts a new instance with the given properties and returns
         the instance id.
 
         :param str key_name: name of the ssh key to connect
@@ -249,6 +249,12 @@ class GoogleCloudProvider(AbstractCloudProvider):
 
           * Full URL specifying an accelerator type valid for the zone and project VMs are being created in.  For example, ``https://www.googleapis.com/compute/v1/projects/[PROJECT_ID]/zones/[ZONE]/acceleratorTypes/[ACCELERATOR_TYPE]``
           * An accelerator type name (any string which is not a valid URL).  This is internally prefixed with the string ``https://www.googleapis.com/compute/v1/projects/[PROJECT_ID]/zones/[ZONE]/acceleratorTypes/`` to form a full URL.
+        :param bool allow_project_ssh_keys:
+          When ``True`` (default), SSH login is allowed to a node
+          using any of the project-wide SSH keys (if they are
+          defined).  When ``False``, only the SSH key specified by
+          ElastiCluster config's ``[login/*]`` section will be allowed
+          to log in (instance-level key).
         :param str min_cpu_platform: require CPUs of this type or better (e.g., "Intel Skylake")
 
           Only used if ``accelerator_count`` is > 0.
@@ -353,8 +359,12 @@ class GoogleCloudProvider(AbstractCloudProvider):
                 "items": [
                     {
                         "key": "ssh-keys",
-                        "value": "%s:%s" % (username, public_key_content)
-                    }
+                        "value": "%s:%s" % (username, public_key_content),
+                    },
+                    {
+                        "key": "block-project-ssh-keys",
+                        "value": (not allow_project_ssh_keys),
+                    },
                 ]
             }
         }

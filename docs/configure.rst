@@ -929,6 +929,20 @@ Additional optional configuration keys for Google Cloud
 
     Only used if ``accelerator_count`` is > 0.
 
+``allow_project_ssh_keys``
+
+    When ``yes`` (default), SSH login is allowed to a node using any
+    of the `project-wide SSH keys`__ (if any are defined).  When ``no``,
+    only the SSH key specified by ElastiCluster config's ``[login/*]``
+    section refernced by this cluster will be allowed to log in
+    (instance-level key).
+
+    .. __: https://cloud.google.com/compute/docs/instances/adding-removing-ssh-keys#block-project-keys
+
+    Note that Google Cloud API uses the *negative* setting for this
+    option, i.e., the API allows you to *block* project-wide SSH keys
+    -- but the default outcome is unchanged.
+
 ``boot_disk_type``
     Define the type of boot disk to use.  Supported values are
     ``pd-standard`` (default) and ``pd-ssd``.

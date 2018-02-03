@@ -126,6 +126,7 @@ SCHEMA = {
         # only on Google Cloud
         Optional("accelerator_count", default=0): nonnegative_int,
         Optional("accelerator_type"): nonempty_str,
+        Optional("allow_project_ssh_keys", default=True): boolean,
         Optional("min_cpu_platform"): nonempty_str,
         # allow other keys w/out restrictions
         Optional(str): str,
@@ -657,6 +658,7 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             # Google Cloud only
             'accelerator_count',
             'accelerator_type',
+            'allow_project_ssh_keys',
             'boot_disk_size',
             'boot_disk_type',
             'min_cpu_platform',
