@@ -122,44 +122,43 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :return: A Resource object with methods for interacting with the
                  service.
         """
-        # check for existing connection
+        # ensure only one thread runs the authentication process, if needed
         with GoogleCloudProvider.__gce_lock:
-            if self._gce:
-                return self._gce
+            # check for existing connection
+            if not self._gce:
+                flow = OAuth2WebServerFlow(self._client_id, self._client_secret,
+                                           GCE_SCOPE)
+                # The `Storage` object holds the credentials that your
+                # application needs to authorize access to the user's
+                # data. The name of the credentials file is provided. If the
+                # file does not exist, it is created. This object can only
+                # hold credentials for a single user. It stores the access
+                # priviledges for the application, so a user only has to grant
+                # access through the web interface once.
+                storage_path = os.path.join(self._storage_path,
+                                            self._client_id + '.oauth.dat')
+                storage = Storage(storage_path)
 
-            flow = OAuth2WebServerFlow(self._client_id, self._client_secret,
-                                       GCE_SCOPE)
-            # The `Storage` object holds the credentials that your
-            # application needs to authorize access to the user's
-            # data. The name of the credentials file is provided. If the
-            # file does not exist, it is created. This object can only
-            # hold credentials for a single user. It stores the access
-            # priviledges for the application, so a user only has to grant
-            # access through the web interface once.
-            storage_path = os.path.join(self._storage_path,
-                                        self._client_id + '.oauth.dat')
-            storage = Storage(storage_path)
+                credentials = storage.get()
+                if credentials is None or credentials.invalid:
+                    args = argparser.parse_args([])
+                    args.noauth_local_webserver = self._noauth_local_webserver
+                    # try to start a browser to have the user authenticate with Google
+                    # TODO: what kind of exception is raised if the browser
+                    #       cannot be started?
+                    try:
+                        credentials = run_flow(flow, storage, flags=args)
+                    except Exception as err:
+                        log.error("Could not run authentication flow: %s", err)
+                        log.debug("(Original traceback follows.)", exc_info=True)
+                        raise
 
-            credentials = storage.get()
-            if credentials is None or credentials.invalid:
-                args = argparser.parse_args([])
-                args.noauth_local_webserver = self._noauth_local_webserver
-                # try to start a browser to have the user authenticate with Google
-                # TODO: what kind of exception is raised if the browser
-                #       cannot be started?
-                try:
-                    credentials = run_flow(flow, storage, flags=args)
-                except:
-                    import sys
-                    print "Unexpected error:", sys.exc_info()[0]
-                    raise
+                http = httplib2.Http()
+                self._auth_http = credentials.authorize(http)
 
-            http = httplib2.Http()
-            self._auth_http = credentials.authorize(http)
+                self._gce = build(GCE_API_NAME, GCE_API_VERSION, http=http)
 
-            self._gce = build(GCE_API_NAME, GCE_API_VERSION, http=http)
-
-            return self._gce
+        return self._gce
 
     def _execute_request(self, request):
         """Helper method to execute a request, since a lock should be used
