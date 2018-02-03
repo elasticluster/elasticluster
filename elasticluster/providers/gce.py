@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013, 2015, 2016, 2018 S3IT, University of Zurich
+# Copyright (C) 2013-2018 University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -352,7 +352,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                 "kind": "compute#metadata",
                 "items": [
                     {
-                        "key": "sshKeys",
+                        "key": "ssh-keys",
                         "value": "%s:%s" % (username, public_key_content)
                     }
                 ]
