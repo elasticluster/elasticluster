@@ -36,7 +36,11 @@ SchedulerPort=7321
 SelectType={{slurm_selecttype|default('select/cons_res')}}
 SelectTypeParameters={{slurm_selecttypeparameters|default('CR_Core_Memory')}}
 FastSchedule={{slurm_fastschedule|default('1')}}
-DefMemPerCPU={{slurm_defmempercpu|default(slurm_workers_max_free_memory_mb / slurm_workers_max_vcpus)|int}}
+{% if slurm_defmempercpu is defined %}
+DefMemPerCPU={{slurm_defmempercpu|int}}
+{% else %}
+#DefMemPerCPU={{ (slurm_workers_max_free_memory_mb / slurm_workers_max_vcpus)|int }}
+{% endif %}
 
 # use the "multifactor" plugin with weights set up to be multi-user ready
 PriorityType=priority/multifactor
