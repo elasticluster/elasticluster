@@ -850,7 +850,7 @@ The following configuration keys can only be specified in a top-level
     following command to access hosts that are located on a private
     cloud behind a bastion host::
 
-      ssh_proxy_command = ssh -T bastion.example.org nc -q0 %%%h %%%p
+      ssh_proxy_command = ssh -T bastion.example.org nc -q0 %%h %%p
 
 
 ``start_timeout`` (optional; default: 300)
