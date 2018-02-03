@@ -19,6 +19,7 @@ script:
 sudo: false
 
 after_success:
+  - if [ $(echo "$TRAVIS_PYTHON_VERSION" | cut -d. -f1-2) != '2.7' ]; then echo "Only building on Py2.7, this is $TRAVIS_PYTHON_VERSION"; exit 0; fi
   - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
   - export BRANCH=$(echo "${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}" | cut -c-8)
   - export COMMIT=$(echo "${TRAVIS_PULL_REQUEST_SHA:-$TRAVIS_COMMIT}" | cut -c-8)
