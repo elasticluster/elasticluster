@@ -25,7 +25,6 @@ VOLUME /home/.elasticluster
 
 # Copy ElastiCluster sources
 COPY ./ /home
-COPY ./etc/docker/sitecustomize.py /usr/local/lib/python2.7/site-packages/sitecustomize.py
 
 
 # Install ElastiCluster
@@ -68,6 +67,12 @@ RUN : \
     && rm -rf /var/cache/apt/* \
     && rm -rf /var/cache/debconf/*.dat-old \
     ;
+
+
+# Deploy adapter script (needs to be done last, otherwise it fails
+# when running Python commands above)
+COPY ./etc/docker/sitecustomize.py /usr/local/lib/python2.7/site-packages/sitecustomize.py
+
 
 # Run this command by default
 ENTRYPOINT ["/usr/local/bin/python", "-m", "elasticluster"]
