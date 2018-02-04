@@ -7,9 +7,11 @@
 #
 
 import os
-from os import environ, getuid, makedirs, setuid, setgid, stat, symlink
-from os.path import dirname, exists
+from os import chmod, chown, environ, getuid, makedirs, \
+    setuid, setgid, stat, symlink, walk
+from os.path import dirname, exists, join
 from pwd import getpwuid
+
 
 # read user and group ID of the configuration and storage directory
 si = stat('/home/.elasticluster')
@@ -28,6 +30,18 @@ except KeyError:
                 username=environ.get('USER', 'user'),
                 uid=uid, gid=gid))
 
+# ensure Ansible's work directory exists and is writable
+ansible_d = '/home/.ansible'
+if not exists(ansible_d):
+    makedirs(ansible_d)
+for rootdir, _, filenames in walk(ansible_d):
+    chown(rootdir, uid, gid)
+    chmod(rootdir, 0o755)
+    for filename in filenames:
+        path = join(rootdir, filename)
+        chown(path, uid, gid)
+        chmod(path, 0o755)
+
 # symlink outside home path to /home, so that path names embedded in
 # conf files (e.g. `~/.ssh/config`) continue to work
 home = environ.get('HOME', '/home')
@@ -37,8 +51,6 @@ if home != '/home':
         if not exists(parent):
             makedirs(dirname(home))
         symlink('/home', home)
-    else:
-        system('mount --bind /home {home}'.format(home=home))
 
 # ensure we can use the SSH agent if present
 if exists('/home/.ssh-agent.sock'):
