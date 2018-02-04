@@ -22,7 +22,8 @@ Options:
   --no-act, -n
       Do not actually execute any build command; just print
       what would have been done.
-
+  --tag, -t NAME:TAG
+      Passed unchanged to the 'docker build' command.
 EOF
 }
 
@@ -115,8 +116,8 @@ is_absolute_path () {
 
 ## parse command-line
 
-short_opts='hkn'
-long_opts='dry-run,help,keep,no-act,just-print'
+short_opts='hknt:'
+long_opts='dry-run,help,keep,no-act,just-print,tag:'
 
 # test which `getopt` version is available:
 # - GNU `getopt` will generate no output and exit with status 4
@@ -145,6 +146,7 @@ while [ $# -gt 0 ]; do
         -h|--help) usage; exit 0 ;;
         -k|--keep) keep=yes ;;
         -n|--dry-run|--no-act|--just-print) maybe=echo ;;
+        -t|--tag) opt_tag="-t $2"; shift ;;
         --) shift; break ;;
     esac
     shift
@@ -180,10 +182,8 @@ $maybe set -ex
 $maybe git clone "$PWD" "$build_dir"
 $maybe cd "$build_dir"
 if [ -z "$maybe" ]; then
-    docker build . | tee build.log
-    id=$(egrep -o 'Successfully built ([[:xdigit:]]+)' build.log \
-             | cut -d' ' -f3)
-    docker tag "$id" riccardomurri/elasticluster:latest
+    docker build --iidfile id.txt $opt_tag . | tee build.log
+    docker tag $(cat id.txt) riccardomurri/elasticluster:latest
 else
     $maybe docker build .
 fi
