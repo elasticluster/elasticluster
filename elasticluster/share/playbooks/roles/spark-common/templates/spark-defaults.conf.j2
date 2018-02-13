@@ -1,5 +1,11 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+#
 # Default system properties included when running spark-submit.
-# This is useful for setting default environmental settings.
+#
 
 {%- set hadoop_workers_max_vcpus = groups.hadoop_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|max -%}
 {%- set hadoop_workers_min_vcpus = groups.hadoop_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|min -%}
