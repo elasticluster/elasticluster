@@ -29,7 +29,7 @@
 
 - name: Symlink Py4J `.zip` archive under a version-independent name
   # XXX: We use shell globbing to find out what source file to link,
-  # assuming there is one and only one Py4J `.zip` file.  
+  # assuming there is one and only one Py4J `.zip` file.
   shell: |
     cd /usr/lib/spark/python/lib
     ln -s py4j-*-src.zip py4j-src.zip
@@ -46,8 +46,8 @@
   file:
     path='{{SPARK_CONF_DIR}}'
     state=directory
-    
-    
+
+
 - name: Copy Spark/BigTop default configuration files
   tags:
     - hadoop
@@ -55,7 +55,18 @@
   command:
     'rsync -ax --update --backup /etc/spark/conf.dist/ {{SPARK_CONF_DIR}}/'
 
-  
+
+- name: Read installed JVM version
+  shell: |
+    expr match "$(java -version 2>&1)" '.\+ version "1\.\([0-9]\+\)\.[0-9]\+'
+  register: _spark_common_jvm_version
+
+
+- name: Store JVM version into variable `java_version`
+  set_fact:
+    java_version: '{{ _spark_common_jvm_version.stdout|int }}'
+
+
 - name: Deploy Spark/ElastiCluster configuration files
   tags:
     - hadoop

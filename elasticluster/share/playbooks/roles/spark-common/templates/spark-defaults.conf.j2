@@ -11,6 +11,20 @@
 {%- set hadoop_workers_min_vcpus = groups.hadoop_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|min -%}
 {%- set hadoop_workers_max_free_memory_mb = groups.hadoop_worker|map('extract', hostvars, ['ansible_memory_mb', 'nocache', 'free'])|list|max -%}
 
+{% if java_version|default(8)|int >= 8 %}
+# These are necessary with JVM 1.8+ to avoid allocating 1GB extra
+# memory at the onset for the "MetaSpace"; while having a large
+# MetaSpace from the beginning *might* be a good choice for
+# long-running server applications, it makes small test jobs use an
+# inordinate amount of memory -- and smallish short-lived jobs is a
+# more typical use of ElastiCluster's Spark deployments (for
+# education, experimentation, and exploratory programming).  For a
+# full explanation, see:
+# https://github.com/TissueMAPS/TmLibrary/issues/34#issuecomment-334730532
+spark.yarn.am.extraJavaOptions -XX:-UseCompressedOops -XX:-UseCompressedClassPointers
+spark.driver.extraJavaOptions  -XX:-UseCompressedOops -XX:-UseCompressedClassPointers
+{% endif %}
+
 # this is local to the master node, so use its memory and vcpu values for computing
 spark.driver.memory              {{ (ansible_memory_mb.nocache.free / ansible_processor_vcpus)|int }}m
 
