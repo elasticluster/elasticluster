@@ -72,8 +72,8 @@
     - hadoop
     - spark
   template:
-    src='{{item}}.j2'
-    dest='{{SPARK_CONF_DIR}}/{{item}}'
+    src: '{{item}}.j2'
+    dest: '{{SPARK_CONF_DIR}}/{{item}}'
   with_items:
     - spark-defaults.conf
     #- spark-env.sh
@@ -81,17 +81,17 @@
 
 - name: Activate Spark/ElastiCluster configuration
   alternatives:
-    name='spark-conf'
-    link='/etc/spark/conf'
-    path='{{SPARK_CONF_DIR}}'
+    name: 'spark-conf'
+    link: '/etc/spark/conf'
+    path: '{{SPARK_CONF_DIR}}'
 
 
 - name: Deploy PySpark configuration files
   tags:
     - hadoop
     - spark
-  copy:
-    src='{{item}}'
-    dest='/{{item}}'
+  template:
+    src: '{{item.src}}'
+    dest: '{{item.dest}}'
   with_items:
-    - etc/profile.d/pyspark.sh
+    - { src: 'pyspark.sh.j2', dest: '/etc/profile.d/pyspark.sh' }
