@@ -363,6 +363,39 @@ installed on the cluster (NIS master on the cluster master node, compute nodes
 are NIS slaves) to make it easier to add users to the cluster (just run the
 ``adduser`` command on the master).
 
+The following variables can be used to control the defaults for
+running Spark applications.  (Note that they set a *default*, hence
+can be overridden by applications when creating a Spark context; on
+the other hand, these defaults are *exactly* what is used when running
+``pyspark`` or a Jupyter notebook with Spark support.)
+
+.. list-table:: Spark settings
+   :widths: 30 20 50
+   :header-rows: 1
+
+   * - Variable
+     - Default value
+     - Description
+   * - ``spark_driver_memory_mb``          1
+     - *(Free memory on master node / nr. of CPUs of master node)*
+     - Used to set ``spark.driver.memory``: maximum amount of memory
+       (counted in MBs) that a Spark "driver" process is allowed to use.
+   * - ``spark_driver_maxresultsize_mb``          1
+     - *(80% of ``spark_driver_memory_mb``)*
+     - Used to set ``spark.driver.maxResultSize``: Limit of total size
+       (amount in MBs) of serialized results of all partitions for
+       each Spark action (e.g. collect)
+   * - ``spark_executor_memory_mb``          1
+     - *(Max free memory on worker node / max nr. of CPUs on a node)*
+     - Used to set ``spark.executor.memory``: Maximum amount of memory
+       (counted in MBs) that a Spark "executor" process is allowed to use.
+   * - ``spark_python_worker_memory_mb``          1
+     - *(50% of ``spark_executor_memory_mb``)*
+     - Used to set ``spark.python.worker.memory``: Maximum amount of
+       memory (counted in MBs) to use per Python worker process during
+       aggregation.  If the memory used during aggregation goes above
+       this amount, Spark starts spilling the data into disks.
+
 
 HTCondor
 --------
