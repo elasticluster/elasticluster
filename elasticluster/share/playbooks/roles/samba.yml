@@ -7,5 +7,5 @@
   become: yes
   roles:
     - role: smb-server
-      SMB_WORKGROUP: '{{ smb_workgroup|default("elasticluster") }}'
-      SMB_SHARES: '{{ smb_shares|default([]) }}'
+      smb_workgroup: '{{ smb_workgroup|default("elasticluster") }}'
+      smb_shares: '{{ smb_shares|default([]) }}'
