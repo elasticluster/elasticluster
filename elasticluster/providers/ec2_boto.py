@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013 S3IT, University of Zurich
+# Copyright (C) 2013, 2018 S3IT, University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,7 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
+__author__ = ', '.join([
+    'Nicolas Baer <nicolas.baer@uzh.ch>',
+    'Antonio Messina <antonio.s.messina@gmail.com>',
+    'Riccardo Murri <riccardo.murri@gmail.com>',
+])
 
 # System imports
 import os
@@ -93,13 +97,7 @@ class BotoCloudProvider(AbstractCloudProvider):
         else:
             self._secure = False
 
-        self._region = boto.ec2.get_region(
-            ec2_region,
-            aws_access_key_id=self._access_key,
-            aws_secret_access_key=self._secret_key,
-            is_secure=self._secure,
-            host=self._ec2host, port=self._ec2port,
-            path=self._ec2path)
+        self._region_name = ec2_region
 
         # will be initialized upon first connect
         self._ec2_connection = None
@@ -111,7 +109,8 @@ class BotoCloudProvider(AbstractCloudProvider):
         self._images = None
 
     def _connect(self):
-        """Connects to the ec2 cloud provider
+        """
+        Connect to the EC2 cloud provider.
 
         :return: :py:class:`boto.ec2.connection.EC2Connection`
         :raises: Generic exception on error
@@ -120,52 +119,62 @@ class BotoCloudProvider(AbstractCloudProvider):
         if self._ec2_connection:
             return self._ec2_connection
 
-        if not self._vpc:
-            vpc_connection = None
-
         try:
             log.debug("Connecting to EC2 endpoint %s", self._ec2host)
 
             # connect to webservice
-            ec2_connection = self._region.connect()
+            ec2_connection = boto.ec2.connect_to_region(
+                self._region_name,
+                aws_access_key_id=self._access_key,
+                aws_secret_access_key=self._secret_key,
+                is_secure=self._secure,
+                host=self._ec2host,
+                port=self._ec2port,
+                path=self._ec2path,
+            )
             log.debug("EC2 connection has been successful.")
 
-            if self._vpc:
-                vpc_connection = boto.connect_vpc(
-                    aws_access_key_id=self._access_key,
-                    aws_secret_access_key=self._secret_key,
-                    is_secure=self._secure,
-                    host=self._ec2host, port=self._ec2port,
-                    path=self._ec2path, region=self._region)
-                log.debug("VPC connection has been successful.")
+            if not self._vpc:
+                vpc_connection = None
+                self._vpc_id = None
+            else:
+                vpc_connection, self._vpc_id = self._find_vpc_by_name(self._vpc)
 
-                for vpc in vpc_connection.get_all_vpcs():
-                    matches = [vpc.id]
-                    if 'Name' in vpc.tags:
-                        matches.append(vpc.tags['Name'])
-                    if self._vpc in matches:
-                        self._vpc_id = vpc.id
-                        if self._vpc != self._vpc_id:
-                            # then `self._vpc` is the VPC's name
-                            log.debug(
-                                "VPC `%s` has ID `%s`",
-                                self._vpc, self._vpc_id)
-                        break
-                else:
-                    raise VpcError('Cannot find VPC `{0}`.'.format(self._vpc))
-
-            # list images to see if the connection works
-            # images = self._ec2_connection.get_all_images()
-            # log.debug("%d images found on cloud %s",
-            #           len(images), self._ec2host)
-
-        except Exception as e:
-            log.error("Error connecting to EC2: %s", e)
+        except Exception as err:
+            log.error("Error connecting to EC2: %s", err)
             raise
 
         self._ec2_connection, self._vpc_connection = (
             ec2_connection, vpc_connection)
         return self._ec2_connection
+
+    def _find_vpc_by_name(self, vpc_name):
+        vpc_connection = boto.vpc.connect_to_region(
+            self._region_name,
+            aws_access_key_id=self._access_key,
+            aws_secret_access_key=self._secret_key,
+            is_secure=self._secure,
+            host=self._ec2host,
+            port=self._ec2port,
+            path=self._ec2path,
+        )
+        log.debug("VPC connection has been successful.")
+
+        for vpc in vpc_connection.get_all_vpcs():
+            matches = [vpc.id]
+            if 'Name' in vpc.tags:
+                matches.append(vpc.tags['Name'])
+            if vpc_name in matches:
+                vpc_id = vpc.id
+                if vpc_name != vpc_id:
+                    # then `vpc_name` is the VPC name
+                    log.debug("VPC `%s` has ID `%s`", vpc_name, vpc_id)
+                break
+        else:
+            raise VpcError('Cannot find VPC `{0}`.'.format(vpc_name))
+
+        return (vpc_connection, vpc_id)
+
 
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
