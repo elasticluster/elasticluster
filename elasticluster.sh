@@ -186,6 +186,9 @@ cat <<EOF
 In addition, the following options can be used to control execution of
 ElastiCluster in Docker:
 
+  --latest
+      Same as '--pull --release latest'
+
   --pull
       Update Docker image to the latest version available
 
@@ -208,6 +211,10 @@ while [ $# -gt 0 ]; do
         --help|-h)
             usage;
             exit 0
+            ;;
+        --latest)
+            pull='yes'
+            docker_image_tag='latest'
             ;;
         --pull)
             pull='yes'
