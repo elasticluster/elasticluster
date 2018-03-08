@@ -46,7 +46,7 @@
     - gridengine-master
   file:
     dest: '{{SGE_VAR}}/{{SGE_CELL}}/common/accounting'
-    state: present
+    state: touch
     mode: 0644
     # FIXME: should we stat other files and re-use the same owner/group?
     owner: sgeadmin
