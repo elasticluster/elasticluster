@@ -91,6 +91,16 @@
   when: 'create_systemd_gridengine_master_service|changed and ({{is_rhel7_compatible}})'
 
 
+- name: Ensure GridEngine master is started
+  tags:
+    - gridengine
+    - gridengine-master
+  service:
+    name: gridengine-master
+    enabled: yes
+    state: started
+
+
 - name: upload configuration file for host
   tags:
     - gridengine
