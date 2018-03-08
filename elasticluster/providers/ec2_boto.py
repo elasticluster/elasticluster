@@ -29,7 +29,8 @@ from warnings import warn
 
 # External modules
 import boto
-from boto import ec2
+import boto.ec2
+import boto.vpc
 from paramiko import DSSKey, RSAKey, PasswordRequiredException
 from paramiko.ssh_exception import SSHException
 
@@ -225,10 +226,11 @@ class BotoCloudProvider(AbstractCloudProvider):
             for subnet in network_ids.split(','):
                 subnet_id = self._check_subnet(subnet)
 
-                interfaces.append(ec2.networkinterface.NetworkInterfaceSpecification(
-                    subnet_id=subnet_id, groups=[security_group_id],
-                    associate_public_ip_address=self.request_floating_ip))
-            interfaces = ec2.networkinterface.NetworkInterfaceCollection(*interfaces)
+                interfaces.append(
+                    boto.ec2.networkinterface.NetworkInterfaceSpecification(
+                        subnet_id=subnet_id, groups=[security_group_id],
+                        associate_public_ip_address=self.request_floating_ip))
+            interfaces = boto.ec2.networkinterface.NetworkInterfaceCollection(*interfaces)
 
             security_groups = []
         else:
