@@ -4,7 +4,7 @@
   template:
     src: 'etc/netgroup.j2'
     dest: '/etc/netgroup'
-    mode: 0400
+    mode: 0444
     owner: root
     group: root
 
