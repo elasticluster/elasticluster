@@ -2,7 +2,7 @@
 
 # force PySpark to use the Hadoop/YARN cluster
 # (default is to use a local executor)
-export MASTER=yarn-client
+export MASTER=yarn
 
 # by default, calling `pyspark` starts an IPython interpreter
 export PYSPARK_DRIVER_PYTHON={{anaconda_home}}/bin/ipython
