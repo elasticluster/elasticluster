@@ -17,8 +17,10 @@ if 'SPARK_HOME' not in os.environ:
 spark_home = os.environ['SPARK_HOME']
 
 # by default Spark uses the "local" executor, use YARN instead
-os.environ.setdefault('MASTER', 'yarn-client')
-os.environ.setdefault('SPARK_JAR', '/usr/lib/spark/lib/spark-assembly.jar')
+os.environ.setdefault('MASTER', 'yarn')
+os.environ.setdefault('SPARK_JAR',
+                      '{spark_home}/lib/spark-assembly.jar'
+                      .format(spark_home=spark_home))
 os.environ.setdefault('SPARK_YARN_APP_JAR', '/dev/null')
 
 # make `pyspark` and `py4j` available to this process
@@ -28,7 +30,8 @@ sys.path.insert(0, join(spark_home_python, 'pyspark'))
 sys.path.insert(0, join(spark_home_python, 'lib/py4j-src.zip'))
 
 # make `pyspark` and `py4j` available on PYTHONPATH so it's read by children processes
-spark_pythonpath = ('{spark_home_python}:{spark_home_python}/pyspark'.format(**locals()))
+spark_pythonpath = ('{spark_home_python}:{spark_home_python}/pyspark'
+                    .format(spark_home_python=spark_home_python))
 if 'PYTHONPATH' in os.environ:
     os.environ['PYTHONPATH'] += ':' + spark_pythonpath
 else:
@@ -36,3 +39,8 @@ else:
 
 # Initialize PySpark to predefine the SparkContext variable 'sc'
 execfile(join(spark_home_python, 'pyspark/shell.py'))
+
+# clean up variables
+del spark_home
+del spark_home_python
+del spark_pythonpath
