@@ -408,7 +408,8 @@ HTCondor
 
 Tested on:
 
-* Ubuntu 12.04
+* Debian 8.x
+* Ubuntu 14.04
 
 +-------------------+----------------------------------+
 | ansible groups    | role                             |
@@ -416,7 +417,7 @@ Tested on:
 |``condor_master``  | Act as scheduler, submission and |
 |                   | execution host.                  |
 +-------------------+----------------------------------+
-|``condor_workers`` | Act as execution host only.      |
+|``condor_worker``  | Act as execution host only.      |
 +-------------------+----------------------------------+
 
 This playbook will install the `HTCondor`_ workload management system
@@ -429,16 +430,16 @@ compute nodes.
 A *snippet* of a typical configuration for a slurm cluster is::
 
     [cluster/condor]
-    setup_provider=ansible_condor
+    setup_provider=htcondor
     frontend_nodes=1
     compute_nodes=2
     ssh_to=frontend
-    ...
+    # ...
 
-    [setup/ansible_condor]
+    [setup/htcondor]
     frontend_groups=condor_master
-    compute_groups=condor_workers
-    ...
+    compute_groups=condor_worker
+    # ...
 
 
 Kubernetes

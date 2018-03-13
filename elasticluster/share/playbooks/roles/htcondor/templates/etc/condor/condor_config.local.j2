@@ -1,6 +1,8 @@
-# THIS FILE IS CONTROLLED BY ANSIBLE
-# any local modifications will be overwritten!
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
 #
+
 
 ##  What machine is your central manager?
 
@@ -8,9 +10,9 @@ CONDOR_HOST = {{ groups.condor_master[0] }}
 
 ## Pool's short description
 
-COLLECTOR_NAME = Personal Condor at {{ groups.condor_master[0] }}
+COLLECTOR_NAME = ElastiCluster HTCondor at {{ groups.condor_master[0] }}
 
-##  When is this machine willing to start a job? 
+##  When is this machine willing to start a job?
 
 START = TRUE
 
@@ -34,16 +36,16 @@ KILL = FALSE
 ##  This macro determines what daemons the condor_master will start and keep its watchful eyes on.
 ##  The list is a comma or space separated list of subsystem names
 
-{% if inventory_hostname in groups.condor_master %}
+{% if 'condor_master' in group_names %}
 DAEMON_LIST = COLLECTOR, MASTER, NEGOTIATOR, SCHEDD, STARTD
 {% else %}
 DAEMON_LIST = MASTER, SCHEDD, STARTD
 {% endif %}
 
-## For a simple personal condor setup there are issues 
-## with default AUTH.  
+## For a simple personal condor setup there are issues
+## with default AUTH.
 
 SEC_CLIENT_AUTHENTICATION_METHODS = CLAIMTOBE
 SEC_DEFAULT_AUTHENTICATION_METHODS = CLAIMTOBE
 
-ALLOW_WRITE = $(ALLOW_WRITE), {% for host in groups.condor_workers %} {{ host }}, {% endfor %} $(CONDOR_HOST)
+ALLOW_WRITE = $(ALLOW_WRITE), {% for host in groups.condor_worker %} {{ host }}, {% endfor %} $(CONDOR_HOST)
