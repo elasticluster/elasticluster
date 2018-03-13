@@ -1,45 +1,31 @@
 ---
+
 - name: HTCondor common Playbook
-  hosts: condor_master:condor_workers
+  hosts: condor_master:condor_worker
   roles:
     - role: hpc-common
-  tasks:
-    - include: htcondor/tasks/common.yml
-  handlers:
-    - include: common/handlers/main.yml
-    - include: htcondor/handlers/common.yml
+    - role: 'nis'
+      NIS_MASTER: '{{groups.condor_master[0]}}'
+      when: '{{multiuser_cluster|default("true")|bool}}'
 
 
 - name: HTCondor master Playbook
   hosts: condor_master
   roles:
-    - role: 'nis'
-      NIS_MASTER: '{{groups.condor_master[0]}}'
-      when: '{{multiuser_cluster|default("true")|bool}}'
     - role: nfs-server
       NFS_EXPORTS:
-        path: '/home'
-        clients: '{{group.condor_workers}}'
-        options: 'rw,no_root_squash,async'
-  handlers:
-    - include: common/handlers/main.yml
-    - include: htcondor/handlers/common.yml
+        - path: '/home'
+          clients: '{{groups.condor_worker}}'
+          options: 'rw,no_root_squash,async'
+    - role: htcondor
 
 
 - name: HTCondor worker nodes Playbook
-  hosts: condor_workers
+  hosts: condor_worker
   roles:
-    - role: 'nis'
-      NIS_MASTER: '{{groups.condor_master[0]}}'
-      when: '{{multiuser_cluster|default("true")|bool}}'
     - role: nfs-client
       NFS_MOUNTS:
-        fs: '{{groups.condor_master[0]}}:/home'
-        mountpoint: '/home'
+        - fs: '{{groups.condor_master[0]}}:/home'
+          mountpoint: '/home'
     - role: autofs
-  handlers:
-    - include: common/handlers/main.yml
-    - include: htcondor/handlers/common.yml
-
-# Get infos with
-# ansible -i hostsfile -m setup hostname
+    - role: htcondor

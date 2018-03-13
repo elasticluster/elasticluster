@@ -1,0 +1,70 @@
+---
+
+# Unfortunately, apt_repository wants to add also source repositories,
+# which are not available for htcontor, so we have to manually create
+# the repository file.
+
+- name: add HTCondor public package repositories
+  tags:
+    - htcondor
+  template:
+    src: 'etc/apt/sources.list.d/htcondor.list.j2'
+    dest: '/etc/apt/sources.list.d/htcondor.list'
+    owner: root
+    group: root
+    mode: 0444
+  when: is_debian_compatible
+  register: _htcondor_repository
+
+
+- name: update package cache
+  tags:
+    - htcondor
+  apt:
+    update_cache: yes
+    cache_valid_time: 0
+  when: 'is_debian_compatible and _htcondor_repository|changed'
+
+
+- name: prepare HTCondor DebConf template
+  tags:
+    - htcondor
+  template:
+    src: 'root/htcondor.debconf.j2'
+    dest: '/root/htcondor.debconf'
+    owner: root
+    group: root
+    mode: 0444
+  when: is_debian_compatible
+
+
+- name: install HTCondor w/ preconfigured template
+  tags:
+    - htcondor
+  apt:
+    name: condor
+    state: '{{ pkg_install_state }}'
+    force: yes
+  environment:
+    DEBCONF_DB_FALLBACK: 'File{/root/htcondor.debconf}'
+  when: is_debian_compatible
+
+
+- name: Deploy configuration file
+  tags:
+    - htcondor
+  template:
+    src: 'htcondor/templates/etc/condor/condor_config.local.j2'
+    dest: '/etc/condor/condor_config.local'
+    owner: nobody
+    group: nogroup
+    mode: 0444
+
+
+- name: Ensure HTCondors is started and (re)started at boot
+  tags:
+    - htcondor
+  service:
+    name: condor
+    state: started
+    enabled: yes

@@ -1,3 +1,8 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
 Name: condor/wantdebconf
 Template: condor/wantdebconf
 Value: true
@@ -12,7 +17,7 @@ Value: {{groups.condor_master[0]}}
 
 Name: condor/daemons
 Template: condor/daemons
-{% if inventory_hostname in groups['condor_master'] %}
+{% if 'condor_master' in group_names %}
 Value: MASTER,SCHEDD,COLLECTOR,NEGOTIATOR
 {% else %}
 Value: MASTER,SCHEDD,STARTD
