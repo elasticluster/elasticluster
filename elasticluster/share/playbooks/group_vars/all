@@ -1,4 +1,3 @@
-
 # broad OS family, used to set package manager, etc.
 is_debian_compatible: "('{{ansible_os_family}}' == 'Debian')"
 is_rhel_compatible:   "('{{ansible_os_family}}' == 'RedHat')"
@@ -25,6 +24,7 @@ is_debian_8: "({{is_debian}} and {{ansible_distribution_major_version}}|int == 8
 # Debian release ranges
 is_debian_7_or_later: "({{is_debian}} and {{ansible_distribution_major_version}}|int >= 7)"
 is_debian_8_or_later: "({{is_debian}} and {{ansible_distribution_major_version}}|int >= 8)"
+is_debian_9_or_later: "({{is_debian}} and {{ansible_distribution_major_version}}|int >= 9)"
 
 
 # RHEL family releases by version
