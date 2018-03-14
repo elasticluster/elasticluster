@@ -9,6 +9,7 @@
     state: '{{pkg_install_state}}'
   with_items:
     - nfs-common
+    - nfs4-acl-tools
   when: is_debian_compatible
 
 - name: install NFS client software (RHEL-compatible)
@@ -20,6 +21,7 @@
     state: '{{pkg_install_state}}'
   with_items:
     - nfs-utils
+    - nfs4-acl-tools
   when: is_rhel_compatible
 
 
