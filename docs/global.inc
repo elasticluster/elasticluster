@@ -60,3 +60,4 @@
 .. _`Torque/PBS`: http://www.adaptivecomputing.com/products/open-source/torque/
 .. _`Ubuntu`: http://www.ubuntu.com
 .. _`University of Zurich`: http://www.uzh.ch
+.. _`UUID`: https://en.wikipedia.org/wiki/Universally_unique_identifier

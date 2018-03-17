@@ -25,6 +25,7 @@ from __future__ import (print_function, division, absolute_import)
 import os
 import string
 from urlparse import urlparse
+from warnings import warn
 
 # 3rd-party modules
 import schema
@@ -42,6 +43,15 @@ def validator(fn):
     .. _schema: https://github.com/keleshev/schema
     """
     return schema.Use(fn)
+
+
+def alert(errmsg, cls=DeprecationWarning):
+    """
+    Allow value, but warn user with the specified error message.
+    """
+    def _alert(v):
+        warn(errmsg, cls)
+    return validator(_alert)
 
 
 alphanumeric = schema.Regex(r'[0-9A-Za-z_]+')
@@ -164,6 +174,15 @@ def nova_api_version(version):
             " -- must be either '1.1', '2', or '2.X'"
             " (where 'X' is a microversion integer)"
             .format(version))
+
+
+def reject(errmsg):
+    """
+    Reject any value with the specified error message.
+    """
+    def _reject(v):
+        raise ValueError(errmsg.format(v))
+    return validator(_reject)
 
 
 @validator
