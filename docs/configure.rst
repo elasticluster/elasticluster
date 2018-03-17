@@ -144,6 +144,7 @@ provider is done in a ``cluster`` section (see below).
 
 Currently these cloud providers are available:
 
+- ``azure``: supports Microsoft Azure cloud
 - ``ec2_boto``: supports Amazon EC2 and compatible clouds
 - ``google``: supports Google Compute Engine
 - ``libcloud``: support `many cloud providers`__ through `Apache LibCloud`_
@@ -157,18 +158,87 @@ section:
 ``provider``
 
     the driver to use to connect to the cloud provider:
-    ``ec2_boto``, ``openstack``, ``google`` or ``libcloud``.
+    ``azure``, ``ec2_boto``, ``openstack``, ``google`` or ``libcloud``.
 
     .. note::
 
-       The LibCloud provider can also provision VMs on EC2, Google Compute
-       Engine, and OpenStack. The native drivers can however offer functionality
+       The LibCloud provider can also provision VMs on Azure, EC2, Google Compute
+       Engine, and OpenStack. The native drivers may however offer functionality
        that is not available through the generic LibCloud driver. Feedback is
        welcome on the ElastiCluster `mailing-list`_.
 
 
-Valid configuration keys for `ec2_boto`
----------------------------------------
+Valid configuration keys for ``azure``
+--------------------------------------
+
+``subscription_id``
+  UUID_ of the Azure subscription you want to use.
+  For instructions on how to retrieve the subscription ID from the Azure web portal, see: `<https://blogs.msdn.microsoft.com/mschray/2016/03/18/getting-your-azure-subscription-guid-new-portal/>`_
+
+  If not set, the value of the ``AZURE_SUBSCRIPTION_ID`` enviromental
+  variable will be used.
+
+``tenant_id``
+  UUID_ of the Azure tenant where the VMs and associated resources will be created.
+  See `<https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal#get-application-id-and-authentication-key>`_ for instructions on how to retrieve this value from the Azure web portal.
+
+  If not set, the value of the ``AZURE_TENANT_ID`` environmental
+  variable will be used.
+
+``client_id``
+  UUID_ identifying an authorized Azure application (must have at least the `Contributor` role).
+  See `<https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal#get-application-id-and-authentication-key>`_ for instructions on how to retrieve this value from the Azure web portal.
+
+  If not set, the value of the ``AZURE_CLIENT_ID`` environmental
+  variable will be used.
+
+``secret``
+  The 44-character long "key" corresponding to the authorized
+  application identified by ``client_id`` above.  See
+  `<https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal#get-application-id-and-authentication-key>`_
+  for instructions on how to generate this value from the Azure web
+  portal.
+
+  If not set, the value of the ``AZURE_CLIENT_SECRET`` environmental
+  variable will be used.
+
+``location``
+  Identifier of the Azure datacenter location (e.g., ``WestUS``).
+  Case insensitive.
+
+  See `<https://azure.microsoft.com/en-us/global-infrastructure/regions/>`_
+  for a map, or run ``az account list-locations`` (if you have the
+  Azure CLI installed).
+
+
+
+Obtaining Azure authentication credentials
+++++++++++++++++++++++++++++++++++++++++++
+
+In order to use ElastiCluster with Azure, you must create an
+application role and authorize it to create VMs and other resources;
+the subscription, tenant, and application ID, together with the
+application key ("secret") shown during this process have to be saved
+into the configuration file (see above).  A step-by-step walkthrough
+of the application authentication procedure can be found here:
+`<https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal#get-application-id-and-authentication-key>`_
+
+Note that:
+
+* When authorizing an application, you have to select a role (which in
+  turn determines what exactly the application can or cannot do on
+  Azure).  In order to work properly, ElastiCluster needs at least the
+  *Contributor* role (the example in the instructions above uses
+  "Reader", which will *not* suffice).
+
+* The value for the *key* (the ``secret`` configuration item) will
+  only be shown once during the procedure -- if you fail to copy the
+  secret string, you will have to repeat the procedure again from the
+  start.
+
+
+Valid configuration keys for ``ec2_boto``
+-----------------------------------------
 
 ``ec2_url``
     URL of the EC2 endpoint. For Amazon EC2 it is probably
@@ -240,8 +310,8 @@ Valid configuration keys for `ec2_boto`
      .. _`iam instance profile`: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html
 
 
-Valid configuration keys for `google`
--------------------------------------
+Valid configuration keys for ``google``
+---------------------------------------
 
 ``gce_client_id``
     The API client ID generated in the Google Developers Console
@@ -267,8 +337,8 @@ following instructions at:
 `<http://googlegenomics.readthedocs.io/en/latest/use_cases/setup_gridengine_cluster_on_compute_engine/index.html#index-obtaining-client-id-and-client-secrets>`_
 
 
-Valid configuration keys for *libcloud*
-----------------------------------------
+Valid configuration keys for ``libcloud``
+-----------------------------------------
 
 ``driver_name``:
 
@@ -282,10 +352,10 @@ Other configuration keys are provider-dependent; ElastiCluster configuration
 items map 1-1 to LibCloud "NodeDriver" instanciation parameters, both in name
 and in type.
 
-For example, to configure an Azure connection, go to the page
-https://libcloud.readthedocs.io/en/latest/compute/drivers/azure.html and check
+For example, to configure a Digital Ocean connection, go to the page
+https://libcloud.readthedocs.io/en/latest/compute/drivers/digital_ocean.html and check
 what the *Instantiating a driver* section states: you would need to
-configure the keys ``subscription_id`` and ``key_file``.
+configure the key ``access_token``.
 
 A few examples for providers supported through LibCloud are given in the table
 below:
@@ -293,9 +363,6 @@ below:
 ==========  =======================================  ========================
 Provider    Additional arguments                     Example
 ==========  =======================================  ========================
-Azure       key_file, subscription_id                \
-                                                     ``subscription_id=...``
-                                                     ``key_file=/path/to/azure.pem``
 CloudSigma  username, password, region, api_version  \
                                                      ``username=user``
                                                      ``password=pass``
@@ -324,8 +391,8 @@ vSphere     host, username, password                 \
 ==========  =======================================  ========================
 
 
-Valid configuration keys for *openstack*
-----------------------------------------
+Valid configuration keys for ``openstack``
+------------------------------------------
 
 .. _`*openstack* command`: https://docs.openstack.org/python-openstackclient/latest/cli/man/openstack.html#manpage
 
@@ -432,7 +499,7 @@ A larger set of commented examples can be found at:
 
 
 Login Section
-===============
+=============
 
 A ``login`` section named ``<name>`` starts with::
 
@@ -449,7 +516,7 @@ Configuration keys
 ------------------
 
 ``image_user``
-  login name used to SSH into the virtual machine. In case you're
+  Login name used to SSH into the virtual machine. In case you're
   using Google Compute Engine you have to set your user name here.  So
   if your GMail address is ``karl.marx@gmail.com``, use ``karl.marx``
   as value of ``image_user``.
@@ -477,6 +544,11 @@ Configuration keys
   will be added by ElastiCluster, uploading the public SSH key pointed
   to by ``user_key_public`` (see below).
 
+  .. note::
+
+     *This option is ignored on Azure,* due to its different model for
+     handling SSH authorization.
+
 ``user_key_private``
   file containing a valid SSH private key to be used to connect
   to the virtual machine. Please note that this must match the
@@ -487,6 +559,11 @@ Configuration keys
      Currently ElastiCluster only supports RSA and DSA key types.
      Pull requests to add support for more modern SSH key types are
      very welcome.
+
+  .. note::
+
+     *This option is ignored on Azure,* due to its different model for
+     handling SSH authorization.
 
 ``user_key_public``
   file containing the RSA/DSA public key corresponding to the
@@ -795,7 +872,7 @@ The following configuration keys can only be specified in a top-level
     started correctly (i.e. are not in error state), the cluster is
     configured anyway. Otherwise, the ``start`` command will fail.
 
-``ssh_to``
+``ssh_to`` (optional; see defaults below)
     Which class of nodes to SSH into, when running
     ``elasticluster ssh`` or ``elasticluster sftp``.
 
@@ -866,26 +943,52 @@ node-level section take precedence over cluster-wide ones.
    compute nodes.
 
 ``image_id``
-   Image ID to use as a base for all VMs in this cluster
+   Disk image ID to use as a base for all VMs in this cluster
    (unless later overridden for a class of nodes, see below).  Actual
-   format is cloud specific: OpenStack uses UUIDs
-   (e.g. `2bf3baba-35c8-4e20-9cc9-b36808720c9b`), Amazon EC2 uses IDs
-   like `ami-123456`. For Google Compute Engine you can also use a
-   URL of a private image; run ``gcloud compute images describe
-   <your_image_name>``:file: to show the selfLink URL to use.
+   format is cloud specific:
+
+   * Azure uses the form *publisher/offer/sku/version* (e.g.,
+     ``canonical/ubuntuserver/16.04.0-LTS/latest``) You can see
+     commands to list available values for each of these parts at:
+     `<https://docs.microsoft.com/en-us/cli/azure/vm/image?view=azure-cli-latest>`_
+
+   * Amazon EC2 uses IDs like `ami-123456`.
+
+   * For Google Compute Engine you can also use a URL of a private
+     image; run ``gcloud compute images describe
+     <your_image_name>``:file: to show the selfLink URL to use.
+
+   * OpenStack uses UUIDs
+     (e.g. `2bf3baba-35c8-4e20-9cc9-b36808720c9b`); use command
+     ``openstack image list`` or the web dashboard to list available
+     images.
 
 ``image_userdata`` (optional)
     Shell script to be executed (as root) when the machine
     starts. This can happen before ElastiCluster even gets a
     chance to connect to the VM.
 
+    .. note::
+
+       *This option is (currently) ignored on Azure.*
+
 ``network_ids`` (optional)
     Comma separated list of network or subnet IDs the nodes of the cluster
     will be connected to. Only supported when the cloud provider is
     ``ec2_boto`` or ``openstack``.
 
-``security_group``
-    Security group to use when starting the instance.
+``security_group`` (optional; default: ``default``)
+    Name of security group to use when starting the instance.
+
+    .. note::
+
+       *This option is ignored on Azure.*
+
+       All VMs started by ElastiCluster on MS-Azure will be put in a
+       security group named after the cluster, which initially only
+       allows inbound connections to the SSH port.  Any other port
+       must be added by the user through the portal or any other Azure
+       management interface.
 
     .. note::
 

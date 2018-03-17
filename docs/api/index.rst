@@ -20,6 +20,7 @@
    elasticluster/__main__.rst
    elasticluster/providers.rst
    elasticluster/providers/ansible_provider.rst
+   elasticluster/providers/azure_provider.rst
    elasticluster/providers/ec2_boto.rst
    elasticluster/providers/gce.rst
    elasticluster/providers/openstack.rst
