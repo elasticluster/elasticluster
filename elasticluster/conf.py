@@ -57,6 +57,7 @@ from elasticluster.cluster import Cluster, NodeNamingPolicy
 from elasticluster.repository import MultiDiskRepository
 from elasticluster.utils import environment
 from elasticluster.validate import (
+    alert,
     boolean,
     executable_file,
     existing_file,
@@ -106,7 +107,7 @@ SCHEMA = {
                 'flavor': nonempty_str,
                 'image_id': nonempty_str,
                 Optional('image_userdata', default=''): str,
-                'security_group': str,  ## FIXME: alphanumeric?
+                Optional('security_group', default='default'): str,  ## FIXME: alphanumeric?
                 Optional('network_ids'): str,
                 # these are auto-generated but already there by the time
                 # validation is run
@@ -162,9 +163,19 @@ SCHEMA = {
 CLOUD_PROVIDER_SCHEMAS = {
     'azure': {
         "provider": 'azure',
-        "subscription_id": nonempty_str,
-        "certificate": nonempty_str,
-        Optional("wait_timeout", default=600): positive_int,
+        Optional("subscription_id", default=os.getenv('AZURE_SUBSCRIPTION_ID', '')): nonempty_str,
+        Optional("tenant_id", default=os.getenv('AZURE_TENANT_ID', '')): nonempty_str,
+        Optional("client_id", default=os.getenv('AZURE_CLIENT_ID', '')): nonempty_str,
+        Optional("secret", default=os.getenv('AZURE_CLIENT_SECRET', '')): nonempty_str,
+        Optional("location", default="westus"): nonempty_str,
+        Optional("certificate"): alert(
+            "The `certificate` setting is no longer valid"
+            " in the Azure configuration."
+            " Please remove it from your configuration file."),
+        Optional("wait_timeout"): alert(
+            "The `wait_timeout` setting is no longer valid"
+            " in the Azure configuration."
+            " Please remove it from your configuration file."),
     },
 
     'ec2_boto': {
