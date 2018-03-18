@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+#
+# Test run this module with::
+#
+#        ansible -m gpus -M /path/to/librayr/dir hostname
+#
 """
 Return info about NVidia GPUs on the system.
 
@@ -48,8 +53,10 @@ Example output::
 
 from collections import defaultdict
 import json
+import re
 import shlex
 from subprocess import check_output
+from urllib import urlopen
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -74,8 +81,37 @@ def _format_pci_slot(slot):
     return ('%04x:%02x:%02x.%1x' % _parse_pci_slot(slot))
 
 
-def get_pci_device_name(slot):
-    lspci_output = check_output(['lspci', '-vmm', '-s', slot])
+def get_pci_device_name(parts):
+    vendor, model_name_short, model_name_long = None, None, None
+    # normally, `lspci -vmm` gives us all the info we need...
+    try:
+        vendor, model_name_short, model_name_long = _get_pci_device_name_lspci(parts)
+    except Exception:
+        pass
+    # ...however, when HW is new, the OS-provided `pci_ids.txt` file
+    # does not have entries for it (e.g., Ubuntu 16.04 and NVIDIA
+    # Tesla V100 in March 2018), so we try to get the result from the
+    # online PCI IDs database.  (But in order to keep the parsing
+    # simple, we just get one single entry from the page, which might
+    # be incorrect.)
+    if (model_name_short is None) or (model_name_long is None):
+        try:
+            model_name_short2, model_name_long2 = _get_pci_device_name_http(parts)
+            model_name_short = (model_name_short or model_name_short2)
+            model_name_long = (model_name_long or model_name_long2)
+        except Exception:
+            pass
+    # if any of the state variables is still `None`, we were not able
+    # to find a value for it, so return "Unknown"
+    return (vendor or "Unknown",
+            model_name_short or "Unknown",
+            model_name_long or "Unknown")
+
+def _get_pci_device_name_lspci(parts):
+    vendor = "Unknown"
+    model_name_short = None
+    model_name_long = None
+    lspci_output = check_output(['lspci', '-vmm', '-s', parts[0]])
     for line in lspci_output.split('\n'):
         # skip blank lines
         line = line.strip()
@@ -96,6 +132,18 @@ def get_pci_device_name(slot):
             continue
     return vendor, model_name_short, model_name_long
 
+_DB_ENTRY_NAME_RE = re.compile(r'<p>Name: (?P<short>[^ ]+) \[(?P<long>.+)\]</')
+
+def _get_pci_device_name_http(parts):
+    db_entry_url = ('http://pci-ids.ucw.cz/read/PC/{vendor_id}/{model_id}'
+                    .format(vendor_id=parts[2], model_id=parts[3]))
+    db_entry_html = urlopen(db_entry_url).read()
+    match = _DB_ENTRY_NAME_RE.search(db_entry_html)
+    if match:
+        return match.group('short'), match.group('long')
+    else:
+        return None, None
+
 
 def get_pci_gpu_info():
     result = []
@@ -113,7 +161,7 @@ def get_pci_gpu_info():
             continue
         if parts[1] == '0302' and parts[2] == '10de':
             slot = _format_pci_slot(parts[0])
-            vendor_name, model_name, model_name_long = get_pci_device_name(slot)
+            vendor_name, model_name, model_name_long = get_pci_device_name(parts)
             result.append({
                 'pci_slot': slot,
                 'pci_vendor_id': parts[2],
