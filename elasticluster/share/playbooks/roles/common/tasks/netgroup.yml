@@ -21,7 +21,7 @@
 - name: Add `files` databases to `netgroup` service (I)
   replace:
     dest: /etc/nsswitch.conf
-    regex: '^ *netgroup: *nis *$'
+    regexp: '^ *netgroup: *nis *$'
     replace: 'netgroup: nis files'
   ignore_errors: yes
   register: _netgroup_add_nss_files
