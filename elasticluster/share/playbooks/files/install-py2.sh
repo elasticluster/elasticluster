@@ -115,7 +115,7 @@ if ! [ -x "$python" ]; then
         . /etc/os-release
         os=$ID
         ver=$VERSION_ID
-    elif type lsb_release >/dev/null 2>&1; then
+    elif have_command lsb_release; then
         # linuxbase.org
         os=$(lsb_release -si)
         ver=$(lsb_release -sr)
