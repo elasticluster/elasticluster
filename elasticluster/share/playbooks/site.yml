@@ -16,6 +16,12 @@
 - name: Common setup for all hosts
   hosts: all
   gather_facts: yes
+  pre_tasks:
+    - name: Ensure apt-daily is *not* running
+      script: |
+        no-apt-daily.sh
+      become: yes
+      when: 'is_debian_compatible'
   roles:
     - role: common
     - role: iptables
