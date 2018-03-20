@@ -45,9 +45,15 @@ def validator(fn):
 
 
 alphanumeric = schema.Regex(r'[0-9A-Za-z_]+')
+"""
+Allow alphanumeric strings.
+"""
 
 
 boolean = schema.Use(string_to_boolean)
+"""
+Allow values *1/yes/true* and *0/no/false* (case insensitive).
+"""
 
 
 def _file_name(v):
