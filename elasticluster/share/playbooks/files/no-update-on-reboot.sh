@@ -135,21 +135,46 @@ if have_command systemctl; then
 
     # kill 'apt-daily.service' if running
     if [ "$kill" = 'y' ]; then
+        # stop the service
         systemctl stop apt-daily.service
+        systemctl stop apt-daily-upgrade.service
+        # be sure to kill remaining processes
         systemctl kill --kill-who=all apt-daily.service
+        systemctl kill --kill-who=all apt-daily-upgrade.service
     fi
 
     # wait until `apt-get update` has been killed
     if [ "$wait" = 'y' ]; then
-        waited=0
-        while [ "$(systemctl show apt-daily.service -p SubState | cut -d= -f2)" != 'dead' ];
-        do
-            sleep 1
-            waited=$(expr 1 + $waited)
-            if [ "$waited" -gt "$max_wait" ]; then
-                die $EX_TEMPFAIL "Service 'apt-daily' did not terminate within $max_wait seconds."
-            fi
-        done
+        # When the locks on these files have been released, we are
+        # ready to start another `apt-get` or `dpkg` process.  (The
+        # `flock` utility is used by `/usr/lib/apt/apt.systemd.daily`
+        # so we are sure it is installed.)
+        if ! flock -w "$max_wait" /var/lib/dpkg/lock /bin/true; then
+            die $EX_TEMPFAIL "Lock still held on '/var/lib/dpkg/lock' after $max_wait seconds. Failed to kill 'apt-daily.service'?"
+        fi
+        if ! flock -w "$max_wait" /var/lib/apt/lists/lock /bin/true; then
+            die $EX_TEMPFAIL "Lock still held on '/var/lib/apt/lists/lock' after $max_wait seconds. Failed to kill 'apt-daily.service'?"
+        fi
+        # Alternatively, we could look for traces of the processes
+        # that would hold the lock::
+        #
+        # waited=0
+        # # Apparently, `systemctl status` can report that a unit is in
+        # # "dead" state even if some processes belonging to it are
+        # # still running... So bake our own very crude one-liner to
+        # # check that no processes named like `apt` or `dpkg` are
+        # # running, without depending on procps utilities like `pgrep`
+        # # which may not be installed.
+        # while egrep -q 'apt|dpkg' /proc/[0-9]*/stat;
+        # do
+        #     sleep 1
+        #     waited=$(expr 1 + $waited)
+        #     if [ "$waited" -gt "$max_wait" ]; then
+        #         warn "After $max_wait seconds, the following 'apt' and 'dpkg' processes are still running:"
+        #         egrep 'apt|dpkg' /proc/[0-9]*/stat;
+        #         die $EX_TEMPFAIL "Service 'apt-daily' did not terminate within $max_wait seconds."
+        #     fi
+        # done
     fi
 
 else
