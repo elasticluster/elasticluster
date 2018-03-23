@@ -220,6 +220,9 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 ansible_env[k.upper()] = str(v)
         # ...finally allow the environment have the final word
         ansible_env.update(os.environ)
+        # however, this is needed for correct detection of success/failure
+        ansible_env['ANSIBLE_ANY_ERRORS_FATAL'] = 'yes'
+        # report on calling environment
         if __debug__:
             elasticluster.log.debug(
                 "Calling `ansible-playbook` with the following environment:")
