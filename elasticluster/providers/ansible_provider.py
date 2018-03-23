@@ -43,7 +43,7 @@ import elasticluster
 from elasticluster import log
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers import AbstractSetupProvider
-from elasticluster.utils import parse_ip_address_and_port
+from elasticluster.utils import parse_ip_address_and_port, temporary_dir
 
 
 class AnsibleSetupProvider(AbstractSetupProvider):
@@ -260,21 +260,43 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         if ansible_extra_args:
             cmd += shlex.split(ansible_extra_args)
 
-        cmdline = ' '.join(cmd)
-        elasticluster.log.debug("Running Ansible command `%s` ...", cmdline)
-
-        rc = call(cmd, env=ansible_env, bufsize=1, close_fds=True)
-        if rc == 0:
+        ok = False  # pessimistic default
+        with temporary_dir():
+            cmd += [
+                '-e', 'elasticluster_output_dir={0}'.format(os.getcwd())
+            ]
+            elasticluster.log.debug(
+                "Running Ansible command `%s` ...", ' '.join(cmd))
+            rc = call(cmd, env=ansible_env, bufsize=1, close_fds=True)
+            if rc != 0:
+                elasticluster.log.error(
+                    "Command `%s` failed with exit code %d.", cmdline, rc)
+            if not os.path.exists('done.log'):
+                elasticluster.log.error(
+                    "Cannot find the status report file.")
+            else:
+                cluster_hosts = set(node.name
+                                    for node in cluster.get_all_nodes())
+                done_hosts = set()
+                with open('done.log') as lines:
+                    for line in lines:
+                        host, status = line.strip().split()
+                        if status == 'done':
+                            done_hosts.add(host)
+                if done_hosts == cluster_hosts:
+                    ok = True
+                else:
+                    elasticluster.log.error(
+                        "The following nodes did not report"
+                        " successful termination of the setup playbook:"
+                        " %s", (', '.join(cluster_hosts - done_hosts)))
+        if ok:
             elasticluster.log.info("Cluster correctly configured.")
             return True
         else:
-            elasticluster.log.error(
-                "Command `%s` failed with exit code %d.", cmdline, rc)
-            elasticluster.log.error(
-                "Check the output lines above for additional information on this error.")
-            elasticluster.log.error(
+            elasticluster.log.warning(
                 "The cluster has likely *not* been configured correctly."
-                " You may need to re-run `elasticluster setup` or fix the playbooks.")
+                " You may need to re-run `elasticluster setup`.")
             return False
 
     def _build_inventory(self, cluster):
