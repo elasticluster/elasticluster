@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013-2015 S3IT, University of Zurich
+# Copyright (C) 2013-2018  University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -210,13 +210,17 @@ class Start(AbstractCommand):
             if self.params.no_setup:
                 print("NOT configuring the cluster as requested.")
             else:
-                print("Configuring the cluster.")
-                print("(this too may take a while...)")
-                ret = cluster.setup()
-                if ret:
-                    print("Your cluster is ready!")
+                print("Configuring the cluster ...")
+                print("(this too may take a while)")
+                ok = cluster.setup()
+                if ok:
+                    print(
+                        "\nYour cluster `{0}` is ready!"
+                        .format(cluster.name))
                 else:
-                    print("\nWARNING: YOUR CLUSTER IS NOT READY YET!")
+                    print(
+                        "\nWARNING: YOUR CLUSTER `{0}` IS NOT READY YET!"
+                        .format(cluster.name))
             print(cluster_summary(cluster))
         except (KeyError, ImageError, SecurityGroupError, ClusterError) as err:
             log.error("Could not start cluster `%s`: %s", cluster.name, err)
@@ -621,12 +625,16 @@ class SetupCluster(AbstractCommand):
             log.error("Setting up cluster %s: %s", cluster_name, ex)
             return
 
-        print("Configuring cluster `%s`..." % cluster_name)
-        ret = cluster.setup(self.params.extra)
-        if ret:
-            print("Your cluster is ready!")
+        print("Configuring cluster `{0}`...".format(cluster_name))
+        ok = cluster.setup(self.params.extra)
+        if ok:
+            print(
+                "\nYour cluster `{0}` is ready!"
+                .format(cluster_name))
         else:
-            print("\nWARNING: YOUR CLUSTER IS NOT READY YET!")
+            print(
+                "\nWARNING: YOUR CLUSTER `{0}` IS NOT READY YET!"
+                .format(cluster_name))
         print(cluster_summary(cluster))
 
 
