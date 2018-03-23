@@ -67,3 +67,19 @@
 
 # for local customizations
 - include: after.yml
+
+# if we got to this point, all is well
+- name: Report success on cluster creation
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Mark host as successfully configured
+      lineinfile:
+        dest: '{{ elasticluster_output_dir }}/done.log'
+        line: '{{ inventory_hostname }} done'
+        state: present
+        create: yes
+      delegate_to: 'localhost'
+      # this is necessary as we might not have/want superuser rights
+      # where ElastiCluster is running
+      become: no
