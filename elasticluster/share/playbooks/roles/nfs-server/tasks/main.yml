@@ -35,6 +35,16 @@
   with_items: '{{NFS_EXPORTS}}'
 
 
+- name: Ensure portmapper is running
+  tags:
+    - nfs
+    - nfs-server
+  service:
+    name: 'rpcbind'
+    enabled: yes
+    state: 'started'
+
+
 - name: Ensure NFS server is running (Debian 8 "jessie")
   tags:
     - nfs
