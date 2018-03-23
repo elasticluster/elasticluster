@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-#
 #
-# Copyright (C) 2016 University of Zurich. All rights reserved.
+# Copyright (C) 2016, 2018 University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -26,7 +26,9 @@ import functools
 import os
 import re
 import signal
+import shutil
 import sys
+import tempfile
 import time
 import UserDict
 
@@ -431,6 +433,27 @@ def sighandler(signum, handler):
     signal.signal(signum, handler)
     yield
     signal.signal(signum, prev_handler)
+
+
+@contextmanager
+def temporary_dir(delete=True, dir=None,
+                  prefix='elasticluster.', suffix='.d'):
+    """
+    Make a temporary directory and make it current for the code in this context.
+
+    Delete temporary directory upon exit from the context, unless
+    ``delete=False`` is passed in the arguments.
+
+    Arguments *suffix*, *prefix* and *dir* are exactly as in
+    :func:`tempfile.mkdtemp()` (but have different defaults).
+    """
+    cwd = os.getcwd()
+    tmpdir = tempfile.mkdtemp(suffix, prefix, dir)
+    os.chdir(tmpdir)
+    yield
+    os.chdir(cwd)
+    if delete:
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 @contextmanager
