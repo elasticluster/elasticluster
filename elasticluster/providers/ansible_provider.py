@@ -209,6 +209,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         ansible_env = {
             'ANSIBLE_FORKS':             '10',
             'ANSIBLE_HOST_KEY_CHECKING': 'no',
+            'ANSIBLE_RETRY_FILES_ENABLED': 'no',
             'ANSIBLE_ROLES_PATH':        ':'.join(reversed(ansible_roles_dirs)),
             'ANSIBLE_SSH_PIPELINING':    'yes',
             'ANSIBLE_TIMEOUT':           '120',
