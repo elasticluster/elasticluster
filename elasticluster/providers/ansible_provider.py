@@ -279,11 +279,16 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 cluster_hosts = set(node.name
                                     for node in cluster.get_all_nodes())
                 done_hosts = set()
-                with open('done.log') as lines:
-                    for line in lines:
-                        host, status = line.strip().split()
+                for node_name in cluster_hosts:
+                    try:
+                        with open(node_name + '.log') as stream:
+                            status = stream.read().strip()
                         if status == 'done':
                             done_hosts.add(host)
+                    except (OSError, IOError):
+                        # no status file for host, do not add it to
+                        # `done_hosts`
+                        pass
                 if done_hosts == cluster_hosts:
                     ok = True
                 else:
