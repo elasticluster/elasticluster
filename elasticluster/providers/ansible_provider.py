@@ -272,10 +272,11 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             if rc != 0:
                 elasticluster.log.error(
                     "Command `%s` failed with exit code %d.", cmdline, rc)
-            if not os.path.exists('done.log'):
-                elasticluster.log.error(
-                    "Cannot find the status report file.")
             else:
+                # even if Ansible exited with return code 0, the
+                # playbook might still have failed -- so explicitly
+                # check for a "done" report showing that each node run
+                # the playbook until the very last task
                 cluster_hosts = set(node.name
                                     for node in cluster.get_all_nodes())
                 done_hosts = set()
@@ -290,8 +291,14 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                         # `done_hosts`
                         pass
                 if done_hosts == cluster_hosts:
+                    # success!
                     ok = True
+                elif len(done_hosts) == 0:
+                    # total failure
+                    elasticluster.log.error(
+                        "No host reported successfully running the setup playbook!")
                 else:
+                    # partial failure
                     elasticluster.log.error(
                         "The following nodes did not report"
                         " successful termination of the setup playbook:"
