@@ -265,8 +265,9 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             cmd += [
                 '-e', 'elasticluster_output_dir={0}'.format(os.getcwd())
             ]
+            cmdline = ' '.join(cmd)
             elasticluster.log.debug(
-                "Running Ansible command `%s` ...", ' '.join(cmd))
+                "Running Ansible command `%s` ...", cmdline)
             rc = call(cmd, env=ansible_env, bufsize=1, close_fds=True)
             if rc != 0:
                 elasticluster.log.error(
