@@ -187,6 +187,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                        root_volume_size=None,
                        root_volume_type=None,
                        root_volume_iops=None,
+                       placement_group=None,
                        **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
@@ -214,6 +215,8 @@ class BotoCloudProvider(AbstractCloudProvider):
         :param str root_volume_size: Target size, in GiB, for the root volume
         :param str root_volume_type: Type of root volume (standard, gp2, io1)
         :param str root_volume_iops: Provisioned IOPS for the root volume
+        :param str placement_group: Enable low-latency networking between
+                                    compute nodes.
 
         :return: str - instance id of the started instance
         """
@@ -274,7 +277,9 @@ class BotoCloudProvider(AbstractCloudProvider):
                 request = connection.request_spot_instances(
                                 price,image_id, key_name=key_name, security_groups=security_groups,
                                 instance_type=flavor, user_data=image_userdata,
-                                network_interfaces=interfaces, block_device_map=bdm,
+                                network_interfaces=interfaces,
+                                placement_group=placement_group,
+                                block_device_map=bdm,
                                 instance_profile_name=self._instance_profile)[-1]
 
                 # wait until spot request is fullfilled (will wait
@@ -293,7 +298,9 @@ class BotoCloudProvider(AbstractCloudProvider):
                 reservation = connection.run_instances(
                     image_id, key_name=key_name, security_groups=security_groups,
                     instance_type=flavor, user_data=image_userdata,
-                    network_interfaces=interfaces, block_device_map=bdm,
+                    network_interfaces=interfaces,
+                    placement_group=placement_group,
+                    block_device_map=bdm,
                     instance_profile_name=self._instance_profile)
         except Exception as ex:
             log.error("Error starting instance: %s", ex)

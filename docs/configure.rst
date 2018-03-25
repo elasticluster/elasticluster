@@ -1057,6 +1057,11 @@ well, to place nodes on spot instances.
 ``root_volume_iops``
     Specific IOPS target for provisioned IOPS SSD (``io1``) volumes.
 
+``placement_group``
+    `Placement group
+    <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html>`_
+    to enable low-latency networking between compute nodes.
+
 
 Additional optional configuration keys for Google Cloud
 -------------------------------------------------------
