@@ -75,8 +75,8 @@
   tasks:
     - name: Mark host as successfully configured
       lineinfile:
-        dest: '{{ elasticluster_output_dir }}/done.log'
-        line: '{{ inventory_hostname }} done'
+        dest: '{{ elasticluster_output_dir }}/{{ inventory_hostname }}.log'
+        line: 'done'
         state: present
         create: yes
       delegate_to: 'localhost'
