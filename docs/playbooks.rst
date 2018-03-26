@@ -63,6 +63,10 @@ Variable name                      Default             Description
                                                        class will be assigned the role of the YP master
                                                        server; additional nodes in the "master" class
                                                        (if any) will be YP slave servers.
+``ssh_password_auth``              yes                 Allow users to log in via SSH by providing a
+                                                       password. **Note:** the default in ElastiCluster
+                                                       is the opposite of what all major GNU/Linux
+                                                       distributions do.
 ``upgrade_packages``               yes                 Upgrade all installed to the latest available
                                                        version.  Setting this to ``no`` allows speedier
                                                        setup when starting from cluster snapshots.
