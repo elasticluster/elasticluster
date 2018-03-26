@@ -285,7 +285,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                         with open(node_name + '.log') as stream:
                             status = stream.read().strip()
                         if status == 'done':
-                            done_hosts.add(host)
+                            done_hosts.add(node_name)
                     except (OSError, IOError):
                         # no status file for host, do not add it to
                         # `done_hosts`
