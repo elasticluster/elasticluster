@@ -40,18 +40,19 @@
     group=root
 
 
-- name: Setup SSH host based authentication (server configuration file)
+- name: Setup SSH authentication (server configuration file)
   lineinfile:
-    dest=/etc/ssh/sshd_config
-    regexp='{{item.key}}.*'
-    line="{{item.key}} {{item.value}}"
+    dest: /etc/ssh/sshd_config
+    regexp: '{{item.key}}.*'
+    line: "{{item.key}} {{item.value}}"
   with_items:
     - { key: "HostbasedAuthentication", value: 'yes' }
     - { key: "IgnoreRhosts",            value: 'no'  }
+    - { key: "PasswordAuthentication",  value: '{{ ssh_password_auth|default("yes") }}' }
   notify: 'restart sshd {{ansible_os_family}}'
 
 
-- name: Setup SSH host based authentication (server configuration file)
+- name: Setup SSH authentication (client configuration file)
   lineinfile:
     dest=/etc/ssh/ssh_config
     regexp='{{item.key}}.*'
