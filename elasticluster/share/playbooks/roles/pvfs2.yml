@@ -27,7 +27,12 @@
         - pkg-config
         - libfuse-dev
 
-    - action: get_url url={{pvfs_url}} dest=/root/
+    - name: Download OrangeFS sources
+      get_url:
+        url: '{{pvfs_url}}'
+        dest: '/root/'
+        validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
+
     - action: command tar -zxf {{pvfs_tar}} chdir=/root/ creates=/root/{{pvfs_src}}/configure
  # --enable-segv-backtrace
     - action: 'shell chdir=/root/{{pvfs_src}} ./configure --enable-fuse --with-kernel=/usr/src/linux-headers-$(uname -r) && make && make install creates=/root/{{pvfs_src}}/src/server/pvfs2-server'

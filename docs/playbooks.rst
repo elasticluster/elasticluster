@@ -59,6 +59,15 @@ Variable name                      Default             Description
 ``allow_reboot``                   no                  Allow rebooting nodes if needed.  Be careful
                                                        if this is set when resizing clusters, as you
                                                        may lose running jobs.
+``insecure_https_downloads``       no                  If ``no`` (default), require that web sites, from
+                                                       where software is downloaded, present a valid
+                                                       SSL/TLS certificate.  However, it may happen
+                                                       that the base OS trusted certificates repository
+                                                       is not fully up-to-date and this verification fails.
+                                                       (See, for instance, `issue #539 <https://github.com/gc3-uzh-ch/elasticluster/issues/539>`_).
+                                                       In these cases, setting this option to ``yes``
+                                                       allows the playbooks to continue (at the expense
+                                                       of some security).
 ``multiuser_cluster``              no                  Install NIS/YP.  The first node in the ``master``
                                                        class will be assigned the role of the YP master
                                                        server; additional nodes in the "master" class
