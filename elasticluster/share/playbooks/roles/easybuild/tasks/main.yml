@@ -10,8 +10,9 @@
 
 - name: Download bootstrap script
   get_url:
-    url='{{ easybuild_bootstrap_url }}'
-    dest='{{ easybuild_build_dir }}/bootstrap_eb.py'
+    url: '{{ easybuild_bootstrap_url }}'
+    dest: '{{ easybuild_build_dir }}/bootstrap_eb.py'
+    validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
 
 
 - name: Set EasyBuild user name

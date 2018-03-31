@@ -69,6 +69,7 @@
   get_url:
     url: '{{ lmod_source_url }}'
     dest: '{{ lmod_build_dir }}'
+    validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
 
 
 # XXX: Ansible issues a warning message "Consider using unarchive module rather
