@@ -56,6 +56,38 @@ on any TCP *and* UDP port. (TCP and UDP are typically named
   different reimplementation of the OpenStack web frontend.
 
 
+Downloading fails with error "Failed to validate the SSL certificate"
+---------------------------------------------------------------------
+
+This error may happen at different stages and with different web sites
+in the setup phase but the commonality is that the Ansible error
+message starts with the words *Failed to validate the SSL
+certificate*.  For example::
+
+    TASK [lmod : Download sources] ********************************************************************************************************************************************************
+    fatal: [frontend001]: FAILED! => {"changed": false, "failed": true, "msg": "Failed to validate the SSL certificate for github.com:443. Make sure your managed systems have a valid CA certificate installed. You can use validate_certs=False if you do not need to confirm the servers identity but this is unsafe and not recommended. Paths checked for this platform: /etc/ssl/certs, /etc/pki/ca-trust/extracted/pem, /etc/pki/tls/certs, /usr/share/ca-certificates/cacert.org, /etc/ansible. The exception msg was: (\"bad handshake: Error([('SSL routines', 'ssl3_read_bytes', 'tlsv1 alert protocol version')],)\",)."}
+
+This error is typically caused by the "trusted CA repository" on the
+host being set up being out of sync with the site (GitHub in the above
+example).  The site might have gotten a new SSL/TLS certificate more
+recently than the base OS updated its "trusted CA" store, so Ansible
+cannot verify that the connection is valid and you're not downloading
+software from a rogue site.
+
+The "correct fix" (from a security point of view) would be to ensure
+that the base OS from your cluster has an up-to-date "trusted CA
+repository" that can validate popular sites like github.com.  However,
+providing instructions for how to do this is very much dependent on
+the base OS and certainly outside the scope of these short notes.
+
+The *quick workaround* instead is to allow ElastiCluster to skip the
+verfication process and download software insecurely.  This can be
+accomplished by adding this line to your cluster's ``[setup/...]``
+configuration section::
+
+  global_var_insecure_https_downloads=yes
+
+
 Running any ``elasticluster`` command fails with a version conflict about the ``requests`` package
 --------------------------------------------------------------------------------------------------
 
