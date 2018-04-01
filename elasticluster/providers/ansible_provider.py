@@ -214,6 +214,33 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             'ANSIBLE_SSH_PIPELINING':    'yes',
             'ANSIBLE_TIMEOUT':           '120',
         }
+        try:
+            import ara
+            ara_location = os.path.dirname(ara.__file__)
+            ansible_env['ANSIBLE_CALLBACK_PLUGINS'] = (
+                '{ara_location}/plugins/callbacks'
+                .format(ara_location=ara_location))
+            ansible_env['ANSIBLE_ACTION_PLUGINS'] = (
+                '{ara_location}/plugins/actions'
+                .format(ara_location=ara_location))
+            ansible_env['ANSIBLE_LIBRARY'] = (
+                '{ara_location}/plugins/modules'
+                .format(ara_location=ara_location))
+            ara_dir = os.getcwd()
+            ansible_env['ARA_DIR'] = ara_dir
+            ansible_env['ARA_DATABASE'] = (
+                'sqlite:///{ara_dir}/ansible.sqlite'
+                .format(ara_dir=ara_dir))
+            ansible_env['ARA_LOG_FILE'] = (
+                '{ara_dir}/ara.log'
+                .format(ara_dir=ara_dir))
+            ansible_env['ARA_LOG_LEVEL'] = 'DEBUG'
+            ansible_env['ARA_PLAYBOOK_PER_PAGE'] = '0'
+            ansible_env['ARA_RESULT_PER_PAGE'] = '0'
+        except ImportError:
+            elasticluster.log.info(
+                "Could not import module `ara`:"
+                " no detailed information about the playbook will be recorded.")
         # ...override them with key/values set in the config file(s)
         for k, v in self.extra_conf.items():
             if k.startswith('ansible_'):
@@ -260,15 +287,19 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         if ansible_extra_args:
             cmd += shlex.split(ansible_extra_args)
 
-        ok = False  # pessimistic default
         with temporary_dir():
+            # adjust execution environment, for the part that needs a
+            # the current directory path
             cmd += [
                 '-e', 'elasticluster_output_dir={0}'.format(os.getcwd())
             ]
+            # run it!
             cmdline = ' '.join(cmd)
             elasticluster.log.debug(
                 "Running Ansible command `%s` ...", cmdline)
             rc = call(cmd, env=ansible_env, bufsize=1, close_fds=True)
+            # check outcome
+            ok = False  # pessimistic default
             if rc != 0:
                 elasticluster.log.error(
                     "Command `%s` failed with exit code %d.", cmdline, rc)
