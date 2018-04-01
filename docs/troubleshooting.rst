@@ -19,6 +19,43 @@ further help and for any problem not reported here!
 .. contents::
 
 
+Setup of a cluster fails and stops at task ``nfs-client: add to /etc/fstab``
+----------------------------------------------------------------------------
+
+You get this error when starting a new cluster: virtual machines are
+started correctly and cluster configuration begins, however at some
+point the progress stalls and then after a few minutes' time out, the
+Ansible playbook stops running. This error will be the last task
+mentioned before the "PLAY RECAP"::
+
+  TASK [nfs-client : add to /etc/fstab] *********************************************************************************************************
+  fatal: [compute001]: FAILED! => {"changed": false, "failed": true, "msg": "Error mounting /home: mount.nfs: Connection timed out\n"}
+
+This is due to the security group (also named "direwall rules") not
+allowing all traffic across cluster VMs: for NFS to work correctly,
+each VM in the cluster must be able to open connections to other VMs
+on any TCP *and* UDP port. (TCP and UDP are typically named
+"protocols" in security groups / firewall rules context.)
+
+* For AWS EC2, you apply the instuctions given `in page "Security
+  Groups for Your VPC", section "Adding, Removing, and Updating Rules"
+  <https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_SecurityGroups.html#AddRemoveRules>`_
+  at step 6. -- be sure to apply them to the security group you're
+  using with ElastiCluster;
+
+* For Google Cloud, you need to add the rule
+  ``default-allow-internal`` -- see
+  `<https://cloud.google.com/vpc/docs/firewalls>`_ for details.
+
+* For OpenStack, you can find instructions on how to manipulate
+  security groups at
+  `<https://help.dreamhost.com/hc/en-us/articles/360000717692-Managing-Security-Groups-using-the-OpenStack-CLI>`_.
+  Note that you can also manipulate security groups through the
+  Horizon web interface but it's hard to find web documents on its
+  usage since every commercial provider seems to have their own
+  different reimplementation of the OpenStack web frontend.
+
+
 Running any ``elasticluster`` command fails with a version conflict about the ``requests`` package
 --------------------------------------------------------------------------------------------------
 
