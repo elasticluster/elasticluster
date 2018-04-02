@@ -4,6 +4,7 @@
   apt:
     name: pdsh
     state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   when: is_debian_or_ubuntu
 
   # note: the following requires EPEL repos

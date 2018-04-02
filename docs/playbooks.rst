@@ -68,6 +68,13 @@ Variable name                      Default             Description
                                                        In these cases, setting this option to ``yes``
                                                        allows the playbooks to continue (at the expense
                                                        of some security).
+
+                                                       .. warning::
+
+                                                          Setting this option to ``yes`` also allows
+                                                          installing packages from *unauthenticated*
+                                                          sources on Debian/Ubuntu.
+
 ``multiuser_cluster``              no                  Install NIS/YP.  The first node in the ``master``
                                                        class will be assigned the role of the YP master
                                                        server; additional nodes in the "master" class

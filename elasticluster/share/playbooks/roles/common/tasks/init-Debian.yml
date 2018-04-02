@@ -12,8 +12,9 @@
 
 - name: Ensure the APT package cache is updated
   apt:
-    update_cache=yes
-    cache_valid_time=0
+    update_cache: yes
+    cache_valid_time: 0
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
 
 - name: Install Ansible `apt` module dependencies
   # the `apt` module depends on both `aptitude` and `python-apt` to do
@@ -30,12 +31,14 @@
 - name: Upgrade all installed packages to latest version
   apt:
     upgrade: safe
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   when: 'upgrade_packages|default(True)'
 
 - name: Ensure additional packages are installed
   apt:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items:
     - apt-transport-https
     # these are required by Ansible's `debconf` module
@@ -50,6 +53,7 @@
   apt:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items:
     - dbus
   when: 'is_debian_8_or_later'
@@ -64,6 +68,7 @@
   apt:
     name: 'policyrcd-script-zg2'
     state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
 
 
 - name: Install policy script for service autostart

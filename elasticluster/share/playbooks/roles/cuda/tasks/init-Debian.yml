@@ -39,4 +39,5 @@
   apt:
     update_cache: yes
     cache_valid_time: 86400
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   when: '_cuda_add_apt_repo|changed'

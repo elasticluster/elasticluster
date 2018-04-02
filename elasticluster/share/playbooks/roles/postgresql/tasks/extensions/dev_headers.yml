@@ -6,5 +6,6 @@
     state: '{{ pkg_install_state }}'
     update_cache: yes
     cache_valid_time: "{{apt_cache_valid_time | default (3600)}}"
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   notify:
     - restart postgresql
