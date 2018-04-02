@@ -13,6 +13,7 @@
     id: "{{ postgresql_apt_key_id }}"
     url: "{{ postgresql_apt_key_url }}"
     state: present
+    validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
   when: postgresql_apt_key_url and postgresql_apt_key_id
 
 - name: PostgreSQL | Add PostgreSQL repository
