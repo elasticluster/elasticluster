@@ -8,6 +8,7 @@
   apt:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items:
     # see: http://easybuild.readthedocs.io/en/latest/Installation.html#dependencies
     #
@@ -42,6 +43,7 @@
   apt:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items:
     - git
     - graphviz
@@ -55,6 +57,7 @@
   apt:
     name: '{{ item }}'
     state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items:
     #  required by EasyBuild to build some SW
     - fontconfig

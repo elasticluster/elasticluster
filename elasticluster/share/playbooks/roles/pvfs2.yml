@@ -19,6 +19,7 @@
     - apt:
         name: '{{item}}'
         state: '{{ pkg_install_state }}'
+        allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
       with_items:
         - build-essential
         - libdb-dev

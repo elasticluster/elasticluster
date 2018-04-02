@@ -33,6 +33,7 @@
   apt:
     name: 'linux-headers-{{ _cuda_uname_r.stdout }}'
     state: present
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   when: 'is_ubuntu'
 
 

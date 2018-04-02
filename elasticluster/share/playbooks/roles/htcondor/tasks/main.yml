@@ -37,6 +37,7 @@
   apt:
     update_cache: yes
     cache_valid_time: 0
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   when: 'is_debian_compatible and _htcondor_repository|changed'
 
 
@@ -59,6 +60,7 @@
     name: condor
     state: '{{ pkg_install_state }}'
     force: yes
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   environment:
     DEBCONF_DB_FALLBACK: 'File{/root/htcondor.debconf}'
   when: is_debian_compatible

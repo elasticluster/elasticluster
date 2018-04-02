@@ -21,6 +21,7 @@
     pkg: '{{item}}'
     state: '{{ pkg_install_state }}'
     force: yes
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items: j_packages
   when: is_debian_or_ubuntu
 
