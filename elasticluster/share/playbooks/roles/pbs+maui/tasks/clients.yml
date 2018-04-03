@@ -1,4 +1,11 @@
 ---
+
+- name: Ensure base OS is RHEL/CentOS
+  fail:
+    msg: "PBS/TORQUE clusters can only be based on RHEL/CentOS"
+  when: 'not is_rhel_compatible'
+
+
 - name: Install TORQUE packages (mom)
   when: is_centos
   action: yum pkg={{item}} state=latest

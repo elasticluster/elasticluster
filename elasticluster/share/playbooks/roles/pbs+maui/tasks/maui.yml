@@ -1,4 +1,11 @@
 ---
+
+- name: Ensure base OS is RHEL/CentOS
+  fail:
+    msg: "PBS/TORQUE clusters can only be based on RHEL/CentOS"
+  when: 'not is_rhel_compatible'
+
+
 - name: Install MAUI RPM from a remote repo
   when: is_centos
   yum:
