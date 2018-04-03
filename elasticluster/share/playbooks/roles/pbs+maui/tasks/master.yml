@@ -1,4 +1,11 @@
 ---
+
+- name: Ensure base OS is RHEL/CentOS
+  fail:
+    msg: "PBS/TORQUE clusters can only be based on RHEL/CentOS"
+  when: 'not is_rhel_compatible'
+
+
 - name: Install TORQUE packages
   when: is_centos
   action: yum pkg={{item}} state=latest
@@ -22,7 +29,7 @@
   notify:
     - restart pbs_server
 
-- name: generate munge key 
+- name: generate munge key
   action: shell create-munge-key
 
 - name: Ensure munge services are running
