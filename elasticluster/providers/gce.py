@@ -314,6 +314,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
                 "The `tags` argument to `gce.start_instance`"
                 " should be a string or a list, got {T} instead"
                 .format(T=type(tags)))
+            
+        with open(public_key_path, 'r') as f:
+            public_key_content = f.read()
 
         compute_metadata = [
             {
