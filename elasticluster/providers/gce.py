@@ -315,6 +315,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
                 " should be a string or a list, got {T} instead"
                 .format(T=type(tags)))
 
+        with open(public_key_path, 'r') as f:
+            public_key_content = f.read()
+
         compute_metadata = [
             {
                 "key": "ssh-keys",
@@ -336,9 +339,6 @@ class GoogleCloudProvider(AbstractCloudProvider):
             instance_id = node_name.lower().replace('_', '-')  # GCE doesn't allow "_"
         else:
             instance_id = 'elasticluster-%s' % uuid.uuid4()
-
-        with open(public_key_path, 'r') as f:
-            public_key_content = f.read()
 
         instance = {
             'name': instance_id,
