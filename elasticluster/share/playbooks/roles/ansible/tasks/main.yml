@@ -6,7 +6,7 @@
 - name: Add Ansible APT repository (Ubuntu)
   apt_repository:
     repo: 'ppa:ansible/ansible'
-    state: '{{ pkg_install_state }}'
+    state: present
   when: is_ubuntu
 
 
