@@ -1,0 +1,26 @@
+---
+
+- name: Ensure base OS is RHEL/CentOS
+  fail:
+    msg: "PBS/TORQUE clusters can only be based on RHEL/CentOS"
+  when: 'not is_rhel_compatible'
+
+
+# As of 2018-04-06, no MAUI RPM packages are available for public
+# download.  This forces us to disable the MAUI playbook and rely on
+# TORQUE's simpler `pbs_sched` (installed in the `master.yml`
+# playbook below).
+#
+- name: Install MAUI on the master node (disabled)
+  include: 'maui.yml'
+  when: "false and 'torque_master' in group_names"
+
+
+- name: Install TORQUE server on the master node
+  include: 'master.yml'
+  when: "'torque_master' in group_names"
+
+
+- name: Install TORQUE on worker nodes
+  include: 'worker.yml'
+  when: "'torque_worker' in group_names"

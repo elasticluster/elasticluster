@@ -1098,6 +1098,9 @@ class Creator(object):
         'gluster_client':  ('glusterfs_client',  '1.4'),
         'gluster_data' :   ('glusterfs_server',  '1.4'),
         'gridengine_clients': ('gridengine_worker', '2.0'),
+        'maui_master':     ('torque_master',     '2.0'),
+        'pbs_clients':     ('torque_worker',     '2.0'),
+        'pbs_master':      ('torque_master',     '2.0'),
         'slurm_clients':   ('slurm_worker',      '2.0'),
         'slurm_workers':   ('slurm_worker',      '1.4'),
     }

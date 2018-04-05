@@ -494,6 +494,57 @@ SSH into the cluster and execute 'sudo kubectl --kubeconfig
 /etc/kubernetes/admin.conf get nodes' to view the cluster.
 
 
+TORQUE
+------
+
+Supported on:
+
+* CentOS 7.x
+* CentOS 6.x
+
++-------------------+----------------------------------+
+| ansible groups    | role                             |
++===================+==================================+
+|``torque_master``  | Act as scheduler, submission and |
+|                   | execution host.                  |
++-------------------+----------------------------------+
+|``torque_worker``  | Act as execution host only.      |
++-------------------+----------------------------------+
+
+This playbook will install the `TORQUE`_ workload management system
+using the packages provided in the EPEL_ repository.
+
+.. note::
+
+   Due to a change in the licensing policy, the last available version
+   in EPEL_ is TORQUE 4.2.10 (released in March 2015) while the latest
+   version (as of this writing, April 2018) is 6.1.2; the cluster
+   installed by ElastiClyuster will thus lack recent features.
+
+   For the same licensing reasons, TORQUE is no longer available in
+   recent Debian and Ubuntu distributionsm and hence cannot currently
+   be installed by ElastiCluster.
+
+The TORQUE server will be configured with a single queue, named
+``default``; all worker nodes will belong to this queue.
+
+The ``/home`` filesystem is exported *from* the ``torque_master`` node
+to the ``torque_worker`` nodes.
+
+A *snippet* of a typical configuration for a slurm cluster is::
+
+    [cluster/torque]
+    setup=torque
+    frontend_nodes=1
+    compute_nodes=4
+    # ...
+
+    [setup/torque]
+    frontend_groups=torque_master
+    compute_groups=torque_worker
+    # ...
+
+
 Filesystems and storage
 =======================
 

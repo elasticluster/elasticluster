@@ -27,6 +27,7 @@
 .. _`Debian GNU/Linux`: http://www.debian.org
 .. _EasyBuild: http://easybuild.readthedocs.io/
 .. _`elasticluster`: http://gc3-uzh-ch.github.io/elasticluster/
+.. _`EPEL`: https://fedoraproject.org/wiki/EPEL
 .. _`example configuration file`: https://github.com/gc3-uzh-ch/elasticluster/raw/master/elasticluster/share/etc/config.template
 .. _`Ganglia`: http://ganglia.info
 .. _`github elasticluster page`: https://github.com/gc3-uzh-ch/elasticluster
@@ -57,7 +58,7 @@
 .. _`SoGE`: https://arc.liv.ac.uk/trac/SGE
 .. _`Spark`: http://spark.apache.org/
 .. _`SLURM`: https://slurm.schedmd.com/
-.. _`Torque/PBS`: http://www.adaptivecomputing.com/products/open-source/torque/
+.. _`TORQUE`: http://www.adaptivecomputing.com/products/open-source/torque/
 .. _`Ubuntu`: http://www.ubuntu.com
 .. _`University of Zurich`: http://www.uzh.ch
 .. _`UUID`: https://en.wikipedia.org/wiki/Universally_unique_identifier

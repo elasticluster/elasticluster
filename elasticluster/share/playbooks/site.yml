@@ -50,8 +50,8 @@
 - include: roles/ipython.yml
 - include: roles/jenkins.yml
 - include: roles/kubernetes.yml
-- include: roles/pbs+maui.yml
 - include: roles/slurm.yml
+- include: roles/torque.yml
 
 # add-on software
 - include: roles/anaconda.yml
