@@ -1,0 +1,28 @@
+---
+
+- name: Install MAUI RPM from remote repo
+  yum:
+    name: 'http://ftp.cs.stanford.edu/pub/rpms/centos/{{ansible_distribution_major_version}}/x86_64/maui-3.3.1-x86_64-fpmbuild.rpm'
+    state: '{{ pkg_install_state }}'
+
+
+- name: Ensure /var/spool/maui/log directory exists
+  file:
+    path: '/var/spool/maui/log'
+    state: directory
+
+
+- name: Deploy MAUI configuration
+  template:
+    src: 'var/spool/maui/maui.cfg.j2'
+    dest: '/usr/local/maui/maui.cfg'
+  notify: restart maui.d
+
+
+- name: Ensure MAUI is running
+  service:
+    name: '{{item}}'
+    state: started
+    enabled: yes
+  with_items:
+    - maui.d

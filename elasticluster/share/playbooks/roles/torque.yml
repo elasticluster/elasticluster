@@ -1,0 +1,35 @@
+---
+
+- name: PBS master node
+  hosts: torque_master
+  vars:
+    torque_master_host: '{{ groups.torque_master[0] }}'
+  roles:
+    - role: 'nis'
+      NIS_MASTER: '{{ torque_master_host }}'
+      when: '{{ multiuser_cluster|default("true")|bool }}'
+    - role: nfs-server
+      NFS_EXPORTS:
+      - path: '/home'
+        clients: '{{groups.torque_worker}}'
+        options: 'rw,no_root_squash,async'
+    - role: hpc-common
+    - role: torque
+
+
+- name: PBS worker nodes
+  hosts: torque_worker
+  vars:
+    torque_master_host: '{{ groups.torque_master[0] }}'
+  roles:
+    - role: 'nis'
+      NIS_MASTER: '{{ torque_master_host }}'
+      when: '{{ multiuser_cluster|default("true")|bool }}'
+    - role: nfs-client
+      NFS_MOUNTS:
+      - fs: '{{ torque_master_host }}:/home'
+        mountpoint: '/home'
+        options: 'rw,async'
+    - role: autofs
+    - role: hpc-common
+    - role: torque
