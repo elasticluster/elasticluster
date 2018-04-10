@@ -3,6 +3,13 @@
 # Set up the package manager and its Ansible module for installing packages
 #
 
+# see Issues #541 and #548
+- name: Ensure Google Cloud signing keys are available
+  get_url:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    dest: /etc/apt/trusted.gpg.d/google-cloud-packages-archive-keyring.gpg
+    backup: yes
+
 - name: Ensure extra repositories are present (Ubuntu)
   apt_repository:
     repo="deb http://archive.ubuntu.com/ubuntu {{ansible_distribution_release}} universe multiverse"
