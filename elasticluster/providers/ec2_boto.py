@@ -257,14 +257,14 @@ class BotoCloudProvider(AbstractCloudProvider):
             timeout = self.timeout
 
         if boot_disk_size:
-            dev_root = ec2.blockdevicemapping.BlockDeviceType()
+            dev_root = boto.ec2.blockdevicemapping.BlockDeviceType()
             dev_root.size = int(boot_disk_size)
             dev_root.delete_on_termination = True
             if boot_disk_type:
                 dev_root.volume_type = boot_disk_type
             if boot_disk_iops:
                 dev_root.iops = int(boot_disk_iops)
-            bdm = ec2.blockdevicemapping.BlockDeviceMapping()
+            bdm = boto.ec2.blockdevicemapping.BlockDeviceMapping()
             dev_name = boot_disk_device if boot_disk_device else "/dev/sda1"
             bdm[dev_name] = dev_root
         else:
