@@ -1039,6 +1039,31 @@ Options ``price`` and ``timeout`` (see their documentation in the
 "ec2_boto" cloud provider section) can be specified here as
 well, to place nodes on spot instances.
 
+``boot_disk_device``
+    Device name of the instance's root file system in the `block device mapping
+    <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html>`_.
+    Defaults to ``/dev/sda1``. On HVM AMIs, ``/dev/xvda`` is another common choice.
+
+``boot_disk_size``
+    Size of the instance's root filesystem volume, in Gibibytes (GiB).
+    The ``/home`` directory of this volume on the first frontend node
+    is shared to compute nodes using NFS.  Defaults to the original
+    size of the base AMI specified by ``image_id``.
+
+``boot_disk_type``
+    `Root filesystem volume storage type
+    <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html>`_,
+    one of ``gp2`` (general purpose SSD), ``io1`` (provisioned IOPS
+    SSD), or ``standard`` (the default).
+
+``boot_disk_iops``
+    Specific IOPS target for provisioned IOPS SSD (``io1``) volumes.
+
+``placement_group``
+    `Placement group
+    <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html>`_
+    to enable low-latency networking between compute nodes.
+
 
 Additional optional configuration keys for Google Cloud
 -------------------------------------------------------
