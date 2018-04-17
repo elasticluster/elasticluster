@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013, 2016 S3IT, University of Zurich
+#   Copyright (C) 2013, 2016, 2018  University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -120,10 +120,17 @@ class TestBotoCloudProvider(unittest.TestCase):
                                     security_group, flavor, image_id,
                                     image_userdata)
 
-            con.run_instances.assert_called_once_with(image_id,
-                    key_name=key_name, security_groups=[security_group],
-                    instance_type=flavor, user_data=image_userdata,
-                    network_interfaces=None, instance_profile_name=None)
+            con.run_instances.assert_called_once_with(
+                image_id,
+                block_device_map=None,
+                instance_profile_name=None,
+                instance_type=flavor,
+                key_name=key_name,
+                network_interfaces=None,
+                placement_group=None,
+                security_groups=[security_group],
+                user_data=image_userdata,
+            )
 
 
         except:
