@@ -535,29 +535,6 @@ class GoogleCloudProvider(AbstractCloudProvider):
                 return True
         return False
 
-    def _get_image_url(self, image_id):
-        """Gets the url for the specified image. Unfortunatly this only works
-        for images uploaded by the user. The images provided by google will
-        not be found.
-
-        :param str image_id: image identifier
-        :return: str - api url of the image
-        """
-        gce = self._connect()
-        filter = "name eq %s" % image_id
-        request = gce.images().list(project=self._project_id, filter=filter)
-        response = self._execute_request(request)
-        response = self._wait_until_done(response)
-
-        image_url = None
-        if "items" in response:
-            image_url = response["items"][0]["selfLink"]
-
-        if image_url:
-            return image_url
-        else:
-            raise ImageError("Could not find given image id `%s`" % image_id)
-
     def _check_response(self, response):
         """Checks the response from GCE for error messages.
 
