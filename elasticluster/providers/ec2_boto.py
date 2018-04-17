@@ -21,6 +21,7 @@ __author__ = ', '.join([
 ])
 
 # System imports
+import hashlib
 import os
 import urllib
 import threading
@@ -31,6 +32,7 @@ from warnings import warn
 import boto
 import boto.ec2
 import boto.vpc
+from Crypto.PublicKey import RSA
 from paramiko import DSSKey, RSAKey, PasswordRequiredException
 from paramiko.ssh_exception import SSHException
 
@@ -181,6 +183,11 @@ class BotoCloudProvider(AbstractCloudProvider):
                        security_group, flavor, image_id, image_userdata,
                        username=None, node_name=None, network_ids=None,
                        price=None, timeout=None,
+                       boot_disk_device=None,
+                       boot_disk_size=None,
+                       boot_disk_type=None,
+                       boot_disk_iops=None,
+                       placement_group=None,
                        **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
@@ -204,6 +211,12 @@ class BotoCloudProvider(AbstractCloudProvider):
         :param float price: Spot instance price (if 0, do not use spot instances).
         :param int price: Timeout (in seconds) waiting for spot instances;
                           only used if price > 0.
+        :param str boot_disk_device: Root volume device path if not /dev/sda1
+        :param str boot_disk_size: Target size, in GiB, for the root volume
+        :param str boot_disk_type: Type of root volume (standard, gp2, io1)
+        :param str boot_disk_iops: Provisioned IOPS for the root volume
+        :param str placement_group: Enable low-latency networking between
+                                    compute nodes.
 
         :return: str - instance id of the started instance
         """
@@ -243,6 +256,20 @@ class BotoCloudProvider(AbstractCloudProvider):
         if timeout is None:
             timeout = self.timeout
 
+        if boot_disk_size:
+            dev_root = boto.ec2.blockdevicemapping.BlockDeviceType()
+            dev_root.size = int(boot_disk_size)
+            dev_root.delete_on_termination = True
+            if boot_disk_type:
+                dev_root.volume_type = boot_disk_type
+            if boot_disk_iops:
+                dev_root.iops = int(boot_disk_iops)
+            bdm = boto.ec2.blockdevicemapping.BlockDeviceMapping()
+            dev_name = boot_disk_device if boot_disk_device else "/dev/sda1"
+            bdm[dev_name] = dev_root
+        else:
+            bdm = None
+
         try:
             #start spot instance if bid is specified
             if price:
@@ -251,6 +278,8 @@ class BotoCloudProvider(AbstractCloudProvider):
                                 price,image_id, key_name=key_name, security_groups=security_groups,
                                 instance_type=flavor, user_data=image_userdata,
                                 network_interfaces=interfaces,
+                                placement_group=placement_group,
+                                block_device_map=bdm,
                                 instance_profile_name=self._instance_profile)[-1]
 
                 # wait until spot request is fullfilled (will wait
@@ -270,6 +299,8 @@ class BotoCloudProvider(AbstractCloudProvider):
                     image_id, key_name=key_name, security_groups=security_groups,
                     instance_type=flavor, user_data=image_userdata,
                     network_interfaces=interfaces,
+                    placement_group=placement_group,
+                    block_device_map=bdm,
                     instance_profile_name=self._instance_profile)
         except Exception as ex:
             log.error("Error starting instance: %s", ex)
@@ -488,8 +519,19 @@ class BotoCloudProvider(AbstractCloudProvider):
             cloud_keypair = keypairs[name]
 
             if pkey:
-                fingerprint = str.join(
-                    ':', (i.encode('hex') for i in pkey.get_fingerprint()))
+                if "amazon" in self._ec2host:
+                    # AWS takes the MD5 hash of the key's DER representation.
+                    key = RSA.importKey(open(private_key_path).read())
+                    der = key.publickey().exportKey('DER')
+
+                    m = hashlib.md5()
+                    m.update(der)
+                    digest = m.hexdigest()
+                    fingerprint = ':'.join(digest[i:(i + 2)]
+                                           for i in range(0, len(digest), 2))
+                else:
+                    fingerprint = ':'.join(i.encode('hex')
+                                           for i in pkey.get_fingerprint())
 
                 if fingerprint != cloud_keypair.fingerprint:
                     if "amazon" in self._ec2host:

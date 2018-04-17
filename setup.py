@@ -198,6 +198,7 @@ setup(
         'subprocess32',  ## stdlib subprocess but correct under multithreading
         # EC2 clouds
         'boto>=2.48',
+        'pycrypto',   # for computing RSA key hash, see: PR #132
         # GCE cloud
         'google-api-python-client',
         'google-compute-engine',
