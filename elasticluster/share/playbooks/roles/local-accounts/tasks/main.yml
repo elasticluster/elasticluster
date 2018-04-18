@@ -1,0 +1,82 @@
+---
+
+- block:
+
+  - name: add local group "course"
+    group:
+      name=course
+      gid=3000
+      state=present
+
+  - name: add local accounts for teacher and course students
+    user:
+      name={{ item }}
+      home=/home/{{ item }}
+      shell=/bin/bash
+      group=course
+      password="{{ students_password }}"
+      generate_ssh_key=yes
+    with_items:
+      "{{ accounts_to_create }}"
+
+  - name: Fetch public ssh keys for all the cluster users
+    fetch:
+      src: /home/{{ item }}/.ssh/id_rsa.pub
+      dest: /tmp/{{ item }}.pub
+      flat: yes
+    with_items:
+      "{{ accounts_to_create }}"
+
+  - name: add ssh public keys for all the cluster users
+    authorized_key:
+      user={{ item }}
+      path=/home/{{ item }}/.ssh/authorized_keys
+      state=present
+      key="{{ lookup('file', '/tmp/{{ item }}.pub') }}"
+    with_items:
+      "{{ accounts_to_create }}"
+      
+  - name: set teacher account password 
+    user:
+      name=teacher
+      groups=wheel,adm
+      password="{{ teacher_password }}"
+
+  - name: propagate accounts to all the cluster machines
+    shell: cd /var/yp && sudo make
+    
+  - name: create all the accounts in slurm if sacctmgr command is available
+    shell: sacctmgr -i add user {{ item }} account=root || echo "sacctmgr command not found"
+    with_items:
+      "{{ accounts_to_create }}"
+
+  when: ansible_hostname  == "frontend001"
+
+  
+- name: grant sudo permissions to teacher in every node
+  user:
+    name=teacher
+    groups=wheel,adm
+
+- name: Configure sshd to allow password login
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^PasswordAuthentication no'
+    line: 'PasswordAuthentication yes'
+    
+- name: Configure sshd to disable empty passwords
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#PermitEmptyPasswords no'
+    line: 'PermitEmptyPasswords no'
+    
+- name: Configure sshd to allow key authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#PubkeyAuthentication yes'
+    line: 'PubkeyAuthentication yes'
+
+- name: Reload sshd
+  service:
+    name: sshd
+    state: reloaded
