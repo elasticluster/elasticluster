@@ -1,59 +1,10 @@
 ---
-# tasks file for scicore-singularity-install
-
-- name: Install some dependencies
-  yum:
-    name: '{{ item }}'
-    state: installed
-  with_items:
-    - gcc
-    - squashfs-tools
-    - git
-    - autoconf
-    - automake
-    - libtool
-    - make
-
-- block:
-
-    - name: Query what is the latest Singularity version
-      uri:
-        url: https://api.github.com/repos/singularityware/singularity/releases/latest
-        method: GET
-        return_content: yes
-        status_code: 200
-        body_format: json
-      register: result_json
-      changed_when: false
-
-    - name: Define singularity_version
-      set_fact:
-        singularity_version: "{{ (result_json.content|from_json).tag_name }}"
-
-  when: singularity_version == "latest"
+# tasks file for singularity-install
 
 - name: Check if Singularity is already installed
   stat:
     path: "{{ singularity_install_prefix }}/bin/singularity"
   register: singularity_binary
 
-- block:
-
-    - name: Download Singularity
-      git:
-        repo: https://github.com/singularityware/singularity/
-        dest: "/usr/local/src/{{ singularity_version }}"
-        version: "{{ singularity_version }}"
-
-    - name: Compile and install singularity
-      shell: cd /usr/local/src/{{ singularity_version }} && ./autogen.sh && ./configure --prefix={{ singularity_install_prefix }} && make && make install
-      tags:
-        - skip_ansible_lint
-
-    - name: Symlink the Singularity autocomplete settings
-      file:
-        src: "{{ singularity_install_prefix }}/etc/bash_completion.d/singularity"
-        dest: /etc/bash_completion.d/singularity
-        state: link
-
+- import_tasks: install_singularity.yml
   when: singularity_binary.stat.exists == False
