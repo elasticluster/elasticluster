@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013-2016 S3IT, University of Zurich
+# Copyright (C) 2013-2018 University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ from binascii import hexlify
 from elasticluster import log
 from elasticluster.exceptions import (
     ClusterError,
+    ClusterSizeError,
     ConfigurationError,
     InstanceError,
     InstanceNotFoundError,
@@ -646,48 +647,20 @@ class Cluster(Struct):
         :raises: ClusterError in case the size does not fit the minimum
                  number specified by the user.
         """
-        # check the total sizes before moving the nodes around
-        minimum_nodes = 0
-        for group, size in min_nodes.items():
-            minimum_nodes = minimum_nodes + size
-
-        if len(self.get_all_nodes()) < minimum_nodes:
-            raise ClusterError("The cluster does not provide the minimum "
-                               "amount of nodes specified in the "
-                               "configuration. The nodes are still running, "
-                               "but will not be setup yet. Please change the"
-                               " minimum amount of nodes in the "
-                               "configuration or try to start a new cluster "
-                               "after checking the cloud provider settings.")
-
         # finding all node groups with an unsatisfied amount of nodes
-        unsatisfied_groups = []
-        for group, size in min_nodes.items():
-            if len(self.nodes[group]) < size:
-                unsatisfied_groups.append(group)
+        unsatisfied = 0
+        for kind, required in min_nodes.iteritems():
+            available = len(self.nodes[kind])
+            if available < required:
+                log.error(
+                    "Not enough nodes of kind `%s`:"
+                    " %d required, but only %d available.",
+                )
+                unsatisfied += 1
 
-        # trying to move nodes around to fill the groups with missing nodes
-        for ugroup in unsatisfied_groups[:]:
-            missing = min_nodes[ugroup] - len(self.nodes[ugroup])
-            for group, nodes in self.nodes.items():
-                spare = len(self.nodes[group]) - min_nodes[group]
-                while spare > 0 and missing > 0:
-                    self.nodes[ugroup].append(self.nodes[group][-1])
-                    del self.nodes[group][-1]
-                    spare -= 1
-                    missing -= 1
+        if unsatisfied:
+            raise ClusterSizeError()
 
-                    if missing == 0:
-                        unsatisfied_groups.remove(ugroup)
-
-        if unsatisfied_groups:
-            raise ClusterError("Could not find an optimal solution to "
-                               "distribute the started nodes into the node "
-                               "groups to satisfy the minimum amount of "
-                               "nodes. Please change the minimum amount of "
-                               "nodes in the configuration or try to start a"
-                               " new clouster after checking the cloud "
-                               "provider settings")
 
     def get_all_nodes(self):
         """Returns a list of all nodes in this cluster as a mixed list of
