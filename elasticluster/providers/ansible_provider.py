@@ -41,7 +41,7 @@ from pkg_resources import resource_filename
 # Elasticluster imports
 import elasticluster
 from elasticluster import log
-from elasticluster.exceptions import ConfigurationError
+from elasticluster.exceptions import ConfigurationError, ClusterSizeError
 from elasticluster.providers import AbstractSetupProvider
 from elasticluster.utils import parse_ip_address_and_port, temporary_dir
 
@@ -165,11 +165,9 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         """
         inventory_path = self._build_inventory(cluster)
         if inventory_path is None:
-            # No inventory file has been created, maybe an
-            # invalid class has been specified in config file? Or none?
-            # assume it is fine.
-            elasticluster.log.info("No setup required for this cluster.")
-            return True
+            # no inventory file has been created: this can only happen
+            # if no nodes have been started nor can be reached
+            raise ClusterSizeError()
         assert os.path.exists(inventory_path), (
                 "inventory file `{inventory_path}` does not exist"
                 .format(inventory_path=inventory_path))
