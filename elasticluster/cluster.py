@@ -385,6 +385,10 @@ class Cluster(Struct):
                     node.stop()
                 self._naming_policy.free(node.kind, node.name)
                 self.repository.save_or_update(self)
+                remaining_nodes = self.get_all_nodes()
+                self._gather_node_ip_addresses(
+                    remaining_nodes, self.start_timeout, self.ssh_probe_timeout,
+                    remake=True)
             except ValueError:
                 raise NodeNotFound("Node %s not found in cluster" % node.name)
 
@@ -568,7 +572,7 @@ class Cluster(Struct):
         # so we can exclude them from coming rounds
         return nodes
 
-    def _gather_node_ip_addresses(self, nodes, lapse, ssh_timeout):
+    def _gather_node_ip_addresses(self, nodes, lapse, ssh_timeout, remake=False):
         """
         Connect via SSH to each node.
 
@@ -578,6 +582,11 @@ class Cluster(Struct):
         # be opened -- but we do not want to forget the cluster-wide
         # setting in case the error is transient
         known_hosts_path = self.known_hosts_file
+
+        # If run with remake=True, deletes known_hosts_file so that it will
+        # be recreated. Prevents "Invalid host key" errors
+        if remake and os.path.isfile(known_hosts_path):
+            os.remove(known_hosts_path)
 
         # Create the file if it's not present, otherwise the
         # following lines will raise an error
