@@ -37,7 +37,6 @@
     # other "standard" utilities
     - kexec-tools
     - m4
-    - moreutils
     - rsync
     - screen
     - tmux
