@@ -22,3 +22,12 @@
     - kubeadm
     - kubectl
     - kubernetes-cni
+
+- name: Enable and start kubeadm services
+  service:
+    name: '{{ item }}'
+    enabled: true
+    state: started
+  with_items:
+    - docker
+    - kubelet
