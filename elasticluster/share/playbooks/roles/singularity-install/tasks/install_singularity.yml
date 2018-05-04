@@ -13,6 +13,7 @@
     - automake
     - libtool
     - make
+    - libarchive-devel
 
 
 - block:
