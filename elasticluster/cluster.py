@@ -447,24 +447,22 @@ class Cluster(Struct):
         self.repository.save_or_update(self)
 
         # Try to connect to each node to gather IP addresses and SSH host keys
+        started_nodes = nodes - not_started_nodes
+        if not started_nodes:
+            raise ClusterSizeError("No nodes could be started!")
         log.info(
             "Checking SSH connection to nodes (timeout: %d seconds) ...",
             self.start_timeout)
-        pending_nodes = nodes - not_started_nodes
         self._gather_node_ip_addresses(
-            pending_nodes, self.start_timeout, self.ssh_probe_timeout)
-
-        # It might be possible that the node.connect() call updated
-        # the `preferred_ip` attribute, so, let's save the cluster
-        # again.
+            started_nodes, self.start_timeout, self.ssh_probe_timeout)
+        # It's possible that the node.connect() call updated the
+        # `preferred_ip` attribute, so, let's save the cluster again.
         self.repository.save_or_update(self)
 
-        # A lot of things could go wrong when starting the cluster. To
-        # ensure a stable cluster fitting the needs of the user in terms of
-        # cluster size, we check the minimum nodes within the node groups to
-        # match the current setup.
-        min_nodes = self._compute_min_nodes(min_nodes)
-        self._check_cluster_size(min_nodes)
+        # A lot of things could go wrong when starting the cluster.
+        # Check that the minimum number of nodes within each groups is
+        # reachable. Raise `ClusterSizeError()` if not.
+        self._check_cluster_size(self._compute_min_nodes(min_nodes))
 
     def _start_nodes_sequentially(self, nodes):
         """

@@ -82,8 +82,8 @@ class ClusterSizeError(ClusterError):
     """
     Not enough nodes (of one or more kinds) are available.
     """
-    def __init__(self):
-        super(ClusterSizeError, self).__init__(
+    def __init__(self, msg=None):
+        super(ClusterSizeError, self).__init__(msg or
             "The cluster does not provide the minimum"
             " amount of nodes specified in the"
             " configuration. Some nodes are running,"
