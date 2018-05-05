@@ -70,12 +70,12 @@ c.JupyterHub.port = 443
 ## The Proxy Auth token.
 #
 #  Loaded from the CONFIGPROXY_AUTH_TOKEN env variable by default.
-c.JupyterHub.proxy_auth_token = open('/var/lib/jupyterhub/jupyterhub_proxy_auth_token', 'rb').read().strip()
+c.ConfigurableHTTPProxy.auth = open('/var/lib/jupyterhub/jupyterhub_proxy_auth_token', 'rb').read().strip()
 
 ## The command to start the http proxy.
 #
 #  Only override if configurable-http-proxy is not on your PATH
-c.JupyterHub.proxy_cmd = ['/usr/local/lib/node_modules/configurable-http-proxy/bin/configurable-http-proxy']
+c.ConfigurableHTTPProxy.command = ['/usr/local/lib/node_modules/configurable-http-proxy/bin/configurable-http-proxy']
 
 ## Dict of token:servicename to be loaded into the database.
 #
