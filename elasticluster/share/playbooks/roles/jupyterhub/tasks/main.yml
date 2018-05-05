@@ -48,18 +48,14 @@
     executable: '/opt/anaconda3/bin/pip'
 
 
-- name: Create cookie secret file
+- name: Create secret tokens
   shell: |
-    openssl rand -base64 2048 | tr -d '\n' > /var/lib/jupyterhub/jupyterhub_cookie_secret
+    openssl rand -hex 32 | tr -d '\n' > '/var/lib/jupyterhub/{{ item }}'
   args:
-    creates: /var/lib/jupyterhub/jupyterhub_cookie_secret
-
-
-- name: Create proxy auth token file
-  shell: |
-    openssl rand -hex 32 | tr -d '\n' > /var/lib/jupyterhub/jupyterhub_proxy_auth_token
-  args:
-    creates: /var/lib/jupyterhub/jupyterhub_proxy_auth_token
+    creates: '/var/lib/jupyterhub/{{ item }}'
+  with_items:
+    - jupyterhub_cookie_secret
+    - jupyterhub_proxy_auth_token
 
 
 - name: Deploy configuration file
