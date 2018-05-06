@@ -1,0 +1,25 @@
+- name: Copy network configuration RBAC
+  get_url:
+    url: "{{kubernetes_networking.canal.rbac}}"
+    dest: /var/tmp/kube-{{kubernetes_default_networking}}-rbac.yml
+  when: "'failed' in token_list_result.stderr"
+
+- name: Copy network configuration
+  get_url:
+    url: "{{kubernetes_networking.flannel.manifest}}"
+    dest: /var/tmp/kube-{{kubernetes_default_networking}}.yml
+  when: "'failed' in token_list_result.stderr"
+
+- name: Replace network cidr
+  replace:
+    path: /var/tmp/kube-{{kubernetes_default_networking}}.yml
+    regexp: "10.244.0.0/16"
+    replace: "{{kubernetes_network}}"
+
+- name: Initialize Kubernetes networking RBAC
+  command: kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f /var/tmp/kube-{{kubernetes_default_networking}}-rbac.yml
+  when: "'failed' in token_list_result.stderr"
+
+- name: Initialize Kubernetes networking
+  command: kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f /var/tmp/kube-{{kubernetes_default_networking}}.yml
+  when: "'failed' in token_list_result.stderr"
