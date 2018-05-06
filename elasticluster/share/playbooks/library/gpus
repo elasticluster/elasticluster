@@ -123,11 +123,13 @@ def _get_pci_device_name_lspci(parts):
         if key == 'Vendor':
             vendor = value
         elif key == 'Device':
-            first_space = value.index(' ')
-            open_bracket = value.index('[')
-            close_bracket = value.index(']')
-            model_name_short = value[:first_space]
-            model_name_long = value[(open_bracket+1):close_bracket]
+            if ' ' in value and '[' in value and ']' in value:
+                # e.g., `Device: GM108M [GeForce 940MX]`
+                first_space = value.index(' ')
+                model_name_short = value[:first_space]
+                open_bracket = value.index('[')
+                close_bracket = value.index(']')
+                model_name_long = value[(open_bracket+1):close_bracket]
         else:
             continue
     return vendor, model_name_short, model_name_long
