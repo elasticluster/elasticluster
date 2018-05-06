@@ -7,6 +7,8 @@ kubernetes_network: 10.244.0.0/16
 # see https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/#instructions
 
 kubernetes_networking:
+  calico:
+    manifest: https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml
   canal:
     rbac: https://raw.githubusercontent.com/projectcalico/canal/master/k8s-install/1.7/rbac.yaml
     manifest: https://raw.githubusercontent.com/projectcalico/canal/master/k8s-install/1.7/canal.yaml
