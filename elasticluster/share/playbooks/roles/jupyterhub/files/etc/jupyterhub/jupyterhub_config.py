@@ -75,7 +75,7 @@ c.ConfigurableHTTPProxy.auth = open('/var/lib/jupyterhub/jupyterhub_proxy_auth_t
 ## The command to start the http proxy.
 #
 #  Only override if configurable-http-proxy is not on your PATH
-c.ConfigurableHTTPProxy.command = ['/usr/local/lib/node_modules/configurable-http-proxy/bin/configurable-http-proxy']
+c.ConfigurableHTTPProxy.command = ['/opt/anaconda3/bin/configurable-http-proxy']
 
 ## Path to SSL certificate file for the public facing interface of the proxy
 #
