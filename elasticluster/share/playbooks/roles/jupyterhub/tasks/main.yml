@@ -33,19 +33,9 @@
     - supervisor
 
 
-# FIXME: Could this be replaced by Ansible's `npm` module?
-- name: Install HTTP proxy service
+- name: Install JupyterHub
   command: |
-    npm install -g configurable-http-proxy
-  args:
-    creates: /usr/local/lib/node_modules/configurable-http-proxy/bin/configurable-http-proxy
-
-
-- name: Install JupyterHub SW
-  pip:
-    name: 'jupyterhub'
-    state: '{{ pkg_install_state }}'
-    executable: '/opt/anaconda3/bin/pip'
+    /opt/anaconda3/bin/conda install jupyterhub -c conda-forge
 
 
 - name: Create secret tokens
