@@ -262,7 +262,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             ('--private-key=' + cluster.user_key_private),
             os.path.realpath(self._playbook_path),
             ('--inventory=' + inventory_path),
-        ] + list(extra_args)
+        ]
 
         if self._sudo:
             cmd.extend([
@@ -280,10 +280,20 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         if verbosity > 0:
             cmd.append('-' + ('v' * verbosity))  # e.g., `-vv`
 
-        # append any additional arguments provided by users
+        # append any additional arguments provided by users in config file
         ansible_extra_args = self.extra_conf.get('ansible_extra_args', None)
         if ansible_extra_args:
             cmd += shlex.split(ansible_extra_args)
+
+        # finally, append any additional arguments provided on command-line
+        for arg in extra_args:
+            # XXX: since we are going to change working directory,
+            # make sure that anything that looks like a path to an
+            # existing file is made absolute before appending to
+            # Ansible's command line.  (Yes, this is a ugly hack.)
+            if os.path.exists(arg):
+                arg = os.path.abspath(arg)
+            cmd.append(arg)
 
         with temporary_dir():
             # adjust execution environment, for the part that needs a
