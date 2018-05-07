@@ -16,6 +16,7 @@
     - luarocks
   when: '{{ is_debian_compatible }}'
 
+
 - name: Install Lua from the OS repository (RHEL-compatible)
   yum:
     name: '{{ item }}'
