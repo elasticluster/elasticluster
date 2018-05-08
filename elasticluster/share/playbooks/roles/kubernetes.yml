@@ -30,3 +30,12 @@
     - worker
   roles:
     - kubernetes-worker
+
+- name: Deploy Kubernetes apps
+  hosts: kubernetes_master
+  tags:
+    - docker
+    - kubernetes
+    - master
+  roles:
+    - kubernetes-apps

@@ -1,0 +1,22 @@
+# See https://github.com/kubernetes/dashboard
+#     https://github.com/kubernetes/dashboard/wiki/Creating-sample-user
+
+- name: Deploy Kubernetes Dashboard
+  command: kubectl --kubeconfig /etc/kubernetes/admin.conf  apply -f {{ kubernetes_dashboard_configuration }}
+
+- name: Copy admin user configuration
+  copy:
+    src: "{{ item }}"
+    dest: "/var/tmp/{{ item }}"
+  with_items:
+    - create_ServiceAccount.yaml
+    - create_ClusterRoleBinding.yaml
+  when: kubernetes_dashboard_create_admin_account
+
+- name: Create ServiceAccount
+  command: kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f /var/tmp/create_ServiceAccount.yaml
+  when: kubernetes_dashboard_create_admin_account
+
+- name: Create ClusterRoleBinding
+  command: kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f /var/tmp/create_ClusterRoleBinding.yaml
+  when: kubernetes_dashboard_create_admin_account
