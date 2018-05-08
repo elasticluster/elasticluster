@@ -17,8 +17,8 @@
   when: 'not epel_repo_file.stat.exists'
 
 
-# this is required to have packages live `lua-devel`, which are in the
-# main repos in CentOS; for more details, see:
+# this is required to have packages like `lua-devel` in RHEL, which
+# are in the main repos in CentOS; for more details, see:
 # https://stackoverflow.com/a/34671499/459543
 - name: Enable "optional" package repository (RHEL)
   command: |
