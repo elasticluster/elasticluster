@@ -23,6 +23,7 @@
 - name: Enable "optional" package repository (RHEL)
   command: |
     yum-config-manager --enable rhui-REGION-rhel-server-optional
+  ignore_errors: yes
   when: '{{ is_rhel_compatible }} and not {{ is_centos }}'
 
 
