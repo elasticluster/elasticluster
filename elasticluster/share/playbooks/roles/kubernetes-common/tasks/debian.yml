@@ -14,12 +14,26 @@
 - name: Install packages
   apt:
     name: "{{ item }}"
+    state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items:
     - docker.io
-    - kubelet={{ kubernetes_apt_version }}
-    - kubeadm={{ kubernetes_apt_version }}
-    - kubectl={{ kubernetes_apt_version }}
+    - kubelet
+    - kubeadm
+    - kubectl
+    - kubernetes-cni
+  when: not kubernetes_version.apt.install
+
+- name: Install packages - fixed version
+  apt:
+    name: "{{ item }}"
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
+  with_items:
+    - docker.io
+    - kubelet={{ kubernetes_version.apt.label }}
+    - kubeadm={{ kubernetes_version.apt.label }}
+    - kubectl={{ kubernetes_version.apt.label }}
+  when: kubernetes_version.apt.install
 
 - name: Enable and start kubeadm services
   service:
