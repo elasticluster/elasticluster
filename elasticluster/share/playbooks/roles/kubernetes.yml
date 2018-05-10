@@ -8,7 +8,7 @@
     - master
   roles:
     - kubernetes-master
-  post_tasks:
+  tasks:
   - name: Create kube directory for normal user
     file:
       path: "/opt/k8s"
@@ -20,7 +20,7 @@
       remote_src: yes
       src: /etc/kubernetes/admin.conf
       dest: "/opt/k8s/config"
-      mode: 0644
+      mode: 0444
 
 - name: Install Kubernetes worker
   hosts: kubernetes_worker
