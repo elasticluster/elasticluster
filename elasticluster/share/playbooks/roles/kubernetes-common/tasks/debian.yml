@@ -27,7 +27,7 @@
 - name: Install packages - fixed version
   apt:
     name: "{{ item }}"
-    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
+    allow_unauthenticated: '{{ insecure_https_downloads|default("no")|bool }}'
   with_items:
     - docker.io
     - kubelet={{ kubernetes_version.apt.label }}
