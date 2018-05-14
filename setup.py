@@ -134,7 +134,7 @@ elif python_version == (2, 7):
         'ipaddress',
         'pathlib2',
         'scandir',
-        'secretstorage',
+        'secretstorage<=2.3.1',
     ]
 else:
     raise RuntimeError("ElastiCluster requires Python 2.6 or 2.7")
