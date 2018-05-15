@@ -1,6 +1,6 @@
 #! /usr/bin/python
 #
-# Copyright (C) 2016 University of Zurich.
+# Copyright (C) 2016, 2018 University of Zurich.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ from __future__ import (print_function, division, absolute_import)
 import os
 import string
 from urlparse import urlparse
+from warnings import warn
 
 # 3rd-party modules
 import schema
@@ -44,10 +45,25 @@ def validator(fn):
     return schema.Use(fn)
 
 
+def alert(errmsg, cls=DeprecationWarning):
+    """
+    Allow value, but warn user with the specified error message.
+    """
+    def _alert(v):
+        warn(errmsg, cls)
+    return validator(_alert)
+
+
 alphanumeric = schema.Regex(r'[0-9A-Za-z_]+')
+"""
+Allow alphanumeric strings.
+"""
 
 
 boolean = schema.Use(string_to_boolean)
+"""
+Allow values *1/yes/true* and *0/no/false* (case insensitive).
+"""
 
 
 def _file_name(v):
@@ -116,6 +132,23 @@ def nonempty_str(v):
 
 
 @validator
+def positive_int(v):
+    converted = int(v)
+    if converted > 0:
+        return converted
+    else:
+        raise ValueError("value must be integer > 0")
+
+
+@validator
+def nonnegative_int(v):
+    converted = int(v)
+    if converted < 0:
+        raise ValueError("value must be a non-negative integer")
+    return converted
+
+
+@validator
 def nova_api_version(version):
     """
     Check that the ``OS_COMPUTE_API_VERSION`` is valid.
@@ -141,6 +174,15 @@ def nova_api_version(version):
             " -- must be either '1.1', '2', or '2.X'"
             " (where 'X' is a microversion integer)"
             .format(version))
+
+
+def reject(errmsg):
+    """
+    Reject any value with the specified error message.
+    """
+    def _reject(v):
+        raise ValueError(errmsg.format(v))
+    return validator(_reject)
 
 
 @validator

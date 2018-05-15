@@ -3,7 +3,7 @@
   handlers:
     - include: common/handlers/main.yml
   tasks:
-    - include: common/tasks/ssh_host_based_authentication.yml hosts={{groups.all}}
+    - include: common/tasks/ssh_auth.yml hosts={{groups.all}}
 
 - hosts: pvfs2:pvfs2_data:pvfs2_meta:pvfs2_client
   vars:
@@ -16,7 +16,10 @@
   handlers:
     - include: common/handlers/main.yml
   tasks:
-    - action: apt name={{item}} state=installed update_cache=yes
+    - apt:
+        name: '{{item}}'
+        state: '{{ pkg_install_state }}'
+        allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
       with_items:
         - build-essential
         - libdb-dev
@@ -25,7 +28,12 @@
         - pkg-config
         - libfuse-dev
 
-    - action: get_url url={{pvfs_url}} dest=/root/
+    - name: Download OrangeFS sources
+      get_url:
+        url: '{{pvfs_url}}'
+        dest: '/root/'
+        validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
+
     - action: command tar -zxf {{pvfs_tar}} chdir=/root/ creates=/root/{{pvfs_src}}/configure
  # --enable-segv-backtrace
     - action: 'shell chdir=/root/{{pvfs_src}} ./configure --enable-fuse --with-kernel=/usr/src/linux-headers-$(uname -r) && make && make install creates=/root/{{pvfs_src}}/src/server/pvfs2-server'
@@ -43,13 +51,13 @@
     - is_client: '"{{inventory_hostname}}" in {{groups.pvfs2_client}}'
   tasks:
     - action: shell scp /etc/pvfs2-fs.conf root@{{item}}:/etc/pvfs2-fs.conf
-      with_items: 
+      with_items:
         - "{{groups.pvfs2_meta}}"
         - "{{groups.pvfs2_data}}"
       when: inventory_hostname == groups.pvfs2_meta[0]
 
     - name: ensure the storage path is correct
-      action: 'lineinfile dest=/etc/pvfs2-fs.conf regexp="StorageSpace {{pvfs2_storage}}" line="	StorageSpace {{pvfs2_storage}}"'
+      action: 'lineinfile dest=/etc/pvfs2-fs.conf regexp="StorageSpace {{pvfs2_storage}}" line="        StorageSpace {{pvfs2_storage}}"'
 
     - shell: pvfs2-server /etc/pvfs2-fs.conf -f creates=/{{pvfs2_storage}}/collections.db
 

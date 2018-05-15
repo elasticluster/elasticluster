@@ -1,0 +1,14 @@
+---
+
+- name: Add CUDA YUM repository
+  template:
+    dest: '/etc/yum.repos.d/cuda.repo'
+    src: 'etc/yum.repos.d/cuda.repo.j2'
+    mode: 0444
+    owner: root
+    group: root
+
+
+- name: Set auxiliary variables
+  set_fact:
+    _cuda_ko_regex: '^extra/nvidia.*\.ko:'

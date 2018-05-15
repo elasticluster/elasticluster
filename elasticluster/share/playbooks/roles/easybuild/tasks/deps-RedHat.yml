@@ -6,8 +6,8 @@
 
 - name: Install required dependencies of EasyBuild (RHEL-compatible)
   package:
-    name='{{item}}'
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     # see: http://easybuild.readthedocs.io/en/latest/Installation.html#dependencies
     #
@@ -40,8 +40,8 @@
 
 - name: Install optional dependencies of EasyBuild (RHEL-compatible)
   package:
-    name='{{item}}'
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - git
     - graphviz
@@ -52,8 +52,8 @@
 
 - name: Install "filtered dependency" software (RHEL-compatible)
   package:
-    name='{{ item }}'
-    state=present
+    name: '{{ item }}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - bzip2-devel
     - m4

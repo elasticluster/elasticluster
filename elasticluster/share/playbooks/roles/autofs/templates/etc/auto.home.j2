@@ -1,0 +1,25 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+
+# /etc/auto.home
+#
+# AUTOFS(5) indirect map for locating user home directories.
+# This file must be referenced by `/etc/auto.master`.
+# See `man 5 autofs` for syntax and details.
+#
+# Since all home directory mounts follow the same pattern,
+# we just resort to a "wildcard entry": the `&` character
+# in the right-hand side is replaced by whatever matched
+# the wildcard `*` in the left-hand side.
+#
+*       -rw,hard,intr   {{autofs_home_server|default('nfs')}}:/srv/nfs/home/&
+
+# The above wildcard should expand to the following user entries.
+# Uncomment and move at the beginning of file to override the
+# wildcard entry; e.g., to provide a slightly different mount path
+# for a specific user.
+#
+#rmurri -rw,hard,intr    {{autofs_home_server|default('nfs')}}:/srv/nfs/home/oci/murri

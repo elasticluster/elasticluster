@@ -10,8 +10,9 @@
 
 - name: Download bootstrap script
   get_url:
-    url='{{ easybuild_bootstrap_url }}'
-    dest='{{ easybuild_build_dir }}/bootstrap_eb.py'
+    url: '{{ easybuild_bootstrap_url }}'
+    dest: '{{ easybuild_build_dir }}/bootstrap_eb.py'
+    validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
 
 
 - name: Set EasyBuild user name
@@ -67,7 +68,7 @@
 # If this is installed, `eb -l` can colorize output
 - name: Install the `coloredlogs` Python package
   pip:
-    name=coloredlogs
+    name: coloredlogs
   become: yes
   become_user: root
   ignore_errors: yes
@@ -87,7 +88,7 @@
   shell:
     set -e
     . /etc/profile.d/easybuild.sh
-    . /etc/profile.d/lmod.sh
+    . /etc/profile.d/modules.sh
     module load EasyBuild
     eb {{ EASYBUILD_INSTALL|join(' ') }}
   when: '{{ EASYBUILD_INSTALL|length > 0 }}'

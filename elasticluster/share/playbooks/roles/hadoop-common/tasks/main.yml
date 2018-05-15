@@ -8,13 +8,13 @@
     name=default-jre-headless
     state=present
 
-    
+
 - name: Install Hadoop packages (common)
   tags:
     - hadoop
   package:
-    name='{{item}}'
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - hadoop # Hadoop is a software platform for processing vast amounts of data
     - hadoop-client # Hadoop client side dependencies
@@ -28,15 +28,15 @@
   file:
     path='{{HADOOP_CONF_DIR}}'
     state=directory
-    
-    
+
+
 - name: Copy Hadoop/BigTop default configuration files
   tags:
     - hadoop
   command:
     'rsync -ax --update --backup /etc/hadoop/conf.empty/ {{HADOOP_CONF_DIR}}/'
 
-  
+
 - name: Deploy Hadoop/ElastiCluster configuration files
   tags:
     - hadoop

@@ -4,8 +4,8 @@
 # for once, package names are the same on Debian/Ubuntu and RHEL/CentOS
 - name: Install GlusterFS server packages
   package:
-    name='{{item}}'
-    state=installed
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - glusterfs-server
     - glusterfs-client
@@ -14,24 +14,17 @@
     - glusterfs-server
 
 
-- name: Ensure the GlusterFS service is running (Debian/Ubuntu)
+- name: Ensure the GlusterFS service is running
   service:
-    name=glusterfs-server
-    state=started
-  when: 'is_debian_compatible'
-  tags:
-    - gluster
-    - glusterfs-server
-
-
-- name: Ensure the GlusterFS service is running (RHEL-compatible)
-  service:
-    name='{{item}}'
-    state=started
-  with_items:
-    - glusterd
-    - glusterfsd
-  when: 'is_rhel_compatible'
+    name: '{{ item }}'
+    state: 'started'
+  # Service names are different across GlusterFS versions.
+  #
+  # This is implemented as a two-level hash table: the `init-XXX.yml`
+  # files define `glusterfs_server_services` as a mapping from
+  # `glusterfs_version` (string) to list of service names.
+  #
+  with_items: '{{ glusterfs_server_services[glusterfs_version] }}'
   tags:
     - gluster
     - glusterfs-server

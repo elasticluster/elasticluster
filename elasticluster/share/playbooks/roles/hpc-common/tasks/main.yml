@@ -8,7 +8,7 @@
 - name: Install common HPC software
   package:
     name: '{{item}}'
-    state: present
+    state: '{{ pkg_install_state }}'
   with_items: '{{hpc_common_packages}}'
 
 

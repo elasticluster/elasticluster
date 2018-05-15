@@ -1,0 +1,7 @@
+# lmod/meta/main.yml
+---
+
+dependencies:
+  # install Lua with default options (i.e., let the role figure out
+  # the best way to perform installation)
+  - role: lua

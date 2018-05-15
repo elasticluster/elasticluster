@@ -1,0 +1,11 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+[cuda]
+name=CUDA packages by NVIDIA
+baseurl=http://developer.download.nvidia.com/compute/cuda/repos/rhel{{ansible_distribution_major_version}}/$basearch
+enabled=1
+gpgcheck=1
+gpgkey=http://developer.download.nvidia.com/compute/cuda/repos/rhel{{ansible_distribution_major_version}}/$basearch/7fa2af80.pub

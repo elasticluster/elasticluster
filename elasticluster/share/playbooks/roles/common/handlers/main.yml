@@ -1,11 +1,9 @@
 ---
-- name: restart sshd
+- name: restart sshd Debian
   action: service name=ssh state=restarted
-  when: is_debian_or_ubuntu
 
-- name: restart sshd
+- name: restart sshd RedHat
   action: service name=sshd state=restarted
-  when: is_centos
 
 - name: reload exports
   action: shell exportfs -r

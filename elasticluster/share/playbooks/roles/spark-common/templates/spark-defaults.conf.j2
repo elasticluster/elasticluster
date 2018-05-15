@@ -1,23 +1,56 @@
-# Default system properties included when running spark-submit.
-# This is useful for setting default environmental settings.
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
 
-{%- set hadoop_workers_max_vcpus = groups.hadoop_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|max -%}
-{%- set hadoop_workers_min_vcpus = groups.hadoop_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|min -%}
-{%- set hadoop_workers_max_free_memory_mb = groups.hadoop_worker|map('extract', hostvars, ['ansible_memory_mb', 'nocache', 'free'])|list|max -%}
+#
+# Default system properties included when running spark-submit.
+#
+
+{#- provide defaults for parameters that can only be computed at config time #}
+{%- set hadoop_workers_max_vcpus = groups.hadoop_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|max %}
+{%- set hadoop_workers_min_vcpus = groups.hadoop_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|min %}
+{%- set hadoop_workers_max_free_memory_mb = groups.hadoop_worker|map('extract', hostvars, ['ansible_memory_mb', 'nocache', 'free'])|list|max %}
+{%- set computed_spark_driver_memory_mb = (ansible_memory_mb.nocache.free / ansible_processor_vcpus)|int %}
+{%- set computed_spark_executor_memory_mb = (2 * hadoop_workers_max_free_memory_mb / (hadoop_workers_max_vcpus + hadoop_workers_min_vcpus))|int %}
+{%- set computed_spark_python_worker_memory_mb = (spark_executor_memory_mb|default(computed_spark_executor_memory_mb)|float * 0.5)|int %}
+{%- set computed_spark_driver_maxresultsize_mb = (spark_driver_memory_mb|default(computed_spark_driver_memory_mb)|float * 0.8)|int %}
+
+{% if java_version|default(8)|int >= 8 %}
+# These are necessary with JVM 1.8+ to avoid allocating 1GB extra
+# memory at the onset for the "MetaSpace"; while having a large
+# MetaSpace from the beginning *might* be a good choice for
+# long-running server applications, it makes small test jobs use an
+# inordinate amount of memory -- and smallish short-lived jobs is a
+# more typical use of ElastiCluster's Spark deployments (for
+# education, experimentation, and exploratory programming).  For a
+# full explanation, see:
+# https://github.com/TissueMAPS/TmLibrary/issues/34#issuecomment-334730532
+spark.yarn.am.extraJavaOptions -XX:-UseCompressedOops -XX:-UseCompressedClassPointers
+spark.driver.extraJavaOptions  -XX:-UseCompressedOops -XX:-UseCompressedClassPointers
+{% endif %}
 
 # this is local to the master node, so use its memory and vcpu values for computing
-spark.driver.memory              {{ (ansible_memory_mb.nocache.free / ansible_processor_vcpus)|int }}m
+spark.driver.memory              {{ spark_driver_memory_mb|default(computed_spark_driver_memory_mb)|int }}m
 
 # This value depends more on the intended usage of the cluster than on its
-features; still, ElastiCluster has to provide a default. Ideally one woulda use
+# features; still, ElastiCluster has to provide a default. Ideally one would use
 # the *minimum* RAM-per-core ratio (as that would give the largest compatibility)
 # but Ansible and Jinja currently lack filters to allow us to compute the RAM/core
 # quotient across all nodes. So use the (max memory) / (average nr. of cores) as a
 # "reasonable" approximation...
-spark.executor.memory            {{ (2 * hadoop_workers_max_free_memory_mb / (hadoop_workers_max_vcpus + hadoop_workers_min_vcpus))|int }}m
+spark.executor.memory            {{ spark_executor_memory_mb|default(computed_spark_executor_memory_mb)|int }}m
+
+# Amount of memory to use per python worker process during
+# aggregation, in the same format as JVM memory strings (e.g. 512m, 2g).
+# If the memory used during aggregation goes above this amount, it will
+# spill the data into disks.
+#
+spark.python.worker.memory       {{ spark_python_worker_memory_mb|default(computed_spark_python_worker_memory_mb)|int }}m
 
 # Limit of total size of serialized results of all partitions for each Spark action (e.g. collect)
-spark.driver.maxResultSize       {{(ansible_memory_mb.nocache.free * 0.8)|int}}m
+spark.driver.maxResultSize       {{ spark_driver_maxresultsize_mb|default(computed_spark_driver_maxresultsize_mb)|int }}m
+
 
 # Although the documentation says that PYSPARK_PYTHON and
 # PYSPARK_DRIVER_PYTHON control which Python interpreter will be used
@@ -33,13 +66,6 @@ spark.yarn.appMasterEnv.PYSPARK_PYTHON {{anaconda_home}}/bin/python
 spark.yarn.appMasterEnv.PYSPARK_DRIVER_PYTHON {{anaconda_home}}/bin/python
 spark.yarn.appMasterEnv.PATH {{anaconda_home}}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-# Amount of memory to use per python worker process during
-# aggregation, in the same format as JVM memory strings (e.g. 512m, 2g).
-# If the memory used during aggregation goes above this amount, it will
-# spill the data into disks. 
-#
-spark.python.worker.memory       {{(ansible_memory_mb.nocache.free * 0.5)|int}}m
-
 # ensure the PostGreSQL JDBC connector is available
 spark.driver.extraClassPath      /usr/share/java/postgresql-jdbc4.jar
 spark.executor.extraClassPath    /usr/share/java/postgresql-jdbc4.jar
@@ -53,11 +79,6 @@ spark.scheduler.maxRegisteredResourcesWaitingTime 5s
 # Specified as a double between 0.0 and 1.0. Regardless of whether the
 # minimum ratio of resources has been reached, the maximum amount of
 # time it will wait before scheduling begins is controlled by config
-# spark.scheduler.maxRegisteredResourcesWaitingTime. 
+# spark.scheduler.maxRegisteredResourcesWaitingTime.
 #
-spark.scheduler.minRegisteredResourcesRatio 0.5 
-
-
-# Max out message size for those who do not care much about slowing
-# down computation due to too much communication
-spark.akka.frameSize	2000
+spark.scheduler.minRegisteredResourcesRatio 0.5

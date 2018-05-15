@@ -1,0 +1,3 @@
+{% for host in groups.torque_worker %}
+{{ host }} np={{ hostvars[host].ansible_processor_count }} num_node_boards=1
+{% endfor %}

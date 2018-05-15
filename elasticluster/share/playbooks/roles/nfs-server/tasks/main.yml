@@ -14,8 +14,8 @@
     - nfs
     - nfs-server
   package:
-    pkg='{{item}}'
-    state=present
+    pkg: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items: '{{nfs_server_packages}}'
 
 
@@ -33,6 +33,16 @@
     dest: '/etc/exports'
     state: exported
   with_items: '{{NFS_EXPORTS}}'
+
+
+- name: Ensure portmapper is running
+  tags:
+    - nfs
+    - nfs-server
+  service:
+    name: 'rpcbind'
+    enabled: yes
+    state: 'started'
 
 
 - name: Ensure NFS server is running (Debian 8 "jessie")

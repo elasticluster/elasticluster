@@ -1,0 +1,45 @@
+---
+
+#
+# Install Autofs and configure it to dynamically mount network filesystems
+# under the `/net` hierarchy.
+#
+
+- name: Load distribution-specific parameters
+  include: 'init-{{ansible_os_family}}.yml'
+
+
+- name: Deploy autofs configuration
+  template:
+    dest: '/{{item}}'
+    src: '{{item}}.j2'
+    mode: 0444
+    owner: root
+    group: root
+  with_items:
+    - 'etc/auto.master'
+    - 'etc/auto.home'
+
+
+- name: Deploy autofs mount script for NFSv4 (Debian/Ubuntu)
+  copy:
+    dest: '/etc/auto.nfs4'
+    src: 'etc/auto.nfs4'
+    mode: 0555
+    owner: root
+    group: root
+  when: is_debian_compatible
+
+
+- name: Install Autofs
+  package:
+    name: '{{ item }}'
+    state: '{{ pkg_install_state }}'
+  with_items: '{{autofs_packages}}'
+
+
+- name: Ensure autofs is running and starts at boot
+  service:
+    name: '{{autofs_service}}'
+    state: started
+    enabled: yes

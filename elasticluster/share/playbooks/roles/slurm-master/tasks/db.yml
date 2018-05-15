@@ -7,7 +7,7 @@
     slurm_db_python_pkg: python-mysqldb
     slurm_db_service_name: mysql
   when: '{{is_debian_or_ubuntu}} and ({{is_debian_8_or_later}} or {{is_ubuntu_14_04_or_later}})'
-  
+
 - name: Set variables (older Debian/Ubuntu)
   set_fact:
     slurm_db_server_name: MySQL
@@ -15,7 +15,7 @@
     slurm_db_python_pkg: python-mysqldb
     slurm_db_service_name: mysql
   when: '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_14_04_or_later}})'
-  
+
 - name: Set variables (RHEL 7.x)
   set_fact:
     slurm_db_server_name: MariaDB
@@ -23,7 +23,7 @@
     slurm_db_python_pkg: MySQL-python
     slurm_db_service_name: mariadb
   when: 'is_rhel7_compatible'
-  
+
 - name: Set variables (RHEL 6.x)
   set_fact:
     slurm_db_server_name: MySQL
@@ -32,19 +32,19 @@
     slurm_db_service_name: mysqld
   when: 'is_rhel6_compatible'
 
-  
+
 - name: Install {{slurm_db_server_name}}, used for SLURM accounting
   tags:
     - slurm
     - slurmdbd
   package:
-    name='{{item}}'
-    state=latest
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - '{{slurm_db_server_pkg}}'
     - '{{slurm_db_python_pkg}}'
 
-    
+
 - name: Ensure {{slurm_db_server_name}} daemon is up
   tags:
     - slurm
@@ -54,7 +54,7 @@
     enabled=yes
     state=started
 
-    
+
 - name: Create DB for SLURMDBD
   tags:
     - slurm
@@ -64,7 +64,7 @@
     name='{{SLURM_ACCOUNTING_DB_NAME}}'
     state=present
 
-    
+
 - name: Create DB user for SLURMDBD
   tags:
     - slurm
@@ -79,4 +79,3 @@
   with_items:
     - '{{SLURM_ACCOUNTING_HOST}}'
     - 'localhost'
-

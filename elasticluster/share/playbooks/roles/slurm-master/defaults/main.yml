@@ -6,3 +6,10 @@ SLURM_ACCOUNTING_HOST: '{{groups.slurm_master[0]|default("slurmdbd")}}'
 # (i.e., users that can submit jobs)
 slurm_cluster_users:
   - '{{ansible_user}}'
+  # Around April 2018, GCP seems to have started replacing the `.` in
+  # user names (e.g. `riccardo.murri` as extracted from the email
+  # address `riccardo.murri@gmail.com`) with a `_` when creating the
+  # account names on VMs -- so be sure we do the same.  Still, since I
+  # do not know when this started, and whether *all* images do this,
+  # let us keep *both* spellings.
+  - '{{ ansible_user|replace(".", "_") }}'

@@ -98,6 +98,13 @@ DEFAULT_OS_IMAGE_API_VERSION='2'
 DEFAULT_OS_NETWORK_API_VERSION='2.0'  # no choice as of Aug. 2017
 DEFAULT_OS_VOLUME_API_VERSION='2'
 
+_NO_DEFAULT = object()
+"""
+Special value used in `_get_os_config_value` to indicate that a
+value *must* be provided.
+"""
+
+
 
 class OpenStackCloudProvider(AbstractCloudProvider):
     """
@@ -120,8 +127,14 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     :param identity_api_version: What version of the Keystone API to use.
         Valid values are the strings `"v2"` or `"v3"`,
         or `None` (default, meaning try v3 first and fall-back to v2).
+    :param cacert: Path to CA certificate bundle (for verifying HTTPS sessions)
+        or ``None`` to use the systems' default.
     """
-    __node_start_lock = threading.Lock()  # lock used for node startup
+
+    __node_start_lock = threading.Lock()
+    """
+    Lock used for node startup.
+    """
 
     def __init__(self, username, password, project_name, auth_url,
                  user_domain_name="default", project_domain_name="default",
@@ -134,9 +147,12 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                  # this can be auto-detected
                  identity_api_version=None,
                  # this is deprecated in favor of `compute_api_version`
-                 nova_api_version=None):
+                 nova_api_version=None,
+                 cacert=None,  # keep in sync w/ default in novaclient.Client()
+    ):
         # OpenStack connection params
         self._os_auth_url = self._get_os_config_value('auth URL', auth_url, ['OS_AUTH_URL']).rstrip('/')
+        self._os_cacert = self._get_os_config_value('cacert', cacert, ['OS_CACERT'], default=None)
         self._os_username = self._get_os_config_value('user name', username, ['OS_USERNAME'])
         self._os_user_domain_name = self._get_os_config_value('user domain name', user_domain_name, ['OS_USER_DOMAIN_NAME'], 'default')
         self._os_password = self._get_os_config_value('password', password, ['OS_PASSWORD'])
@@ -152,9 +168,11 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._compute_api_version = compute_api_version
         self._image_api_version = image_api_version
         self._network_api_version = network_api_version
-        if os.getenv('OS_NETWORK_API_VERSION', None) != DEFAULT_OS_NETWORK_API_VERSION:
+        os_network_api_version = os.getenv('OS_NETWORK_API_VERSION', None)
+        if  (os_network_api_version
+             and os_network_api_version != DEFAULT_OS_NETWORK_API_VERSION):
             warn("Environment variable OS_NETWORK_API_VERSION set,"
-                 " but ElastiCluster does not supporting selecting"
+                 " but ElastiCluster does not support selecting"
                  " the OpenStack Networking API (Neutron) version yet.",
                  UserWarning)
         self._volume_api_version = volume_api_version
@@ -172,7 +190,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._cached_instances = {}
 
     @staticmethod
-    def _get_os_config_value(thing, value, varnames, default=None):
+    def _get_os_config_value(thing, value, varnames, default=_NO_DEFAULT):
         assert varnames, "List of env variable names cannot be empty"
         for varname in varnames:
             env_value = os.getenv(varname, None)
@@ -189,22 +207,22 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 return env_value
         if value:
             return value
-        elif default is not None:
-            return default
-        else:
+        elif default is _NO_DEFAULT:
             # first variable name is preferred; others are for backwards-compatibility only
             raise RuntimeError(
                 "There is no default value for OpenStack {0};"
                 " please specify one in the config file"
                 " or using environment variable {1}."
                 .format(thing, varnames[0]))
+        else:
+            return default
 
     def _init_os_api(self):
         """
         Initialise client objects for talking to OpenStack API.
 
-        This is in a separate function so to be called by ``__init__`` and
-        ``__setstate__``.
+        This is in a separate function so to be called by ``__init__``
+        and ``__setstate__``.
         """
         if not self.nova_client:
             log.debug("Initializing OpenStack API clients:"
@@ -214,19 +232,29 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                       " OS_PROJECT_NAME='%s'"
                       " OS_PROJECT_DOMAIN_NAME='%s'"
                       " OS_REGION_NAME='%s'"
+                      " OS_CACERT='%s'"
                       "", self._os_auth_url,
                       self._os_username, self._os_user_domain_name,
                       self._os_tenant_name, self._os_project_domain_name,
-                      self._os_region_name)
+                      self._os_region_name,
+                      self._os_cacert)
             sess = self.__init_keystone_session()
             log.debug("Creating OpenStack Compute API (Nova) v%s client ...", self._compute_api_version)
             self.nova_client = nova_client.Client(
                 self._compute_api_version, session=sess,
-                region_name=self._os_region_name)
+                region_name=self._os_region_name,
+                cacert=self._os_cacert)
             log.debug("Creating OpenStack Network API (Neutron) client ...")
             self.neutron_client = neutron_client.Client(
                 #self._network_api_version,  ## doesn't work as of Neutron Client 2 :-(
-                session=sess, region_name=self._os_region_name)
+                session=sess, region_name=self._os_region_name,
+                ca_cert=self._os_cacert)
+            # FIXME: Glance's `Client` class does not take an explicit
+            # `cacert` parameter, instead it relies on the `session`
+            # argument being "A keystoneauth1 session that should be
+            # used for transport" -- I presume this means that
+            # `cacert` only needs to be set there.  Is this true of
+            # other OpenStack client classes as well?
             log.debug("Creating OpenStack Image API (Glance) v%s client ...", self._image_api_version)
             self.glance_client = glance_client.Client(
                 self._image_api_version, session=sess,
@@ -234,7 +262,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             log.debug("Creating OpenStack Volume API (Cinder) v%s client ...", self._volume_api_version)
             self.cinder_client = cinder_client.Client(
                 self._volume_api_version, session=sess,
-                region_name=self._os_region_name)
+                region_name=self._os_region_name,
+                cacert=self._os_cacert)
 
     def __init_keystone_session(self):
         """Create and return a Keystone session object."""
@@ -264,12 +293,12 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             password=self._os_password,
             project_name=self._os_tenant_name,
         )
-        sess = keystoneauth1.session.Session(auth=auth)
+        sess = keystoneauth1.session.Session(auth=auth, verify=self._os_cacert)
         if check:
             log.debug("Checking that Keystone API v2 session works...")
             try:
                 # if session is invalid, the following will raise some exception
-                nova = nova_client.Client(self.compute_api_version, session=sess)
+                nova = nova_client.Client(self.compute_api_version, session=sess, cacert=self._os_cacert)
                 nova.flavors.list()
             except keystoneauth1.exceptions.NotFound as err:
                 log.warning("Creating Keystone v2 session failed: %s", err)
@@ -304,7 +333,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             project_domain_name=self._os_project_domain_name,
             project_name=self._os_tenant_name,
         )
-        sess = keystoneauth1.session.Session(auth=auth)
+        sess = keystoneauth1.session.Session(auth=auth, verify=self._os_cacert)
         if check:
             log.debug("Checking that Keystone API v3 session works...")
             try:

@@ -1,0 +1,67 @@
+---
+#
+# Set up SSH host-based authentication
+#
+
+- name: Load distribution-dependent values (Debian/Ubuntu)
+  set_fact:
+    ssh_keysign_path: '/usr/lib/openssh/ssh-keysign'
+  when: '{{ is_debian_compatible }}'
+
+
+- name: Load distribution-dependent values (CentOS/RHEL)
+  set_fact:
+    ssh_keysign_path: '/usr/libexec/openssh/ssh-keysign'
+  when: '{{ is_rhel_compatible }}'
+
+
+- name: Setup SSH known hosts file
+  template:
+    dest=/etc/ssh/ssh_known_hosts
+    src=roles/common/templates/etc/ssh/ssh_known_hosts.j2
+    owner=root
+    group=root
+    mode=0644
+
+
+- name: Setup /etc/ssh/shosts.equiv file
+  template:
+    dest=/etc/ssh/shosts.equiv
+    src=roles/common/templates/etc/ssh/shosts.equiv.j2
+    owner=root
+    group=root
+
+
+- name: Setup /root/.shosts file
+  template:
+    dest=/root/.shosts
+    src=roles/common/templates/etc/ssh/shosts.equiv.j2
+    owner=root
+    group=root
+
+
+- name: Setup SSH authentication (server configuration file)
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: '{{item.key}}.*'
+    line: "{{item.key}} {{item.value}}"
+  with_items:
+    - { key: "HostbasedAuthentication", value: 'yes' }
+    - { key: "IgnoreRhosts",            value: 'no'  }
+    - { key: "PasswordAuthentication",  value: '{{ ssh_password_auth|default("yes") }}' }
+  notify: 'restart sshd {{ansible_os_family}}'
+
+
+- name: Setup SSH authentication (client configuration file)
+  lineinfile:
+    dest=/etc/ssh/ssh_config
+    regexp='{{item.key}}.*'
+    line="{{item.key}} {{item.value}}"
+  with_items:
+    - { key: 'HostbasedAuthentication', value: 'yes' }
+    - { key: 'EnableSSHKeysign',        value: 'yes' }
+
+
+- name: Fix SSH keysigning on CentOS/RHEL 7.x
+  include: ssh_keysign_rhel7.yml
+  when: 'is_rhel7_or_later_compatible'

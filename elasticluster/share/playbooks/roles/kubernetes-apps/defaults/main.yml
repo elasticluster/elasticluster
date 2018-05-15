@@ -1,0 +1,4 @@
+kubernetes_dashboard_deploy: true
+kubernetes_dashboard_configuration: https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+kubernetes_dashboard_create_admin_account: true
+kubernetes_dashboard_deployment_label: kubernetes_dashboard

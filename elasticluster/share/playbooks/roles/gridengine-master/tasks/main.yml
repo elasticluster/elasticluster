@@ -15,8 +15,8 @@
     - gridengine
     - gridengine-master
   package:
-    pkg='{{item}}'
-    state=present
+    pkg: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items: '{{gridengine_master_packages}}'
 
 
@@ -39,6 +39,18 @@
     chdir: '{{SGE_ROOT}}'
     creates: '{{SGE_CELL}}/common/cluster_name'
   when: is_rhel_compatible
+
+- name: Create GridEngine accounting file
+  tags:
+    - gridengine
+    - gridengine-master
+  file:
+    dest: '{{SGE_VAR}}/{{SGE_CELL}}/common/accounting'
+    state: touch
+    mode: 0644
+    # FIXME: should we stat other files and re-use the same owner/group?
+    owner: sgeadmin
+    group: sgeadmin
 
 - name: Load GridEngine settings at login (RHEL/CentOS)
   tags:
@@ -77,6 +89,16 @@
 - name: Reload systemd service units (RHEL/CentOS 7.x)
   command: systemctl daemon-reload
   when: 'create_systemd_gridengine_master_service|changed and ({{is_rhel7_compatible}})'
+
+
+- name: Ensure GridEngine master is started
+  tags:
+    - gridengine
+    - gridengine-master
+  service:
+    name: gridengine-master
+    enabled: yes
+    state: started
 
 
 - name: upload configuration file for host

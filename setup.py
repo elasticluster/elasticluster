@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-#
 #
 #
-# Copyright (C) 2013-2017 University of Zurich. All rights reserved.
+# Copyright (C) 2013-2018 University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -87,6 +87,8 @@ if python_version == (2, 6):
         'argparse',
         # - OpenStack's "keystoneclient" requires `importlib`
         'importlib',
+        # Paramiko ceased support for Python 2.6 in version 2.4.0
+        'paramiko<2.4',
         # - support for Python 2.6 was removed from `novaclient` in commit
         #   81f8fa655ccecd409fe6dcda0d3763592c053e57 which is contained in
         #   releases 3.0.0 and above; however, we also need to pin down
@@ -109,6 +111,9 @@ if python_version == (2, 6):
     ]
 elif python_version == (2, 7):
     version_dependent_requires = [
+        # Paramiko ceased support for Python 2.6 so we need it here
+        'paramiko',
+        # OpenStack
         'python-keystoneclient',
         'python-glanceclient',
         'python-neutronclient',
@@ -120,7 +125,16 @@ elif python_version == (2, 7):
         # a top-level dependency of ElastiCluster
         'Babel>=2.3.4,!=2.4.0',
         'pbr>=2.0.0,!=2.1.0',
-        '',
+        # MS-Azure
+        'azure',
+        ## the following 6 are all required dependencies
+        ## which are not picked up, see issue #500
+        'enum34',
+        'functools32',
+        'ipaddress',
+        'pathlib2',
+        'scandir',
+        'secretstorage<=2.3.1',
     ]
 else:
     raise RuntimeError("ElastiCluster requires Python 2.6 or 2.7")
@@ -135,8 +149,12 @@ setup(
     version=read_whole_file("version.txt").strip(),
     description="A command line tool to create, manage and setup computing clusters hosted on a public or private cloud infrastructure.",
     long_description=read_whole_file('README.rst'),
-    author="Services and Support for Science IT, University of Zurich",
-    author_email="team@s3it.lists.uzh.ch",
+    author=", ".join([
+        'Nicolas Baer',
+        'Antonio Messina',
+        'Riccardo Murri',
+    ]),
+    author_email="riccardo.murri@gmail.com",
     license="LGPL",
     keywords="cloud openstack amazon ec2 ssh hpc gridengine torque slurm batch job elastic",
     url="https://github.com/gc3-uzh-ch/elasticluster",
@@ -167,16 +185,21 @@ setup(
             'elasticluster = elasticluster.__main__:main',
         ]
     },
+    setup_requires=['Babel>=2.3.4'],  # see Issue #268
     install_requires=([
+        # ElastiCluster core requirements
+        'pip>=9.0.0',  ## see issue #433
+        #'ara',  # optional
         'PyCLI',
-        'ansible>=2.2.3,!=2.3.0',  ## whitelist only Ansible versions that fix know CVE exploits
+        'ansible>=2.2.3,!=2.3.0,<2.4',  ## whitelist only "known good" versions of Ansible
         'click>=4.0',  ## click.prompt() added in 4.0
         'coloredlogs',
         'netaddr',
-        'paramiko',
         'schema',
+        'subprocess32',  ## stdlib subprocess but correct under multithreading
         # EC2 clouds
-        'boto',
+        'boto>=2.48',
+        'pycrypto',   # for computing RSA key hash, see: PR #132
         # GCE cloud
         'google-api-python-client',
         'google-compute-engine',
@@ -185,12 +208,12 @@ setup(
         'pytz',   ## required by `positional` but somehow not picked up
         'httplib2>=0.9.1',  ## required by `oauth2client` but somehow not picked up
         # Azure cloud
-        'azure',
+        #'azure',  ## only available on Py 2.7, see `version_dependent_requires`
         # OpenStack clouds
         'netifaces',
-        'apache-libcloud',
+        'apache-libcloud>=0.14.0',
         'requests~=2.14.1',  ## see issue #441
-        #'python-novaclient' ## this needs special treatment depending on Python version, see below
+        #'python-novaclient' ## this needs special treatment depending on Python version
     ] + version_dependent_requires),
     tests_require=['tox', 'mock', 'pytest>=2.10'],  # read right-to-left
     cmdclass={'test': Tox},

@@ -2,11 +2,12 @@
 # tasks file for anaconda
 - name: Download Anaconda installer script
   get_url:
-    url='{{anaconda_installer_url}}'
-    dest='{{anaconda_installer_sh}}'
-    owner=root
-    group=root
-    mode=0755
+    url: '{{anaconda_installer_url}}'
+    dest: '{{anaconda_installer_sh}}'
+    owner: root
+    group: root
+    mode: 0755
+    validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
 
 - name: Install Anaconda
   command: '{{anaconda_installer_sh}} -b -f -p {{anaconda_home}}'
@@ -18,7 +19,7 @@
     path='{{anaconda_installer_sh}}'
     state=absent
   when: anaconda_cleanup
-    
+
 - name: make Anaconda Python the first match in $PATH
   template:
     src='etc/profile.d/anaconda.sh.j2'

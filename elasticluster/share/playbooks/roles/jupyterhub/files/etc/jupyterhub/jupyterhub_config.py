@@ -70,42 +70,12 @@ c.JupyterHub.port = 443
 ## The Proxy Auth token.
 #
 #  Loaded from the CONFIGPROXY_AUTH_TOKEN env variable by default.
-c.JupyterHub.proxy_auth_token = open('/var/lib/jupyterhub/jupyterhub_proxy_auth_token', 'rb').read().strip()
+c.ConfigurableHTTPProxy.auth = open('/var/lib/jupyterhub/jupyterhub_proxy_auth_token', 'rb').read().strip()
 
 ## The command to start the http proxy.
 #
 #  Only override if configurable-http-proxy is not on your PATH
-c.JupyterHub.proxy_cmd = ['/usr/local/lib/node_modules/configurable-http-proxy/bin/configurable-http-proxy']
-
-## Dict of token:servicename to be loaded into the database.
-#
-#  Allows ahead-of-time generation of API tokens for use by externally managed
-#  services.
-#c.JupyterHub.service_tokens = {}
-
-## List of service specification dictionaries.
-#
-#  A service
-#
-#  For instance::
-#
-#      services = [
-#          {
-#              'name': 'cull_idle',
-#              'command': ['/path/to/cull_idle_servers.py'],
-#          },
-#          {
-#              'name': 'formgrader',
-#              'url': 'http://127.0.0.1:1234',
-#              'token': 'super-secret',
-#              'environment':
-#          }
-#      ]
-#c.JupyterHub.services = []
-
-## The class to use for spawning single-user servers.
-#
-c.JupyterHub.spawner_class = 'jupyterhub.spawner.LocalProcessSpawner'
+c.ConfigurableHTTPProxy.command = ['/opt/anaconda3/bin/configurable-http-proxy']
 
 ## Path to SSL certificate file for the public facing interface of the proxy
 #
@@ -117,9 +87,14 @@ c.JupyterHub.ssl_cert = '/etc/jupyterhub/jupyterhub.crt.pem'
 #  Use with ssl_cert
 c.JupyterHub.ssl_key = '/etc/jupyterhub/jupyterhub.key.pem'
 
+
 #------------------------------------------------------------------------------
 # Spawner(LoggingConfigurable) configuration
 #------------------------------------------------------------------------------
+
+## The class to use for spawning single-user servers.
+#
+c.JupyterHub.spawner_class = 'jupyterhub.spawner.LocalProcessSpawner'
 
 ## The command used for starting the single-user server.
 #
@@ -257,6 +232,7 @@ c.Spawner.cmd = ['/opt/anaconda3/bin/jupyterhub-singleuser']
 #  path! They can do so with many other means.
 c.Spawner.notebook_dir = '~'
 
+
 #------------------------------------------------------------------------------
 # Authenticator(LoggingConfigurable) configuration
 #------------------------------------------------------------------------------
@@ -285,6 +261,7 @@ c.Spawner.notebook_dir = '~'
 #
 #  If empty, does not perform any additional restriction.
 #c.Authenticator.whitelist = set()
+
 
 #------------------------------------------------------------------------------
 # LocalAuthenticator(Authenticator) configuration

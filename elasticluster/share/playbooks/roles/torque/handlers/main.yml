@@ -1,0 +1,16 @@
+---
+
+- name: restart pbs_mom
+  service:
+    name: pbs_mom
+    state: restarted
+
+- name: restart pbs_server
+  service:
+    name: pbs_server
+    state: restarted
+
+- name: restart maui.d
+  service:
+    name: maui.d
+    state: restarted

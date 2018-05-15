@@ -1,0 +1,7 @@
+---
+
+# Version of CUDA to install.
+cuda_version: '8.0'
+
+# GPG key used to sign CUDA packages
+cuda_apt_key: '7FA2AF80'

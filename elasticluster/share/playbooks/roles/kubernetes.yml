@@ -8,6 +8,19 @@
     - master
   roles:
     - kubernetes-master
+  tasks:
+  - name: Create kube directory for normal user
+    file:
+      path: "/opt/k8s"
+      state: directory
+      mode: 0755
+
+  - name: Copy configuration into kube directory to allow normal user to access it
+    copy:
+      remote_src: yes
+      src: /etc/kubernetes/admin.conf
+      dest: "/opt/k8s/config"
+      mode: 0444
 
 - name: Install Kubernetes worker
   hosts: kubernetes_worker
@@ -17,3 +30,12 @@
     - worker
   roles:
     - kubernetes-worker
+
+- name: Deploy Kubernetes apps
+  hosts: kubernetes_master
+  tags:
+    - docker
+    - kubernetes
+    - master
+  roles:
+    - kubernetes-apps

@@ -1,0 +1,97 @@
+---
+
+# Debian starts services immediately upon installation; however, since
+# the clustered configuration is already deployed, startup will fail.
+# Prevent that by masking the services.
+- name: Prevent SMBD/NMBD from starting upon install
+  become: yes
+  command: |
+    systemctl mask {{item}}
+  register: _mask
+  with_items:
+    - smbd
+    - nmbd
+  when: 'init_is_systemd and is_debian_compatible'
+
+- name: Reload SystemD configuration
+  command: |
+    systemctl daemon-reload
+  when: '_mask|changed'
+
+
+- name: Ensure CTDB directories exists
+  file:
+    name: '{{ item }}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - '/etc/ctdb'
+    - '{{ ctdb_shared_dir }}/etc'
+    - '{{ ctdb_shared_dir }}/var'
+    - '{{ ctdb_shared_dir }}/var/lib'
+    - '{{ ctdb_shared_dir }}/var/lib/ctdb'
+    - '{{ ctdb_shared_dir }}/var/lib/samba'
+    - '{{ ctdb_shared_dir }}/var/lock'
+
+
+- name: Deploy CTDB configuration
+  template:
+    dest: '/{{ item }}'
+    src: '{{ item }}.j2'
+    owner: root
+    group: root
+    mode: 0444
+  with_items:
+    - etc/default/ctdb
+    - etc/ctdb/nodes
+    - etc/ctdb/public_addresses
+
+
+- name: Install CTDB
+  package:
+    name: ctdb
+    state: '{{ pkg_install_state }}'
+
+
+- name: Disable IP takeover scripts
+  file:
+    path: '/etc/ctdb/events.d/{{ item }}'
+    mode: 'a-x'
+  with_items:
+    - 10.interface
+
+
+- name: Unmask SMBD/NMBD services
+  become: yes
+  command: |
+    systemctl unmask {{item}}
+  register: _unmask
+  with_items:
+    - smbd
+    - nmbd
+  when: 'init_is_systemd and is_debian_compatible'
+
+- name: Reload SystemD configuration
+  command: |
+    systemctl daemon-reload
+  when: '_unmask|changed'
+
+
+- name: Ensure SAMBA servers are *not* started at boot
+  service:
+    name: '{{ item }}'
+    state: stopped
+    enabled: no
+  with_items:
+    - smbd
+    - nmbd
+
+
+- name: Ensure CTDB is started at boot
+  service:
+    name: 'ctdb'
+    state: started
+    enabled: yes
+  notify: Restart SAMBA servers

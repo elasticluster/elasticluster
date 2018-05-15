@@ -1,0 +1,118 @@
+---
+
+- name: Deploy kernel config check script
+  copy:
+    src: 'usr/local/sbin/elasticluster-check-kconfig-cgroups.sh'
+    dest: '/usr/local/sbin/elasticluster-check-kconfig-cgroups.sh'
+    mode: 0555
+    owner: root
+    group: root
+
+
+- name: Check that kernel is configured for cgroups
+  command: |
+    /usr/local/sbin/elasticluster-check-kconfig-cgroups.sh --color no --verbose
+  changed_when: false
+
+
+- name: Ensure cgroup filesystems are mounted
+  # mount:
+  #   src: cgroup
+  #   path: '/sys/fs/cgroup/{{ item }}'
+  #   fstype: cgroup
+  #   opts: 'rw,nosuid,nodev,noexec,relatime,{{ item }}'
+  #   state: mounted
+  #   # do not persist these mounts to `/etc/fstab`!
+  #   fstab: /dev/null
+  # alternate implementation, using a quick shell script::
+  shell: |
+    mp='/sys/fs/cgroup/{{ item }}'
+    if ! mountpoint -q "$mp"; then
+      set -ex
+      mkdir -p "$mp"
+      mount -t cgroup cgroup "$mp" -o 'rw,nosuid,nodev,noexec,relatime,{{ item }}'
+      set +ex
+      exit 42
+    else
+      exit 0
+    fi
+  register: '_cgroup_mount'
+  changed_when: '_cgroup_mount.rc == 42'
+  with_items: '{{ slurm_cgroup_controllers }}'
+
+
+- name: Ensure kernel is booted with swap accounting enabled
+  bootparam:
+    name: 'swapaccounting'
+    value: 1
+    state: present
+    backup: yes
+  register: _bootparam_swapaccounting
+
+
+- name: Check if swap accouting is enabled (may fail!)
+  stat:
+    path: '/sys/fs/cgroup/memory/memory.memsw.limit_in_bytes'
+  register: _memsw_limit
+
+
+- name: Reboot to enable swap accounting
+  # the initial `sleep` command is there to give time to Ansible to
+  # background the task and disconnect; otherwise the SSH connection
+  # is torn by the reboot and Ansible marks the host as "unreachable"
+  shell: |
+    sleep 3;
+    /sbin/shutdown -r now "Rebooting to enable swap accounting ...";
+  async: 1
+  poll: 0
+  register: _cgroup_reboot
+  when: 'allow_reboot|default(false) and _memsw_limit|failed and _bootparam_swapaccounting'
+
+
+- name: Wait for server to come up again
+  become: no
+  wait_for:
+    host: "{{ ansible_host }}"
+    search_regex: 'OpenSSH'
+    port: 22
+    delay: 10
+    timeout: 300
+  delegate_to: localhost
+  when: 'not _cgroup_reboot|skipped'
+
+
+- name: Ensure release agent directory exists
+  file:
+    dest: '/etc/slurm/cgroup'
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+
+- name: Deploy cgroup-specific release agent script
+  copy:
+    src: 'etc/slurm/cgroup/release_agent'
+    dest: '/etc/slurm/cgroup/release_{{ item }}'
+    mode: 0555
+    owner: root
+    group: root
+  with_items: '{{ slurm_cgroup_controllers }}'
+
+
+- name: Deploy SLURM cgroup configuration file (main)
+  template:
+    src: 'cgroup.conf.j2'
+    dest: '/etc/slurm/cgroup.conf'
+    mode: 0444
+    owner: root
+    group: root
+
+
+- name: Deploy SLURM cgroup configuration file (devices)
+  copy:
+    src: 'etc/slurm/cgroup_allowed_devices_file.conf'
+    dest: '/etc/slurm/cgroup_allowed_devices_file.conf'
+    mode: 0444
+    owner: root
+    group: root

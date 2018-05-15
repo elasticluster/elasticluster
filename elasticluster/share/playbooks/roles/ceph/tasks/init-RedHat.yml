@@ -17,7 +17,7 @@
     - server
   package:
     name: '{{item}}'
-    state: present
+    state: '{{ pkg_install_state }}'
   with_items:
     - ceph
   when: 'is_ceph_server'
@@ -29,7 +29,7 @@
     - client
   package:
     name: '{{item}}'
-    state: present
+    state: '{{ pkg_install_state }}'
   with_items:
     - ceph-common
     - ceph-fuse
@@ -45,5 +45,5 @@
     - ceph-mds
   package:
     name: 'ceph-mds'
-    state: present
+    state: '{{ pkg_install_state }}'
   when: 'is_ceph_mds'

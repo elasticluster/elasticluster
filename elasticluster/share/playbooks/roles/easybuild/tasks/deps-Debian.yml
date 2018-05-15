@@ -6,8 +6,9 @@
 
 - name: Install required dependencies of EasyBuild (Debian/Ubuntu)
   apt:
-    name='{{item}}'
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items:
     # see: http://easybuild.readthedocs.io/en/latest/Installation.html#dependencies
     #
@@ -40,8 +41,9 @@
 
 - name: Install optional dependencies of EasyBuild (Debian/Ubuntu)
   apt:
-    name='{{item}}'
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items:
     - git
     - graphviz
@@ -53,11 +55,33 @@
 
 - name: Install "filtered dependency" software (Debian/Ubuntu)
   apt:
-    name='{{ item }}'
-    state=present
+    name: '{{ item }}'
+    state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items:
+    #  required by EasyBuild to build some SW
+    - fontconfig
+    - graphviz
     - libbz2-dev
+    - libfontconfig1-dev
+    - libibverbs-dev
     - libncurses-dev
+    - libncurses5-dev
     - libreadline-dev
+    - libssl-dev
     - m4
+    - perl-modules # Thread::Queue is needed to build `automake`
+    - zlib1g-dev
+    # required by X11 software
+    - libgl1-mesa-glx
+    - libxi6
+    - libxmu6
+    - libxrandr2
+    - libxt6
+    - libxtst6
+    - libx11-dev
+    - libxext-dev
+    - libxft-dev
+    - libxinerama-dev
+    - libxt-dev
   ignore_errors: True

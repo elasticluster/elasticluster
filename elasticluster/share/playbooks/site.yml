@@ -1,10 +1,27 @@
 ---
+- name: Prepare VM for running Ansible
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Ensure Python is installed
+      script: |
+        install-py2.sh {{ ansible_python_interpreter|default("/usr/bin/python") }}
+      args:
+        creates: '{{ ansible_python_interpreter|default("/usr/bin/python") }}'
+      become: yes
+
 # for local customizations
 - include: before.yml
 
 - name: Common setup for all hosts
   hosts: all
   gather_facts: yes
+  pre_tasks:
+    - name: Ensure apt-daily is *not* running
+      script: |
+        no-update-on-reboot.sh
+      become: yes
+      when: 'is_debian_compatible'
   roles:
     - role: common
     - role: iptables
@@ -14,28 +31,55 @@
       ntp_server: '{{groups.ntp_master|default([])}}'
     - role: pdsh
 
+# This needs to be run as early as possible as it may need to reboot
+# the VM to install driver support
+- include: roles/cuda.yml
+
 # Run all other playbooks one by one, so they get a chance of doing
 # their setup depending on configured host groups
-- include: roles/ansible.yml
-- include: roles/slurm.yml
-- include: roles/jenkins.yml
-- include: roles/ganglia.yml
-- include: roles/pbs+maui.yml
-- include: roles/gridengine.yml
-- include: roles/hadoop.yml
-- include: roles/kubernetes.yml
-- include: roles/pvfs2.yml
+
+# filesystems/storage first so we could in principle use it in compute clusters
 - include: roles/ceph.yml
 - include: roles/glusterfs.yml
-- include: roles/ipython.yml
+- include: roles/pvfs2.yml
+
+# now install and set up computing infrastructure
+- include: roles/gridengine.yml
+- include: roles/hadoop.yml
 - include: roles/htcondor.yml
+- include: roles/ipython.yml
+- include: roles/jenkins.yml
+- include: roles/kubernetes.yml
+- include: roles/slurm.yml
+- include: roles/torque.yml
 
 # add-on software
+- include: roles/anaconda.yml
+- include: roles/ansible.yml
+- include: roles/easybuild.yml
+- include: roles/ganglia.yml
 - include: roles/r.yml
-  
+- include: roles/samba.yml
+
 # Jupyter installation comes last, to allow it to pick up any SW that's been
 # installed so far (e.g., for kernels, or for ipyparallel)
 - include: roles/jupyterhub.yml
 
 # for local customizations
 - include: after.yml
+
+# if we got to this point, all is well
+- name: Report success on cluster creation
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Mark host as successfully configured
+      lineinfile:
+        dest: '{{ elasticluster_output_dir }}/{{ inventory_hostname }}.log'
+        line: 'done'
+        state: present
+        create: yes
+      delegate_to: 'localhost'
+      # this is necessary as we might not have/want superuser rights
+      # where ElastiCluster is running
+      become: no

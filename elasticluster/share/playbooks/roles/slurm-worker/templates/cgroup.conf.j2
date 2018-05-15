@@ -1,0 +1,22 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+###
+#
+# Slurm cgroup support configuration file
+#
+# See man slurm.conf and man cgroup.conf for further
+# information on cgroup configuration parameters
+#
+ConstrainRAMSpace={{ slurm_constrainramspace|default("yes") }}
+ConstrainSwapSpace={{ slurm_constrainramspace|default("yes") }}
+AllowedRAMSpace={{ slurm_allowedramspace|default(100) }}
+AllowedSwapSpace={{ slurm_allowedswapspace|default(1) }}
+
+ConstrainCores=yes
+
+CgroupAutomount=yes
+CgroupReleaseAgentDir=/etc/slurm/cgroup
+CgroupMountpoint=/sys/fs/cgroup

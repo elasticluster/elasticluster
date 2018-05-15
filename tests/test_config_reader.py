@@ -70,7 +70,7 @@ provider = openstack
 auth_url = http://hobbes.gc3.uzh.ch::5000/v2.0
 username = XXXXXX
 password = XXXXXX
-tenant_name = test-tenant
+project_name = test-tenant
 
 
 [cloud/google]
@@ -83,7 +83,7 @@ gce_client_secret = XXXXXX
 [cluster/example_ec2]
 cloud = ec2
 login = ubuntu
-setup_provider = example_setup
+setup = example_setup
 misc_nodes = 10
 
 # cloud-specific params
@@ -95,7 +95,7 @@ security_group = default
 [cluster/example_ec2_with_vpc]
 cloud = ec2
 login = ubuntu
-setup_provider = example_setup
+setup = example_setup
 misc_nodes = 10
 
 # cloud-specific params
@@ -109,7 +109,7 @@ network_ids = subnet-deadbeef
 [cluster/example_openstack]
 cloud = openstack
 login = ubuntu
-setup_provider = example_setup
+setup = example_setup
 misc_nodes = 10
 
 # cloud-specific params
@@ -120,7 +120,7 @@ security_group = default
 
 [cluster/example_google]
 cloud = google
-setup_provider = example_setup
+setup = example_setup
 misc_nodes = 10
 
 # cloud-specific params
@@ -137,7 +137,7 @@ tags = tag1,tag2,tag3
 
 [cluster/wrong_example_google]
 cloud = wrongle
-setup_provider = example_setup
+setup = example_setup
 misc_nodes = 10
 
 # cloud-specific params
@@ -185,7 +185,7 @@ CONFIG_RAW = ({
         'auth_url': 'http://hobbes.gc3.uzh.ch::5000/v2.0',
         'username': 'XXXXXX',
         'password': 'XXXXXX',
-        'tenant_name': 'test-tenant',
+        'project_name': 'test-tenant',
     },
 
     'cloud/google': {
@@ -198,7 +198,7 @@ CONFIG_RAW = ({
     'cluster/example_ec2': {
         'cloud': 'ec2',
         'login': 'ubuntu',
-        'setup_provider': 'example_setup',
+        'setup': 'example_setup',
         'misc_nodes': '10',
         'image_id': 'i-12345',
         'flavor': 'm1.tiny',
@@ -208,7 +208,7 @@ CONFIG_RAW = ({
     'cluster/example_ec2_with_vpc': {
         'cloud': 'ec2',
         'login': 'ubuntu',
-        'setup_provider': 'example_setup',
+        'setup': 'example_setup',
         'misc_nodes': '10',
         'image_id': 'i-12345',
         'flavor': 'm1.tiny',
@@ -219,7 +219,7 @@ CONFIG_RAW = ({
     'cluster/example_openstack': {
         'cloud': 'openstack',
         'login': 'ubuntu',
-        'setup_provider': 'example_setup',
+        'setup': 'example_setup',
         'misc_nodes': '10',
         'image_id': 'e23f2df2-d68c-4307-ace0-2571f8fdcd1f',
         'flavor': '1cpu-4ram-hpc',
@@ -228,7 +228,7 @@ CONFIG_RAW = ({
 
     'cluster/example_google': {
         'cloud': 'google',
-        'setup_provider': 'example_setup',
+        'setup': 'example_setup',
         'misc_nodes': '10',
         'image_id': 'i-12345',
         'login': 'ubuntu',
@@ -243,7 +243,7 @@ CONFIG_RAW = ({
 
     'cluster/wrong_example_google': {
         'cloud': 'wrongle',
-        'setup_provider': 'example_setup',
+        'setup': 'example_setup',
         'misc_nodes': '10',
         'image_id': 'i-12345',
         'login': 'ubuntu',
@@ -289,7 +289,7 @@ CONFIG_TREE = ({
             'auth_url': 'http://hobbes.gc3.uzh.ch::5000/v2.0',
             'username': 'XXXXXX',
             'password': 'XXXXXX',
-            'tenant_name': 'test-tenant',
+            'project_name': 'test-tenant',
         },
         'google': {
             'provider': 'google',
@@ -302,7 +302,7 @@ CONFIG_TREE = ({
         'example_ec2': {
             'cloud': 'ec2',
             'login': 'ubuntu',
-            'setup_provider': 'example_setup',
+            'setup': 'example_setup',
             'misc_nodes': '10',
             'image_id': 'i-12345',
             'flavor': 'm1.tiny',
@@ -311,7 +311,7 @@ CONFIG_TREE = ({
         'example_ec2_with_vpc': {
             'cloud': 'ec2',
             'login': 'ubuntu',
-            'setup_provider': 'example_setup',
+            'setup': 'example_setup',
             'misc_nodes': '10',
             'image_id': 'i-12345',
             'flavor': 'm1.tiny',
@@ -321,7 +321,7 @@ CONFIG_TREE = ({
         'example_openstack': {
             'cloud': 'openstack',
             'login': 'ubuntu',
-            'setup_provider': 'example_setup',
+            'setup': 'example_setup',
             'misc_nodes': '10',
             'image_id': 'e23f2df2-d68c-4307-ace0-2571f8fdcd1f',
             'flavor': '1cpu-4ram-hpc',
@@ -329,7 +329,7 @@ CONFIG_TREE = ({
         },
         'example_google': {
             'cloud': 'google',
-            'setup_provider': 'example_setup',
+            'setup': 'example_setup',
             'misc_nodes': '10',
             'image_id': 'i-12345',
             'login': 'ubuntu',
@@ -343,7 +343,7 @@ CONFIG_TREE = ({
         },
         'wrong_example_google': {
             'cloud': 'wrongle',
-            'setup_provider': 'example_setup',
+            'setup': 'example_setup',
             'misc_nodes': '10',
             'image_id': 'i-12345',
             'login': 'ubuntu',

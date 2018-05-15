@@ -1,0 +1,86 @@
+---
+
+- name: Stop if not Debian/Ubuntu compatible
+  fail:
+    msg: The HTCondor role currently only supports Debian/Ubuntu
+  when: 'not {{is_debian_compatible}}'
+
+# as of March 2018, upstream does not yet package HTCondor for Debian
+# 9.x nor for Ubuntu 16.04 -- so fail here before users submit this as
+# a bug in ElastiCluster
+- name: Stop if not compatible Debian/Ubuntu versions
+  fail:
+    msg: The HTCondor role currently only supports Debian 8.x or Ubuntu 14.04
+  when: '{{is_debian_9_or_later}} or {{is_ubuntu_16_04_or_later}}'
+
+
+# Unfortunately, apt_repository wants to add also source repositories,
+# which are not available for htcontor, so we have to manually create
+# the repository file.
+
+- name: add HTCondor public package repositories
+  tags:
+    - htcondor
+  template:
+    src: 'etc/apt/sources.list.d/htcondor.list.j2'
+    dest: '/etc/apt/sources.list.d/htcondor.list'
+    owner: root
+    group: root
+    mode: 0444
+  when: is_debian_compatible
+  register: _htcondor_repository
+
+
+- name: update package cache
+  tags:
+    - htcondor
+  apt:
+    update_cache: yes
+    cache_valid_time: 0
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
+  when: 'is_debian_compatible and _htcondor_repository|changed'
+
+
+- name: prepare HTCondor DebConf template
+  tags:
+    - htcondor
+  template:
+    src: 'root/htcondor.debconf.j2'
+    dest: '/root/htcondor.debconf'
+    owner: root
+    group: root
+    mode: 0444
+  when: is_debian_compatible
+
+
+- name: install HTCondor w/ preconfigured template
+  tags:
+    - htcondor
+  apt:
+    name: condor
+    state: '{{ pkg_install_state }}'
+    force: yes
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
+  environment:
+    DEBCONF_DB_FALLBACK: 'File{/root/htcondor.debconf}'
+  when: is_debian_compatible
+
+
+- name: Deploy configuration file
+  tags:
+    - htcondor
+  template:
+    src: 'htcondor/templates/etc/condor/condor_config.local.j2'
+    dest: '/etc/condor/condor_config.local'
+    owner: nobody
+    group: nogroup
+    mode: 0444
+
+
+- name: Ensure HTCondors is started and (re)started at boot
+  tags:
+    - htcondor
+  service:
+    name: condor
+    state: started
+    enabled: yes

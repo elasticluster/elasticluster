@@ -33,7 +33,7 @@ r_libraries:
 #   - caret # Tools for training regression and classification models
 #   # To report results
 #   - shiny # Easily make interactive, web apps with R.
-#   - RMarkdown # The perfect workflow for reproducible reporting. 
+#   - RMarkdown # The perfect workflow for reproducible reporting.
 #   - xtable # The xtable function takes an R object (like a data frame) and returns the latex or HTML code you need to paste a pretty version of the object into your documents. Copy and paste, or pair up with R Markdown.
 #   # For Spatial data
 #   - sp # Tools for loading and using spatial data including shapefiles.
@@ -54,11 +54,11 @@ r_libraries:
 #   # To write your own R packages
 #   - devtools # An essential suite of tools for turning your code into an R package.
 #   - testthat # testthat provides an easy way to write unit tests for your code projects.
-  
-  
+
+
 # whether to install packages for parallel processing (multicore and MPI);
 # default is `yes` if we're installing more than 1 host
-r_cluster_support: '{{ groups.r|length > 1 }}'
+r_cluster_support: '{{ groups.r|default([])|length > 1 }}'
 
 
 ## there should be no need for customization below this line

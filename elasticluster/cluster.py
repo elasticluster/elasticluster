@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013-2016 S3IT, University of Zurich
+# Copyright (C) 2013-2018 University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,10 +40,23 @@ from binascii import hexlify
 
 # Elasticluster imports
 from elasticluster import log
-from elasticluster.exceptions import TimeoutError, NodeNotFound, \
-    InstanceError, InstanceNotFoundError, ClusterError
+from elasticluster.exceptions import (
+    ClusterError,
+    ClusterSizeError,
+    ConfigurationError,
+    InstanceError,
+    InstanceNotFoundError,
+    NodeNotFound,
+    TimeoutError,
+)
 from elasticluster.repository import MemRepository
-from elasticluster.utils import Struct, parse_ip_address_and_port, sighandler, timeout
+from elasticluster.utils import (
+    Struct,
+    get_num_processors,
+    parse_ip_address_and_port,
+    sighandler,
+    timeout,
+)
 
 SSH_PORT = 22
 
@@ -59,7 +72,8 @@ class IgnorePolicy(paramiko.MissingHostKeyPolicy):
 
 
 class Cluster(Struct):
-    """This is the heart of elasticluster and handles all cluster relevant
+    """
+    This is the heart of elasticluster and handles all cluster relevant
     behavior. You can basically start, setup and stop a cluster. Also it
     provides factory methods to add nodes to the cluster.
     A typical workflow is as follows:
@@ -84,6 +98,17 @@ class Cluster(Struct):
 
     :param str user_key_private: path to ssh private key file
 
+    :param int start_timeout:
+        Maximum time (in seconds) to wait for all cluster nodes to be
+        up and running. Nodes that are not up and running (i.e., an
+        SSH connection can be successfully established) within this
+        time lapse are marked as "down".
+
+    :param int ssh_probe_timeout: Maximum time (in seconds) to wait
+        for each SSH connection attempt to succeed. If no attempt
+        succeed within `start_timeout`, then the node is marked as
+        "down".
+
     :param repository: by default the
                        :py:class:`elasticluster.repository.MemRepository` is
                        used to store the cluster in memory. Provide another
@@ -96,20 +121,27 @@ class Cluster(Struct):
     :ivar nodes: dict [node_type] = [:py:class:`Node`] that represents all
                  nodes in this cluster
     """
-    startup_timeout = 60 * 10  #: timeout in seconds to start all nodes
     polling_interval = 10  #: how often to ask the cloud provider for node state
 
     def __init__(self, name, user_key_name='elasticluster-key',
                  user_key_public='~/.ssh/id_rsa.pub',
                  user_key_private='~/.ssh/id_rsa',
-                 cloud_provider=None, setup_provider=None,
-                 repository=None, thread_pool_max_size=10,
+                 cloud_provider=None,
+                 setup_provider=None,
+                 repository=None,
+                 start_timeout=600,
+                 ssh_probe_timeout=5,
+                 ssh_proxy_command='',
+                 thread_pool_max_size=10,
                  **extra):
         self.name = name
         self.template = extra.pop('template', None)
-        self.thread_pool_max_size = thread_pool_max_size
         self._cloud_provider = cloud_provider
         self._setup_provider = setup_provider
+        self.ssh_probe_timeout = ssh_probe_timeout
+        self.ssh_proxy_command = ssh_proxy_command
+        self.start_timeout = start_timeout
+        self.thread_pool_max_size = thread_pool_max_size
         self.user_key_name = user_key_name
         self.repository = repository if repository else MemRepository()
 
@@ -353,10 +385,14 @@ class Cluster(Struct):
                     node.stop()
                 self._naming_policy.free(node.kind, node.name)
                 self.repository.save_or_update(self)
+                remaining_nodes = self.get_all_nodes()
+                self._gather_node_ip_addresses(
+                    remaining_nodes, self.start_timeout, self.ssh_probe_timeout,
+                    remake=True)
             except ValueError:
                 raise NodeNotFound("Node %s not found in cluster" % node.name)
 
-    def start(self, min_nodes=None):
+    def start(self, min_nodes=None, max_concurrent_requests=0):
         """
         Starts up all the instances in the cloud.
 
@@ -377,40 +413,56 @@ class Cluster(Struct):
         :param min_nodes: minimum number of nodes to start in case the quota
                           is reached before all instances are up
         :type min_nodes: dict [node_kind] = number
+        :param int max_concurrent_requests:
+          Issue at most this number of requests to start
+          VMs; if 1 or less, start nodes one at a time (sequentially).
+          The special value ``0`` means run 4 threads for each available
+          processor.
         """
 
         nodes = self.get_all_nodes()
 
-        log.info("Starting cluster nodes ...")
-        if log.DO_NOT_FORK:
-            nodes = self._start_nodes_sequentially(nodes)
+        log.info(
+            "Starting cluster nodes (timeout: %d seconds) ...",
+            self.start_timeout)
+        if max_concurrent_requests == 0:
+            try:
+                max_concurrent_requests = 4 * get_num_processors()
+            except RuntimeError:
+                log.warning(
+                    "Cannot determine number of processors!"
+                    " will start nodes sequentially...")
+                max_concurrent_requests = 1
+        if max_concurrent_requests > 1:
+            nodes = self._start_nodes_parallel(nodes, max_concurrent_requests)
         else:
-            nodes = self._start_nodes_parallel(nodes, self.thread_pool_max_size)
+            nodes = self._start_nodes_sequentially(nodes)
 
         # checkpoint cluster state
         self.repository.save_or_update(self)
 
-        not_started_nodes = self._check_starting_nodes(nodes, self.startup_timeout)
+        not_started_nodes = self._check_starting_nodes(nodes, self.start_timeout)
 
         # now that all nodes are up, checkpoint cluster state again
         self.repository.save_or_update(self)
 
         # Try to connect to each node to gather IP addresses and SSH host keys
-        log.info("Checking SSH connection to nodes ...")
-        pending_nodes = nodes - not_started_nodes
-        self._gather_node_ip_addresses(pending_nodes, self.startup_timeout)
-
-        # It might be possible that the node.connect() call updated
-        # the `preferred_ip` attribute, so, let's save the cluster
-        # again.
+        started_nodes = nodes - not_started_nodes
+        if not started_nodes:
+            raise ClusterSizeError("No nodes could be started!")
+        log.info(
+            "Checking SSH connection to nodes (timeout: %d seconds) ...",
+            self.start_timeout)
+        self._gather_node_ip_addresses(
+            started_nodes, self.start_timeout, self.ssh_probe_timeout)
+        # It's possible that the node.connect() call updated the
+        # `preferred_ip` attribute, so, let's save the cluster again.
         self.repository.save_or_update(self)
 
-        # A lot of things could go wrong when starting the cluster. To
-        # ensure a stable cluster fitting the needs of the user in terms of
-        # cluster size, we check the minimum nodes within the node groups to
-        # match the current setup.
-        min_nodes = self._compute_min_nodes(min_nodes)
-        self._check_cluster_size(min_nodes)
+        # A lot of things could go wrong when starting the cluster.
+        # Check that the minimum number of nodes within each groups is
+        # reachable. Raise `ClusterSizeError()` if not.
+        self._check_cluster_size(self._compute_min_nodes(min_nodes))
 
     def _start_nodes_sequentially(self, nodes):
         """
@@ -418,6 +470,7 @@ class Cluster(Struct):
 
         Return set of nodes that were actually started.
         """
+        log.debug("Note: will *not* issue parallel requests to cloud API.")
         started_nodes = set()
         for node in copy(nodes):
             started = self._start_node(node)
@@ -436,7 +489,7 @@ class Cluster(Struct):
         # Create one thread for each node to start
         thread_pool_size = min(len(nodes), max_thread_pool_size)
         thread_pool = Pool(processes=thread_pool_size)
-        log.debug("Created pool of %d threads", thread_pool_size)
+        log.debug("Note: starting %d nodes concurrently.", thread_pool_size)
 
         # pressing Ctrl+C flips this flag, which in turn stops the main loop
         # down below
@@ -485,8 +538,7 @@ class Cluster(Struct):
         # in a starting state, it will start another node here, since the
         # `is_alive` method will only check for running nodes (see issue #13)
         if node.is_alive():
-            log.info("Not starting node `%s` which is "
-                     "already up&running.", node.name)
+            log.info("Not starting node `%s` which is already up.", node.name)
             return True
         else:
             try:
@@ -518,7 +570,7 @@ class Cluster(Struct):
         # so we can exclude them from coming rounds
         return nodes
 
-    def _gather_node_ip_addresses(self, nodes, lapse):
+    def _gather_node_ip_addresses(self, nodes, lapse, ssh_timeout, remake=False):
         """
         Connect via SSH to each node.
 
@@ -528,6 +580,11 @@ class Cluster(Struct):
         # be opened -- but we do not want to forget the cluster-wide
         # setting in case the error is transient
         known_hosts_path = self.known_hosts_file
+
+        # If run with remake=True, deletes known_hosts_file so that it will
+        # be recreated. Prevents "Invalid host key" errors
+        if remake and os.path.isfile(known_hosts_path):
+            os.remove(known_hosts_path)
 
         # Create the file if it's not present, otherwise the
         # following lines will raise an error
@@ -545,7 +602,9 @@ class Cluster(Struct):
             try:
                 while nodes:
                     for node in copy(nodes):
-                        ssh = node.connect(keyfile=known_hosts_path)
+                        ssh = node.connect(
+                            keyfile=known_hosts_path,
+                            timeout=ssh_timeout)
                         if ssh:
                             log.info("Connection to node `%s` successful,"
                                      " using IP address %s to connect.",
@@ -595,48 +654,20 @@ class Cluster(Struct):
         :raises: ClusterError in case the size does not fit the minimum
                  number specified by the user.
         """
-        # check the total sizes before moving the nodes around
-        minimum_nodes = 0
-        for group, size in min_nodes.items():
-            minimum_nodes = minimum_nodes + size
-
-        if len(self.get_all_nodes()) < minimum_nodes:
-            raise ClusterError("The cluster does not provide the minimum "
-                               "amount of nodes specified in the "
-                               "configuration. The nodes are still running, "
-                               "but will not be setup yet. Please change the"
-                               " minimum amount of nodes in the "
-                               "configuration or try to start a new cluster "
-                               "after checking the cloud provider settings.")
-
         # finding all node groups with an unsatisfied amount of nodes
-        unsatisfied_groups = []
-        for group, size in min_nodes.items():
-            if len(self.nodes[group]) < size:
-                unsatisfied_groups.append(group)
+        unsatisfied = 0
+        for kind, required in min_nodes.iteritems():
+            available = len(self.nodes[kind])
+            if available < required:
+                log.error(
+                    "Not enough nodes of kind `%s`:"
+                    " %d required, but only %d available.",
+                )
+                unsatisfied += 1
 
-        # trying to move nodes around to fill the groups with missing nodes
-        for ugroup in unsatisfied_groups[:]:
-            missing = min_nodes[ugroup] - len(self.nodes[ugroup])
-            for group, nodes in self.nodes.items():
-                spare = len(self.nodes[group]) - min_nodes[group]
-                while spare > 0 and missing > 0:
-                    self.nodes[ugroup].append(self.nodes[group][-1])
-                    del self.nodes[group][-1]
-                    spare -= 1
-                    missing -= 1
+        if unsatisfied:
+            raise ClusterSizeError()
 
-                    if missing == 0:
-                        unsatisfied_groups.remove(ugroup)
-
-        if unsatisfied_groups:
-            raise ClusterError("Could not find an optimal solution to "
-                               "distribute the started nodes into the node "
-                               "groups to satisfy the minimum amount of "
-                               "nodes. Please change the minimum amount of "
-                               "nodes in the configuration or try to start a"
-                               " new clouster after checking the cloud "
-                               "provider settings")
 
     def get_all_nodes(self):
         """Returns a list of all nodes in this cluster as a mixed list of
@@ -660,7 +691,9 @@ class Cluster(Struct):
         try:
             return nodes[nodename]
         except KeyError:
-            raise NodeNotFound("Node %s not found" % nodename)
+            raise NodeNotFound(
+                "Node `{0}` not found in cluster `{1}`"
+                .format(nodename, self.name))
 
     def stop(self, force=False, wait=False):
         """
@@ -728,38 +761,85 @@ class Cluster(Struct):
                     node.name, node.instance_id, err, err.__class__)
         return failed
 
-    def get_frontend_node(self):
-        """Returns the first node of the class specified in the
-        configuration file as `ssh_to`, or the first node of
-        the first class in alphabetic order.
+
+    def get_ssh_to_node(self, ssh_to=None):
+        """
+        Return target node for SSH/SFTP connections.
+
+        The target node is the first node of the class specified in
+        the configuration file as ``ssh_to`` (but argument ``ssh_to``
+        can override this choice).
+
+        If not ``ssh_to`` has been specified in this cluster's config,
+        then try node class names ``ssh``, ``login``, ``frontend``,
+        and ``master``: if any of these is non-empty, return the first
+        node.
+
+        If all else fails, return the first node of the first class
+        (in alphabetic order).
 
         :return: :py:class:`Node`
-        :raise: :py:class:`elasticluster.exceptions.NodeNotFound` if no
-                valid frontend node is found
+        :raise: :py:class:`elasticluster.exceptions.NodeNotFound`
+          if no valid frontend node is found
         """
-        if self.ssh_to:
-            if self.ssh_to in self.nodes:
-                cls = self.nodes[self.ssh_to]
-                if cls:
-                    return cls[0]
-                else:
-                    log.warning(
-                        "preferred `ssh_to` `%s` is empty: unable to "
-                        "get the choosen frontend node from that class.",
-                        self.ssh_to)
-            else:
-                raise NodeNotFound(
-                    "Invalid ssh_to `%s`. Please check your "
-                    "configuration file." % self.ssh_to)
+        if ssh_to is None:
+            ssh_to = self.ssh_to
 
-        # If we reach this point, the preferred class was empty. Pick
-        # one using the default logic.
-        for cls in sorted(self.nodes.keys()):
-            if self.nodes[cls]:
-                return self.nodes[cls][0]
-        # Uh-oh, no nodes in this cluster.
-        raise NodeNotFound("Unable to find a valid frontend: "
-                           "cluster has no nodes!")
+        # first try to interpret `ssh_to` as a node name
+        if ssh_to:
+            try:
+                return self.get_node_by_name(ssh_to)
+            except NodeNotFound:
+                pass
+
+        # next, ensure `ssh_to` is a class name
+        if ssh_to:
+            try:
+                parts = self._naming_policy.parse(ssh_to)
+                log.warning(
+                    "Node `%s` not found."
+                    " Trying to find other node in class `%s` ...",
+                    ssh_to, parts['kind'])
+                ssh_to = parts['kind']
+            except ValueError:
+                # it's already a class name
+                pass
+
+        # try getting first node of kind `ssh_to`
+        if ssh_to:
+            try:
+                nodes = self.nodes[ssh_to]
+            except KeyError:
+                raise ConfigurationError(
+                    "Invalid configuration item `ssh_to={ssh_to}` in cluster `{name}`:"
+                    " node class `{ssh_to}` does not exist in this cluster."
+                    .format(ssh_to=ssh_to, name=self.name))
+            try:
+                return nodes[0]
+            except IndexError:
+                log.warning(
+                    "Chosen `ssh_to` class `%s` is empty: unable to "
+                    "get the choosen frontend node from that class.",
+                    ssh_to)
+
+        # If we reach this point, `ssh_to` was not set or the
+        # preferred class was empty. Try "natural" `ssh_to` values.
+        for kind in ['ssh', 'login', 'frontend', 'master']:
+            try:
+                nodes = self.nodes[kind]
+                return nodes[0]
+            except (KeyError, IndexError):
+                pass
+
+        # ... if all else fails, return first node
+        for kind in sorted(self.nodes.keys()):
+            if self.nodes[kind]:
+                return self.nodes[kind][0]
+
+        # Uh-oh, no nodes in this cluster!
+        raise NodeNotFound("Unable to find a valid frontend:"
+                           " cluster has no nodes!")
+
 
     def setup(self, extra_args=tuple()):
         """
@@ -874,7 +954,7 @@ class NodeNamingPolicy(object):
     :meth:`use` and :meth:`free` can parse the name back.  This
     implementation assumes that a node's numerical index is formed by
     the last digits in the name; to implement a more general/complex
-    scheme, override methods :meth:`_format` and :meth:`_parse`.
+    scheme, override methods :meth:`format` and :meth:`parse`.
 
     This class may seem over-engineered for the simple requirement
     that unique names be generated, but I've actually had to answer
@@ -893,19 +973,19 @@ class NodeNamingPolicy(object):
         self._top = defaultdict(int)
 
     @staticmethod
-    def _format(pattern, **args):
+    def format(pattern, **args):
         """
         Form a node name by interpolating `args` into `pattern`.
 
         This is actually nothing more than a call to
         `pattern.format(...)` but is provided as a separate
         overrideable method as it is logically paired with
-        :meth:`_parse`.
+        :meth:`parse`.
         """
         return pattern.format(**args)
 
     @staticmethod
-    def _parse(name):
+    def parse(name):
         """
         Return dict of parts forming `name`.  Raise `ValueError` if string
         `name` cannot be correctly parsed.
@@ -914,7 +994,7 @@ class NodeNamingPolicy(object):
         `NodeNamingPolicy._NODE_NAME_RE` to parse the name back into
         constituent parts.
 
-        This is ideally the inverse of :meth:`_format` -- it should be
+        This is ideally the inverse of :meth:`format` -- it should be
         able to parse a node name string into the parameter values
         that were used to form it.
         """
@@ -956,14 +1036,14 @@ class NodeNamingPolicy(object):
         else:
             self._top[kind] += 1
             index = self._top[kind]
-        return self._format(self.pattern, kind=kind, index=index, **extra)
+        return self.format(self.pattern, kind=kind, index=index, **extra)
 
     def use(self, kind, name):
         """
         Mark a node name as used.
         """
         try:
-            params = self._parse(name)
+            params = self.parse(name)
             index = int(params['index'], 10)
             if index in self._free[kind]:
                 self._free[kind].remove(index)
@@ -983,14 +1063,14 @@ class NodeNamingPolicy(object):
         It could thus be recycled to name a new node.
         """
         try:
-            params = self._parse(name)
+            params = self.parse(name)
             index = int(params['index'], 10)
             self._free[kind].add(index)
             assert index <= self._top[kind]
             if index == self._top[kind]:
                 self._top[kind] -= 1
         except ValueError:
-            # ignore failures in self._parse()
+            # ignore failures in self.parse()
             pass
 
 
@@ -1032,11 +1112,11 @@ class Node(Struct):
 
     :ivar ips: list of all the IPs defined for this node.
     """
-    connection_timeout = 5  #: timeout in seconds to connect to host via ssh
 
     def __init__(self, name, cluster_name, kind, cloud_provider, user_key_public,
                  user_key_private, user_key_name, image_user, security_group,
-                 image_id, flavor, image_userdata=None, **extra):
+                 image_id, flavor, image_userdata=None, ssh_proxy_command='',
+                 **extra):
         self.name = name
         self.cluster_name = cluster_name
         self.kind = kind
@@ -1049,7 +1129,7 @@ class Node(Struct):
         self.image_id = image_id
         self.image_userdata = image_userdata
         self.flavor = flavor
-
+        self.ssh_proxy_command = ssh_proxy_command
         self.instance_id = extra.pop('instance_id', None)
         self.preferred_ip = extra.pop('preferred_ip', None)
         self.ips = extra.pop('ips', [])
@@ -1062,7 +1142,7 @@ class Node(Struct):
         self.extra.update(extra)
 
     def __setstate__(self, state):
-        self.__dict__ = state
+        self.__dict__.update(state)
         if 'image_id' not in state and 'image' in state:
             state['image_id'] = state['image']
 
@@ -1075,7 +1155,8 @@ class Node(Struct):
         `update_ips`:meth: methods should be used to further gather details
         about the state of the node.
         """
-        log.info("Starting node %s ...", self.name)
+        log.info("Starting node `%s` from image `%s` with flavor %s ...",
+                 self.name, self.image_id, self.flavor)
         self.instance_id = self._cloud_provider.start_instance(
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
@@ -1122,7 +1203,7 @@ class Node(Struct):
             log.debug("Ignoring error while looking for vm id %s: %s",
                       self.instance_id, str(ex))
         if running:
-            log.debug("node `%s` (instance id %s) is up and running",
+            log.debug("node `%s` (instance id %s) is up.",
                       self.name, self.instance_id)
             self.update_ips()
         else:
@@ -1138,8 +1219,13 @@ class Node(Struct):
         """
         return self.preferred_ip
 
-    def connect(self, keyfile=None):
-        """Connect to the node via ssh using the paramiko library.
+    def connect(self, keyfile=None, timeout=5):
+        """
+        Connect to the node via SSH.
+
+        :param keyfile: Path to the SSH host key.
+        :param timeout: Maximum time to wait (in seconds) for the TCP
+            connection to be established.
 
         :return: :py:class:`paramiko.SSHClient` - ssh connection or None on
                  failure
@@ -1159,39 +1245,96 @@ class Node(Struct):
                 ips.remove(self.preferred_ip)
             else:
                 # Preferred is changed?
-                log.debug("IP %s does not seem to belong to %s anymore. Ignoring!", self.preferred_ip, self.name)
+                log.debug(
+                    "IP address %s does not seem to belong to %s anymore."
+                    " Ignoring it.", self.preferred_ip, self.name)
                 self.preferred_ip = ips[0]
 
         for ip in itertools.chain([self.preferred_ip], ips):
             if not ip:
                 continue
+            log.debug("Trying to connect to host %s (%s) ...", self.name, ip)
             try:
-                log.debug("Trying to connect to host %s (%s)",
-                          self.name, ip)
                 addr, port = parse_ip_address_and_port(ip, SSH_PORT)
-                ssh.connect(str(addr),
-                            username=self.image_user,
-                            allow_agent=True,
-                            key_filename=self.user_key_private,
-                            timeout=Node.connection_timeout,
-                            port=port)
-                log.debug("Connection to %s succeeded on port %d!", ip, port)
+                extra = {
+                    'allow_agent':   True,
+                    'key_filename':  self.user_key_private,
+                    'look_for_keys': False,
+                    'timeout':       timeout,
+                    'username':      self.image_user,
+                }
+                if self.ssh_proxy_command:
+                    proxy_command = self.expand_proxy_command(
+                        self.ssh_proxy_command,
+                        self.image_user, addr, port)
+                    from paramiko.proxy import ProxyCommand
+                    extra['sock'] = ProxyCommand(proxy_command)
+                    log.debug("Using proxy command `%s`.", proxy_command)
+                ssh.connect(str(addr), port=port, **extra)
+                log.debug(
+                    "Connection to %s succeeded on port %d,"
+                    " will use this IP address for future connections.",
+                    ip, port)
                 if ip != self.preferred_ip:
-                    log.debug("Setting `preferred_ip` to %s", ip)
                     self.preferred_ip = ip
                 # Connection successful.
                 return ssh
             except socket.error as ex:
-                log.debug("Host %s (%s) not reachable: %s.",
-                          self.name, ip, ex)
+                log.debug(
+                    "Host %s (%s) not reachable within %d seconds: %s -- %r",
+                    self.name, ip, timeout, ex, type(ex))
             except paramiko.BadHostKeyException as ex:
-                log.error("Invalid host key: host %s (%s); check keyfile: %s",
-                          self.name, ip, keyfile)
+                log.error(
+                    "Invalid SSH host key for %s (%s): %s.",
+                    self.name, ip, ex)
             except paramiko.SSHException as ex:
-                log.debug("Ignoring error %s connecting to %s",
-                          str(ex), self.name)
+                log.debug(
+                    "Ignoring error connecting to %s: %s -- %r",
+                    self.name, ex, type(ex))
 
         return None
+
+    @staticmethod
+    def expand_proxy_command(command, user, addr, port=22):
+        """
+        Expand spacial digraphs ``%h``, ``%p``, and ``%r``.
+
+        Return a copy of `command` with the following string
+        substitutions applied:
+
+        * ``%h`` is replaced by *addr*
+        * ``%p`` is replaced by *port*
+        * ``%r`` is replaced by *user*
+        * ``%%`` is replaced by ``%``.
+
+        See also: man page ``ssh_config``, section "TOKENS".
+        """
+        translated = []
+        subst = {
+            'h': list(str(addr)),
+            'p': list(str(port)),
+            'r': list(str(user)),
+            '%': ['%'],
+        }
+        escaped = False
+        for char in command:
+            if char == '%':
+                escaped = True
+                continue
+            if escaped:
+               try:
+                   translated.extend(subst[char])
+                   escaped = False
+                   continue
+               except KeyError:
+                   raise ValueError(
+                       "Unknown digraph `%{0}`"
+                       " in proxy command string `{1}`"
+                       .format(char, command))
+            else:
+                translated.append(char)
+                continue
+        return str.join('', translated)
 
     def update_ips(self):
         """Retrieves the public and private ip of the instance by using the
@@ -1207,7 +1350,7 @@ class Node(Struct):
         return ("name=`{name}`, id=`{id}`,"
                 " ips=[{ips}], connection_ip=`{preferred_ip}`"
                 .format(name=self.name, id=self.instance_id,
-                        ips=ips, preferred_id=self.preferred_ip))
+                        ips=ips, preferred_ip=self.preferred_ip))
 
     def pprint(self):
         """Pretty print information about the node.

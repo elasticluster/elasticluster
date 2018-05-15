@@ -1,0 +1,37 @@
+---
+
+- name: Deploy `/etc/netgroup` file.
+  template:
+    src: 'etc/netgroup.j2'
+    dest: '/etc/netgroup'
+    mode: 0444
+    owner: root
+    group: root
+
+
+# Note:
+#
+# (1) We only modify the line if its `netgroup: nis`
+#     which is the default.
+#
+# (2) `files` is added *after* `nis`, so YP/NIS wins in case of a
+#     duplicate netgroup name and things continue to work as usual in
+#     case of a multi-user cluster (principle of least surprise)
+#
+- name: Add `files` databases to `netgroup` service (I)
+  replace:
+    dest: /etc/nsswitch.conf
+    regexp: '^ *netgroup: *nis *$'
+    replace: 'netgroup: nis files'
+  ignore_errors: yes
+  register: _netgroup_add_nss_files
+
+
+# This is necessary for OSes that do not ship a `netgroup: ...` line
+# in their `nsswitch.conf` file
+- name: Add `files` databases to `netgroup` service (II)
+  lineinfile:
+    dest: /etc/nsswitch.conf
+    line: 'netgroup: nis files'
+    state: present
+  when: '_netgroup_add_nss_files|failed'

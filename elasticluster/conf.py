@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013-2016 University of Zurich.
+# Copyright (C) 2013-2016, 2018 University of Zurich.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -53,15 +53,19 @@ from schema import Schema, SchemaError, Optional, Or, Regex, Use
 from elasticluster import log
 from elasticluster.exceptions import ConfigurationError
 from elasticluster.providers.ansible_provider import AnsibleSetupProvider
-from elasticluster.cluster import Cluster
+from elasticluster.cluster import Cluster, NodeNamingPolicy
 from elasticluster.repository import MultiDiskRepository
 from elasticluster.utils import environment
 from elasticluster.validate import (
+    alert,
     boolean,
     executable_file,
+    existing_file,
     hostname,
     nonempty_str,
+    nonnegative_int,
     nova_api_version,
+    positive_int,
     readable_file,
     url,
 )
@@ -103,23 +107,35 @@ SCHEMA = {
                 'flavor': nonempty_str,
                 'image_id': nonempty_str,
                 Optional('image_userdata', default=''): str,
-                'security_group': str,  ## FIXME: alphanumeric?
+                Optional('security_group', default='default'): str,  ## FIXME: alphanumeric?
                 Optional('network_ids'): str,
                 # these are auto-generated but already there by the time
                 # validation is run
                 'login': nonempty_str,
                 'num': int,
                 'min_num': int,
-                # allow other keys w/out restrictions
+                # only on Google Cloud
+                Optional("accelerator_count", default=0): nonnegative_int,
+                Optional("accelerator_type"): nonempty_str,
+                Optional("min_cpu_platform"): nonempty_str,
+                # allow other string keys w/out restrictions
                 Optional(str): str,
             },
         },
-        # allow other keys w/out restrictions
+        Optional("ssh_probe_timeout", default=5): positive_int,
+        Optional("ssh_proxy_command", default=''): str,
+        Optional("start_timeout", default=600): positive_int,
+        # only on Google Cloud
+        Optional("accelerator_count", default=0): nonnegative_int,
+        Optional("accelerator_type"): nonempty_str,
+        Optional("allow_project_ssh_keys", default=True): boolean,
+        Optional("min_cpu_platform"): nonempty_str,
+        # allow other string keys w/out restrictions
         Optional(str): str,
     },
     'login': {
         'image_user': nonempty_str,
-        'image_sudo': boolean,
+        Optional('image_sudo', default=True): boolean,
         Optional('image_user_sudo', default="root"): nonempty_str,
         Optional('image_userdata', default=''): str,
         'user_key_name': str,  # FIXME: are there restrictions? (e.g., alphanumeric)
@@ -148,8 +164,19 @@ SCHEMA = {
 CLOUD_PROVIDER_SCHEMAS = {
     'azure': {
         "provider": 'azure',
-        "subscription_id": nonempty_str,
-        "certificate": nonempty_str,
+        Optional("subscription_id", default=os.getenv('AZURE_SUBSCRIPTION_ID', '')): nonempty_str,
+        Optional("tenant_id", default=os.getenv('AZURE_TENANT_ID', '')): nonempty_str,
+        Optional("client_id", default=os.getenv('AZURE_CLIENT_ID', '')): nonempty_str,
+        Optional("secret", default=os.getenv('AZURE_CLIENT_SECRET', '')): nonempty_str,
+        Optional("location", default="westus"): nonempty_str,
+        Optional("certificate"): alert(
+            "The `certificate` setting is no longer valid"
+            " in the Azure configuration."
+            " Please remove it from your configuration file."),
+        Optional("wait_timeout"): alert(
+            "The `wait_timeout` setting is no longer valid"
+            " in the Azure configuration."
+            " Please remove it from your configuration file."),
     },
 
     'ec2_boto': {
@@ -170,14 +197,15 @@ CLOUD_PROVIDER_SCHEMAS = {
         "gce_client_id": nonempty_str,
         "gce_client_secret": nonempty_str,
         "gce_project_id": nonempty_str,
+        Optional("network", default="default"): nonempty_str,
         Optional("noauth_local_webserver"): boolean,
         Optional("zone", default="us-central1-a"): nonempty_str,
-        Optional("network", default="default"): nonempty_str,
     },
 
     'openstack': {
         "provider": 'openstack',
         Optional("auth_url"): url,
+        Optional("cacert"): existing_file,
         Optional("username"): nonempty_str,
         Optional("password"): nonempty_str,
         Optional("user_domain_name"): nonempty_str,
@@ -639,8 +667,14 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'network_ids',
             'security_group',
             'node_name',
+            'ssh_proxy_command',
+            # Google Cloud only
+            'accelerator_count',
+            'accelerator_type',
+            'allow_project_ssh_keys',
             'boot_disk_size',
             'boot_disk_type',
+            'min_cpu_platform',
             'scheduling',
             'tags'
             #'user_key_name',    ## from `login/*`
@@ -753,11 +787,18 @@ def _cross_validate_final_config(objtree, evict_on_error=True):
                 break
 
         # ensure `ssh_to` has a valid value
-        if 'ssh_to' in cluster and cluster['ssh_to'] not in cluster['nodes']:
-            log.error("Cluster `%s` is configured to SSH into nodes of kind `%s`,"
-                      " but no such kind is defined.",
-                      name, cluster['ssh_to'])
-            valid = False
+        if 'ssh_to' in cluster:
+            ssh_to = cluster['ssh_to']
+            try:
+                # extract node kind if this is a node name (e.g., `master001` => `master`)
+                parts = NodeNamingPolicy.parse(ssh_to)
+                ssh_to = parts['kind']
+            except ValueError:
+                pass
+            if ssh_to not in cluster['nodes']:
+                log.error("Cluster `%s` is configured to SSH into nodes of kind `%s`,"
+                          " but no such kind is defined.", name, ssh_to)
+                valid = False
 
         # EC2-specific checks
         if cluster['cloud']['provider'] == 'ec2_boto':
@@ -886,7 +927,36 @@ class Creator(object):
         provider_conf = cloud_conf.copy()
         provider_conf.pop('provider')
 
-        return ctor(storage_path=self.storage_path, **provider_conf)
+        # use a single keyword args dictionary for instanciating
+        # provider, so we can detect missing arguments in case of error
+        provider_conf['storage_path'] = self.storage_path
+        try:
+            return ctor(**provider_conf)
+        except TypeError:
+            # check that required parameters are given, and try to
+            # give a sensible error message if not; if we do not
+            # do this, users only see a message like this::
+            #
+            #   ERROR Error: __init__() takes at least 5 arguments (4 given)
+            #
+            # which gives no clue about what to correct!
+            import inspect
+            args, varargs, keywords, defaults = inspect.getargspec(ctor.__init__)
+            if defaults is not None:
+                # `defaults` is a list of default values for the last N args
+                defaulted = dict((argname, value)
+                                 for argname, value in zip(reversed(args),
+                                                           reversed(defaults)))
+            else:
+                # no default values at all
+                defaulted = {}
+            for argname in args[1:]:  # skip `self`
+                if argname not in provider_conf and argname not in defaulted:
+                    raise ConfigurationError(
+                        "Missing required configuration parameter `{0}`"
+                        " in cloud section for cluster `{1}`"
+                        .format(argname, cluster_template))
+
 
 
     def create_cluster(self, template, name=None, cloud=None, setup=None):
@@ -1024,9 +1094,13 @@ class Creator(object):
 
     _RENAMED_NODE_GROUPS = {
         # old name     ->  (new name             will be removed in...
+        'condor_workers':  ('condor_worker',     '1.4'),
         'gluster_client':  ('glusterfs_client',  '1.4'),
         'gluster_data' :   ('glusterfs_server',  '1.4'),
         'gridengine_clients': ('gridengine_worker', '2.0'),
+        'maui_master':     ('torque_master',     '2.0'),
+        'pbs_clients':     ('torque_worker',     '2.0'),
+        'pbs_master':      ('torque_master',     '2.0'),
         'slurm_clients':   ('slurm_worker',      '2.0'),
         'slurm_workers':   ('slurm_worker',      '1.4'),
     }

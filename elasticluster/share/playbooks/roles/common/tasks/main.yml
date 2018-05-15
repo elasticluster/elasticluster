@@ -6,9 +6,19 @@
   tags:
     - cloud-init
 
+- name: Allow package updates
+  set_fact:
+    pkg_install_state: 'latest'
+  when: 'upgrade_packages|default(True)|bool'
+
+- name: Disallow package updates
+  set_fact:
+    pkg_install_state: 'present'
+  when: 'not upgrade_packages|default(True)|bool'
 
 - include: 'init-{{ansible_os_family}}.yml'
 - include: hosts.yml hosts={{groups.all}}
 - include: hostname.yml
+- include: netgroup.yml
 - include: 'software-{{ansible_os_family}}.yml'
-- include: ssh_host_based_authentication.yml
+- include: ssh_auth.yml

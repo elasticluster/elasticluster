@@ -5,9 +5,8 @@
 # Suggestions or PRs to improve this are welcome.
 - name: Add Ansible APT repository (Ubuntu)
   apt_repository:
-    repo='ppa:ansible/ansible'
-    state=present
-    update_cache=yes
+    repo: 'ppa:ansible/ansible'
+    state: present
   when: is_ubuntu
 
 
@@ -16,16 +15,16 @@
 #
 # - name: Add EPEL repository (RHEL-compatible)
 #   yum:
-#     name=epel-release
-#     state=present
+#     name: epel-release
+#     state: '{{ pkg_install_state }}'
 #   when: is_rhel_compatible
 
 
 # finally, install Ansible
 - name: Install Ansible
   package:
-    name="{% if ANSIBLE_VERSION == 'LATEST' %}ansible{% else %}ansible{{__at__}}{{ANSIBLE_VERSION}}{% endif %}"
-    state="{% if ANSIBLE_VERSION == 'LATEST' %}latest{% else %}present{% endif %}"
+    name: "{% if ANSIBLE_VERSION == 'LATEST' %}ansible{% else %}ansible{{__at__}}{{ANSIBLE_VERSION}}{% endif %}"
+    state: "{% if ANSIBLE_VERSION == 'LATEST' or upgrade_packages|default(False) %}latest{% else %}present{% endif %}"
 
 - name: Create default Ansible inventory
   template:

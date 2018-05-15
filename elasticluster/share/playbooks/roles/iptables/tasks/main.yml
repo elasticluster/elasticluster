@@ -30,8 +30,8 @@
 - name: Install iptables packages
   tags: iptables
   package:
-    name={{item}}
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items: '{{ packages }}'
 
 

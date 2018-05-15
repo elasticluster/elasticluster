@@ -12,13 +12,20 @@
 #   is the same on all server hosts (this is a limitation of this -
 #   playbook, not of GlusterFS itself)
 #
+# - `redundancy`: number of servers that can go offline before the
+#   GlusterFS volume stops being operational.  If this is set to any
+#   value > 0, forces the volume to be "dispersed", which is
+#   incompatible with striping and replication; hence, this option is
+#   mutually exclusive with `replicas` and `stripes` (see below).
+#   Default is 0, i.e., do not create a dispersed volume.
+#
 # - `replicas`: number of online replicas for each file; omit to use GlusterFS' default
 #
 # - `stripes`: striping factor of the volume; omit to use GlusterFS' default
 #
 # - `transport`: transport option for the GlusterFS daemon (as of
-#   version 3.7.3, one of: `tcp`, `rdma`, or `tcp,rdma`), , or the -
-#   empty string `''` to use GlusterFS' default
+#   version 3.12.3, one of: `tcp`, `rdma`, or `tcp,rdma`).  Default
+#   is `tcp`.
 #
 # The `replicas`, `stripes`, and `transport` keys are optional, and
 # GlusterFS defaults are used if omitted.
@@ -26,22 +33,13 @@
 GLUSTERFS_VOLUMES:
   - name: 'glusterfs'
     path: '/srv/glusterfs'
+    redundancy: 0
     replicas: ''
     stripes: ''
-    transport: 'tcp'
 
-    
-# which version of GlusterFS to install
-glusterfs_version: '3.8'
 
 # GlusterFS setup commands should be issued on one single server in
 # the whole cluster; name that host here.  (I'm not sure there is a
 # sane default for this setting, feel free to suggest an alternate
 # selection logic.)
 glusterfs_main_host: '{{groups.glusterfs_server[0]}}'
-
-# Select the host where volume-building commands will be run.  This is
-# a conditional expression that must evaluate to ``True`` on the node
-# that runs GlusterFS commands, ``False`` elsewhere.  By default, use
-# the first server node.
-is_glusterfs_main_server_node: "inventory_hostname == '{{glusterfs_main_host}}'"

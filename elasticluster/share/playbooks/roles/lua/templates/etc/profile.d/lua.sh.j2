@@ -3,6 +3,14 @@
 # the next time `elasticluster setup` is run!
 
 
+# this is necessary (at least on CentOS) to make Lua find binary
+# packages installed with Luarocks (for the meaning of `;;`, see:
+# https://stackoverflow.com/a/31626271/459543 )
+export LUA_CPATH='/usr/lib/lua/{{ lua_version }}/?.so;;'
+export LUA_PATH='/usr/share/lua/{{ lua_version }}/?.so;;'
+
+{% if lua_add_to_path -%}
 # Use the ElastiCluster-installed Lua interpreter as the first one in $PATH,
 # instead of the one (possibly) provided by the Linux distribution.
 export PATH="{{ lua_install_dir }}/bin:${PATH}"
+{%- endif %}

@@ -1,0 +1,46 @@
+---
+#
+# Install CUDA toolkit and runtime
+#
+
+- name: Load distribution-dependent parameters
+  include: 'init-{{ ansible_os_family }}.yml'
+
+
+- name: Ensure the `nouveau` kernel module is not loaded
+  modprobe:
+    name: nouveau
+    state: absent
+
+
+- name: Blacklist the `nouveau` kernel module
+  kernel_blacklist:
+    name: nouveau
+    state: present
+
+
+- name: Install CUDA packages
+  package:
+    name: 'cuda-{{cuda_version_major}}-{{cuda_version_minor}}'
+    state: latest
+
+
+- name: Add CUDA binaries to PATH
+  template:
+    dest: '/etc/profile.d/{{item}}'
+    src: 'etc/profile.d/{{item}}.j2'
+    mode: 0444
+    owner: root
+    group: root
+  with_items:
+    - 'cuda.sh'
+    - 'cuda.csh'
+
+
+- name: Check if CUDA devices exists
+  include: _check_nvidia_dev.yml
+
+
+- name: Enable CUDA devices by rebooting
+  include: _reboot_and_wait.yml
+  when: 'allow_reboot|default(false) and not _cuda_check_devices.stat.exists'

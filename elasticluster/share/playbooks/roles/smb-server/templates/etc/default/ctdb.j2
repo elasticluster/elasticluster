@@ -1,0 +1,49 @@
+# Options to ctdbd, read by ctdbd_wrapper(1)
+#
+# See ctdbd.conf(5) for more information about CTDB configuration variables.
+
+# Shared recovery lock file to avoid split brain.  No default.
+#
+# Do NOT run CTDB without a recovery lock file unless you know exactly
+# what you are doing.
+CTDB_RECOVERY_LOCK={{ ctdb_shared_dir }}/var/lock/ctdb
+
+# List of nodes in the cluster.  Default is below.
+CTDB_NODES=/etc/ctdb/nodes
+
+# List of public addresses for providing NAS services.  No default.
+CTDB_PUBLIC_ADDRESSES=/dev/null
+
+# Externally managed public IP addresses:
+#
+# This indicates that CTDB will not host/failover public IP addresses.
+# The addresses will need to be assigned/failed-over via some external
+# means.  Use "ctdb moveip" to inform CTDB of the IP
+# assignment/failover so that CTDB can do connection tracking/killing
+# correctly.
+#
+CTDB_SET_DisableIPFailover=1
+#
+# Also:
+#  ctdb disablescript 10.interface
+#  ctdb enablescript  10.external
+#
+
+# Auto start/stop managed services
+CTDB_AUTO_STARTSTOP=yes
+
+# What services should CTDB manage?  Default is none.
+CTDB_MANAGES_SAMBA=yes
+CTDB_SERVICE_SMB=smbd
+CTDB_SERVICE_NMB=nmbd
+
+CTDB_MANAGES_WINBIND=no
+
+CTDB_MANAGES_NFS=no
+
+# Default is to use the log file below instead of syslog.
+#CTDB_LOGGING=file:/var/log/log.ctdb
+CTDB_LOGGING=syslog
+
+# Default log level is NOTICE.
+#CTDB_DEBUGLEVEL=DEBUG
