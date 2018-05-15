@@ -17,13 +17,17 @@
   when: is_debian_or_ubuntu
 
 - name: Install jenkins
-  action: apt pkg={{item}} update_cache=yes force=yes state=latest
+  apt:
+    pkg: '{{item}}'
+    state: '{{ pkg_install_state }}'
+    force: yes
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items: j_packages
   when: is_debian_or_ubuntu
 
 # Only if this is a CentOS (NOT TESTED!)
 - name: Configure YUM repository
-  action: get_url url=http://pkg.jenkins-ci.org/redhat/jenkins.repo dest=/etc/yum.repos.d/jenkins.repo 
+  action: get_url url=http://pkg.jenkins-ci.org/redhat/jenkins.repo dest=/etc/yum.repos.d/jenkins.repo
   when: is_centos
 
 - name: Import repository key

@@ -1,0 +1,143 @@
+#
+# This is the main Samba configuration file. You should read the
+# smb.conf(5) manual page in order to understand the options listed
+# here. Samba has a huge number of configurable options most of which
+# are not shown in this example
+#
+
+
+#======================= Global Settings =====================================
+
+[global]
+workgroup = {{smb_workgroup}}
+server string = SAMBA Server %v
+netbios name = {{smb_server_name}}
+
+log level = 0
+syslog only = yes
+
+{% if samba_with_ctdb -%}
+# config needed for CTDB
+clustering = yes
+idmap backend = tdb2
+private dir = {{ ctdb_shared_dir }}/var/lib/samba
+{%- endif %}
+
+
+####### Authentication #######
+
+# Server role. Defines in which mode Samba will operate. Possible
+# values are "standalone server", "member server", "classic primary
+# domain controller", "classic backup domain controller", "active
+# directory domain controller".
+#
+   server role = standalone server
+
+# If you are using encrypted passwords, Samba will need to know what
+# password database type you are using.
+   passdb backend = tdbsam
+   obey pam restrictions = yes
+
+# This boolean parameter controls whether Samba attempts to sync the Unix
+# password with the SMB password when the encrypted SMB password in the
+# passdb is changed.
+   unix password sync = yes
+
+# For Unix password sync to work on a Debian GNU/Linux system, the following
+# parameters must be set (thanks to Ian Kahan <<kahan@informatik.tu-muenchen.de> for
+# sending the correct chat script for the passwd program in Debian Sarge).
+   passwd program = /usr/bin/passwd %u
+   passwd chat = *Enter\snew\s*\spassword:* %n\n *Retype\snew\s*\spassword:* %n\n *password\supdated\ssuccessfully* .
+
+# This boolean controls whether PAM will be used for password changes
+# when requested by an SMB client instead of the program listed in
+# 'passwd program'. The default is 'no'.
+   pam password change = yes
+
+# This option controls how unsuccessful authentication attempts are mapped
+# to anonymous connections
+   map to guest = bad user
+   security = user
+
+# Allow users who've been granted usershare privileges to create
+# public shares, not just authenticated ones
+   usershare allow guests = no
+
+
+####### Misc #######
+
+# no WINS (neither server nor client)
+wins support = no
+name resolve order = lmhosts hosts
+
+# prevent nmbd to search for NetBIOS names through DNS.
+dns proxy = no
+
+# do not refresh printer list, as we don't allow printing
+load printers = no
+printcap name = /dev/null
+printcap cache time = 0
+
+
+#======================= Share Definitions =======================
+
+# Un-comment the following (and tweak the other settings below to suit)
+# to enable the default home directory shares. This will share each
+# user's home directory as \\server\username
+[homes]
+   comment = Home Directories
+   browseable = no
+
+# By default, the home directories are exported read-only. Change the
+# next parameter to 'no' if you want to be able to write to them.
+   read only = no
+
+# File creation mask is set to 0700 for security reasons. If you want to
+# create files with group=rw permissions, set next parameter to 0775.
+   create mask = 0700
+
+# Directory creation mask is set to 0700 for security reasons. If you want to
+# create dirs. with group=rw permissions, set next parameter to 0775.
+   directory mask = 0700
+
+# Make sure that only "username" can connect to \\server\username
+   valid users = %S
+
+# some MacOSX report slowness especially in directory listings
+# this article [1] suggests that using `vfs_fruit` (see `man vfs_fruit`)
+# is the solution; it seems that it actually speeds things up.
+#
+# [1]: http://plazko.io/apple-osx-finder-is-listing-files-very-very-slow-when-connected-to-smb-shared-hard-drive-connected-to-a-wifi-router/
+#
+   vfs objects = fruit streams_xattr
+
+
+{% for item in smb_shares %}
+[{{item.name}}]
+   {% if item.description is defined %}
+   comment = {{ item.description|default(item.path) }}
+   {% endif %}
+   path = {{item.path}}
+   browsable =yes
+   writable = {% if item.readonly|default(false) %}no{% else %}yes{% endif %}
+
+   create mask = 0775
+   directory mask = 0775
+
+   guest ok = {% if item.public|default(false) %}no{% else %}yes{% endif %}
+
+# some MacOSX report slowness especially in directory listings
+# this article [1] suggests that using `vfs_fruit` (see `man vfs_fruit`)
+# is the solution; it seems that it actually speeds things up.
+#
+# [1]: http://plazko.io/apple-osx-finder-is-listing-files-very-very-slow-when-connected-to-smb-shared-hard-drive-connected-to-a-wifi-router/
+#
+   vfs objects = fruit streams_xattr
+
+# By default, \\server\username shares can be connected to by anyone
+# with access to the samba server.
+# Un-comment the following parameter to make sure that only "username"
+# can connect to \\server\username
+#valid users = username
+
+{% endfor %}

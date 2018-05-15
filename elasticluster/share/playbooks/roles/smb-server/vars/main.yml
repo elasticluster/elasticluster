@@ -1,0 +1,4 @@
+---
+
+# whether to configure SAMBA to use CTDB
+samba_with_ctdb: '{{ groups.samba|length > 1 and ctdb_shared_dir is defined }}'

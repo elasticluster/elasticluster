@@ -19,13 +19,25 @@
 
 - name: Set GlusterFS volume options
   set_fact:
-    _gluster_option_stripes:   '{%- if item.stripes is defined and item.stripes != "" and item.stripes|int > 1 -%}stripe {{item.stripes}}{%- endif -%}'
-    _gluster_option_replicas:  '{%- if item.replicas is defined and item.replicas != "" and item.replicas|int > 1 -%}replica {{item.replicas}}{%- endif -%}'
-    _gluster_option_transport: 'transport {{item.transport|default(tcp)}}'
-  
+    _gluster_option_dispersed: '{%- if item.redundancy is defined and item.redundancy|int > 1 -%}disperse redundancy {{item.redundancy}}{%- endif -%}'
+    _gluster_option_stripes:   '{%- if item.stripes is defined and item.stripes|int > 1 -%}stripe {{item.stripes}}{%- endif -%}'
+    _gluster_option_replicas:  '{%- if item.replicas is defined and item.replicas|int > 1 -%}replica {{item.replicas}}{%- endif -%}'
+    _gluster_option_transport: 'transport {{item.transport|default("tcp")}}'
+
+- name: Check consistency of volume options (striped/replicated vs dispersed)
+  fail:
+    msg: "A GlusterFS volume can either be striped/replicated or dispersed (redundancy>0), not both."
+  when: '_gluster_option_dispersed|length > 0 and (_gluster_option_stripes|length > 0 or _gluster_option_replicas|length > 0)'
+
+- name: Check consistency of volume options (maximum redundancy)
+  fail:
+    msg: "Maximum value for redundancy of a volume with {{groups.glusterfs_server|length}} bricks is {{groups.glusterfs_server|length / 2}}"
+  when: '_gluster_option_dispersed|length > 0 and 2*(item.redundancy|int) >= groups.glusterfs_server|length'
+
 - name: Create volume {{item.name}}
-  command: |    
+  command: |
     gluster volume create {{item.name}} \
+      {{_gluster_option_dispersed}}     \
       {{_gluster_option_stripes}}       \
       {{_gluster_option_replicas}}      \
       {{_gluster_option_transport}}     \

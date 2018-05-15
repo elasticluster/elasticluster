@@ -1,210 +1,97 @@
+# spark-common/tasks/main.yml
 ---
 
-- name: Fail if not Ubuntu 16 or greater
-  fail:
-    msg: "Ubuntu is 16 or greater is required for mesos playbook"
-  when: not( ansible_distribution == 'Ubuntu' and ansible_distribution_major_version|int >= 16)
-
-- name: Fail if more than 1 master
-  fail:
-    msg: "Only single master supported when running Spark, for HA use Hadoop or Mesos"
-  when: not(groups.spark_master|length == 1)
-
-- set_fact:
-    minimum_master_memory: "{{((spark_alluxio_memory + spark_alluxio_jvm_memory + spark_zeppelin_jvm_memory + spark_python_worker_memory) * 2)|int}}"
-    minimum_slave_memory: "{{((spark_alluxio_memory + spark_alluxio_jvm_memory + spark_python_worker_memory) * 2)|int}}"
-
-- name: Fail if we do not have sufficient memory for Master
-  fail:
-    msg: "Memory size for master insufficient, required: {{minimum_master_memory}}, available: ({{ansible_memtotal_mb}}"
-  when: inventory_hostname in groups.spark_master and spark_master_memory < (minimum_master_memory|int)
-
-- name: Fail if we do not have sufficient memory for Slaves
-  fail:
-    msg: "Memory size for slaves insufficient, required: {{minimum_slave_memory}}, available: ({{ansible_memtotal_mb}}"
-  when: inventory_hostname in groups.spark_slave and spark_worker_memory < (minimum_slave_memory|int)
-
-- name: Spark configuration information
-  debug:
-    msg: "Master memory: minimally {{minimum_master_memory}} of {{spark_master_memory}}\nWorker memory: minimally {{minimum_slave_memory}} of {{spark_worker_memory}}\nSpark driver: {{spark_driver_memory}}\nSpark executor: {{spark_executor_memory}}"
-
-- stat:
-    path: /usr/lib/spark
-  register: spark_symlink
-
-- stat:
-    path: /usr/lib/alluxio
-  register: alluxio_symlink
-
-- name: Download Alluxio
-  get_url:
-    url: '{{spark_alluxio_uri}}'
-    dest: '/tmp/{{spark_alluxio_package}}'
-  when: alluxio_symlink.stat.islnk is not defined
-
-- name: Unpack Alluxio
-  unarchive:
-    src: '/tmp/{{spark_alluxio_package}}'
-    dest: /usr/lib/
-    owner: ubuntu
-    group: ubuntu
-    remote_src: True
-  when: alluxio_symlink.stat.islnk is not defined
-
-- name: Create Alluxio symlink
-  file:
-    src: '/usr/lib/{{spark_alluxio_package_root}}'
-    dest: '/usr/lib/alluxio'
-    state: link
-  when: alluxio_symlink.stat.islnk is not defined
-
-- name: Create Alluxio log directory
-  file:
-    path: '/var/log/alluxio'
-    state: directory
-    owner: ubuntu
-    group: ubuntu
-  when: alluxio_symlink.stat.islnk is not defined
-
-- name: Create Alluxio RAM directory
-  file:
-    path: '/mnt/ramdisk'
-    state: directory
-    owner: ubuntu
-    group: ubuntu
-  when: alluxio_symlink.stat.islnk is not defined
-
-- name: Create Alluxio underFS directory
-  file:
-    path: '/usr/lib/alluxio/underFSStorage'
-    state: directory
-    owner: ubuntu
-    group: ubuntu
-  when: alluxio_symlink.stat.islnk is not defined
-
-- name: Create Alluxio Configuration symlink
-  file:
-    src: '/usr/lib/alluxio/conf'
-    dest: '/etc/alluxio'
-    state: link
-  when: alluxio_symlink.stat.islnk is not defined
-
-- name: Alluxio configuration files
-  template:
-    src: '{{item}}.j2'
-    dest: '/usr/lib/alluxio/conf/{{item}}'
-    owner: ubuntu
-    group: ubuntu
+- name: Install Spark packages (common)
+  tags:
+    - hadoop
+    - spark
+    - common
+  package:
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
-    - alluxio-site.properties
-    - alluxio-env.sh
-    - masters
-    - workers
+    - spark-core # Lightning-Fast Cluster Computing
+    - spark-datanucleus # DataNucleus libraries for Apache Spark
+    - spark-extras # External/extra libraries for Apache Spark
+    - spark-python # Python client for Spark
+    - spark-thriftserver # Thrift server for Spark SQL
+    - spark-yarn-shuffle # Spark YARN Shuffle Service
 
-- name: Set ALLUXIO_HOME in environment
-  lineinfile:
-    dest: /etc/environment
-    line: 'export ALLUXIO_HOME=/usr/lib/alluxio'
-    insertafter: 'EOF'
-    state: present
-  when: alluxio_symlink.stat.islnk is not defined
-
-- name: Download Spark
-  get_url:
-    url: '{{spark_uri}}'
-    dest: '/tmp/{{spark_package}}'
-  when: spark_symlink.stat.islnk is not defined
-
-- name: Unpack Spark
-  unarchive:
-    src: '/tmp/{{spark_package}}'
-    dest: /usr/lib/
-    owner: ubuntu
-    group: ubuntu
-    remote_src: True
-  when: spark_symlink.stat.islnk is not defined
-
-- name: Create Spark symlink
-  file:
-    src: '/usr/lib/{{spark_package_root}}'
-    dest: '/usr/lib/spark'
-    state: link
-  when: spark_symlink.stat.islnk is not defined
 
 - name: Check if Py4J version-independent `.zip` archive exist
   stat:
-    path: '/usr/lib/spark/python/lib/py4j-src.zip'
-    follow: no
+    path='/usr/lib/spark/python/lib/py4j-src.zip'
+    follow=no
   register: p
-  when: spark_symlink.stat.islnk is not defined
+  tags:
+    - hadoop
+    - spark
 
 - name: Symlink Py4J `.zip` archive under a version-independent name
+  # XXX: We use shell globbing to find out what source file to link,
+  # assuming there is one and only one Py4J `.zip` file.
   shell: |
     cd /usr/lib/spark/python/lib
     ln -s py4j-*-src.zip py4j-src.zip
-  when: spark_symlink.stat.islnk is not defined and not p.stat.exists
+  when: not p.stat.exists
+  tags:
+    - hadoop
+    - spark
 
-- name: Create Spark Configuration symlink
+
+- name: Ensure Spark configuration directory exists
+  tags:
+    - hadoop
+    - spark
   file:
-    src: '/usr/lib/spark/conf'
-    dest: '/etc/spark'
-    state: link
-  when: spark_symlink.stat.islnk is not defined
+    path='{{SPARK_CONF_DIR}}'
+    state=directory
 
-- name: Spark configuration files
+
+- name: Copy Spark/BigTop default configuration files
+  tags:
+    - hadoop
+    - spark
+  command:
+    'rsync -ax --update --backup /etc/spark/conf.dist/ {{SPARK_CONF_DIR}}/'
+
+
+- name: Read installed JVM version
+  shell: |
+    expr match "$(java -version 2>&1)" '.\+ version "1\.\([0-9]\+\)\.[0-9]\+'
+  register: _spark_common_jvm_version
+
+
+- name: Store JVM version into variable `java_version`
+  set_fact:
+    java_version: '{{ _spark_common_jvm_version.stdout|int }}'
+
+
+- name: Deploy Spark/ElastiCluster configuration files
+  tags:
+    - hadoop
+    - spark
   template:
     src: '{{item}}.j2'
-    dest: '/usr/lib/spark/conf/{{item}}'
-    owner: ubuntu
-    group: ubuntu
+    dest: '{{SPARK_CONF_DIR}}/{{item}}'
   with_items:
     - spark-defaults.conf
-    - spark-env.sh
+    #- spark-env.sh
 
-- name: Create Spark log directory
-  file:
-    path: '/var/log/spark'
-    state: directory
-    owner: ubuntu
-    group: ubuntu
-  when: spark_symlink.stat.islnk is not defined
 
-- name: Set SPARK_HOME in environment
-  lineinfile:
-    dest: /etc/environment
-    line: 'export SPARK_HOME=/usr/lib/spark'
-    insertafter: 'EOF'
-    state: present
-  when: spark_symlink.stat.islnk is not defined
+- name: Activate Spark/ElastiCluster configuration
+  alternatives:
+    name: 'spark-conf'
+    link: '/etc/spark/conf'
+    path: '{{SPARK_CONF_DIR}}'
 
-- name: Deploy profile configuration files
-  copy:
-    src: '{{item}}'
-    dest: '/{{item}}'
+
+- name: Deploy PySpark configuration files
+  tags:
+    - hadoop
+    - spark
+  template:
+    src: '{{item.src}}'
+    dest: '{{item.dest}}'
   with_items:
-    - etc/profile.d/spark.sh
-    - etc/profile.d/alluxio.sh
-
-- name: Install Auxiliary Python Packages using pip
-  pip:
-    name: '{{item}}'
-    state: present
-    executable: '{{spark_python|dirname}}/pip'
-  with_items: '{{spark_anaconda_aux_packages}}'
-  register: pip_install
-  ignore_errors: yes
-
-- name: Install Auxiliary Python Packages using conda
-  conda:
-    name: '{{item}}'
-    state: present
-    executable: '{{spark_python|dirname}}/conda'
-  with_items: '{{spark_anaconda_aux_packages}}'
-  register: conda_install
-  ignore_errors: yes
-  when: pip_install|failed
-
-- name: Fail if packages could not be installed with pip or conda
-  fail:
-    msg: 'could not install all packages, please check if they are avaible for Python {{anaconda_python_version}} (pip or conda)'
-  when: conda_install|failed
+    - { src: 'pyspark.sh.j2', dest: '/etc/profile.d/pyspark.sh' }

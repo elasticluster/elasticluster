@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013-2017 University of Zurich
+#   Copyright (C) 2013-2018 University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ from elasticluster.exceptions import ClusterError
 
 # local test imports
 from _helpers.config import make_cluster
+from _helpers.environ import clean_os_environ_openstack
 
 
 __author__ = (', '.join([
@@ -46,6 +47,7 @@ def test_add_node(tmpdir):
     """
     Add node and let ElastiCluster choose the name.
     """
+    clean_os_environ_openstack()
     cluster = make_cluster(tmpdir)
     size = len(cluster.nodes['compute'])
     cluster.add_node("compute", 'image_id', 'image_user', 'flavor',
@@ -75,7 +77,19 @@ def test_remove_node(tmpdir):
     """
     cluster = make_cluster(tmpdir)
     size = len(cluster.nodes['compute'])
-    cluster.remove_node(cluster.nodes['compute'][1])
+    # Method `cluster.remove_node()` calls
+    # `cluster._gather_node_ip_addresses()` which in turn tries to
+    # connect to nodes over SSH, so we need to avoid that these
+    # connections are really attempted during tests.  This requires
+    # two steps:
+    #
+    # (1) that each node is assigned a list of IP addresses (otherwise
+    #     connection is skipped); and
+    # (2) that we substitute the actual connection function with a mock one
+    for node in cluster.get_all_nodes():
+        node.ips = ['1.2.3.4']
+    with patch('paramiko.SSHClient'):
+        cluster.remove_node(cluster.nodes['compute'][1])
     assert (size - 1) == len(cluster.nodes['compute'])
 
 
@@ -167,13 +181,33 @@ def test_stop(tmpdir):
     cluster.repository.delete.assert_called_once_with(cluster)
 
 
-def test_get_frontend_node(tmpdir):
+def test_get_ssh_to_node_with_class(tmpdir):
     """
     Get frontend node
     """
     cluster = make_cluster(tmpdir)
     cluster.ssh_to = 'frontend'
-    frontend = cluster.get_frontend_node()
+    frontend = cluster.get_ssh_to_node()
+    assert cluster.nodes['frontend'][0] == frontend
+
+
+def test_get_ssh_to_node_with_nodename(tmpdir):
+    """
+    Get frontend node
+    """
+    cluster = make_cluster(tmpdir)
+    cluster.ssh_to = 'frontend001'
+    frontend = cluster.get_ssh_to_node()
+    assert frontend.name == 'frontend001'
+
+
+def test_get_ssh_to_node_with_defaults(tmpdir):
+    """
+    Get frontend node
+    """
+    cluster = make_cluster(tmpdir)
+    cluster.ssh_to = None
+    frontend = cluster.get_ssh_to_node()
     assert cluster.nodes['frontend'][0] == frontend
 
 

@@ -1,5 +1,7 @@
 # ElastiCluster-specific patterns
+.agignore
 elasticluster.egg-info/
+elasticluster/share/playbooks/private/
 .noseids
 .tox/
 
@@ -14,9 +16,11 @@ docs/doctrees
 docs/html
 docs/latex
 .local
+.pypirc
 .python-version
 setuptools-*.egg
 .venv
+.workon
 __pycache__
 
 # Ansible-specific

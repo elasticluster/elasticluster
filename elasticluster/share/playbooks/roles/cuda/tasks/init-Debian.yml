@@ -1,0 +1,43 @@
+---
+
+- name: Install software prerequisites
+  package:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - 'linux-headers-generic'
+    - 'gcc'
+
+
+- name: Add signing key for CUDA repository
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: '{{cuda_apt_key}}'
+
+
+- name: Set auxiliary variables
+  set_fact:
+    _cuda_repo_ending: '{{ ansible_distribution|lower }}{{ ansible_distribution_version.replace(".", "") }}'
+    _cuda_ko_regex: '^updates/dkms/nvidia_.+\.ko:'
+
+
+- name: add CUDA APT repository
+  apt_repository:
+    # For some reason, APT complains that nVidia CUDA packages are
+    # "unauthenticated"; fix this by marking the repository as
+    # "trusted" (although this is questionable security practice...)
+    repo: 'deb [trusted=yes] https://developer.download.nvidia.com/compute/cuda/repos/{{ _cuda_repo_ending }}/x86_64 /'
+    state: present
+  register: _cuda_add_apt_repo
+
+
+# this is run as task and not as a handler, since handlers are all
+# executed after *all* tasks in the play have run, and we need the
+# package cache to be up-to-date immediately for subsequent install
+# tasks to succeed...
+- name: update APT cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 86400
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
+  when: '_cuda_add_apt_repo|changed'

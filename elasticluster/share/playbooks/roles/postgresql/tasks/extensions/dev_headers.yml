@@ -3,8 +3,9 @@
 - name: PostgreSQL | Extensions | Make sure the development headers are installed
   apt:
     name: libpq-dev
-    state: present
+    state: '{{ pkg_install_state }}'
     update_cache: yes
     cache_valid_time: "{{apt_cache_valid_time | default (3600)}}"
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   notify:
     - restart postgresql

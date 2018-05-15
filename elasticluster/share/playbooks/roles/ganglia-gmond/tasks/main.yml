@@ -15,7 +15,7 @@
     - gmond
   package:
     pkg: '{{item}}'
-    state: present
+    state: '{{ pkg_install_state }}'
   with_items: '{{ ganglia_gmond_packages }}'
 
 

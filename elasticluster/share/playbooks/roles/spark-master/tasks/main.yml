@@ -1,139 +1,72 @@
+# spark-master/tasks/main.yml
 ---
 
-- name: Configure Apache2
-  apt:
-    name: apache2
-    state: present
+- name: Parse `spark_history_storage_uri`
+  tags:
+    - hadoop
+    - spark
+    - master
+  set_fact:
+    _spark_history_storage_schema: "{{spark_history_storage_uri.split(':')[0]}}"
+    _spark_history_storage_location: "{{spark_history_storage_uri.split(':')[1]}}"
 
-- name: configure help page
-  template:
-    src: index.html.j2
-    dest: /var/www/html/index.html
 
-- name: enable and start help page
-  systemd:
-    name: apache2
-    enabled: yes
-    masked: no
-    state: restarted
-
-- name: Alluxio systemd service config
-  template:
-    src: 'alluxio.service.j2'
-    dest: '/etc/systemd/system/alluxio.service'
-
-- name: enable and start alluxio service and ensure it is not masked
-  systemd:
-    name: alluxio
-    enabled: yes
-    masked: no
-    state: restarted
-
-- name: Create Spark History log directory
+- name: Ensure Spark history storage directory exists on the local filesystem
+  tags:
+    - hadoop
+    - spark
+    - master
   file:
-    path: '{{spark_history_path}}'
-    state: directory
-    owner: ubuntu
-    group: ubuntu
-    mode: 0777
+    name='{{_spark_history_storage_location}}'
+    state=directory
+    owner=spark
+    group=spark
+    mode=0755
+  when: '"{{_spark_history_storage_schema}}" == "file"'
 
-- name: Spark History systemd service config
+
+- name: Ensure Spark history storage directory exists in HDFS
+  tags:
+    - hadoop
+    - spark
+    - master
+  command: |
+    hdfs dfs -mkdir {{_spark_history_storage_location}}
+  when: '"{{_spark_history_storage_schema}}" == "hdfs"'
+
+
+- name: Deploy Spark environment configuration
+  tags:
+    - hadoop
+    - spark
+    - master
   template:
-    src: 'spark-history.service.j2'
-    dest: '/etc/systemd/system/spark-history.service'
+    src='spark-env.sh.j2'
+    dest='/etc/spark/conf.elasticluster/spark-env.sh'
+    mode=0444
 
-- name: enable and start spark history service and ensure it is not masked
-  systemd:
-    name: spark-history
-    enabled: yes
-    masked: no
-    state: restarted
 
-- name: Spark Master systemd service config
-  template:
-    src: 'spark-master.service.j2'
-    dest: '/etc/systemd/system/spark-master.service'
-
-- name: enable and start spark master service and ensure it is not masked
-  systemd:
-    name: spark-master
-    enabled: yes
-    masked: no
-    state: restarted
-
-- stat:
-    path: /usr/lib/zeppelin
-  register: zeppelin_symlink
-
-- name: download Zeppelin installer
-  get_url:
-    url: '{{spark_zeppelin_uri}}'
-    dest: '/tmp/{{spark_zeppelin_package}}'
-  when: zeppelin_symlink.stat.islnk is not defined
-
-- name: Unpack Zeppelin
-  unarchive:
-    src: '/tmp/{{spark_zeppelin_package}}'
-    dest: /usr/lib/
-    owner: ubuntu
-    group: ubuntu
-    remote_src: True
-  when: zeppelin_symlink.stat.islnk is not defined
-
-- name: Create Zeppelin symlink
-  file:
-    src: '/usr/lib/{{spark_zeppelin_package_root}}'
-    dest: '/usr/lib/zeppelin'
-    state: link
-  when: zeppelin_symlink.stat.islnk is not defined
-
-- name: Zeppelin configuration files
-  template:
-    src: '{{item}}.j2'
-    dest: '/usr/lib/zeppelin/conf/{{item}}'
-    owner: ubuntu
-    group: ubuntu
+- name: Install Spark packages (master)
+  tags:
+    - hadoop
+    - spark
+    - master
+  package:
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
-    - zeppelin-site.xml
-    - zeppelin-env.sh
+    - spark-history-server # History server for Apache Spark
+    - spark-master # Server for Spark master
 
-- name: Create Zeppelin Configuration symlink
-  file:
-    src: '/usr/lib/zeppelin/conf'
-    dest: '/etc/zeppelin'
-    state: link
-  when: zeppelin_symlink.stat.islnk is not defined
 
-- name: Zeppelin Server systemd service config
-  template:
-    src: 'zeppelin.service.j2'
-    dest: '/etc/systemd/system/zeppelin.service'
-  when: zeppelin_symlink.stat.islnk is not defined
-
-- name: Find Zeppelin Apache Commons Lang3 jar
-  find:
-    paths: /usr/lib/zeppelin/lib/
-    patterns: 'commons-lang3*.jar'
-  register: zeppelin_apache_commons_lang3
-
-- name: Add Apache Commons Lang3 in interpreter path
-  copy:
-    src: '/usr/lib/zeppelin/lib/{{ item.path | basename }}'
-    dest: '/usr/lib/zeppelin/lib/interpreter/{{ item.path | basename }}'
-    remote_src: yes
+- name: Start Spark master services
+  tags:
+    - hadoop
+    - spark
+    - master
+  service:
+    name="{{item}}"
+    state=started
+    enabled=yes
   with_items:
-    - '{{zeppelin_apache_commons_lang3.files}}'
-
-- name: enable and start zeppelin service and ensure it is not masked
-  systemd:
-    name: zeppelin
-    enabled: yes
-    masked: no
-    state: restarted
-
-- name: Create Zeppelin Log symlink
-  file:
-    src: '/usr/lib/zeppelin/logs'
-    dest: '/var/log/zeppelin'
-    state: link
-  when: zeppelin_symlink.stat.islnk is not defined
+    - spark-master

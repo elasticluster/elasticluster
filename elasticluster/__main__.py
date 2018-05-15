@@ -57,7 +57,8 @@ from elasticluster.migration_tools import MigrationCommand
 
 __author__ = ', '.join([
     'Nicolas Baer <nicolas.baer@uzh.ch>',
-    'Antonio Messina <antonio.s.messina@gmail.com>'
+    'Antonio Messina <antonio.s.messina@gmail.com>',
+    'Riccardo Murri <riccardo.murri@gmail.com>',
 ])
 
 
@@ -139,9 +140,8 @@ class ElastiCluster(cli.app.CommandLineApp):
         coloredlogs.install(logger=log, level=loglevel)
         log.setLevel(loglevel)
 
-        # In debug mode, avoid forking
+        # ensure we print tracebacks in DEBUG mode
         if self.params.verbose > 3:
-            log.DO_NOT_FORK = True
             log.raiseExceptions = True
 
         if not os.path.isdir(self.params.storage):

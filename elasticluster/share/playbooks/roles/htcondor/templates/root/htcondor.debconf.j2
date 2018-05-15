@@ -1,0 +1,48 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+Name: condor/wantdebconf
+Template: condor/wantdebconf
+Value: true
+
+Name: condor/phonehome
+Template: condir/phonehome
+Value: false
+
+Name: condor/centralmanager
+Template: condor/centralmanager
+Value: {{groups.condor_master[0]}}
+
+Name: condor/daemons
+Template: condor/daemons
+{% if 'condor_master' in group_names %}
+Value: MASTER,SCHEDD,COLLECTOR,NEGOTIATOR
+{% else %}
+Value: MASTER,SCHEDD,STARTD
+{% endif %}
+
+Name: condor/uiddomain
+Template: condor/uiddomain
+Value: {{groups.condor_master[0]}}
+
+Name: condor/filesystemdomain
+Template: condor/filesystemdomain
+Value: {{groups.condor_master[0]}}
+
+Name: condor/personal
+Template: condor/personal
+Value: false
+
+Name: condor/reservedmemory
+Template: condor/reservedmemory
+Value: 0
+
+Name: condor/allowwrite
+Template: condor/allowwrite
+Value: {{groups.all}}
+
+Name: condor/startpolicy
+Template: condor/startpolicy
+Value: true

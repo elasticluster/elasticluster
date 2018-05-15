@@ -54,6 +54,8 @@ MOCK_MODULES = [
     'apiclient.discovery',
     'apiclient.errors',
     'boto',
+    'boto.ec2',
+    'boto.vpc',
     'cli',
     'cli.app',
     'configobj',

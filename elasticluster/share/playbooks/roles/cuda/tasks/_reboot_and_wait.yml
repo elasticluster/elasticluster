@@ -1,0 +1,68 @@
+---
+
+- name: Reboot to enable CUDA devices
+  # the initial `sleep` command is there to give Ansible time to
+  # background the task and disconnect; otherwise the SSH connection
+  # is torn by the reboot and Ansible marks the host as "unreachable"
+  shell: |
+    sleep 3;
+    /sbin/shutdown -r now "Rebooting to load CUDA device driver ...";
+  async: 1
+  poll: 0
+
+
+- name: Wait for server to come up again (max 5 minutes)
+  become: no
+  wait_for:
+    host: "{{ ansible_host }}"
+    search_regex: 'OpenSSH'
+    port: 22
+    delay: 15
+    timeout: 300
+    sleep: 5
+  delegate_to: localhost
+
+
+- name: Record new kernel version
+  command: |
+    uname -r
+  register: _cuda_uname_r
+
+
+- name: Install new kernel headers (Ubuntu)
+  apt:
+    name: 'linux-headers-{{ _cuda_uname_r.stdout }}'
+    state: present
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
+  when: 'is_ubuntu'
+
+
+- name: Trigger recompilation by DKMS
+  command: |
+    dkms autoinstall
+
+
+- name: Wait for DKMS to compile NVIDIA kernel modules (max 15 minutes)
+  become: yes
+  wait_for:
+    path: '/lib/modules/{{ _cuda_uname_r.stdout }}/modules.dep'
+    search_regex: '{{ _cuda_ko_regex }}'
+    state: present
+    timeout: 900
+    sleep: 15
+
+
+# Ensure that NVIDIA CUDA device drivers are loaded, otherwise
+# problems may happen further down (e.g., `slurmd` not starting
+# because the configured GPU devices do not exist)
+
+- name: Check that CUDA devices exist
+  include: _check_nvidia_dev.yml
+  vars:
+    save_result_to: _cuda_check_devices_after_reboot
+
+
+- name: Fail if CUDA devices are not present
+  fail:
+    msg: Cannot load NVIDIA CUDA drivers!
+  when: 'not _cuda_check_devices_after_reboot.stat.exists'

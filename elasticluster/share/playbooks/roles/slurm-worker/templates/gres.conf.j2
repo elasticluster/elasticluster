@@ -1,0 +1,16 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+#
+# Slurm's Generic Resource (GRES) configuration file
+# Only list node-specific resources here (avoid
+# issues with cross-node facts availability on Ansible).
+#
+
+{% if gpus is defined -%}
+{%   for gpu in gpus %}
+Name=gpu Type={{gpu.model_name}} File={{gpu.device}}
+{%   endfor %}
+{%- endif %}

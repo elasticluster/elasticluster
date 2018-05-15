@@ -1,0 +1,21 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+# /etc/auto.master
+#
+# Master map for autofs(8); it is used to define mountpoints
+# managed by `autofs`, and the corresponding map file. When
+# changed, a HUP signal (`service autofs reload`) must be
+# sent to the `autofs` daemon. See `man 5 auto.master` for details.
+#
+
+{% if autofs_home_server is defined -%}
+# share the `/home` filesystem cluster-wide
+/home      file:/etc/auto.home     --timeout=1200
+{%- endif %}
+
+# allow automounting by syminks into the `/net` hierarchy
+/net/nfs3  -hosts
+/net/nfs4  program:/etc/auto.nfs4  hard,intr,nosuid,nodev

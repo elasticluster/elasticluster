@@ -1,0 +1,89 @@
+---
+
+- name: Install TORQUE packages
+  when: is_rhel_compatible
+  yum:
+    pkg: '{{item}}'
+    state: latest
+  with_items:
+    - munge
+    - torque-client
+    - torque-scheduler
+    - torque-server
+
+
+- name: Create spool directories
+  file:
+    path: '/var/lib/torque/{{ item }}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0775
+    recurse: yes
+  with_items:
+    - server_priv
+    - checkpoint
+
+
+# This wipes out the `server_priv/` directory, so needs to be done first!
+- name: Initialize PBS server database
+  # `pbs_server` keeps running even when passed the `-t create` option
+  # but does not create the PID file, and the systemd startup script
+  # allows no way of passing options to `pbs_server` so we cannot use
+  # it to force creation of the DB... solution is to run `pbs_server`
+  # directly but supervisioned by the `timeout` command so that it's
+  # killed quickly
+  command: |
+    timeout -s TERM -k 10s 10s /usr/sbin/pbs_server -D -a 0 -f -t create
+  register: _torque_create_serverdb
+  # `timeout` will exit with code 124 if it actually killed
+  # `pbs_server` (the `--preserve-status` option was added only
+  # recently), but Ansible will set `rc` to 0 if the command was
+  # skipped because `serverdb` already exists
+  failed_when: '_torque_create_serverdb.rc not in [0, 124]'
+  args:
+    creates: /var/lib/torque/server_priv/serverdb
+
+
+- name: Generate MUNGE key
+  shell: |
+    create-munge-key
+  args:
+    creates: '/etc/munge/munge.key'
+
+
+- name: Ensure MUNGE is running
+  service:
+    name: 'munge'
+    state: started
+    enabled: yes
+
+
+- name: Deploy PBS configuration files
+  template:
+    src: 'var/lib/torque/{{ item }}.j2'
+    dest: '/var/lib/torque/{{ item }}'
+  with_items:
+    - qmgr.bootstrap
+    - server_name
+    - server_priv/nodes
+  notify:
+    - restart pbs_server
+
+
+- name: Ensure PBS services are running
+  service:
+    name: '{{item}}'
+    state: started
+    enabled: yes
+  with_items:
+    - trqauthd
+    - pbs_sched
+    - pbs_server
+
+
+- name: Load default configuration into server
+  shell: |
+    qmgr $(hostname) < /var/lib/torque/qmgr.bootstrap
+  args:
+    creates: /var/lib/torque/server_priv/queues/default

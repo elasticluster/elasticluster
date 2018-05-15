@@ -5,13 +5,15 @@
 - name: PostgreSQL | Make sure the CA certificates are available
   apt:
     pkg: ca-certificates
-    state: present
+    state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
 
 - name: PostgreSQL | Add PostgreSQL repository apt-key
   apt_key:
     id: "{{ postgresql_apt_key_id }}"
     url: "{{ postgresql_apt_key_url }}"
     state: present
+    validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
   when: postgresql_apt_key_url and postgresql_apt_key_id
 
 - name: PostgreSQL | Add PostgreSQL repository
@@ -29,17 +31,19 @@
 - name: PostgreSQL | Make sure the dependencies are installed
   apt:
     pkg: "{{item}}"
-    state: present
+    state: '{{ pkg_install_state }}'
     update_cache: yes
     cache_valid_time: "{{apt_cache_valid_time | default (3600)}}"
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items: ["python-psycopg2", "python-pycurl", "locales"]
 
 - name: PostgreSQL | Install PostgreSQL
   apt:
     name: "{{item}}"
-    state: present
+    state: '{{ pkg_install_state }}'
     update_cache: yes
     cache_valid_time: "{{apt_cache_valid_time | default (3600)}}"
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   environment: "{{postgresql_env}}"
   with_items:
     - "postgresql-{{postgresql_version}}"
@@ -49,8 +53,9 @@
 - name: PostgreSQL | PGTune
   apt:
     name: pgtune
-    state: present
+    state: '{{ pkg_install_state }}'
     update_cache: yes
     cache_valid_time: "{{apt_cache_valid_time | default (3600)}}"
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   environment: "{{postgresql_env}}"
   when: postgresql_pgtune

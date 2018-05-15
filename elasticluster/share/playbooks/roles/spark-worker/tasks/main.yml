@@ -1,0 +1,44 @@
+# spark-worker/tasks/main.yml
+---
+
+# The post-installation script of package `spark-worker` tries to run `service
+# spark-worker start` which is bound to fail since we intend to run Spark on top
+# of YARN and have not configured the standalone worker. So the failure prevents
+# the package from being correctly installed (according to `dpkg`, the
+# "configure" step fails), and everything goes south from there. So just tell
+# systemd to ignore all requests related to `spark-worker` and everybody is
+# happy.
+- name: Prevent Spark worker startup script from running
+  tags:
+    - hadoop
+    - spark
+    - worker
+  command: |
+    systemctl mask spark-worker
+  become: yes
+  when: init_is_systemd
+
+
+- name: Install Spark packages (worker)
+  tags:
+    - hadoop
+    - spark
+    - worker
+  package:
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
+  with_items:
+    - spark-worker # Server for Spark worker
+
+
+- name: Disable and stop Spark worker services
+  tags:
+    - hadoop
+    - spark
+    - worker
+  service:
+    name="{{item}}"
+    state=stopped
+    enabled=no
+  with_items:
+    - spark-worker # Server for Spark worker

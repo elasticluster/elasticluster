@@ -5,22 +5,24 @@
     - nfs
     - nfs-client
   package:
-    pkg='{{item}}'
-    state=present
+    pkg: '{{item}}'
+    state: '{{pkg_install_state}}'
   with_items:
     - nfs-common
-  when: ansible_os_family == 'Debian'
+    - nfs4-acl-tools
+  when: is_debian_compatible
 
 - name: install NFS client software (RHEL-compatible)
   tags:
     - nfs
     - nfs-client
   package:
-    pkg='{{item}}'
-    state=present
+    pkg: '{{item}}'
+    state: '{{pkg_install_state}}'
   with_items:
     - nfs-utils
-  when: ansible_os_family == 'RedHat'
+    - nfs4-acl-tools
+  when: is_rhel_compatible
 
 
 - name: Ensure `rpcbind` is running (Debian)
@@ -28,34 +30,33 @@
     name=rpcbind
     enabled=yes
     state=started
-  when: ansible_distribution == 'Debian'
+  when: is_debian
 
 - name: Ensure `rpcbind` is running (RHEL-compatible)
   service:
     name=rpcbind
     enabled=yes
     state=started
-  when: ansible_os_family == 'RedHat'
+  when: is_rhel_compatible
 
 - name: Ensure `portmap` is running (Ubuntu prior to 14.04)
   service:
     name=portmap
     enabled=yes
     state=started
-  when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version|int < 14
+  when: is_ubuntu and not is_ubuntu_14_04_or_later
 
 - name: Ensure `rpcbind` is running (Ubuntu 14.04 or newer)
   service:
     name=rpcbind
     enabled=yes
     state=started
-  when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version|int >= 14
+  when: is_ubuntu_14_04_or_later
 
 
 - name: Mount NFS filesystems
-  tags: 
+  tags:
     - nfs
     - nfs-client
   include: nfsmount.yml fs='{{item}}'
   with_items: '{{NFS_MOUNTS}}'
-    

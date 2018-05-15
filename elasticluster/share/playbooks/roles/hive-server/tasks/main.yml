@@ -15,7 +15,7 @@
   register: db_tables_check
   ignore_errors: yes
 
-  
+
 - name: Load Hive schema
   tags:
     - hadoop
@@ -25,15 +25,15 @@
     'psql --username="{{HIVE_METASTORE_DB_USER}}" --dbname="{{HIVE_METASTORE_DB_NAME}}" < /usr/lib/hive/scripts/metastore/upgrade/postgres/hive-schema-{{hive_schema_version}}.postgres.sql'
   when: db_tables_check|failed
 
-  
+
 - name: Install Hive packages (services)
   tags:
     - hadoop
     - hive
     - hive-server
   package:
-    name='{{item}}'
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - hive-metastore
     - hive-server2

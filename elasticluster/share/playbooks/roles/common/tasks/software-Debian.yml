@@ -12,8 +12,8 @@
 
 - name: Install commonly needed software (Debian-family)
   package:
-    name={{item}}
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     # compression and archivers
     - bzip2
@@ -37,7 +37,6 @@
     # other "standard" utilities
     - kexec-tools
     - m4
-    - moreutils
     - rsync
     - screen
     - tmux

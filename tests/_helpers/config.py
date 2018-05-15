@@ -55,7 +55,7 @@ username = ${USER}
 password = XXXXXX
 project_domain_name = Default
 user_domain_name = Default
-tenant_name = test-tenant
+project_name = test-tenant
         """,
 
         'google':"""

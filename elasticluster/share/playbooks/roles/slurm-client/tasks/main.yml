@@ -3,8 +3,8 @@
 
 - name: Install required SLURM packages (Debian/Ubuntu)
   package:
-    pkg={{item}}
-    state=latest
+    pkg: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - libpmi0-dev
     - libslurm-dev
@@ -22,8 +22,8 @@
   # `slurm-llnl`, we have to install it and *then* stop all the services
     - name: Install required SLURM packages (older Debian/Ubuntu)
       package:
-        pkg={{item}}
-        state=latest
+        pkg: '{{item}}'
+        state: '{{ pkg_install_state }}'
       with_items:
         - libpmi0-dev
         - libslurm-dev
@@ -46,14 +46,13 @@
 # `slurm`, we have to install it and *then* stop all the services
 - name: Install SLURM packages (RHEL-compatible)
   package:
-    name={{item}}
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items:
     - slurm
     - slurm-devel
     - slurm-perlapi
-    - slurm-sjobexit
-    - slurm-sjstat
+    - slurm-contribs
     - slurm-torque
   when: 'is_rhel_compatible'
 

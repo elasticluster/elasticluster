@@ -1,0 +1,31 @@
+---
+
+- name: Install TORQUE packages (MOM)
+  yum:
+    pkg: 'torque-mom'
+    state: '{{ pkg_install_state }}'
+
+
+- name: Deploy `pbs_mom` configuration
+  lineinfile:
+    dest: '/var/lib/torque/mom_priv/config'
+    regexp: '{{ item.regexp }}'
+    line: '{{ item.line }}'
+  with_items:
+    - { regexp: '.*pbsserver.*', line: '\$pbsserver {{ torque_master_host }}' }
+    - { regexp: '.usecp .*', line: '\$usecp *:/home /home' }
+  notify: restart pbs_mom
+
+
+- name: Deploy /var/lib/torque/server_name
+  template:
+    src: 'var/lib/torque/server_name.j2'
+    dest: '/var/lib/torque/server_name'
+  notify: restart pbs_mom
+
+
+- name: Ensure `pbs_mom` service is running
+  service:
+    name: 'pbs_mom'
+    state: started
+    enabled: yes

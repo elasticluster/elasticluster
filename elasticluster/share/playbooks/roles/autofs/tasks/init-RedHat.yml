@@ -1,0 +1,11 @@
+---
+#
+# Provide RHEL-specific values
+#
+
+- name: Provide RHEL-specific values
+  set_fact:
+    autofs_packages:
+      - autofs
+    autofs_username: root
+    autofs_service: autofs

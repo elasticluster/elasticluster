@@ -2,16 +2,9 @@
 
 dependencies:
 
-  - role: lua
-    # Lmod depends on Lua, so we have to specify where that
-    # should be installed here as well
-    lua_install_dir: '{{EASYBUILD_PREFIX}}/software/Lua/{{LUA_VERSION}}'
-    lua_source_dir:  '{{EASYBUILD_PREFIX}}/sources/l/Lua'
-
   - role: lmod
     LMOD_DEFAULT_MODULES:
       - 'EasyBuild'
     # download and install Lmod in the same locations that EB would use
     lmod_install_dir: '{{EASYBUILD_PREFIX}}/software/Lmod'
     lmod_source_dir:  '{{EASYBUILD_PREFIX}}/sources/l/Lmod'
-    lua_exe: '{{EASYBUILD_PREFIX}}/software/Lua/{{LUA_VERSION}}/bin/lua'

@@ -18,6 +18,7 @@
         - path: '{{SGE_VAR}}/{{SGE_CELL}}/common'
           clients: '{{groups.gridengine_worker + groups.gridengine_master}}'
           options: 'rw,no_root_squash,no_subtree_check'
+    - role: 'autofs'
 
 
 - name: GridEngine worker nodes Playbook
@@ -29,6 +30,7 @@
     - role: 'nis'
       NIS_MASTER: "{{groups.gridengine_master[0]}}"
       when: '{{multiuser_cluster|default("true")|bool}}'
+    - role: 'autofs'
     # we need to explicitly run `gridengine-common` before `nfs-client` to set
     # the `SGE_*` variables; having Ansible run the `gridengine-common` role as
     # a dependenciy for `gridengine-exec` sets it too late and NFS mounts are
@@ -40,4 +42,5 @@
           mountpoint: '/home'
         - fs: '{{groups.gridengine_master[0]}}:{{SGE_VAR}}/{{SGE_CELL}}/common'
           mountpoint: '{{SGE_VAR}}/{{SGE_CELL}}/common'
+    - role: autofs
     - role: gridengine-exec

@@ -6,7 +6,7 @@
   ignore_errors: True
 
 - name: Initialize Kubernetes master
-  command: kubeadm init
+  command: kubeadm init --pod-network-cidr={{kubernetes_network}}
   when: "'failed' in token_list_result.stderr"
 
 - name: Waiting for configuration to become available
@@ -14,15 +14,8 @@
     path: /etc/kubernetes/admin.conf
   when: "'failed' in token_list_result.stderr"
 
-- name: Copy network configuration
-  template:
-    src: kube-{{kubernetes_default_networking}}.yml.j2
-    dest: /var/tmp/kube-{{kubernetes_default_networking}}.yml
-  when: "'failed' in token_list_result.stderr"
-
-- name: Initialize Kubernetes networking
-  command: kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f /var/tmp/kube-{{kubernetes_default_networking}}.yml
-  when: "'failed' in token_list_result.stderr"
+- name: Networking
+  include: "{{ kubernetes_default_networking }}.yml"
 
 - name: Get cluster token
   shell: kubeadm token list | awk 'NR==2{print $1}'

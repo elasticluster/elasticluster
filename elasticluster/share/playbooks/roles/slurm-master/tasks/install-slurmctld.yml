@@ -2,6 +2,6 @@
 
 - name: Install SLURM master packages
   package:
-    pkg='{{item}}'
-    state=latest
+    pkg: '{{item}}'
+    state: '{{ pkg_install_state }}'
   with_items: '{{ slurmctld_packages }}'

@@ -1,45 +1,24 @@
 ---
-
-# check if previous anaconda installation exists by verifying existence of symlink
-- stat:
-    path: /opt/anaconda{{anaconda_python_version}}
-  register: anaconda_symlink
-
-
 # tasks file for anaconda
 - name: Download Anaconda installer script
   get_url:
-    url='{{anaconda_installer_url}}'
-    dest='{{anaconda_installer_sh}}'
-    owner=root
-    group=root
-    mode=0755
-  when: anaconda_symlink.stat.islnk is not defined
-
+    url: '{{anaconda_installer_url}}'
+    dest: '{{anaconda_installer_sh}}'
+    owner: root
+    group: root
+    mode: 0755
+    validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
 
 - name: Install Anaconda
   command: '{{anaconda_installer_sh}} -b -f -p {{anaconda_home}}'
   args:
     creates: '{{anaconda_home}}/bin/conda'
-  when: anaconda_symlink.stat.islnk is not defined
-
 
 - name: Delete Anaconda installer script
   file:
     path='{{anaconda_installer_sh}}'
     state=absent
-  when: anaconda_cleanup and anaconda_symlink.stat.islnk is not defined
-    
-
-- name: Make convenience symlink to Anaconda home
-  file:
-    dest='/opt/anaconda{{anaconda_python_version}}'
-    src='{{anaconda_home}}'
-    state=link
-    owner=root
-    group=root
-  when: anaconda_symlink.stat.islnk is not defined
-
+  when: anaconda_cleanup
 
 - name: make Anaconda Python the first match in $PATH
   template:
@@ -48,4 +27,12 @@
     mode=0444
     owner=root
     group=root
-  when: anaconda_in_path and anaconda_symlink.stat.islnk is not defined
+  when: anaconda_in_path
+
+- name: Make convenience symlink to Anaconda home
+  file:
+    dest='/opt/anaconda{{anaconda_python_version}}'
+    src='{{anaconda_home}}'
+    state=link
+    owner=root
+    group=root

@@ -1,0 +1,9 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+{% for name in groups %}
+{{ name }}  {% for host in groups[name] %}({{ host }},,{{ NIS_DOMAIN|default('') }}) {% endfor %}
+
+{% endfor %}

@@ -1,8 +1,8 @@
 ---
 - name: Jenkins CIS Playbook
   hosts: jenkins
-  tasks: 
-    - include: common/tasks/ssh_host_based_authentication.yml hosts=${groups.all}
+  tasks:
+    - include: common/tasks/ssh_auth.yml hosts=${groups.all}
     - include: jenkins/tasks/main.yml
   handlers:
     - include: jenkins/handlers/main.yml

@@ -13,3 +13,16 @@ SLURM_ACCOUNTING_HOST: "slurmdbd"
 SLURM_ACCOUNTING_DB_NAME: "slurm"
 SLURM_ACCOUNTING_DB_USER: "slurm"
 SLURM_ACCOUNTING_DB_PASS: "ua7diKee"
+
+
+# defaults used in `slurm.conf`
+slurm_fastschedule: 1
+slurm_jobacctgatherfrequency: 60
+slurm_jobacctgathertype: 'jobacct_gather/linux'
+slurm_maxarraysize: 1000
+slurm_maxjobcount: 10000
+slurm_proctracktype: 'proctrack/linuxproc'
+slurm_returntoservice: 2
+slurm_selecttype: 'select/cons_res'
+slurm_selecttypeparameters: 'CR_Core_Memory'
+slurm_taskplugin: 'task/none'

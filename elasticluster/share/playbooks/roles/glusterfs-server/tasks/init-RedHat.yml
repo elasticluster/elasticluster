@@ -1,4 +1,25 @@
 ---
+
+- name: Load GlusterFS service names for RHEL-compatible
+  set_fact:
+    # Service names are different across GlusterFS versions;
+    # the following list has been updated last 2017-11-28
+    glusterfs_server_services:
+      '3.8':
+        - glusterd
+        - glusterfsd
+      '3.10':
+        - glusterd
+        - glusterfsd
+      '3.11':
+        - glusterd
+        - glusterfsd
+      '3.12':
+        - glusterd
+        - glusterfsd
+        - glusterfssharedstorage
+
+
 - name: Make GlusterFS release repo available to YUM
   yum:
     name=centos-release-gluster{{ glusterfs_version | replace('.', '') }}

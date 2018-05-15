@@ -1,0 +1,36 @@
+---
+#
+# RHEL 7.4 apparently removed the set-UID bit from `ssh-keysign`
+# but forgot to make the corresponding change to the SSH host key files
+# (for more info, see: https://github.com/gc3-uzh-ch/elasticluster/issues/510#issuecomment-351832450)
+# Try to fix that.
+#
+
+- name: Load info about the `ssh-keysign` executable
+  stat:
+    path: '{{ ssh_keysign_path }}'
+  register: ssh_keysign
+
+
+- name: List all SSH host keys
+  find:
+    path: '/etc/ssh'
+    pattern: 'ssh_host_[a-z0-9]+_key(.pub|.pem)?'
+    use_regex: yes
+  register: _find_ssh_host_keys
+
+
+- name: Ensure SSH host keys can be read by `ssh-keysign`
+  file:
+    dest: '{{ item.path }}'
+    group: '{{ ssh_keysign.stat.gr_name }}'
+    mode: 'g+r'
+  with_items: '{{ _find_ssh_host_keys.files }}'
+  notify: 'restart sshd {{ansible_os_family}}'
+
+# Alternatively:
+# - name: Ensure SSH host keys can be read by `ssh-keysign`
+#   shell: |
+#     chgrp -v '{{ ssh_keysign.stat.gid }}' /etc/ssh/ssh_host*key*
+#     chmod -v 'g+r' /etc/ssh/ssh_host*key*
+#   notify: 'restart sshd {{ansible_os_family}}'

@@ -3,6 +3,13 @@
 # Set up the package manager and its Ansible module for installing packages
 #
 
+# see Issues #541 and #548
+- name: Ensure Google Cloud signing keys are available
+  get_url:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    dest: /etc/apt/trusted.gpg.d/google-cloud-packages-archive-keyring.gpg
+    backup: yes
+
 - name: Ensure extra repositories are present (Ubuntu)
   apt_repository:
     repo="deb http://archive.ubuntu.com/ubuntu {{ansible_distribution_release}} universe multiverse"
@@ -12,8 +19,9 @@
 
 - name: Ensure the APT package cache is updated
   apt:
-    update_cache=yes
-    cache_valid_time=0
+    update_cache: yes
+    cache_valid_time: 0
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
 
 - name: Install Ansible `apt` module dependencies
   # the `apt` module depends on both `aptitude` and `python-apt` to do
@@ -29,12 +37,15 @@
 
 - name: Upgrade all installed packages to latest version
   apt:
-    upgrade=safe
+    upgrade: safe
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
+  when: 'upgrade_packages|default(True)'
 
 - name: Ensure additional packages are installed
   apt:
-    name={{item}}
-    state=present
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items:
     - apt-transport-https
     - ca-certificates
@@ -45,27 +56,30 @@
 # Apparently some systemd commands (e.g., `hostnamectl` -- possibly others)
 # *require* D-Bus but the Debian 8 cloud VM image does not have it installed
 # (see issues #392, #393).  So, ensure it is installed.
-- name: Ensure additional packages are installed (Debian 8 "jessie")
+- name: Ensure additional packages are installed (Debian 8)
   apt:
     name: '{{item}}'
-    state: present
+    state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items:
     - dbus
-  when: 'is_debian_8'
+  when: 'is_debian_8_or_later'
 
 
 - name: Provide workaround for https://github.com/ansible/ansible-modules-core/issues/4472
   set_fact:
     __at__: '='
 
-- block:
-    - name: Install policy package for service autostart
-      apt:
-        name: 'policyrcd-script-zg2'
-        state: present
-    - name: Install policy script for service autostart
-      copy:
-        dest: '/etc/policy-rc.d'
-        src: 'etc/policy-rc.d'
-        mode: 0555
-  when: 'not {{init_is_systemd}}'
+
+- name: Install policy package for service autostart
+  apt:
+    name: 'policyrcd-script-zg2'
+    state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
+
+
+- name: Install policy script for service autostart
+  copy:
+    dest: '/etc/policy-rc.d'
+    src: 'etc/policy-rc.d'
+    mode: 0555

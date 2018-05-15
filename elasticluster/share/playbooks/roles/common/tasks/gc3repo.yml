@@ -4,7 +4,10 @@
   when: is_debian_or_ubuntu
 
 - name: Install required package for apt_repository. BUG!
-  action: apt pkg=python-software-properties state=present
+  apt:
+    pkg: python-software-properties
+    state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   when: is_debian_or_ubuntu
 
 - name: add GC3 apt public repository
@@ -19,4 +22,3 @@
 - name: add GC3 yum public repository
   action: template src=common/files/etc/yum.repos.d/gc3.repo.j2 dest=/etc/yum.repos.d/gc3.repo
   when: is_centos
-

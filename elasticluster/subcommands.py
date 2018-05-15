@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013-2015 S3IT, University of Zurich
+# Copyright (C) 2013-2018  University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,12 +38,7 @@ from elasticluster import log
 from elasticluster.conf import make_creator
 from elasticluster.exceptions import ClusterNotFound, ConfigurationError, \
     ImageError, SecurityGroupError, NodeNotFound, ClusterError
-from elasticluster.utils import confirm_or_abort
-from elasticluster.apiserver.apiserver import app as apiserver
-
-
-SSH_PORT = 22
-IPV6_RE = re.compile('\[([a-f:A-F0-9]*[%[0-z]+]?)\](?::(\d+))?')
+from elasticluster.utils import confirm_or_abort, parse_ip_address_and_port
 
 
 class AbstractCommand():
@@ -95,11 +90,10 @@ class AbstractCommand():
 
 def cluster_summary(cluster):
     try:
-        frontend = cluster.get_frontend_node().name
+        frontend = cluster.get_ssh_to_node().name
     except NodeNotFound as ex:
         frontend = 'unknown'
-        log.error("Unable to get information on the frontend node: "
-                  "%s", str(ex))
+        log.error("Unable to get information on the frontend node: %s", ex)
     msg = """
 Cluster name:     %s
 Cluster template: %s
@@ -141,6 +135,14 @@ class Start(AbstractCommand):
                                  'N2 of GROUP2 etc...')
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Only start the cluster, do not configure it")
+        parser.add_argument(
+            '-p', '--max-concurrent-requests', default=0,
+            dest='max_concurrent_requests', type=int, metavar='NUM',
+            help=("Try to start at most NUM nodes at the same time."
+                  " Set to 1 to avoid making multiple requests"
+                  " to the cloud controller and start nodes sequentially."
+                  " The special value `0` (default) means: start up to"
+                  " 4 independent requests per CPU core."))
 
     def pre_run(self):
         self.params.nodes_override = {}
@@ -171,7 +173,12 @@ class Start(AbstractCommand):
         creator = make_creator(self.params.config,
                                storage_path=self.params.storage)
 
-        # overwrite configuration
+        if cluster_template not in creator.cluster_conf:
+            raise ClusterNotFound(
+                "No cluster template named `{0}`"
+                .format(cluster_template))
+
+        # possibly overwrite node mix from config
         cluster_nodes_conf = creator.cluster_conf[cluster_template]['nodes']
         for kind, num in self.params.nodes_override.iteritems():
             if kind not in cluster_nodes_conf:
@@ -199,17 +206,21 @@ class Start(AbstractCommand):
             print("(This may take a while...)")
             min_nodes = dict((kind, cluster_nodes_conf[kind]['min_num'])
                              for kind in cluster_nodes_conf)
-            cluster.start(min_nodes=min_nodes)
+            cluster.start(min_nodes, self.params.max_concurrent_requests)
             if self.params.no_setup:
                 print("NOT configuring the cluster as requested.")
             else:
-                print("Configuring the cluster.")
-                print("(this too may take a while...)")
-                ret = cluster.setup()
-                if ret:
-                    print("Your cluster is ready!")
+                print("Configuring the cluster ...")
+                print("(this too may take a while)")
+                ok = cluster.setup()
+                if ok:
+                    print(
+                        "\nYour cluster `{0}` is ready!"
+                        .format(cluster.name))
                 else:
-                    print("\nWARNING: YOUR CLUSTER IS NOT READY YET!")
+                    print(
+                        "\nWARNING: YOUR CLUSTER `{0}` IS NOT READY YET!"
+                        .format(cluster.name))
             print(cluster_summary(cluster))
         except (KeyError, ImageError, SecurityGroupError, ClusterError) as err:
             log.error("Could not start cluster `%s`: %s", cluster.name, err)
@@ -322,8 +333,7 @@ class ResizeCluster(AbstractCommand):
             cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Listing nodes from cluster %s: %s\n" %
-                      (cluster_name, ex))
+            log.error("Listing nodes from cluster %s: %s", cluster_name, ex)
             return
         for grp in self.params.nodes_to_add:
             print("Adding %d %s node(s) to the cluster"
@@ -429,16 +439,15 @@ class RemoveNode(AbstractCommand):
             cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Error loading cluster %s: %s\n" %
-                      (cluster_name, ex))
+            log.error("Error loading cluster %s: %s", cluster_name, ex)
             return
 
         # Find the node to remove.
         try:
             node = cluster.get_node_by_name(self.params.node)
         except NodeNotFound:
-            log.error("Node %s not found in cluster %s" % (
-                self.params.node, self.params.cluster))
+            log.error("Node %s not found in cluster %s",
+                      self.params.node, self.params.cluster)
             sys.exit(1)
 
         # Run
@@ -569,8 +578,7 @@ class ListNodes(AbstractCommand):
             if self.params.update:
                 cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Listing nodes from cluster %s: %s\n" %
-                      (cluster_name, ex))
+            log.error("Listing nodes from cluster %s: %s", cluster_name, ex)
             return
 
         if self.params.pretty_json:
@@ -614,16 +622,19 @@ class SetupCluster(AbstractCommand):
             cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Setting up cluster %s: %s\n" %
-                      (cluster_name, ex))
+            log.error("Setting up cluster %s: %s", cluster_name, ex)
             return
 
-        print("Configuring cluster `%s`..." % cluster_name)
-        ret = cluster.setup(self.params.extra)
-        if ret:
-            print("Your cluster is ready!")
+        print("Configuring cluster `{0}`...".format(cluster_name))
+        ok = cluster.setup(self.params.extra)
+        if ok:
+            print(
+                "\nYour cluster `{0}` is ready!"
+                .format(cluster_name))
         else:
-            print("\nWARNING: YOUR CLUSTER IS NOT READY YET!")
+            print(
+                "\nWARNING: YOUR CLUSTER `{0}` IS NOT READY YET!"
+                .format(cluster_name))
         print(cluster_summary(cluster))
 
 
@@ -654,56 +665,42 @@ class SshFrontend(AbstractCommand):
             cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Setting up cluster %s: %s\n" %
-                      (cluster_name, ex))
+            log.error("Setting up cluster %s: %s", cluster_name, ex)
             return
 
-        if self.params.ssh_to:
-            try:
-                nodes = dict((n.name,n) for n in cluster.get_all_nodes())
-                frontend = nodes[self.params.ssh_to]
-            except KeyError:
-                raise ValueError(
-                    "Hostname %s not found in cluster %s" % (self.params.ssh_to, cluster_name))
-        else:
-            frontend = cluster.get_frontend_node()
+        # XXX: the default value of `self.params.ssh_to` should = the
+        # default value for `ssh_to` in `Cluster.get_ssh_to_node()`
+        frontend = cluster.get_ssh_to_node(self.params.ssh_to)
+
+        # ensure we can connect to the host
         try:
-            # ensure we can connect to the host
             if not frontend.preferred_ip:
                 # Ensure we can connect to the node, and save the value of `preferred_ip`
-
                 ssh = frontend.connect(keyfile=cluster.known_hosts_file)
                 if ssh:
                     ssh.close()
                 cluster.repository.save_or_update(cluster)
-
         except NodeNotFound as ex:
-            log.error("Unable to connect to the frontend node: %s" % str(ex))
+            log.error("Unable to connect to the frontend node: %s", ex)
             sys.exit(1)
+
+        # now delegate real connection to `ssh`
         host = frontend.connection_ip()
-
-        # check for nonstandard port, either IPv4 or IPv6
-        addr = host
-        port = str(SSH_PORT)
-        if ':' in host:
-            match = IPV6_RE.match(host)
-            if match:
-                addr = match.groups()[0]
-                port = match.groups()[1]
-            else:
-                addr, _, port = host.partition(':')
-
+        if not host:
+            log.error("No IP address known for node %s", frontend.name)
+            sys.exit(1)
+        addr, port = parse_ip_address_and_port(host)
         username = frontend.image_user
         knownhostsfile = cluster.known_hosts_file if cluster.known_hosts_file \
                          else '/dev/null'
         ssh_cmdline = ["ssh",
                        "-i", frontend.user_key_private,
-                       "-o", "UserKnownHostsFile=%s" % knownhostsfile,
+                       "-o", "UserKnownHostsFile={0}".format(knownhostsfile),
                        "-o", "StrictHostKeyChecking=yes",
-                       "-p", port,
+                       "-p", "{0:d}".format(port),
                        '%s@%s' % (username, addr)]
         ssh_cmdline.extend(self.params.ssh_args)
-        log.debug("Running command `%s`" % str.join(' ', ssh_cmdline))
+        log.debug("Running command `%s`", str.join(' ', ssh_cmdline))
         os.execlp("ssh", *ssh_cmdline)
 
 
@@ -735,29 +732,31 @@ class SftpFrontend(AbstractCommand):
             cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Setting up cluster %s: %s\n" %
-                      (cluster_name, ex))
+            log.error("Setting up cluster %s: %s", cluster_name, ex)
             return
 
-        if self.params.ssh_to:
-            try:
-                nodes = dict((n.name,n) for n in cluster.get_all_nodes())
-                frontend = nodes[self.params.ssh_to]
-            except KeyError:
-                raise ValueError(
-                    "Hostname %s not found in cluster %s" % (self.params.ssh_to, cluster_name))
-        else:
-            frontend = cluster.get_frontend_node()
+        # XXX: the default value of `self.params.ssh_to` should = the
+        # default value for `ssh_to` in `Cluster.get_ssh_to_node()`
+        frontend = cluster.get_ssh_to_node(self.params.ssh_to)
+
         host = frontend.connection_ip()
+        if not host:
+            log.error("No IP address known for node %s", frontend.name)
+            sys.exit(1)
+
+        addr, port = parse_ip_address_and_port(host)
         username = frontend.image_user
-        knownhostsfile = cluster.known_hosts_file if cluster.known_hosts_file \
-                         else '/dev/null'
-        sftp_cmdline = ["sftp",
-                        "-o", "UserKnownHostsFile=%s" % knownhostsfile,
-                        "-o", "StrictHostKeyChecking=yes",
-                        "-o", "IdentityFile=%s" % frontend.user_key_private]
+        knownhostsfile = (cluster.known_hosts_file if cluster.known_hosts_file
+                          else '/dev/null')
+        sftp_cmdline = [
+            "sftp",
+            "-P", "{0:d}".format(port),
+            "-o", "UserKnownHostsFile={0}".format(knownhostsfile),
+            "-o", "StrictHostKeyChecking=yes",
+            "-o", "IdentityFile={0}".format(frontend.user_key_private),
+        ]
         sftp_cmdline.extend(self.params.sftp_args)
-        sftp_cmdline.append('%s@%s' % (username, host))
+        sftp_cmdline.append('{0}@{1}'.format(username, addr))
         os.execlp("sftp", *sftp_cmdline)
 
 
@@ -779,14 +778,16 @@ class GC3PieConfig(AbstractCommand):
         """
         Load the cluster and build a GC3Pie configuration snippet.
         """
+        log.warning(
+            "Command `elasticluster gc3pie-config` is DEPRECATED"
+            " and will be removed in release 1.4 of ElastiCluster")
         creator = make_creator(self.params.config,
                                storage_path=self.params.storage)
         cluster_name = self.params.cluster
         try:
             cluster = creator.load_cluster(cluster_name)
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Listing nodes from cluster %s: %s\n" %
-                      (cluster_name, ex))
+            log.error("Listing nodes from cluster %s: %s", cluster_name, ex)
             return
 
         from elasticluster.gc3pie_config import create_gc3pie_config_snippet
@@ -841,12 +842,12 @@ class ExportCluster(AbstractCommand):
         try:
             cluster = creator.load_cluster(self.params.cluster)
         except ClusterNotFound:
-            log.error("Cluster `%s` not found in storage dir %s."
-                      % (self.params.cluster, self.params.storage))
+            log.error("Cluster `%s` not found in storage dir %s.",
+                      self.params.cluster, self.params.storage)
             sys.exit(1)
 
         if os.path.exists(self.params.zipfile) and not self.params.overwrite:
-            log.error("ZIP file `%s` already exists." % self.params.zipfile)
+            log.error("ZIP file `%s` already exists.", self.params.zipfile)
             sys.exit(1)
 
         with ZipFile(self.params.zipfile, 'w') as zipfile:
@@ -866,7 +867,7 @@ class ExportCluster(AbstractCommand):
             #
             def verbose_add(fname, basedir='', comment=None):
                 zipname = basedir + os.path.basename(fname)
-                log.info("Adding '%s' as '%s'" % (fname, zipname))
+                log.info("Adding '%s' as '%s'", fname, zipname)
                 zipfile.write(fname, zipname)
                 if comment:
                     info = zipfile.getinfo(zipname)
@@ -912,8 +913,9 @@ where this private key has been deployed.
                                                        node.name))
             except OSError as ex:
                 # A file is probably missing!
-                log.error("Fatal error: cannot add file %s to zip archive: %s."
-                          % (ex.filename, ex))
+                log.error(
+                    "Fatal error: cannot add file %s to zip archive: %s.",
+                    ex.filename, ex)
                 sys.exit(1)
 
         print("Cluster '%s' correctly exported into %s" %
@@ -947,7 +949,7 @@ class ImportCluster(AbstractCommand):
                                storage_path=self.params.storage)
         repo = creator.create_repository()
         tmpdir = tempfile.mkdtemp()
-        log.debug("Using temporary directory %s" % tmpdir)
+        log.debug("Using temporary directory %s", tmpdir)
         tmpconf = make_creator(self.params.config, storage_path=tmpdir)
         tmprepo = tmpconf.create_repository()
 
@@ -957,7 +959,7 @@ class ImportCluster(AbstractCommand):
             with ZipFile(self.params.file, 'r') as zipfile:
                 # Find main cluster file
                 # create cluster object from it
-                log.debug("ZIP file %s opened" % self.params.file)
+                log.debug("ZIP file %s opened", self.params.file)
                 cluster = None
                 zipfile.extractall(tmpdir)
                 newclusters = tmprepo.get_all()
@@ -991,7 +993,7 @@ class ImportCluster(AbstractCommand):
                     keybase = os.path.basename(keyfile)
                     srcfile = os.path.join(tmpdir, keybase)
                     if os.path.isfile(srcfile):
-                        log.info("Importing key file %s" % keybase)
+                        log.info("Importing key file %s", keybase)
                         destfile = os.path.join(dest, keybase)
                         shutil.copy(srcfile, destfile)
                         setattr(cluster, attr, destfile)
@@ -1006,8 +1008,9 @@ class ImportCluster(AbstractCommand):
                                                    node.kind,
                                                    node.name)
                             nodekeybase = os.path.basename(nodekeyfile)
-                            log.info("Importing key file %s for node %s" %
-                                     (nodekeybase, node.name))
+                            log.info(
+                                "Importing key file %s for node %s",
+                                nodekeybase, node.name)
                             if not os.path.isdir(destdir):
                                 os.makedirs(destdir)
                             # Path to key in zip file
@@ -1023,38 +1026,23 @@ class ImportCluster(AbstractCommand):
 
                 repo.save_or_update(cluster)
                 if not cluster:
-                    log.error("ZIP file %s does not contain a valid cluster."
-                              % self.params.file)
+                    log.error(
+                        "ZIP file %s does not contain a valid cluster.",
+                        self.params.file)
                     rc = 2
 
                 # Check if a cluster already exists.
                 # if not, unzip the needed files, and update ssh key path if needed.
         except Exception as ex:
-            log.error("Unable to import from zipfile %s: %s"
-                      % (self.params.file, ex))
+            log.error("Unable to import from zipfile `%s`: %s",
+                      self.params.file, ex)
             rc=1
         finally:
             if os.path.isdir(tmpdir):
                 shutil.rmtree(tmpdir)
-            log.info("Cleaning up directory %s" % tmpdir)
+            log.info("Cleaning up directory `%s`", tmpdir)
 
         if rc == 0:
             print("Successfully imported cluster from ZIP %s to %s"
                   % (self.params.file, repo.storage_path))
         sys.exit(rc)
-
-
-class ApiServer(AbstractCommand):
-    """
-    Start elasticluster api server (rest).
-    """
-
-    def setup(self, subparsers):
-        parser = subparsers.add_parser(
-            "apiserver", help="Start API Server.", description=self.__doc__)
-        parser.set_defaults(func=self)
-        parser.add_argument('-p', '--port', dest='port_number', default=8080, help='port to run the api server on')
-
-    def execute(self):
-        print("press <crtl + c> to stop the api server")
-        apiserver.run('0.0.0.0', self.params.port_number)

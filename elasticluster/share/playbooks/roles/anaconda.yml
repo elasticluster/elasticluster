@@ -1,0 +1,8 @@
+---
+- name: Install Anaconda
+  hosts: anaconda
+  tags:
+    - anaconda
+
+  roles:
+    - anaconda

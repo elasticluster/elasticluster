@@ -3,9 +3,10 @@
 - name: PostgreSQL | Extensions | Make sure the postgis extensions are installed
   apt:
     name: "{{item}}"
-    state: present
+    state: '{{ pkg_install_state }}'
     update_cache: yes
     cache_valid_time: "{{apt_cache_valid_time | default (3600)}}"
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items:
     - libgeos-c1
     - "postgresql-{{postgresql_version}}-postgis-{{postgresql_ext_postgis_version}}"

@@ -8,8 +8,8 @@
     - worker
     - nodemanager
   package:
-    name='{{item}}'
-    state=present
+    name: '{{item}}'
+    state: '{{pkg_install_state}}'
   with_items:
     - hadoop-mapreduce # The Hadoop MapReduce (MRv2)
     - hadoop-yarn # The Hadoop NextGen MapReduce (YARN)

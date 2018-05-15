@@ -9,13 +9,28 @@
 .. _playbooks:
 
 ============================================
-  Playbooks distributed with elasticluster
+  Playbooks distributed with ElastiCluster
 ============================================
 
 ElastiCluster uses `Ansible`_ to configure the VM cluster based on the
 options read from the configuration file.  This chapter describes the
 Ansible playbooks bundled [#]_ with ElastiCluster and how to
 use them.
+
+.. [#]
+
+   ElastiCluster playbooks can be found in the
+   ``elasticluster/share/playbooks`` directory of the source code. You
+   are free to copy, customize and redistribute them under the terms
+   of the `GNU General Public License version 3`_ or (at your option)
+   any later version.
+
+
+.. contents::
+
+
+Setup variables
+===============
 
 In some cases, extra variables can be set to playbooks to modify its
 default behavior. In these cases, you can either define a variable
@@ -28,48 +43,64 @@ hosts::
 
     <groupname>_var_<varname>=<value>
 
+For example::
 
-.. [#]
-
-   The playbooks can be found in the ``elasticluster/share/playbooks``
-   directory of the source code. You are free to copy,
-   customize and redistribute them under the terms of the `GNU General
-   Public License version 3`_ or (at your option) any later version.
+  slurm_worker_allow_reboot=yes
 
 
-Ansible
-=======
+General setup variables
+-----------------------
 
-Supported on:
+The following customization variables apply to all ElastiCluster playbooks.
 
-* Ubuntu 12.04 and later
-* RHEL/CentOS 6.x and 7.x
+================================== =================== =================================================
+Variable name                      Default             Description
+================================== =================== =================================================
+``allow_reboot``                   no                  Allow rebooting nodes if needed.  Be careful
+                                                       if this is set when resizing clusters, as you
+                                                       may lose running jobs.
+``insecure_https_downloads``       no                  If ``no`` (default), require that web sites, from
+                                                       where software is downloaded, present a valid
+                                                       SSL/TLS certificate.  However, it may happen
+                                                       that the base OS trusted certificates repository
+                                                       is not fully up-to-date and this verification fails.
+                                                       (See, for instance, `issue #539 <https://github.com/gc3-uzh-ch/elasticluster/issues/539>`_).
+                                                       In these cases, setting this option to ``yes``
+                                                       allows the playbooks to continue (at the expense
+                                                       of some security).
 
-This playbook installs the `Ansible`_ orchestration and configuration management
-system on each host.  There is not much clustering happening here; this playbook
-is provided in case you want to be able to run Ansible playbooks from inside the
-cluster (as opposed to always running them from the ElastiCluster host).
+                                                       .. warning::
 
-To force the playbook to run, add the Ansible group ``ansible`` to any node. The
-following example configuration sets up a SLURM batch-queuing cluster using 1
-front-end and 4 execution nodes, and additionally installs `Ansible`_ on the
-front-end::
+                                                          Setting this option to ``yes`` also allows
+                                                          installing packages from *unauthenticated*
+                                                          sources on Debian/Ubuntu.
 
-    [cluster/slurm]
-    master_nodes=1
-    worker_nodes=4
-    ssh_to=master
-    setup_provider=slurm+ansible
-    # ...
+``multiuser_cluster``              no                  Install NIS/YP.  The first node in the ``master``
+                                                       class will be assigned the role of the YP master
+                                                       server; additional nodes in the "master" class
+                                                       (if any) will be YP slave servers.
+``ssh_password_auth``              yes                 Allow users to log in via SSH by providing a
+                                                       password. **Note:** the default in ElastiCluster
+                                                       is the opposite of what all major GNU/Linux
+                                                       distributions do.
+``upgrade_packages``               yes                 Upgrade all installed to the latest available
+                                                       version.  Setting this to ``no`` allows speedier
+                                                       setup when starting from cluster snapshots.
+                                                       *Note:* even when set to ``no``, some packages
+                                                       may still be upgraded to satisfy dependencies
+                                                       of other packages that need to be installed.
+================================== =================== =================================================
 
-    [setup/slurm+ansible]
-    master_groups=slurm_master,ansible
-    worker_groups=slurm_worker
-    # ...
+
+Compute clusters
+================
+
+The following playbooks are available for installing compute clusters
+(batch-queuing or otherwise) with ElastiCluster.
 
 
 SLURM
-=====
+-----
 
 Supported on:
 
@@ -113,26 +144,108 @@ cluster using 1 front-end and 4 execution nodes::
     worker_groups=slurm_worker
     # ...
 
-You can combine the SLURM playbook with the Ganglia one; in this case
-the ``setup`` stanza will look like::
+You can combine the SLURM playbook with other add-on software.  For
+instance, you can install the Ganglia monitoring system alongside with
+SLURM; in this case the ``setup`` stanza will look like::
 
-    [setup/ansible_slurm]
+    [setup/slurm+ganglia]
     frontend_groups=slurm_master,ganglia_master
     compute_groups=slurm_worker,ganglia_monitor
     ...
 
+When combined with the CUDA add-on, and if any actual NVIDIA GPU
+devices are found on the compute nodes, SLURM will be configured with
+the GPU devices are GRES__ resources so that you can request the use
+of GPUs in your jobs by passing the ``--gres=gpu:...`` option to
+``sbatch``::
+
+  # request 2 GPU devices
+  sbatch --gres=gpu:2 my_gpgpu_job.sh
+
+.. __: https://slurm.schedmd.com/gres.html
+
+Note that compute nodes need to be given the `cuda` add-on playbook in
+order for CUDA GPU detection and configuration to work.  For eaxmple,
+the following configuration will detect and configure NVIDIA GPUs on
+all compute nodes (but not on the front-end)::
+
+    [setup/slurm+gpu]
+    frontend_groups=slurm_master
+    compute_groups=slurm_worker,cuda
+    ...
+
 Extra variables can be set by editing the `setup/` section:
 
-================================== =================== =================================================
-Variable name                      Default             Description
-================================== =================== =================================================
-``slurm_selecttype``               ``select/cons_res`` Value of `SelectType` in `slurm.conf`
-``slurm_selecttypeparameters``     ``CR_Core_Memory``  Value of `SelectTypeParameters` in `slurm.conf`
-``slurm_maxarraysize``             1000                Maximum size of an array job
-``slurm_maxjobcount``              10000               Maximum nr. of jobs actively managed by the
-                                                       SLURM controller (i.e., pending and running)
-``multiuser_cluster``              yes                 Install NIS/YP
-================================== =================== =================================================
+.. list-table:: cgroup-related SLURM settings
+   :widths: 30 20 50
+   :header-rows: 1
+
+   * - Variable
+     - Default value
+     - Description
+   * - ``slurm_allowedramspace``          1
+     - 100
+     - Max percentage of RAM that can be allocated to a job. If
+       ``slurm_constrainramspace`` (see below) is ``yes``, then this
+       limit is applied to a job's *real memory* usage; otherwise,
+       this limit is summed with ``slurm_allowedswapspace`` to cap the
+       *virtual memory* usage (see SLURM's ``VSizeFactor``
+       configuration parameter).
+   * - ``slurm_allowedswapspace``
+     - 1
+     - Max percentage of virtual memory (in addition to the real
+       memory) that can be allocated to a job.  This value is summed
+       with ``slurm_allowedramspace`` to cap a job's total *virtual
+       memory* usage.  You might want to set this limit to a much
+       higher value when using GPUs, as GPU memory might be accounted
+       in the job's virtual memory.
+   * - ``slurm_constrainramspace``
+     - yes
+     - **Only used if ``slurm_taskplugin`` is set to ``task/cgroup``.**
+       If set to ``yes`` then SLURM constrains the job's RAM usage by
+       setting the memory soft limit to the allocated memory and the
+       hard limit to the allocated memory * ``slurm_allowedramspace``
+       (see below).  This can add stability to a system when there are
+       multiple misbehaving jobs that allocate large amounts of
+       memory, but can be problematic with jobs using GPUs (since the
+       memory used on the GPU seems to be accounted against the job's
+       own CPU RAM consumption).
+   * - ``slurm_constrainswapspace``
+     - yes
+     - **Only used if ``slurm_taskplugin`` is set to ``task/cgroup``.**
+       If set to ``yes`` then SLURM kills jobs whose virtual memory
+       usage exceeds allocated memory * ``slurm_allowedswapspace``
+       (see below).
+   * - ``slurm_fastschedule``
+     - 1
+     - Value of ``FastSchedule`` in ``slurm.conf``
+   * - ``slurm_jobacctgatherfrequency``
+     - 60
+     - Value of ``JobAcctGatherFrequency`` in ``slurm.conf``
+   * - ``slurm_jobacctgathertype``
+     - ``jobacct_gather/linux``
+     - Value of ``JobAcctGratherType`` in ``slurm.conf``
+   * - ``slurm_maxarraysize``
+     - 1000
+     - Maximum size of an array job
+   * - ``slurm_maxjobcount``
+     - 10000
+     - Maximum nr. of jobs actively managed by the SLURM controller (i.e., pending and running)
+   * - ``slurm_proctracktype``
+     - ``proctrack/linuxproc``
+     - Value of ``ProcTrackType`` in ``slurm.conf``
+   * - ``slurm_returntoservice``
+     - 2
+     - Value of ``ReturnToService`` in ``slurm.conf``
+   * - ``slurm_selecttype``
+     - ``select/cons_res``
+     - Value of ``SelectType`` in ``slurm.conf``
+   * - ``slurm_selecttypeparameters``
+     - ``CR_Core_Memory``
+     - Value of ``SelectTypeParameters`` in ``slurm.conf``
+   * - ``slurm_taskplugin``
+     - ``task/none``
+     - Value of ``TaskPlugin`` in ``slurm.conf``
 
 Note that the ``slurm_*`` extra variables need to be set *globally*
 (e.g., ``global_var_slurm_selectype``) because the SLURM configuration
@@ -154,8 +267,9 @@ available:
 In order for the NFS exported home directory to be mountable from the cluster's compute nodes,
 security groups on OpenStack need to permit all UDP traffic between all cluster nodes.
 
+
 GridEngine
-==========
+----------
 
 Tested on:
 
@@ -211,128 +325,8 @@ are NIS slaves) to make it easier to add users to the cluster (just run the
 ``adduser`` command on the master).
 
 
-HTCondor
-========
-
-Tested on:
-
-* Ubuntu 12.04
-
-+-------------------+----------------------------------+
-| ansible groups    | role                             |
-+===================+==================================+
-|``condor_master``  | Act as scheduler, submission and |
-|                   | execution host.                  |
-+-------------------+----------------------------------+
-|``condor_workers`` | Act as execution host only.      |
-+-------------------+----------------------------------+
-
-This playbook will install the `HTCondor`_ workload management system
-using the packages provided by the Center for High Throughput
-Computing at UW-Madison.
-
-The ``/home`` filesystem is exported *from* the condor master to the
-compute nodes.
-
-A *snippet* of a typical configuration for a slurm cluster is::
-
-    [cluster/condor]
-    setup_provider=ansible_condor
-    frontend_nodes=1
-    compute_nodes=2
-    ssh_to=frontend
-    ...
-
-    [setup/ansible_condor]
-    frontend_groups=condor_master
-    compute_groups=condor_workers
-    ...
-
-
-Ganglia
-=======
-
-Tested on:
-
-* Ubuntu 12.04
-* CentOS 6.3
-* Debian 7.1 (GCE)
-* CentOS 6.2 (GCE)
-
-+--------------------+---------------------------------+
-| ansible groups     | role                            |
-+====================+=================================+
-|``ganglia_master``  | Run gmetad and web interface.   |
-|                    | It also run the monitor daemon. |
-+--------------------+---------------------------------+
-|``ganglia_monitor`` | Run ganglia monitor daemon.     |
-+--------------------+---------------------------------+
-
-This playbook will install `Ganglia`_ monitoring tool using the
-packages distributed with Ubuntu or CentOS and will configure frontend
-and monitors.
-
-You should run only one ``ganglia_master``. This will install the
-``gmetad`` daemon to collect all the metrics from the monitored nodes
-and will also run apache.
-
-If the machine in which you installed ``ganglia_master`` has IP
-``10.2.3.4``, the ganglia web interface will be available at the
-address http://10.2.3.4/ganglia/
-
-This playbook is supposed to be compatible with all the other available playbooks.
-
-
-IPython cluster
-===============
-
-Tested on:
-
-* Ubuntu 12.04
-* CentOS 6.3
-* Debian 7.1 (GCE)
-* CentOS 6.2 (GCE)
-
-+------------------------+------------------------------------+
-| ansible groups         | role                               |
-+========================+====================================+
-| ``ipython_controller`` | Run an IPython cluster controller  |
-+------------------------+------------------------------------+
-| ``ipython_engine``     | Run a number of ipython engine for |
-|                        | each core                          |
-+------------------------+------------------------------------+
-
-This playbook will install an `IPython cluster`_ to run python code in
-parallel on multiple machines.
-
-One of the nodes should act as *controller* of the cluster
-(``ipython_controller``), running the both the *hub* and the
-*scheduler*. Other nodes will act as *engine*, and will run one
-"ipython engine" per core. You can use the *controller* node for
-computation too by assigning the  ``ipython_engine`` class to it as
-well.
-
-A *snippet* of typical configuration for an Hadoop cluster is::
-
-    [cluster/ipython]
-    setup_provider=ansible_ipython
-    controller_nodes=1
-    worker_nodes=4
-    ssh_to=controller
-    ...
-
-    [setup/ansible_ipython]
-    controller_groups=ipython_controller,ipython_engine
-    worker_groups=ipython_engine
-    ...
-
-In order to use the IPython cluster, using the default configuration,
-you are supposed to connect to the controller node via ssh and run
-your code from there.
-
-
 Hadoop + Spark
-==============
+--------------
 
 Supported on:
 
@@ -374,11 +368,6 @@ nodes from the cluster.
      node before removing it.  Be careful when shrinking a cluster, as
      this may lead to data loss!
 
-  3. The current HDFS replication factor is set to 1 e.g. off, depending on
-     your case you may want to change this. In order to do so, add the
-     following to your setup config (setting replication to ):
-     global_var_hdfs_replication_factor=3
-
 The following example configuration sets up a Hadoop cluster using 4
 storage+execution nodes::
 
@@ -400,9 +389,173 @@ installed on the cluster (NIS master on the cluster master node, compute nodes
 are NIS slaves) to make it easier to add users to the cluster (just run the
 ``adduser`` command on the master).
 
+The following variables can be used to control the defaults for
+running Spark applications.  (Note that they set a *default*, hence
+can be overridden by applications when creating a Spark context; on
+the other hand, these defaults are *exactly* what is used when running
+``pyspark`` or a Jupyter notebook with Spark support.)
+
+.. list-table:: Spark settings
+   :widths: 30 20 50
+   :header-rows: 1
+
+   * - Variable
+     - Default value
+     - Description
+   * - ``spark_driver_memory_mb``          1
+     - *(Free memory on master node / nr. of CPUs of master node)*
+     - Used to set ``spark.driver.memory``: maximum amount of memory
+       (counted in MBs) that a Spark "driver" process is allowed to use.
+   * - ``spark_driver_maxresultsize_mb``          1
+     - *(80% of ``spark_driver_memory_mb``)*
+     - Used to set ``spark.driver.maxResultSize``: Limit of total size
+       (amount in MBs) of serialized results of all partitions for
+       each Spark action (e.g. collect)
+   * - ``spark_executor_memory_mb``          1
+     - *(Max free memory on worker node / max nr. of CPUs on a node)*
+     - Used to set ``spark.executor.memory``: Maximum amount of memory
+       (counted in MBs) that a Spark "executor" process is allowed to use.
+   * - ``spark_python_worker_memory_mb``          1
+     - *(50% of ``spark_executor_memory_mb``)*
+     - Used to set ``spark.python.worker.memory``: Maximum amount of
+       memory (counted in MBs) to use per Python worker process during
+       aggregation.  If the memory used during aggregation goes above
+       this amount, Spark starts spilling the data into disks.
+
+
+HTCondor
+--------
+
+Tested on:
+
+* Debian 8.x
+* Ubuntu 14.04
+
++-------------------+----------------------------------+
+| ansible groups    | role                             |
++===================+==================================+
+|``condor_master``  | Act as scheduler, submission and |
+|                   | execution host.                  |
++-------------------+----------------------------------+
+|``condor_worker``  | Act as execution host only.      |
++-------------------+----------------------------------+
+
+This playbook will install the `HTCondor`_ workload management system
+using the packages provided by the Center for High Throughput
+Computing at UW-Madison.
+
+The ``/home`` filesystem is exported *from* the condor master to the
+compute nodes.
+
+A *snippet* of a typical configuration for a slurm cluster is::
+
+    [cluster/condor]
+    setup_provider=htcondor
+    frontend_nodes=1
+    compute_nodes=2
+    ssh_to=frontend
+    # ...
+
+    [setup/htcondor]
+    frontend_groups=condor_master
+    compute_groups=condor_worker
+    # ...
+
+
+Kubernetes
+----------
+
+Supported on:
+
+* Ubuntu 16.04
+* RHEL/CentOS 7.x
+
+This playbook installs the `Kubernetes`_ container management system on each host.
+It is configured using kubeadm. Currently only 1 master node is supported.
+
+To force the playbook to run, add the Ansible group ``kubernetes``. The
+following example configuration sets up a kubernetes cluster using 1
+master and 2 worker nodes, and additionally installs flannel for the networking
+(canal is also available)::
+
+    [cluster/kubernetes]
+    master_nodes=1
+    worker_nodes=2
+    ssh_to=master
+    setup_provider=kubernetes
+    # ...
+
+    [setup/kubernetes]
+    master_groups=kubernetes_master
+    worker_groups=kubernetes_worker
+    # ...
+
+SSH into the cluster and execute 'sudo kubectl --kubeconfig
+/etc/kubernetes/admin.conf get nodes' to view the cluster.
+
+
+TORQUE
+------
+
+Supported on:
+
+* CentOS 7.x
+* CentOS 6.x
+
++-------------------+----------------------------------+
+| ansible groups    | role                             |
++===================+==================================+
+|``torque_master``  | Act as scheduler, submission and |
+|                   | execution host.                  |
++-------------------+----------------------------------+
+|``torque_worker``  | Act as execution host only.      |
++-------------------+----------------------------------+
+
+This playbook will install the `TORQUE`_ workload management system
+using the packages provided in the EPEL_ repository.
+
+.. note::
+
+   Due to a change in the licensing policy, the last available version
+   in EPEL_ is TORQUE 4.2.10 (released in March 2015) while the latest
+   version (as of this writing, April 2018) is 6.1.2; the cluster
+   installed by ElastiClyuster will thus lack recent features.
+
+   For the same licensing reasons, TORQUE is no longer available in
+   recent Debian and Ubuntu distributionsm and hence cannot currently
+   be installed by ElastiCluster.
+
+The TORQUE server will be configured with a single queue, named
+``default``; all worker nodes will belong to this queue.
+
+The ``/home`` filesystem is exported *from* the ``torque_master`` node
+to the ``torque_worker`` nodes.
+
+A *snippet* of a typical configuration for a slurm cluster is::
+
+    [cluster/torque]
+    setup=torque
+    frontend_nodes=1
+    compute_nodes=4
+    # ...
+
+    [setup/torque]
+    frontend_groups=torque_master
+    compute_groups=torque_worker
+    # ...
+
+
+Filesystems and storage
+=======================
+
+The following playbooks are available for installing storage clusters
+and distributed filesystems with ElastiCluster.  These can be used
+standalone, or mixed with compute clusters to provide additional
+storage space or more performant cluster filesystems.
+
 
 CephFS
-======
+------
 
 Supported on:
 
@@ -448,7 +601,7 @@ The Ceph and CephFS behavior can be changed by defining the
 following variables in the `setup/` section:
 
 .. list-table:: Ceph/CephFS variables in ElastiCluster
-   :widths: 30 20 50
+   :widths: 10 15 75
    :header-rows: 1
 
    * - Variable
@@ -548,11 +701,12 @@ data::
 
 
 GlusterFS
-=========
+---------
 
 Supported on:
 
 * Ubuntu 14.04 and later
+* Debian 8 and later
 * RHEL/CentOS 6.x, 7.x
 
 +--------------------+----------------------------------------------------+
@@ -572,17 +726,30 @@ and any ``glusterfs_client`` to mount this filesystem over directory
 To manage the GlusterFS filesystem you need to connect to a
 ``gluster_server`` node.
 
-By default the volume is neither replicated nor striped, i.e., replica
-and stripe number is set to 1.  This can be changed by defining the
-following variables in the `setup/` section:
+By default the GlusterFS volume is "pure distributed": i.e., there is
+no redundancy in the server setup (if a server goes offline, so does
+the data that resides there), and neither is the data replicated nor
+striped, i.e., replica and stripe number is set to 1.  This can be
+changed by defining the following variables in the `setup/` section:
 
-+----------------------+------------+-----------------------------------------+
-| variable name        | default    | description                             |
-+======================+============+=========================================+
-| ``gluster_stripes``  | no stripe  | set the stripe value for default volume |
-+----------------------+------------+-----------------------------------------+
-| ``gluster_replicas`` | no replica | set replica value for default volume    |
-+----------------------+------------+-----------------------------------------+
++----------------------+------------+---------------------------------------------+
+| variable name        | default    | description                                 |
++======================+============+=============================================+
+|``gluster_stripes``   | no stripe  | set the stripe value for default volume     |
++----------------------+------------+---------------------------------------------+
+|``gluster_replicas``  | no replica | set replica value for default volume        |
++----------------------+------------+---------------------------------------------+
+|``gluster_redundancy``| 0          | nr. of servers that can fail or be          |
+|                      |            | offline without affecting data availability |
++----------------------+------------+---------------------------------------------+
+
+Note that setting ``gluster_redundancy`` to a non-zero value will
+force the volume to be "dispersed", which is incompatible with
+striping and replication.  In other words, the ``gluster_redundancy``
+option is incompatible with ``gluster_stripes`` and/or
+``gluster_replicas``.  You can read more about the GlusterFS volume
+types and permitted combinations at
+`<http://docs.gluster.org/en/latest/Administrator%20Guide/Setting%20Up%20Volumes/>`_.
 
 The following example configuration sets up a GlusterFS cluster using 8 data nodes
 and providing 2 replicas for each file::
@@ -605,6 +772,27 @@ and providing 2 replicas for each file::
     server_var_gluster_replicas=2
     server_var_gluster_stripes=1
 
+The following example configuration sets up a dispersed GlusterFS
+volume using 6 data nodes with redundancy 2, i.e., two servers can be
+offlined without impacting data availability::
+
+  [cluster/gluster]
+    client_nodes=1
+    server_nodes=6
+    ssh_to=client
+
+    setup_provider=gluster
+    # ... rest of cluster params as usual ...
+
+  [setup/gluster]
+    provider=ansible
+
+    client_groups=glusterfs_client
+    server_groups=glusterfs_server,glusterfs_client
+
+    # set redundancy and force "dispersed" volume
+    server_var_gluster_redundancy=2
+
 The "GlusterFS" playbook depends on the following Ansible roles being
 available:
 
@@ -615,7 +803,7 @@ available:
 
 
 OrangeFS/PVFS2
-==============
+--------------
 
 Tested on:
 
@@ -657,245 +845,476 @@ This configuration will create a SLURM cluster with 10 compute nodes,
 10 data nodes and a frontend, and will mount the ``/pvfs2`` directory
 from the data nodes to both the compute nodes and the frontend.
 
-Kubernetes
-=======
+
+Add-on software
+===============
+
+The following playbooks add functionality or software on top of a
+cluster (e.g., monitoring with web-based dashboard).  They can also be
+used stand-alone (e.g., JupyterHub).
+
+
+Anaconda
+--------
 
 Supported on:
 
-* Ubuntu 16.04
-* RHEL/CentOS 7.x
+* Ubuntu 14.04 and later
+* RHEL/CentOS 6.x and 7.x
 
-This playbook installs the `Kubernetes`_ container management system on each host.
-It is configured using kubeadm. Currently only 1 master node is supported.
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``anaconda``    Install the Anaconda_ Python distribution
+==============  =======================================================
 
-To force the playbook to run, add the Ansible group ``kubernetes``. The
-following example configuration sets up a kubernetes cluster using 1
-master and 2 worker nodes, and additionally installs flannel for the networking
-(canal is also available)::
+This playbook installs the `Anaconda`_ Python distribution.  Using
+customization variables you can choose whether to install the Python
+2.7 or Python 3 version, and whether to make the Anaconda Python
+interpreter the default Python interpreter for logged-in users.
 
-    [cluster/kubernetes]
+The following variables may be set to alter the role behavior:
+
+.. list-table:: Anaconda role variables in ElastiCluster
+   :widths: 10 15 75
+   :header-rows: 1
+
+   * - Variable
+     - Default value
+     - Description
+   * - ``anaconda_version``
+     - ``5.1.0``
+     - Version of the Anaconda Python distribution to install
+   * - ``anaconda_python_version``
+     - ``2``
+     - Anaconda comes with either a Python2 or a Python3 interpreter
+       -- choose which one you want here.
+   * - ``anaconda_in_path``
+     - ``yes``
+     - whether the Python interpreter from Anaconda should be made the
+       first match in users' shell ``$PATH``
+
+For instance, the following configuration snippet requests that
+ElastiCluster and Ansible install Anaconda Python3 on a SLURM cluster,
+and make it the default interpreter on the frontend node only::
+
+     [setup/slurm+anaconda]
+     # ... same as usual SLURM setup, but:
+     master_groups=slurm_master,anaconda
+     worker_groups=slurm_worker,anaconda
+
+     # use Anaconda Python3 flavor
+     global_var_anaconda_python_version=3
+
+     # make it default for logged-in users on master node only
+     master_var_anaconda_in_path=yes
+     worker_var_anaconda_in_path=no
+
+The code from this role is a minor modification of the
+`ansible-anaconda`__ playbook written by Andrew Rothstein, and as
+such maintains the original distribution license.  See the
+accompanying `LICENSE` file for details.
+
+.. __: https://github.com/andrewrothstein/ansible-anaconda
+
+
+Ansible
+-------
+
+Supported on:
+
+* Ubuntu 12.04 and later
+* RHEL/CentOS 6.x and 7.x
+
+This playbook installs the `Ansible`_ orchestration and configuration management
+system on each host.  There is not much clustering happening here; this playbook
+is provided in case you want to be able to run Ansible playbooks from inside the
+cluster (as opposed to always running them from the ElastiCluster host).
+
+To force the playbook to run, add the Ansible group ``ansible`` to any node. The
+following example configuration sets up a SLURM batch-queuing cluster using 1
+front-end and 4 execution nodes, and additionally installs `Ansible`_ on the
+front-end::
+
+    [cluster/slurm]
     master_nodes=1
-    worker_nodes=2
+    worker_nodes=4
     ssh_to=master
-    setup_provider=kubernetes
+    setup_provider=slurm+ansible
     # ...
 
-    [setup/kubernetes]
-    master_groups=kubernetes_master
-    worker_groups=kubernetes_worker
+    [setup/slurm+ansible]
+    master_groups=slurm_master,ansible
+    worker_groups=slurm_worker
     # ...
 
-SSH into the cluster and execute 'sudo kubectl --kubeconfig /etc/kubernetes/admin.conf get nodes' to view the cluster.
 
-Mesos + Marathon + Chronos
-============================
+CUDA
+----
 
-Supported on:
+Tested on:
 
-* Ubuntu 16.04
+* Ubuntu 14.04, 16.04
+* CentOS 6.x, 7.x
 
-This playbook installs a Mesos_ cluster with Zookeeper_,  GlusterFS_,
-Marathon_ and Chronos_. The cluster comprises a Zookeeper quorum and
-Mesos nodes. The cluster runs docker containers by default. Try to
-choose an odd number of master servers (otherwise zookeeper complains
-a lot). The minimal recommended size of a master node is 4 vCPU,
-64GB RAM, 120GB disk space. The minimal recommended size of a slave node
-is 4 vCPU, 16GB RAM, 100GB disk space.
++----------------+---------------------------------------+
+| ansible groups | role                                  |
++================+=======================================+
+|``cuda``        | Install the NVIDIA device drivers and |
+|                | the CUDA toolkit and runtime.         |
++----------------+---------------------------------------+
 
-=================  ==================================================
-Ansible group      Action
-=================  ==================================================
-``mesos_master``   Install the Mesos cluster node: Mesos Master,
-                   docker, Zookeeper, GlusterFS, Marathon and Chronos.
-``mesos_slave``    Install the Mesos cluster node: Mesos Slave and
-                   docker.
-=================  ==================================================
+This playbook will detect NVIDIA GPU devices on every host where it is
+run, and install the CUDA toolkit and runtime software, thus enabling
+the use of GPU accelerators.
 
-The following example configuration sets up a Mesos cluster using 15
- nodes::
+Note that in some cases a reboot is necessary in order to correctly
+install the NVIDIA GPU device drivers; this is only allowed if the
+global variable ``allow_reboot`` is ``true`` -- by default, reboots
+are not allowed so the playbook will fail if a reboot is needed.
 
-    [cluster/mesos]
-    setup_provider=mesos
-    master_nodes=3
-    slave_nodes=12
-    ssh_to=master
+A variable can be used to control the version of the CUDA toolkit that
+will be installed on the nodes:
 
-    [setup/mesos]
-    provider=ansible
-    mesos_groups=mesos
+================ ============= ============================================
+Variable name    Default value Description
+---------------- ------------- --------------------------------------------
+``cuda_version`` 8.0           What version of the CUDA toolkit to install
+================ ============= ============================================
+
+The default is to install CUDA tooklit and runtime version 8.0
 
 
-It is recommended that all web interfaces are behind reverse tunnel,
-because 'others' can easily mess up the configuration with these interfaces.
-
-Spark + Alluxio + Zeppelin
-============================
+EasyBuild
+---------
 
 Supported on:
 
-* Ubuntu 16.04
+* Ubuntu 16.04, 14.04
+* Debian 8 ("jessie"), 9 ("stretch")
+* CentOS 6.x and 7.x
 
-This playbook installs a Stand Alone Spark_ cluster with Alluxio_ and
-Zeppelin_. The cluster comprises a Spark Master node (only 1 supported)
-and Spark Slave nodes.
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``easybuild``   Install the EasyBuild_ HPC package manager.
+==============  =======================================================
 
-=================  ==================================================
-Ansible group      Action
-=================  ==================================================
-``spark_master``   Install the Spark Master node: Spark Master,
-                   Alluxio Master and Zeppelin.
-``spark_slave``    Install the Spark Slave node: Spark Slave and
-                   Alluxio Worker.
-=================  ==================================================
+This playbook installs EasyBuild_ and its dependencies to provide
+a working build environment for HPC clusters.
 
-The following example configuration sets up a Spark cluster using 4
- nodes::
+EasyBuild is configured with the following options:
 
-    [cluster/spark]
-    setup_provider=spark
-    master_nodes=1
-    slave_nodes=3
-    ssh_to=master
+* use Lmod_ as the "environment modules" tool,
+  and generate module files with Lua_ syntax.
+* use `minimal toolchains`_ (including the "dummy" / system compiler toolchain)
+* use `generic optimization flags`_ for maximum compatibility
 
-    [setup/mesos]
-    provider=ansible
-    master_groups=spark_master
-    slave_groups=spark_slave
+.. _`minimal toolchains`: http://easybuild.readthedocs.io/en/latest/Manipulating_dependencies.html#using-minimal-toolchains-for-dependencies
+.. _`generic optimization flags`: http://easybuild.readthedocs.io/en/latest/Controlling_compiler_optimization_flags.html#optimizing-for-a-generic-processor-architecture-via-optarch-generic
+
+The following variables may be set to alter the role behavior:
+
+.. list-table:: EasyBuild role variables in ElastiCluster
+   :widths: 10 15 75
+   :header-rows: 1
+
+   * - Variable
+     - Default value
+     - Description
+   * - ``EASYBUILD_VERSION``
+     - 2.8.2
+     - The version of EasyBuild_ to install. Interpolated into the
+       (default) source archive name.
+   * - ``EASYBUILD_PREFIX``
+     - ``/opt/easybuild``
+     - Root directory of all the EasyBuild-related paths: source
+       archive, ``.eb``` files repository, installed software, etc.
+   * - ``EASYBUILD_INSTALL``
+     - Build no software during cluster setup.
+     - List of ``.eb`` recipes to build.  This is a *YAML list*, i.e.,
+       a comma-separated list of recipe names enclosed in square
+       brackets; for example::
+
+         global_var_EASYBUILD_INSTALL=[RELION,OpenMPI]
+
+       *Beware:* the initial EasyBuild invocation will have to build
+       the entire toolchain, so it can take a couple of hours even to
+       install a small and relatively simple package. For this reason,
+       the default value of this variable is the empty list (i.e., do
+       not install any software through EasyBuild).
+   * - ``EASYBUILD_OPTARCH``
+     - ``GENERIC``
+     - Optimization flags for building software, see:
+       `<http://easybuild.readthedocs.io/en/latest/Controlling_compiler_optimization_flags.html#controlling-target-architecture-specific-optimizations-via-optarch>`_
+       By default the "GENERIC" value is used which should produce
+       code compatible with any x86-64 processor.
+
+It is advised to install EasyBuild on the master/frontend node only,
+and export the software directories from there to compute nodes via
+NFS, to cut down on build times and to avoid coherency issues.
 
 
-By default Alluxio connects to a Swift backend, but it supports way more:
-http://www.alluxio.org/docs/master/en/Configuring-Alluxio-with-Swift.html
-check the 'Under Storages' list. All parameters are pushed down from
-the configuration but not all are sensible defaults. Note that your connection
-settings are pushed to the Alluxio config, which will then contain your plain
-text secrets. So it is recommended to only use such a system for yourself.
+Ganglia
+-------
 
-Use `global_var_spark_alluxio_storage_root`=<container name> to connect
-to a specific container. `global_var_spark_alluxio_storage_user` and
-`global_var_spark_alluxio_storage_password` can be used for supplying
-the credentials. `spark_alluxio_storage_auth_url` and
-`global_var_spark_alluxio_storage_tenant` can be used to specify the endpoint.
-`global_var_spark_alluxio_storage_protocol` can be used to switch to a
-different protocol than 'swift'. The connection details default to running
-on an OpenStack environment.
+Tested on:
 
-Use `global_var_spark_anaconda_aux_packages`=<package1, package2> to install
-auxiliary python packages on the cluster.
+* Ubuntu 12.04, 14.04, 16.04
+* CentOS 6.x, 7.x
 
-It is recommended that all web interfaces are behind reverse tunnel,
-because 'others' can easily mess up the configuration with these interfaces.
++--------------------+---------------------------------+
+| ansible groups     | role                            |
++====================+=================================+
+|``ganglia_master``  | Run gmetad and web interface.   |
+|                    | It also run the monitor daemon. |
++--------------------+---------------------------------+
+|``ganglia_monitor`` | Run ganglia monitor daemon.     |
++--------------------+---------------------------------+
 
-Kafka
-==============
+This playbook will install `Ganglia`_ monitoring tool using the
+packages distributed with Ubuntu or CentOS and will configure frontend
+and monitors.
+
+You should run only one ``ganglia_master``. This will install the
+``gmetad`` daemon to collect all the metrics from the monitored nodes
+and will also run apache.
+
+If the machine in which you installed ``ganglia_master`` has IP
+``10.2.3.4``, the ganglia web interface will be available at the
+address http://10.2.3.4/ganglia/
+
+This playbook is supposed to be compatible with all the other available playbooks.
+
+
+IPython cluster
+---------------
+
+Tested on:
+
+* Ubuntu 12.04
+* CentOS 6.3
+* Debian 7.1 (GCE)
+* CentOS 6.2 (GCE)
+
++------------------------+------------------------------------+
+| ansible groups         | role                               |
++========================+====================================+
+| ``ipython_controller`` | Run an IPython cluster controller  |
++------------------------+------------------------------------+
+| ``ipython_engine``     | Run a number of ipython engine for |
+|                        | each core                          |
++------------------------+------------------------------------+
+
+This playbook will install an `IPython cluster`_ to run python code in
+parallel on multiple machines.
+
+One of the nodes should act as *controller* of the cluster
+(``ipython_controller``), running the both the *hub* and the
+*scheduler*. Other nodes will act as *engine*, and will run one
+"ipython engine" per core. You can use the *controller* node for
+computation too by assigning the  ``ipython_engine`` class to it as
+well.
+
+A *snippet* of typical configuration for an Hadoop cluster is::
+
+    [cluster/ipython]
+    setup_provider=ansible_ipython
+    controller_nodes=1
+    worker_nodes=4
+    ssh_to=controller
+    ...
+
+    [setup/ansible_ipython]
+    controller_groups=ipython_controller,ipython_engine
+    worker_groups=ipython_engine
+    ...
+
+In order to use the IPython cluster, using the default configuration,
+you are supposed to connect to the controller node via ssh and run
+your code from there.
+
+
+JupyterHub
+----------
 
 Supported on:
 
-* Ubuntu 16.04
+* Ubuntu 16.04, 14.04
+* Debian 8 ("jessie"), 9 ("stretch")
+* CentOS 6.x and 7.x
 
-This playbook installs Kafka_ nodes with Zookeeper_ as orchestrator. It
-comprises a Zookeeper quorum, and kafka nodes. Kafka is a distributed
-streaming platform (used for building real-time data pipelines and streaming).
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``jupyterhub``  Install Jupyter_ and JupyterHub_ to work with interactive
+                computational notebooks.
+==============  =======================================================
 
-=================  ==================================================
-Ansible group      Action
-=================  ==================================================
-``kafka_node``     Install the node with Kafka and Zookeeper.
-=================  ==================================================
+Install JupyterHub_ to grant multiple users access to Jupyter_
+notebooks thorugh a web interface.  Kernels are installed to run code
+written in Python 2.7 and 3.x (with Anaconda_ Python), BASH (using
+the OS-provided shell), PySpark (in conjunction with the Hadoop+Spark
+playbook), `R language`_ (if the R add-on is installed, see below),
+and MATLAB (if installed).
 
-The following example configuration sets up a group of 3 kafka nodes::
+.. note::
 
-    [cluster/kafka]
-    setup_provider=kafka
-    streamer_nodes=3
-    ssh_to=streamer
+   JupyterHub is configured to authenticate users with the GNU/Linux
+   ``/etc/passwd`` database.  So, in order to log in you need to
+   create users first (or set passwords to existing users).
 
-    [setup/kafka]
-    provider=ansible
-    streamer_groups=kafka_streamer
+   In order to create a new user, run the following commands at the
+   node's shell prompt::
 
-NiFi
-==============
+     # replace `user_name` with an actual name (e.g. `jsmith`)
+     sudo adduser user_name
 
-Supported on:
+   In order to set the password for an existing user, run the
+   following commands at the node's shell prompt::
 
-* Ubuntu 16.04
+     # replace `user_name` with an actual name (e.g. `jsmith`)
+     sudo passwd user_name
 
-This playbook installs NiFi_ nodes with Zookeeper_ as orchestrator. It
-comprises a Zookeeper quorum, and NiFi nodes. Apache NiFi supports powerful
-and scalable directed graphs of data routing, transformation, and system mediation
-logic. The NiFi web interface will be available on port 8080 on any of the nodes.
+To use the JupyterHub server:
 
-=================  ==================================================
-Ansible group      Action
-=================  ==================================================
-``nifi_node``      Install the node with NiFi and Zookeeper.
-=================  ==================================================
+1. Note down the IP address of the server VM created by ElastiCluster
+2. In your browser, open https://server.ip/
+3. Accept the self-signed SSL certificate in the browser
+4. Log in using username and password
 
-The following example configuration sets up a group of 3 nifi nodes::
+.. note::
 
-    [cluster/nifi]
-    setup_provider=nifi
-    transformer_nodes=3
-    ssh_to=transformer
+   You must edit the VM security group to allow connections to port
+   443!  (ElastiCluster will not do this automatically.)
 
-    [setup/kafka]
-    provider=ansible
-    transformer_groups=nifi_transformer
+The JupyterHub role can be combined with other playbooks (it is
+advised to add it to the frontend/master node), or can be used to
+install a stand-alone server.  A full example of how to install a
+JupyterHub stand-alone server can be found at:
+`<https://github.com/gc3-uzh-ch/elasticluster/blob/master/examples/jupyterhub-on-google.conf>`_
 
-ZFS
-==============
 
-Supported on:
-
-* Ubuntu 16.04
-
-This playbook installs ZFS_ nodes. It can be used to deploy one or more
-shared storage environments. When using this play you need to have one
-or more disks/volumes attached to the vm (currently working only on
-OpenStack).
-
-=================  ==================================================
-Ansible group      Action
-=================  ==================================================
-``zfs_server``     Install the node with zfs.
-=================  ==================================================
-
-The following example configuration sets up a group of 2 zfs nodes::
-
-    [cluster/share]
-    setup_provider=share
-    share_nodes=2
-    ssh_to=share
-    volume_disk_size=100
-
-    [setup/kafka]
-    provider=ansible
-    share_groups=zfs_server
-
-ELASTICSEARCH
-==============
+R language
+----------
 
 Supported on:
 
-* Ubuntu 16.04
-* CentOS 7
+* Ubuntu 16.04, 14.04
+* Debian 8 ("jessie"), 9 ("stretch")
+* CentOS 6.x and 7.x
 
-This playbook installs ELASTICSEARCH_ nodes.
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``r``           Install the interpreter and a basic libraries
+                for the GNU `R language`_ and statistical system.
+==============  =======================================================
 
-=================  ==================================================
-Ansible group      Action
-=================  ==================================================
-``elasticsearch``  Install the node with elasticsearch.
-=================  ==================================================
+This playbook installs the `R language`_ interpreter and a few
+additional libraries.  R binaries installed by ElastiCluster come from
+3rd-party repositories which (normally) provide more up-to-date
+releases compared to the OS packages.
 
-The following example configuration sets up a group of 3 elasticsearch
- nodes (please choose a odd amount of servers to prevent split-brain)::
+The following extra variables can be set to control installation of
+additional R libraries:
 
-    [cluster/elasticsearch]
-    setup_provider=elasticsearch
-    elasticsearch_nodes=3
-    ssh_to=elasticsearch
+===================== ========================== ==============================
+Variable name         Default                    Description
+===================== ========================== ==============================
+``r_libraries``       ``[devtools]``             List of R packages to install
+``r_cluster_support`` "yes" if installing R on   Whether to install ``Rmpi``
+                      more then 1 node,          and other packages for
+                      "no" otherwise             distributing work
+                                                 across a computing cluster
+===================== ========================== ==============================
 
-    [setup/elasticsearch]
-    provider=ansible
-    elasticsearch_groups=elasticsearch
+By default, the ``devtools`` library is installed so that R packages
+can be installed directly from their GitHub location.  Additionally, R
+support for MPI and distribution of work across a cluster is available
+if R support is being deployed to more than 1 host.
+
+.. note::
+
+   Note that the ``r_libraries`` variable is a *YAML list*.  In order
+   to customize its value, you must provide a comma-separated list of
+   library names, enclosed in square brackets.
+
+   For instance, the following configuration snippet requests that
+   ElastiCluster and Ansible install R libraries ``devtools`` and
+   ``doSnow`` on the compute nodes of a SLURM cluster::
+
+       [setup/slurm+r]
+       # ...
+       compute_groups=slurm_worker,r
+       compute_r_libraries=[devtools,doSnow]
+
+
+SAMBA
+-----
+
+Supported on:
+
+* Ubuntu 16.04, 14.04
+* Debian 8 ("jessie"), 9 ("stretch")
+* CentOS 6.x and 7.x
+
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``samba``       Install and configure the SAMBA suite for serving
+                local files over the network with the SMB/CIFS protocol
+==============  =======================================================
+
+This playbook installs the `SAMBA`_ server suite, which implements a
+server for the SMB/CIFS network filesystem, plus other utilities for
+integrating Linux/UNIX systems in a Windows environment.  Note that
+ElastiCluster only configures the ``smbd`` daemon for serving files as
+a "standalone SMB server" -- no other integration with Windows
+services is included here.
+
+The following extra variables can be set to control the way the SMB server is set up:
+
+=================== ========================== =================================================
+Variable name       Default                    Description
+=================== ========================== =================================================
+``smb_workgroup``   ``elasticluster``          NetBIOS workgroup name
+``smb_shares``      *(no additional shares)*   Define additional SMB shares (see example below)
+=================== ========================== =================================================
+
+By default, ElastiCluster only configures sharing users' home
+directories over SMB/CIFS.  Additional shares can be defined by adding
+a ``smb_shares`` variable in the ``setup/`` section.  The value of
+this variable should be a list (comma-separated, enclosed in ``[`` and
+``]``) of share definitions; a share definition is enclosed in ``{``
+and ``}`` and is comprised of comma-separated *key:value* pair; the
+following *key:value* pair will be acted upon:
+
+``name``
+  The SMB share name; the string that clients must use to connect to this share
+
+``path``
+  Local path to the root directory being served
+
+``readonly``
+  Whether writes are allowed to the share.  If ``no`` (default), then no
+  writes are allowed by any client.
+
+``public``
+  If ``yes``, any user that can connect to the server can read (and
+  also write, depending on the ``readonly`` setting above) files in
+  the share.  If ``no`` (default), only authenticated users can access
+  the share.
+
+For instance, the following ElastiCluster configuration snippet
+configures two *additional* shares, one named ``public`` which serves
+files off local path ``/data/public`` to any user who can connect, and
+one named ``secret`` which serves files off local path
+``/data/secret`` to authenticated users::
+
+  [setup/samba]
+  server_groups=samba
+  server_smb_shares=[
+    { name: 'public', path: '/data/public',  readonly: yes, public: yes },
+    { name: 'secret', path: '/data/secret',  readonly: yes, public: no },
+    ]
