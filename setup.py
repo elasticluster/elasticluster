@@ -118,7 +118,7 @@ elif python_version == (2, 7):
         'python-glanceclient',
         'python-neutronclient',
         'python-cinderclient',
-        'python-novaclient',
+        'python-novaclient<=9.1.2',
         # fix dependency conflict among OpenStack libraries:
         # `osc-lib` has a more strict dependency specifier
         # which is not picked up by `pip` because it's not
