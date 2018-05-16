@@ -18,6 +18,7 @@
   tags:
       - gluster
       - glusterfs-client
+      - glusterfs-client-mount
 
 
 - name: Mount GlusterFS filesystem {{item.mountpoint}}
@@ -31,3 +32,4 @@
   tags:
       - gluster
       - glusterfs-client
+      - glusterfs-client-mount
