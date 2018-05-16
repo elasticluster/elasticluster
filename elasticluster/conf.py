@@ -109,6 +109,7 @@ SCHEMA = {
                 Optional('image_userdata', default=''): str,
                 Optional('security_group', default='default'): str,  ## FIXME: alphanumeric?
                 Optional('network_ids'): str,
+                Optional('floating_network_id'): str,
                 # these are auto-generated but already there by the time
                 # validation is run
                 'login': nonempty_str,
@@ -665,6 +666,7 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'image_userdata',
             'login',
             'network_ids',
+            'floating_network_id',
             'security_group',
             'node_name',
             'ssh_proxy_command',

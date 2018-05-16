@@ -29,6 +29,7 @@ __author__ = ', '.join([
 import os
 import threading
 from warnings import warn
+import time
 from time import sleep
 
 # External modules
@@ -393,7 +394,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
-                       username=None, node_name=None, **kwargs):
+                       username=None, node_name=None,
+                       instance_wait_timeout=360, **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
 
@@ -447,6 +449,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         network_ids = [net_id.strip()
                        for net_id in kwargs.pop('network_ids', '').split(',')]
+        floating_network_id = kwargs.pop('floating_network_id', '')
+        floating_networks = [floating_network_id] if floating_network_id else network_ids
         if network_ids:
             nics = [{'net-id': net_id, 'v4-fixed-ip': ''}
                     for net_id in network_ids ]
@@ -501,6 +505,22 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # conflated into `**vm_start_args`
         vm = self.nova_client.servers.create(node_name, image_id, flavor, **vm_start_args)
 
+        # wait for server to come up
+        log.info("Waiting for instance to come up ...")
+        start_time = time.time()
+        timeout = (float(instance_wait_timeout)
+                   if instance_wait_timeout else 0)
+        status = vm.status
+        while status != "ACTIVE":
+            if timeout and time.time() - start_time > timeout:
+                raise RuntimeError(
+                    "Instance %s failed to start after %s seconds" %
+                    (vm.id, timeout))
+            vm = self.nova_client.servers.get(vm.id)
+            status = vm.status
+            # TODO(lyj): Configurable poll interval
+            sleep(3)
+
         # allocate and attach a floating IP, if requested
         if self.request_floating_ip:
             # We need to list the floating IPs for this instance
@@ -511,8 +531,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             except AttributeError:
                 floating_ips = self.neutron_client.list_floatingips(id=vm.id)
             # allocate new floating IP if none given
-            if not floating_ips:
-                self._allocate_address(vm, network_ids)
+            if not floating_ips.get("floatingips"):
+                self._allocate_address(vm, floating_networks)
 
         self._instances[vm.id] = vm
 
@@ -782,22 +802,22 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                             allocated_ip = self.neutron_client.create_floatingip({
                                 'floatingip': {'floating_network_id':network_id}})
                         except BadNeutronRequest as err:
-                            log.debug(
+                            log.error(
                                 "Failed allocating floating IP on network %s: %s",
                                 network_id, err)
                         if allocated_ip:
-                            free_ips.append(allocated_ip)
+                            free_ips.append(allocated_ip["floatingip"])
                             break
                         else:
                             continue  # try next network
             if free_ips:
-                ip = free_ips.pop()
+                ip = free_ips.pop()["floating_ip_address"]
             else:
                 raise RuntimeError(
                     "Could not allocate floating IP for VM {0}"
-                    .format(vm.id))
+                    .format(instance.id))
             instance.add_floating_ip(ip)
-        return ip.ip
+        return ip
 
     # Fix pickler
     def __getstate__(self):
