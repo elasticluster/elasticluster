@@ -128,6 +128,7 @@ class Cluster(Struct):
                  user_key_private='~/.ssh/id_rsa',
                  cloud_provider=None,
                  setup_provider=None,
+                 availability_zone='',
                  repository=None,
                  start_timeout=600,
                  ssh_probe_timeout=5,
@@ -138,6 +139,7 @@ class Cluster(Struct):
         self.template = extra.pop('template', None)
         self._cloud_provider = cloud_provider
         self._setup_provider = setup_provider
+        self.availability_zone = availability_zone
         self.ssh_probe_timeout = ssh_probe_timeout
         self.ssh_proxy_command = ssh_proxy_command
         self.start_timeout = start_timeout

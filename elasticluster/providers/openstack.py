@@ -445,6 +445,9 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 .format(flavor, self._os_tenant_name, self._os_auth_url))
         flavor = flavors[0]
 
+        availability_zone = kwargs.pop('availability_zone','')
+        vm_start_args['availability_zone']=availability_zone
+
         network_ids = [net_id.strip()
                        for net_id in kwargs.pop('network_ids', '').split(',')]
         if network_ids:
