@@ -40,12 +40,12 @@
 
 - name: Create secret tokens
   shell: |
-    openssl rand -hex 32 | tr -d '\n' > '/var/lib/jupyterhub/{{ item }}'
+    openssl rand -hex {{ item.bytes/2 }} | tr -d '\n' > '/var/lib/jupyterhub/{{ item.name }}'
   args:
-    creates: '/var/lib/jupyterhub/{{ item }}'
+    creates: '/var/lib/jupyterhub/{{ item.name }}'
   with_items:
-    - jupyterhub_cookie_secret
-    - jupyterhub_proxy_auth_token
+    - { name: jupyterhub_cookie_secret, bytes: 32 }
+    - { name: jupyterhub_proxy_auth_token, bytes: 64 }
 
 
 - name: Deploy configuration file
