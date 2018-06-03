@@ -27,3 +27,9 @@
     dest: '/etc/modulefiles/Core/mpi/openmpi.lua'
     src: 'etc/modulefiles/Core/mpi/openmpi.lua.j2'
     mode: 0444
+
+- name: Deploy OpenMPI3 environment module
+  template:
+    dest: '/etc/modulefiles/Core/mpi/openmpi3.lua'
+    src: 'etc/modulefiles/Core/mpi/openmpi3.lua.j2'
+    mode: 0444

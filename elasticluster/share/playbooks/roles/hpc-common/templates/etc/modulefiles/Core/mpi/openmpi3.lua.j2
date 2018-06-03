@@ -1,0 +1,58 @@
+--
+-- THIS FILE IS CONTROLLED BY ELASTICLUSTER
+-- local modifications will be overwritten
+-- the next time `elasticluster setup` is run!
+--
+
+--
+-- OpenMPI module for use with 'environment-modules' package
+--
+help([[
+Load the version of OpenMPI3 that came with the base OS.
+
+Note that it is configured (via env. variables) to use TCP sockets for
+message passing, and avoid even probing for IB.
+
+To find out more about OpenMPI, visit: http://www.open-mpi.org/
+]])
+whatis("Load the version of OpenMPI3 that came with the base OS.")
+
+-- no two MPI packages can be loaded at the same time
+family("MPI")
+
+{% if ansible_os_family == 'Debian' -%}
+-- (e.g. the Python `openmpi` package) were removed.
+-- NOTE: I've not found openmpi3 for debian like as a separate package;
+-- This hasn't been tested!
+--
+{%- elif ansible_os_family == 'RedHat' -%}
+prepend_path("PATH", 	        "/usr/lib64/openmpi3/bin")
+prepend_path("LD_LIBRARY_PATH", "/usr/lib64/openmpi3/lib")
+prepend_path("INCLUDE_PATH", "/usr/include/openmpi3-x86_64")
+prepend_path("PYTHONPATH",      "/usr/lib64/python2.7/site-packages/openmpi3")
+prepend_path("MANPATH",         "/usr/share/man/openmpi3-x86_64")
+setenv("MPI_BIN",		"/usr/lib64/openmpi3/bin")
+setenv("MPI_SYSCONFIG",	        "/etc/openmpi3-x86_64")
+setenv("MPI_FORTRAN_MOD_DIR",	"/usr/lib64/gfortran/modules/openmpi3")
+setenv("MPI_INCLUDE",	        "/usr/include/openmpi3-x86_64")
+setenv("MPI_LIB",	        "/usr/lib64/openmpi3/lib")
+setenv("MPI_MAN",	        "/usr/share/man/openmpi3-x86_64")
+setenv("MPI_PYTHON_SITEARCH",	"/usr/lib64/python2.7/site-packages/openmpi3")
+setenv("MPI_COMPILER",		"openmpi3-x86_64")
+setenv("MPI_SUFFIX",	        "_openmpi")
+setenv("MPI_HOME",	        "/usr/lib64/openmpi3")
+{%- else -%}
+LmodError("ElastiCluster lacks support for this base OS in its `openmpi3.lua` template.")
+{%- endif %}
+
+
+-- settings below this line are dependent solely on OpenMPI and not on the base OS
+
+-- it's unlikely there's Infiniband on cloud-based VMs,
+-- so disable it by default to avoid confusing warning
+-- messages from OpenMPI
+setenv("OMPI_MCA_btl", "self,sm,tcp")
+
+-- do not busy-wait while running MPI barriers; has a little impact on
+-- performance but saves money and energy on cloud "CPU burstable" instances
+setenv("OMPI_MCA_mpi_yield_when_idle", "1")

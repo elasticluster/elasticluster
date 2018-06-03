@@ -13,3 +13,5 @@
       - netcdf-devel
       - openmpi
       - openmpi-devel
+      - openmpi3
+      - openmpi3-devel
