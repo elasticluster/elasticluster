@@ -1,0 +1,29 @@
+# hpc-extra/tasks/main.yml
+---
+
+- name: Load distribution-specific parameters
+  include: 'init-{{ansible_os_family}}.yml'
+
+
+- name: Install extra HPC software
+  package:
+    name: '{{item}}'
+    state: '{{ pkg_install_state }}'
+  with_items: '{{hpc_extra_packages}}'
+
+
+- name: Ensure modulefiles directories exist
+  file:
+    dest: '{{item}}'
+    state: directory
+  with_items:
+    - '/etc/modulefiles'
+    - '/etc/modulefiles/Core'
+    - '/etc/modulefiles/Core/compilers'
+
+
+- name: Deploy GCC7 environment module
+  template:
+    dest: '/etc/modulefiles/Core/compilers/gcc7.lua'
+    src: 'etc/modulefiles/Core/compilers/gcc7.lua.j2'
+    mode: 0444

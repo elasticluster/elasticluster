@@ -1,0 +1,28 @@
+--
+-- THIS FILE IS CONTROLLED BY ELASTICLUSTER
+-- local modifications will be overwritten
+-- the next time `elasticluster setup` is run!
+--
+
+--
+-- gcc7 module for use with 'environment-modules' package
+--
+help([[
+Load the version 7 of gnu compilers.
+]])
+whatis("Load the version 7 of gnu compilers.")
+
+-- no two MPI packages can be loaded at the same time
+family("compilers")
+
+{% if ansible_os_family == 'Debian' -%}
+-- TODO {# this needs to do #}
+LmodError("ElastiCluster lacks support for this base OS in its `gcc.lua` template.")
+
+{%- elif ansible_os_family == 'RedHat' -%}
+prepend_path("PATH", 	        "/opt/rh/devtoolset-7/root/usr/bin")
+prepend_path("LD_LIBRARY_PATH", "/opt/rh/devtoolset-7/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib")
+prepend_path("MANPATH",         "/opt/rh/devtoolset-7/root/usr/share/man")
+{%- else -%}
+LmodError("ElastiCluster lacks support for this base OS in its `gcc.lua` template.")
+{%- endif %}

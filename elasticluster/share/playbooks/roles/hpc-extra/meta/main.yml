@@ -1,5 +1,5 @@
+# hpc-extra/meta/main.yml
 ---
 
 dependencies:
   - role: hpc-common
-  - role: hpc-extra

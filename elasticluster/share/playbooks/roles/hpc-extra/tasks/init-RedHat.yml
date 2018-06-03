@@ -1,0 +1,24 @@
+---
+
+- name: Load distribution-specific defaults (CentOS/RHEL)
+  set_fact:
+    hpc_extra_packages:
+      - centos-release-scl
+      - devtoolset-7
+      - devtoolset-7-gcc-c++
+      - devtoolset-7-gcc-gfortran
+      - cmake3
+      - automake
+      - autoconf
+      - tmux
+      - git
+      - wget
+      - libgomp
+      - gmp-devel
+      - mpfr-devel
+      - hdf5-devel
+      - fftw-devel
+      - eigen3-devel
+      - lapack64-devel
+      - lapack-devel
+      - numactl-libs

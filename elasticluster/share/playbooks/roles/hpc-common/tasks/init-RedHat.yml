@@ -9,6 +9,7 @@
       - gcc-gfortran
       - hdf5
       - hdf5-openmpi
+      - hdf5-openmpi-devel
       - make
       - netcdf-devel
       - openmpi
