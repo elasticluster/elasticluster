@@ -207,7 +207,6 @@ setup(
         'python-gflags',
         'simplejson>=2.5.0', # needed by `uritemplate` but somehow not picked up
         'pytz',   ## required by `positional` but somehow not picked up
-        'httplib2>=0.9.1',  ## required by `oauth2client` but somehow not picked up
         # Azure cloud
         #'azure',  ## only available on Py 2.7, see `version_dependent_requires`
         # OpenStack clouds
