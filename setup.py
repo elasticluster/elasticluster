@@ -203,6 +203,7 @@ setup(
         # GCE cloud
         'google-api-python-client',
         'google-compute-engine',
+        'oauth2client',
         'python-gflags',
         'simplejson>=2.5.0', # needed by `uritemplate` but somehow not picked up
         'pytz',   ## required by `positional` but somehow not picked up
