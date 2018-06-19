@@ -6,6 +6,11 @@
     - cuda
 
   pre_tasks:
+    - name: Ensure `lspci` is installed
+      package:
+        name: pciutils
+        state: '{{ pkg_install_state }}'
+
     - name: Gather information about GPUs
       action: gpus
 
