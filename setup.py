@@ -213,7 +213,7 @@ setup(
         # OpenStack clouds
         'netifaces',
         'apache-libcloud>=0.14.0',
-        'requests~=2.14',  ## see issue #441
+        'requests~=2.16',  ## see issue #441 and #566
         #'python-novaclient' ## this needs special treatment depending on Python version
     ] + version_dependent_requires),
     tests_require=['tox', 'mock', 'pytest>=2.10'],  # read right-to-left
