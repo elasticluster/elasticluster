@@ -40,6 +40,8 @@
 - name: Trigger recompilation by DKMS
   command: |
     dkms autoinstall
+  register: _cuda_dkms_recompile
+  failed_when: '"Error!" in _cuda_dkms_recompile.stderr'
 
 
 - name: Wait for DKMS to compile NVIDIA kernel modules (max 15 minutes)
