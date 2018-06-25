@@ -441,6 +441,10 @@ class GoogleCloudProvider(AbstractCloudProvider):
             instance['scheduling']['onHostMaintenance'] = 'TERMINATE'
             instance['scheduling']['automaticRestart'] = True
 
+        # preemptible instance cannot be restarted automatically
+        if scheduling_option.get('preemptible', False):
+            instance['scheduling']['automaticRestart'] = False
+
         # create the instance
         gce = self._connect()
         request = gce.instances().insert(
