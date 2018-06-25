@@ -18,7 +18,7 @@
 - name: Set auxiliary variables
   set_fact:
     _cuda_repo_ending: '{{ ansible_distribution|lower }}{{ ansible_distribution_version.replace(".", "") }}'
-    _cuda_ko_regex: '^updates/dkms/nvidia_.+\.ko:'
+    _cuda_ko_regex: '^updates/dkms/nvidia_.+\.ko(.xz)?:'
 
 
 - name: add CUDA APT repository

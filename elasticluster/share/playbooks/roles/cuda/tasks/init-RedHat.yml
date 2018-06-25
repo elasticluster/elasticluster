@@ -11,4 +11,4 @@
 
 - name: Set auxiliary variables
   set_fact:
-    _cuda_ko_regex: '^extra/nvidia.*\.ko:'
+    _cuda_ko_regex: '^extra/nvidia[a-z0-9-]*\.ko(\.xz)?:'
