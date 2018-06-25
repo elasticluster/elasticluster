@@ -440,6 +440,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
             # see: https://cloud.google.com/compute/docs/gpus#restrictions
             instance['scheduling']['onHostMaintenance'] = 'TERMINATE'
             instance['scheduling']['automaticRestart'] = True
+            if scheduling_option['preemptible']:
+                # preemptible instance cannot be restarted automatically
+                instance['scheduling']['automaticRestart'] = False
 
         # create the instance
         gce = self._connect()
