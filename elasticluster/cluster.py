@@ -52,6 +52,7 @@ from elasticluster.exceptions import (
 from elasticluster.repository import MemRepository
 from elasticluster.utils import (
     Struct,
+    expand_ssh_proxy_command,
     get_num_processors,
     parse_ip_address_and_port,
     sighandler,
@@ -1266,7 +1267,7 @@ class Node(Struct):
                     'username':      self.image_user,
                 }
                 if self.ssh_proxy_command:
-                    proxy_command = self.expand_proxy_command(
+                    proxy_command = expand_ssh_proxy_command(
                         self.ssh_proxy_command,
                         self.image_user, addr, port)
                     from paramiko.proxy import ProxyCommand
@@ -1295,48 +1296,6 @@ class Node(Struct):
                     self.name, ex, type(ex))
 
         return None
-
-    @staticmethod
-    def expand_proxy_command(command, user, addr, port=22):
-        """
-        Expand spacial digraphs ``%h``, ``%p``, and ``%r``.
-
-        Return a copy of `command` with the following string
-        substitutions applied:
-
-        * ``%h`` is replaced by *addr*
-        * ``%p`` is replaced by *port*
-        * ``%r`` is replaced by *user*
-        * ``%%`` is replaced by ``%``.
-
-        See also: man page ``ssh_config``, section "TOKENS".
-        """
-        translated = []
-        subst = {
-            'h': list(str(addr)),
-            'p': list(str(port)),
-            'r': list(str(user)),
-            '%': ['%'],
-        }
-        escaped = False
-        for char in command:
-            if char == '%':
-                escaped = True
-                continue
-            if escaped:
-               try:
-                   translated.extend(subst[char])
-                   escaped = False
-                   continue
-               except KeyError:
-                   raise ValueError(
-                       "Unknown digraph `%{0}`"
-                       " in proxy command string `{1}`"
-                       .format(char, command))
-            else:
-                translated.append(char)
-                continue
-        return str.join('', translated)
 
     def update_ips(self):
         """Retrieves the public and private ip of the instance by using the
