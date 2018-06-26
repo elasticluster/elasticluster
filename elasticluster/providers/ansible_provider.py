@@ -245,8 +245,18 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 ansible_env[k.upper()] = str(v)
         # ...finally allow the environment have the final word
         ansible_env.update(os.environ)
-        # however, this is needed for correct detection of success/failure
+        # however, this is needed for correct detection of success/failure...
         ansible_env['ANSIBLE_ANY_ERRORS_FATAL'] = 'yes'
+        # ...and this might be needed to connect (see issue #567)
+        if cluster.ssh_proxy_command:
+            ansible_env['ANSIBLE_SSH_ARGS'] = (
+                ansible_env.get('ANSIBLE_SSH_ARGS', '')
+                + (" -o ProxyCommand='{proxy_command}'"
+                   # NOTE: in contrast to `Node.connect()`, we must
+                   # *not* expand %-escapes in the SSH proxy command:
+                   # it will be done by the `ssh` client
+                   .format(proxy_command=cluster.ssh_proxy_command)))
+
         # report on calling environment
         if __debug__:
             elasticluster.log.debug(
