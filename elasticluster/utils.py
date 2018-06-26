@@ -87,6 +87,48 @@ def environment(**kv):
         os.environ[key] = changed[key]
 
 
+def expand_ssh_proxy_command(command, user, addr, port=22):
+    """
+    Expand spacial digraphs ``%h``, ``%p``, and ``%r``.
+
+    Return a copy of `command` with the following string
+    substitutions applied:
+
+    * ``%h`` is replaced by *addr*
+    * ``%p`` is replaced by *port*
+    * ``%r`` is replaced by *user*
+    * ``%%`` is replaced by ``%``.
+
+    See also: man page ``ssh_config``, section "TOKENS".
+    """
+    translated = []
+    subst = {
+        'h': list(str(addr)),
+        'p': list(str(port)),
+        'r': list(str(user)),
+        '%': ['%'],
+    }
+    escaped = False
+    for char in command:
+        if char == '%':
+            escaped = True
+            continue
+        if escaped:
+           try:
+               translated.extend(subst[char])
+               escaped = False
+               continue
+           except KeyError:
+               raise ValueError(
+                   "Unknown digraph `%{0}`"
+                   " in proxy command string `{1}`"
+                   .format(char, command))
+        else:
+            translated.append(char)
+            continue
+    return str.join('', translated)
+
+
 def get_num_processors():
     """
     Return number of online processor cores.
