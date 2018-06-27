@@ -126,7 +126,11 @@ elif python_version == (2, 7):
         'Babel>=2.3.4,!=2.4.0',
         'pbr>=2.0.0,!=2.1.0',
         # MS-Azure
-        'azure',
+        'azure-common',
+        'azure-mgmt-compute',
+        'azure-mgmt-network',
+        'azure-mgmt-resource',
+        'msrestazure',
         ## the following 6 are all required dependencies
         ## which are not picked up, see issue #500
         'enum34',
