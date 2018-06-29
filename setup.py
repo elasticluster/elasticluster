@@ -123,7 +123,8 @@ elif python_version == (2, 7):
         # `osc-lib` has a more strict dependency specifier
         # which is not picked up by `pip` because it's not
         # a top-level dependency of ElastiCluster
-        'Babel>=2.3.4,!=2.4.0',
+        # FIXME: Babel<2.6.0 is for keeping compatibility with Py 2.6
+        'Babel>=2.3.4,!=2.4.0,<2.6.0',
         'pbr>=2.0.0,!=2.1.0',
         # MS-Azure
         'azure-common',
@@ -189,7 +190,8 @@ setup(
             'elasticluster = elasticluster.__main__:main',
         ]
     },
-    setup_requires=['Babel>=2.3.4'],  # see Issue #268
+    # FIXME: Babel<2.6.0 is for keeping compatibility with Py 2.6
+    setup_requires=['Babel>=2.3.4,!=2.4.0,<2.6.0'],  # see Issue #268
     install_requires=([
         # ElastiCluster core requirements
         'pip>=9.0.0',  ## see issue #433
