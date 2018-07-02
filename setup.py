@@ -85,6 +85,10 @@ if python_version == (2, 6):
         # Alternate dependencies for Python 2.6:
         # - PyCLI requires argparse,
         'argparse',
+        # GCE cloud
+        'google-api-python-client<1.6.0',
+        'google-compute-engine',
+        'oauth2client<4.0.0',
         # - OpenStack's "keystoneclient" requires `importlib`
         'importlib',
         # Paramiko ceased support for Python 2.6 in version 2.4.0
@@ -113,6 +117,10 @@ elif python_version == (2, 7):
     version_dependent_requires = [
         # Paramiko ceased support for Python 2.6 so we need it here
         'paramiko',
+        # GCE cloud
+        'google-api-python-client',
+        'google-compute-engine',
+        'oauth2client',
         # OpenStack
         'python-keystoneclient',
         'python-glanceclient',
@@ -207,9 +215,7 @@ setup(
         'boto>=2.48',
         'pycrypto',   # for computing RSA key hash, see: PR #132
         # GCE cloud
-        'google-api-python-client',
-        'google-compute-engine',
-        'oauth2client',
+        # (main packages are version-dependent)
         'python-gflags',
         'simplejson>=2.5.0', # needed by `uritemplate` but somehow not picked up
         'pytz',   ## required by `positional` but somehow not picked up
