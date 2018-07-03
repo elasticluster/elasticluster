@@ -49,7 +49,7 @@ RUN : \
            libc6 libc6-dev \
            libexpat1 libexpat1-dev \
            libffi6 libffi-dev \
-           libssl1.0.0 libssl-dev \
+           libssl1.1 libssl-dev \
            make \
            openssh-client \
     && pip install -e . \
