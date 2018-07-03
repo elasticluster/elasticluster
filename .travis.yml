@@ -25,7 +25,7 @@ after_success:
   - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
   - export BRANCH=$(echo "${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}" | cut -c-8)
   - export COMMIT=$(echo "${TRAVIS_PULL_REQUEST_SHA:-$TRAVIS_COMMIT}" | cut -c-8)
-  - export TAG=$(if [ "$TRAVIS_PULL_REQUEST" = 'false']; then echo "pr#$TRAVIS_PULL_REQUEST"; elif [ "$BRANCH" = "master" ]; then echo "latest"; else echo "$BRANCH" ; fi)
+  - export TAG=$(if [ "$TRAVIS_PULL_REQUEST" != 'false' ]; then echo "pr#$TRAVIS_PULL_REQUEST"; elif [ "$BRANCH" = 'master' ]; then echo "latest"; else echo "$BRANCH" ; fi)
   - docker build -f Dockerfile -t $DOCKER_DEST:$COMMIT .
   - docker tag $DOCKER_DEST:$COMMIT $DOCKER_DEST:$TAG
   - docker tag $DOCKER_DEST:$COMMIT $DOCKER_DEST:travis-$TRAVIS_BUILD_NUMBER
