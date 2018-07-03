@@ -439,11 +439,10 @@ class GoogleCloudProvider(AbstractCloudProvider):
             # no live migration with GPUs,
             # see: https://cloud.google.com/compute/docs/gpus#restrictions
             instance['scheduling']['onHostMaintenance'] = 'TERMINATE'
-            instance['scheduling']['automaticRestart'] = True
 
-        # preemptible instance cannot be restarted automatically
-        if scheduling_option.get('preemptible', False):
-            instance['scheduling']['automaticRestart'] = False
+        # preemptible instances cannot be restarted automatically
+        instance['scheduling']['automaticRestart'] = (
+            not instance['scheduling'].get('preemptible', False))
 
         # create the instance
         gce = self._connect()
