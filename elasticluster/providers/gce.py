@@ -265,6 +265,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        accelerator_count=0,
                        accelerator_type='default',
                        allow_project_ssh_keys=True,
+                       local_ssd_count=0,
+                       local_ssd_interface='SCSI',
                        min_cpu_platform=None,
                        **kwargs):
         """
@@ -296,6 +298,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
           defined).  When ``False``, only the SSH key specified by
           ElastiCluster config's ``[login/*]`` section will be allowed
           to log in (instance-level key).
+        :param int local_ssd_count: Number of local SSD disks (each 375GB size) to make available in instance
+        :param int local_ssd_interface: Attachment interface for local SSD disks; either ``'SCSI'`` (default) or ``'NVME'``.
         :param str min_cpu_platform: require CPUs of this type or better (e.g., "Intel Skylake")
 
           Only used if ``accelerator_count`` is > 0.
@@ -376,17 +380,19 @@ class GoogleCloudProvider(AbstractCloudProvider):
               'items': tags,
             },
             'scheduling': scheduling_option,
-            'disks': [{
-                'autoDelete': 'true',
-                'boot': 'true',
-                'type': 'PERSISTENT',
-                'initializeParams' : {
-                    'diskName': "%s-disk" % instance_id,
-                    'diskType': boot_disk_type_url,
-                    'diskSizeGb': boot_disk_size_gb,
-                    'sourceImage': image_url,
-                    }
-                }],
+            'disks': [
+                {
+                    'type': 'PERSISTENT',
+                    'boot': 'true',
+                    'initializeParams' : {
+                        'diskName': "%s-disk" % instance_id,
+                        'diskType': boot_disk_type_url,
+                        'diskSizeGb': boot_disk_size_gb,
+                        'sourceImage': image_url,
+                    },
+                    'autoDelete': 'true',
+                },
+            ],
             'networkInterfaces': [
                 {'accessConfigs': [
                     {'type': 'ONE_TO_ONE_NAT',
@@ -439,6 +445,34 @@ class GoogleCloudProvider(AbstractCloudProvider):
             # no live migration with GPUs,
             # see: https://cloud.google.com/compute/docs/gpus#restrictions
             instance['scheduling']['onHostMaintenance'] = 'TERMINATE'
+
+        # add local SSDs if requested
+        if local_ssd_count > 0:
+            log.debug(
+                "VM instance `%s`:"
+                " Requesting %d local SSD%s with %s interface",
+                instance_id, local_ssd_count,
+                ('s' if local_ssd_count > 1 else ''),
+                local_ssd_interface)
+            for n in range(local_ssd_count):
+                instance['disks'].append({
+                    'type': 'SCRATCH',
+                    'initializeParams' : {
+                        #'diskName': ("local-ssd-%d" % n),
+                        'diskType': (
+                            'https://www.googleapis.com/compute/v1'
+                            '/projects/{project_id}'
+                            '/zones/{zone}'
+                            '/diskTypes/local-ssd'
+                            .format(
+                                project_id=self._project_id,
+                                zone=self._zone,
+                            )
+                        ),
+                    },
+                    'interface': local_ssd_interface,
+                    'autoDelete': 'true',
+                })
 
         # preemptible instances cannot be restarted automatically
         instance['scheduling']['automaticRestart'] = (

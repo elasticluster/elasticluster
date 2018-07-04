@@ -117,6 +117,8 @@ SCHEMA = {
                 # only on Google Cloud
                 Optional("accelerator_count", default=0): nonnegative_int,
                 Optional("accelerator_type"): nonempty_str,
+                Optional("local_ssd_count", default=0): nonnegative_int,
+                Optional("local_ssd_interface", default='SCSI'): Or('NVME', 'SCSI'),
                 Optional("min_cpu_platform"): nonempty_str,
                 # allow other string keys w/out restrictions
                 Optional(str): str,
@@ -129,6 +131,8 @@ SCHEMA = {
         Optional("accelerator_count", default=0): nonnegative_int,
         Optional("accelerator_type"): nonempty_str,
         Optional("allow_project_ssh_keys", default=True): boolean,
+        Optional("local_ssd_count", default=0): nonnegative_int,
+        Optional("local_ssd_interface", default='SCSI'): Or('NVME', 'SCSI'),
         Optional("min_cpu_platform"): nonempty_str,
         # allow other string keys w/out restrictions
         Optional(str): str,
