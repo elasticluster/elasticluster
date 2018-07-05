@@ -877,9 +877,11 @@ class Cluster(Struct):
         return ret
 
     def update(self):
-        """Update all connection information of the nodes of this cluster.
-        It occurs for example public ip's are not available imediatly,
-        therefore calling this method might help.
+        """
+        Update connection information of all nodes in this cluster.
+
+        It happens, for example, that public ip's are not available
+        immediately, therefore calling this method might help.
         """
         for node in self.get_all_nodes():
             try:
