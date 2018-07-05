@@ -642,24 +642,35 @@ class SetupCluster(AbstractCommand):
         print(cluster_summary(cluster))
 
 
-class SshFrontend(AbstractCommand):
+class _SshCommand(AbstractCommand):
     """
-    Connect to the frontend of the cluster using `ssh`.
+    Connect to the frontend of the cluster using `ssh` or `sftp`.
     """
+
+    # these need to be provided by the concrete subclass
+    command = None
 
     def setup(self, subparsers):
         parser = subparsers.add_parser(
-            "ssh", help="Connect to the frontend of the cluster using the "
-                        "`ssh` command", description=self.__doc__)
+            self.command,
+            help=("Connect to the frontend of the cluster using the"
+                  " `{cmd}` command".format(cmd=self.command)),
+            description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
         parser.add_argument('-n', '--node', metavar='HOSTNAME', dest='ssh_to',
-                            help="Name of node you want to ssh to. By "
-                            "default, the first node of the `ssh_to` option "
-                            "group is used.")
-        parser.add_argument('ssh_args', metavar='args', nargs='*',
-                            help="Execute the following command on the remote "
-                            "machine instead of opening an interactive shell.")
+                            help=("Name of node you want to connect to."
+                                  " If the cluster template specifies"
+                                  " an `ssh_to` option, the first node"
+                                  " in that group is used.  Otherwise,"
+                                  " connect to the first node in the group"
+                                  " named `ssh`, `login`, `frontend`, or"
+                                  " `master` (whichever exists)."))
+        parser.add_argument('args', metavar='args', nargs='*',
+                            help=(
+                                "Pass these additional arguments"
+                                " to the actual `{cmd}` command."
+                                .format(cmd=self.command)))
 
     def execute(self):
         creator = make_creator(self.params.config,
@@ -697,83 +708,37 @@ class SshFrontend(AbstractCommand):
         username = frontend.image_user
         knownhostsfile = cluster.known_hosts_file if cluster.known_hosts_file \
                          else '/dev/null'
-        ssh_cmdline = ["ssh",
-                       "-i", frontend.user_key_private,
-                       "-o", "UserKnownHostsFile={0}".format(knownhostsfile),
-                       "-o", "StrictHostKeyChecking=yes",
-                       "-p", "{0:d}".format(port),
-                       '%s@%s' % (username, addr)]
+        cmdline = [self.command,
+                   "-i", frontend.user_key_private,
+                   "-o", "UserKnownHostsFile={0}".format(knownhostsfile),
+                   "-o", "StrictHostKeyChecking=yes",
+                   "-o", "Port={0:d}".format(port),
+                   '%s@%s' % (username, addr)]
         if cluster.ssh_proxy_command:
-            ssh_cmdline[1:1] = [
+            cmdline[1:1] = [
                 '-o', ('ProxyCommand=' +
                        expand_ssh_proxy_command(
                            cluster.ssh_proxy_command,
                            username, addr, port))]
-        ssh_cmdline.extend(self.params.ssh_args)
-        log.debug("Running command `%s`", str.join(' ', ssh_cmdline))
-        os.execlp("ssh", *ssh_cmdline)
+        cmdline.extend(self.params.args)
+        log.debug("Running command `%s`", str.join(' ', cmdline))
+        os.execlp(self.command, *cmdline)
 
 
-class SftpFrontend(AbstractCommand):
+class SshFrontend(_SshCommand):
+    """
+    Connect to the frontend of the cluster using `ssh`.
+    """
+
+    command = 'ssh'
+
+
+class SftpFrontend(_SshCommand):
     """
     Open an SFTP session to the cluster frontend host.
     """
 
-    def setup(self, subparsers):
-        parser = subparsers.add_parser(
-            "sftp",
-            help="Open an SFTP session to the cluster frontend host.",
-            description=self.__doc__)
-        parser.set_defaults(func=self)
-        parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-n', '--node', metavar='HOSTNAME', dest='ssh_to',
-                            help="Name of node you want to ssh to. By "
-                            "default, the first node of the `ssh_to` option "
-                            "group is used.")
-        parser.add_argument('sftp_args', metavar='args', nargs='*',
-                            help="Arguments to pass to ftp, instead of "
-                                 "opening an interactive shell.")
-
-    def execute(self):
-        creator = make_creator(self.params.config,
-                               storage_path=self.params.storage)
-        cluster_name = self.params.cluster
-        try:
-            cluster = creator.load_cluster(cluster_name)
-            cluster.update()
-        except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Setting up cluster %s: %s", cluster_name, ex)
-            return
-
-        # XXX: the default value of `self.params.ssh_to` should = the
-        # default value for `ssh_to` in `Cluster.get_ssh_to_node()`
-        frontend = cluster.get_ssh_to_node(self.params.ssh_to)
-
-        host = frontend.connection_ip()
-        if not host:
-            log.error("No IP address known for node %s", frontend.name)
-            sys.exit(1)
-
-        addr, port = parse_ip_address_and_port(host)
-        username = frontend.image_user
-        knownhostsfile = (cluster.known_hosts_file if cluster.known_hosts_file
-                          else '/dev/null')
-        sftp_cmdline = [
-            "sftp",
-            "-P", "{0:d}".format(port),
-            "-o", "UserKnownHostsFile={0}".format(knownhostsfile),
-            "-o", "StrictHostKeyChecking=yes",
-            "-o", "IdentityFile={0}".format(frontend.user_key_private),
-        ]
-        if cluster.ssh_proxy_command:
-            sftp_cmdline[1:1] = [
-                '-o', ('ProxyCommand=' +
-                       expand_ssh_proxy_command(
-                           cluster.ssh_proxy_command,
-                           username, addr, port))]
-        sftp_cmdline.extend(self.params.sftp_args)
-        sftp_cmdline.append('{0}@{1}'.format(username, addr))
-        os.execlp("sftp", *sftp_cmdline)
+    command = 'sftp'
 
 
 class GC3PieConfig(AbstractCommand):
