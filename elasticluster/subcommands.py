@@ -678,7 +678,6 @@ class _SshCommand(AbstractCommand):
         cluster_name = self.params.cluster
         try:
             cluster = creator.load_cluster(cluster_name)
-            cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
             log.error("Setting up cluster %s: %s", cluster_name, ex)
             return
