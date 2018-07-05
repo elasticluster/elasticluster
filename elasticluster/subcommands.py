@@ -38,7 +38,11 @@ from elasticluster import log
 from elasticluster.conf import make_creator
 from elasticluster.exceptions import ClusterNotFound, ConfigurationError, \
     ImageError, SecurityGroupError, NodeNotFound, ClusterError
-from elasticluster.utils import confirm_or_abort, parse_ip_address_and_port
+from elasticluster.utils import (
+    confirm_or_abort,
+    expand_ssh_proxy_command,
+    parse_ip_address_and_port
+)
 
 
 class AbstractCommand():
@@ -699,6 +703,12 @@ class SshFrontend(AbstractCommand):
                        "-o", "StrictHostKeyChecking=yes",
                        "-p", "{0:d}".format(port),
                        '%s@%s' % (username, addr)]
+        if cluster.ssh_proxy_command:
+            ssh_cmdline[1:1] = [
+                '-o', ('ProxyCommand=' +
+                       expand_ssh_proxy_command(
+                           cluster.ssh_proxy_command,
+                           username, addr, port))]
         ssh_cmdline.extend(self.params.ssh_args)
         log.debug("Running command `%s`", str.join(' ', ssh_cmdline))
         os.execlp("ssh", *ssh_cmdline)
@@ -755,6 +765,12 @@ class SftpFrontend(AbstractCommand):
             "-o", "StrictHostKeyChecking=yes",
             "-o", "IdentityFile={0}".format(frontend.user_key_private),
         ]
+        if cluster.ssh_proxy_command:
+            sftp_cmdline[1:1] = [
+                '-o', ('ProxyCommand=' +
+                       expand_ssh_proxy_command(
+                           cluster.ssh_proxy_command,
+                           username, addr, port))]
         sftp_cmdline.extend(self.params.sftp_args)
         sftp_cmdline.append('{0}@{1}'.format(username, addr))
         os.execlp("sftp", *sftp_cmdline)
