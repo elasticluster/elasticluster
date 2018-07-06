@@ -1105,6 +1105,32 @@ Additional optional configuration keys for Google Cloud
     Define the size of boot disk to use; values are specified in gigabytes.
     Default value is 10.
 
+``local_ssd_count``
+    If set to an integer number > 0, then request instances
+    equipped with this number of `local SSD`_ disks.
+
+    .. _`local SSD`: https://cloud.google.com/compute/docs/disks/local-ssd
+
+    All attached local SSDs will be combined in a RAID0 partition,
+    mounted under directory ``/srv/google-local-ssd``:file:.  Local
+    SSDs come in fixed size (375GB as of this writing), so the number
+    of SSDs determines the size of the ``/srv/google-local-ssd``:file:
+    filesystem.
+
+    Default is 0, i.e., do not request local SSD disks.
+
+``local_ssd_interface``
+
+    Make local SSD appear to the VM as disks attached to this type of
+    bus.  Valid values are ``NVME`` or ``SCSI``.
+
+    NVME gives better performance but (as of July 2018) is not yet
+    supported by all base OS images; for this reason, ``SCSI`` is the
+    default. (See
+    `<https://cloud.google.com/compute/docs/disks/local-ssd#choose_an_interface>`_
+    and `<https://cloud.google.com/compute/docs/disks/performance>`_
+    for details.)
+
 ``min_cpu_platform``
     Require that VMs run on CPUs with this platform (see
     `<https://cloud.google.com/compute/docs/instances/specify-min-cpu-platform#availablezones>`_
