@@ -39,6 +39,7 @@
 # their setup depending on configured host groups
 
 # filesystems/storage first so we could in principle use it in compute clusters
+- include: roles/google-local-ssd.yml
 - include: roles/ceph.yml
 - include: roles/glusterfs.yml
 - include: roles/pvfs2.yml
