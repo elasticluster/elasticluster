@@ -36,6 +36,7 @@ from warnings import warn
 
 # 3rd party imports
 from pkg_resources import resource_filename
+import yaml
 
 
 # Elasticluster imports
@@ -299,7 +300,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             # adjust execution environment, for the part that needs a
             # the current directory path
             cmd += [
-                '-e', 'elasticluster_output_dir={0}'.format(os.getcwd())
+                '-e', ('@' + self._write_extra_vars(cluster))
             ]
             # run it!
             cmdline = ' '.join(cmd)
@@ -436,9 +437,47 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                         "AnsibileProvider: Ignoring error while deleting "
                         "inventory file %s: %s", inventory_path, ex)
 
+
     def __setstate__(self, state):
         self.__dict__ = state
         # Compatibility fix: allow loading clusters created before
         # option `ssh_pipelining` was added.
         if 'ssh_pipelining' not in state:
             self.ssh_pipelining = True
+
+
+    def _write_extra_vars(self, cluster, filename='/tmp/extra_vars.yml'):
+        # build dict of "extra vars"
+        # XXX: we should not repeat here names of attributes that
+        # should not be exported... it would be better to use a simple
+        # naming convention (e.g., omit whatever starts with `_`)
+        extra_vars = cluster.to_dict(omit=[
+            '_cloud_provider',
+            '_naming_policy',
+            '_setup_provider',
+            'repository',
+            'ssh_proxy_command',
+            'ssh_to',
+            'storage_file',
+            'thread_pool_max_size',
+        ])
+        extra_vars.update(extra_vars.pop('extra'))
+        nodes = extra_vars.pop('nodes')
+        extra_vars['nodes'] = {}
+        for kind, instances in nodes.iteritems():
+            for node in instances:
+                node_vars = node.to_dict(omit=[
+                    '_cloud_provider',
+                    'ssh_proxy_command',
+                    'cluster_name',
+                    'user_key_public',
+                    'user_key_private',
+                ])
+                node_vars.update(node_vars.pop('extra'))
+                extra_vars['nodes'][node.name] = node_vars
+        extra_vars['output_dir'] = os.getcwd()
+        # save it to a YAML file
+        log.debug("Writing extra vars %r to file %s", extra_vars, filename)
+        with open(filename, 'w') as output:
+            yaml.dump({ 'elasticluster': extra_vars }, output)
+        return filename

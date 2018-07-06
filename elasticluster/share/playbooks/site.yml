@@ -75,7 +75,7 @@
   tasks:
     - name: Mark host as successfully configured
       shell: |
-        echo 'done' > '{{ elasticluster_output_dir }}/{{ inventory_hostname }}.log'
+        echo 'done' > '{{ elasticluster.output_dir }}/{{ inventory_hostname }}.log'
       delegate_to: 'localhost'
       # this is necessary as we might not have/want superuser rights
       # where ElastiCluster is running
