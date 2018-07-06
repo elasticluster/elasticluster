@@ -1,0 +1,66 @@
+---
+- name: Discover SSD device names (SCSI)
+  shell: |
+    ls -1 /dev/disk/by-id/google-local-ssd-[0-9]
+  register: localssd_scsi_devices
+  ignore_errors: yes
+
+- name: No SCSI SSD devices
+  set_fact:
+    localssd_scsi_devices:
+      stdout_lines: []
+  when: localssd_scsi_devices|failed
+
+- name: Discover SSD device names (NVME)
+  shell: |
+    ls -1 /dev/disk/by-id/nvme-nvme.*
+  register: localssd_nvme_devices
+
+- name: No NVME SSD devices
+  set_fact:
+    localssd_nvme_devices:
+      stdout_lines: []
+  when: localssd_nvme_devices|failed
+
+- name: Set local SSD variables
+  set_fact:
+    localssd_all_devices_count: '{{ localssd_nvme_devices.stdout_lines|length + localssd_scsi_devices.stdout_lines|length }}'
+    localssd_all_devices: '{{ localssd_nvme_devices.stdout_lines + localssd_scsi_devices.stdout_lines }}'
+
+- name: Install prerequisites
+  package:
+    name: mdadm
+    state: installed
+
+- name: Make RAID0 device
+  shell: |
+    mdadm --create /dev/md/google-local-ssd \
+        --level=0 \
+        {% if localssd_all_devices_count|int < 2 %}--force{% endif %} \
+        --raid-devices='{{ localssd_all_devices_count }}' \
+        {{ localssd_all_devices|join(" ") }}
+  args:
+    creates: '/dev/md/google-local-ssd'
+  when: 'localssd_all_devices_count > 0'
+
+- name: Format RAID0 device
+  filesystem:
+    dev: '/dev/md/google-local-ssd'
+    fstype: ext4
+    opts: '-m 0 -L /srv/google-local-ssd'
+  when: 'localssd_all_devices_count > 0'
+
+- name: Make mountpoint
+  file:
+    dest: '/srv/google-local-ssd'
+    state: directory
+  when: 'localssd_all_devices_count > 0'
+
+- name: Mount local SSD filesystem
+  mount:
+    path: '/srv/google-local-ssd'
+    src: '/dev/md/google-local-ssd'
+    state: mounted
+    fstype: ext4
+    opts: 'rw,nofail'
+  when: 'localssd_all_devices_count > 0'
