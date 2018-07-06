@@ -1315,6 +1315,17 @@ class Node(Struct):
                 .format(name=self.name, id=self.instance_id,
                         ips=ips, preferred_ip=self.preferred_ip))
 
+    def to_dict(self, omit=()):
+        """
+        Return a (shallow) copy of self cast to a dictionary,
+        optionally omitting some key/value pairs.
+        """
+        result = dict(self)
+        for key in omit:
+            if key in result:
+                del result[key]
+        return result
+
     def pprint(self):
         """Pretty print information about the node.
 
