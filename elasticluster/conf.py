@@ -160,7 +160,7 @@ SCHEMA = {
     },
     'storage': {
         Optional('storage_path', default=os.path.expanduser("~/.elasticluster/storage")): str,
-        Optional('storage_type'): ['yaml', 'json', 'pickle'],
+        Optional('storage_type'): Or('yaml', 'json', 'pickle'),
     },
 }
 
