@@ -251,6 +251,7 @@ CLOUD_PROVIDER_SCHEMAS = {
         Optional("network_api_version"): Or('2.0'),
         Optional("volume_api_version"): Or('1', '2', '3'),
         Optional("identity_api_version"): Or('3', '2'),  # no default, can auto-detect
+        Optional("anti_affinity_group_prefix"): nonempty_str,
         Optional("nova_api_version"): nova_api_version,  ## DEPRECATED, use `compute_api_version` instead
     },
 

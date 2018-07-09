@@ -130,6 +130,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         or `None` (default, meaning try v3 first and fall-back to v2).
     :param cacert: Path to CA certificate bundle (for verifying HTTPS sessions)
         or ``None`` to use the systems' default.
+    :param str anti_affinity_group_prefix: prefix for creating server groups
 
     Parameters *username*, *password*, *user_domain_name*,
     *project_name*, *project_domain_name*, and *region_name* will be
@@ -165,6 +166,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                  # this is deprecated in favor of `compute_api_version`
                  nova_api_version=None,
                  cacert=None,  # keep in sync w/ default in novaclient.Client()
+                 manage_anti_affinity_groups=False,
+                 anti_affinity_group_prefix=None,
                  request_floating_ip=None,  ## DEPRECATED, will be removed
     ):
         # OpenStack connection params
@@ -205,13 +208,15 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._instances = {}
         self._cached_instances = {}
 
+        self.anti_affinity_group_prefix = anti_affinity_group_prefix
+        # constant for anti-affinity routines.
+        self._middle_token = ".number."
+
         if request_floating_ip is not None:
             warn('Deprecated parameter `request_floating_ip` given'
                  ' to OpenStackProvider; place it in the cluster'
                  ' or node configuration instead.', DeprecationWarning)
         self._request_floating_ip_default = request_floating_ip
-
-
 
     def to_vars_dict(self):
         """
@@ -545,10 +550,34 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         .format(id=volume.id, delete_on_terminate=1)),
             }
 
-        # due to some `nova_client.servers.create()` implementation weirdness,
-        # the first three args need to be spelt out explicitly and cannot be
-        # conflated into `**vm_start_args`
-        vm = self.nova_client.servers.create(node_name, image_id, flavor, **vm_start_args)
+        # create anti-affinity groups for spawning servers to ensure server spread
+        # equally across hosts in the cloud.
+        # This will create a server group, spawn hosts in the group until it's full
+        # and then create a new group.
+        if self.anti_affinity_group_prefix:
+            with OpenStackCloudProvider.__node_start_lock:
+
+                group = self._get_current_anti_affinity_group()
+                vm_start_args['scheduler_hints']={ 'group' : group.id }
+                vm = self.nova_client.servers.create(node_name, image_id, flavor, **vm_start_args)
+                self._wait_for_status(vm, ["ACTIVE", "ERROR"], 30)
+
+                if vm.status == 'ERROR':
+                    log.debug("Deleting instance %s(%s) in group %s", vm.name, vm.id, group.name)
+                    self.nova_client.servers.delete(vm.id)
+
+                    group=self._get_next_anti_affinity_group()
+                    vm_start_args['scheduler_hints']={ 'group' : group.id }
+
+                    vm = self.nova_client.servers.create(node_name, image_id, flavor, **vm_start_args)
+
+                log.debug("Started server %s in group %s", vm.name, group.name)
+        else:
+            # due to some `nova_client.servers.create()` implementation weirdness,
+            # the first three args need to be spelt out explicitly and cannot be
+            # conflated into `**vm_start_args`
+            vm = self.nova_client.servers.create(node_name, image_id, flavor, **vm_start_args)
+
 
         # allocate and attach a floating IP, if requested
         request_floating_ip = kwargs.get(
@@ -611,6 +640,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._init_os_api()
         instance = self._load_instance(instance_id)
         instance.delete()
+        self._delete_anti_affinity_groups()
         del self._instances[instance_id]
 
     def resume_instance(self, instance_state):
@@ -648,6 +678,39 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         return instance.status == 'ACTIVE'
 
     # Protected methods
+
+    def _delete_anti_affinity_groups(self):
+        for group in self._list_anti_affinity_groups():
+            self.nova_client.server_groups.delete(group.id)
+
+    def _get_next_anti_affinity_group(self):
+        group_name=self._make_next_group_name(self._get_current_anti_affinity_group().name)
+        return self.nova_client.server_groups.create(name=group_name, policies='anti-affinity')
+
+    def _get_current_anti_affinity_group(self):
+        groups=self._list_anti_affinity_groups()
+
+        if groups:
+            group = sorted(groups, key=lambda g: g.name)[-1]
+        else:
+            group = self.nova_client.server_groups.create(name=self.anti_affinity_group_prefix + self._middle_token + "1", policies='anti-affinity')
+
+        return group
+
+    def _wait_for_status(self, vm, accepted_statuses, attempts):
+        for i in range(attempts):
+            vm.get()
+            if vm.status in accepted_statuses:
+                break
+            sleep(1)
+
+    def _make_next_group_name(self, current_name):
+            split_name=current_name.split('.')
+            split_name[-1]=str(int(split_name[-1])+1)
+            return '.'.join(split_name)
+
+    def _list_anti_affinity_groups(self):
+        return [  group for group in self.nova_client.server_groups.list() if self.anti_affinity_group_prefix + self._middle_token in group.name ]
 
     def _check_keypair(self, name, public_key_path, private_key_path):
         """First checks if the keypair is valid, then checks if the keypair
