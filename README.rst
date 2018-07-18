@@ -130,7 +130,7 @@ us to identify the problem.
 .. _`Ceph`: http://ceph.com/
 .. _`Debian GNU/Linux`: http://www.debian.org
 .. _`elasticluster`: http://gc3-uzh-ch.github.io/elasticluster/
-.. _`example configuration file`: https://github.com/gc3-uzh-ch/elasticluster/raw/develop/elasticluster/share/etc/config.template
+.. _`example configuration file`: https://github.com/gc3-uzh-ch/elasticluster/blob/master/elasticluster/share/etc/config.template
 .. _`enhancement requests and ideas`: https://github.com/gc3-uzh-ch/elasticluster/issues
 .. _`Ganglia`: http://ganglia.info
 .. _`GC3 Hobbes cloud`: http://www.gc3.uzh.ch/infrastructure/hobbes
