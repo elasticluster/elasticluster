@@ -106,6 +106,11 @@ to your liking using the `configuration reference`__.
 
 .. __: http://elasticluster.readthedocs.io/en/master/configure.html
 
+More example configurations for popular cluster types can be found in
+the `examples/`__ directory.
+
+.. __: https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples
+
 
 Getting help
 ============
