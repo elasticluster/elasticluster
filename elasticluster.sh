@@ -169,6 +169,7 @@ fi
 
 # docker should have been installed by now...
 require_command docker
+require_command readlink
 
 # set up mount commands for host directories
 volumes="-v $HOME/.ssh:/home/.ssh -v $HOME/.elasticluster:/home/.elasticluster"
@@ -203,8 +204,11 @@ argv=''
 while [ $# -gt 0 ]; do
     case "$1" in
         --config|-c)
-            cfgfile="$2"
-            volumes="${volumes} -v $(dirname "$cfgfile"):/mnt/config"
+            # canonicalize path to avoid Docker error: "create .:
+            # volume name is too short, names should be at least two
+            # alphanumeric characters." (e.g., when path is `.`)
+            cfgpath=$(readlink -f "$2")
+            volumes="${volumes} -v ${cfgpath}:/mnt/config"
             argv="$argv --config /mnt/config"
             shift
             ;;
