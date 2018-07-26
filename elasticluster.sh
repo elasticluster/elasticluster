@@ -255,7 +255,12 @@ if [ -z "$envfile" ]; then
     die 1 "Cannot create temporary file."
 fi
 trap "rm -f '$envfile';" EXIT INT QUIT ABRT TERM
-env HOME="$HOME" SSH_AUTH_SOCK=/home/.ssh-agent.sock > "$envfile"
+# reset shell prompts to avoid issues with bash/zsh themes with
+# multiline prompts; since the POSIX 1003.1 std does not specify any
+# way to unset a variable in `env` output (the GNU version has
+# `--unset=`), we just reset PS1..PS4 to customary values.
+env HOME="$HOME" PS1='$ ' PS2='> ' PS3='? ' PS4='+ ' \
+    SSH_AUTH_SOCK=/home/.ssh-agent.sock > "$envfile"
 
 # go!
 exec docker run --rm --interactive --tty --env-file "$envfile" $volumes $elasticluster_docker_image "$@"
