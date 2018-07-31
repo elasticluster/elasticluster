@@ -73,6 +73,22 @@
   </property>
 
   <property>
+    <name>yarn.nodemanager.aux-services</name>
+    <value>spark_shuffle</value>
+    <description>
+      Use YARN for Spark shuffle.
+    </description>
+  </property>
+
+  <property>
+    <name>yarn.nodemanager.aux-services.spark_shuffle.class</name>
+    <value>org.apache.spark.network.yarn.YarnShuffleService</value>
+    <description>
+      Set Spark Suffle Class in YARN.
+    </description>
+  </property>
+
+  <property>
     <name>yarn.scheduler.minimum-allocation-vcores</name>
     <value>1</value>
     <description>
@@ -128,5 +144,13 @@
       this too small and you will spam the name node.
     </description>
   </property>
+  <property>
+    <name>yarn.nodemanager.pmem-check-enabled</name>
+    <value>false</value>
+  </property>
 
+  <property>
+    <name>yarn.nodemanager.vmem-check-enabled</name>
+    <value>false</value>
+  </property>
 </configuration>

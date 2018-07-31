@@ -1,0 +1,29 @@
+---
+
+- name: Add GlusterFS ppa
+  apt_repository:
+    repo: 'ppa:gluster/glusterfs-3.8'
+
+- name: Install GlusterFS server
+  apt:
+    name=glusterfs-server
+    state=present
+  when: inventory_hostname in groups.mesos_master
+
+- name: Install GlusterFS client
+  apt:
+    name=glusterfs-client
+    state=present
+
+- name: enable and start glusterfs-server
+  systemd:
+    name: glusterfs-server
+    enabled: yes
+    masked: no
+    state: restarted
+  when: inventory_hostname in groups.mesos_master
+
+- name: Create gluster mount point
+  file:
+    path: '{{mesos_gluster_mount}}'
+    state: directory

@@ -1,0 +1,8 @@
+---
+- name: R-Studio playbook
+  hosts: rstudio
+  roles:
+    - rstudio
+  tags:
+    - rstudio
+    - r

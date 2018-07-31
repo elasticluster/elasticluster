@@ -1,0 +1,36 @@
+---
+
+- name: Install Spark master node
+  hosts: spark_master
+  tags:
+    - alluxio
+    - spark
+    - master
+    - zeppelin
+  vars:
+    # spark python version should never differ between master and workers
+    anaconda_version: '5.0.1'
+    anaconda_python_version: '2'
+  roles:
+    - role: 'nfs-server'
+      NFS_EXPORTS:
+        - path: '/home'
+          clients: "{{groups.spark_slave + groups.spark_master|default([])}}"
+    - spark-master
+
+- name: Install Spark slave node
+  hosts: spark_slave
+  tags:
+    - alluxio
+    - spark
+    - slave
+  vars:
+    # spark python version should never differ between master and workers
+    anaconda_version: '5.0.1'
+    anaconda_python_version: '2'
+  roles:
+    - role: 'nfs-client'
+      NFS_MOUNTS:
+        - fs: '{{groups.spark_master|first}}:/home'
+          mountpoint: '/home'
+    - spark-slave

@@ -1,0 +1,13 @@
+---
+
+- name: Configure help page
+  include: help.yml
+
+- name: Apache Zookeeper
+  include: zookeeper.yml
+
+- name: Apache Mesos
+  include: mesos.yml
+
+- name: GlusterFS
+  include: gluster.yml

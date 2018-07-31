@@ -15,3 +15,5 @@ R_EXE: '/usr/bin/R'
 
 # the Python interpreter used to rune Jupyter/JupyterHub
 jupyter_python: '{{PYTHON3_EXE}}'
+
+jupyter_spark_master: 'yarn-client'

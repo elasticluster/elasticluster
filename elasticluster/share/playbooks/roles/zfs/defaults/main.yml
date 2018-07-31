@@ -1,0 +1,12 @@
+---
+
+zfs_pool_name: zfs
+zfs_data_set: home
+
+zfs_share_type: nfs
+
+zfs_backup_monthly: false
+zfs_backup_weekly: false
+zfs_backup_daily: true
+zfs_backup_hourly: false
+zfs_backup_frequent: false

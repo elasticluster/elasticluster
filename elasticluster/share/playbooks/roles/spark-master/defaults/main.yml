@@ -1,3 +1,8 @@
 ---
 
-spark_history_storage_uri: 'file:////var/log/spark/apps'
+spark_zeppelin_version: 0.7.3
+spark_zeppelin_uri_root: 'http://mirror.switch.ch/mirror/apache/dist/zeppelin/zeppelin-0.7.3/'
+spark_zeppelin_package: 'zeppelin-{{spark_zeppelin_version}}-bin-netinst.tgz'
+spark_zeppelin_package_root: 'zeppelin-{{spark_zeppelin_version}}-bin-netinst'
+spark_zeppelin_uri: '{{spark_zeppelin_uri_root}}{{spark_zeppelin_package}}'
+spark_zeppelin_server_port: 8888

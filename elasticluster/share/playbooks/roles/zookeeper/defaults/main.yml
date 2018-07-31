@@ -1,0 +1,22 @@
+---
+
+zookeeper_hosts:
+  - "zookeeper"
+zookeeper_register_path_env: false
+
+client_port: 2181
+init_limit: 5
+sync_limit: 2
+tick_time: 2000
+zookeeper_autopurge_purgeInterval: 0
+zookeeper_autopurge_snapRetainCount: 10
+
+data_dir: /var/lib/zookeeper
+log_dir: /var/log/zookeeper
+zookeeper_conf_dir: /etc/zookeeper/conf
+
+# Dict of ENV settings to be written into the (optional) conf/zookeeper-env.sh
+zookeeper_env: {}
+
+# Controls Zookeeper myid generation
+zookeeper_force_myid: yes

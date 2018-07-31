@@ -48,10 +48,10 @@
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   with_items:
     - apt-transport-https
+    - ca-certificates
     # these are required by Ansible's `debconf` module
     - debconf
     - debconf-utils
-
 
 # Apparently some systemd commands (e.g., `hostnamectl` -- possibly others)
 # *require* D-Bus but the Debian 8 cloud VM image does not have it installed

@@ -1,0 +1,59 @@
+---
+
+# Check for mandatory parameters
+
+- fail: msg="systemd required for this installation"
+  when: not (ansible_service_mgr == 'systemd')
+
+- fail: msg="es_proxy_port must be specified and cannot be blank when es_proxy_host is defined"
+  when: (es_proxy_port is not defined or es_proxy_port == '') and (es_proxy_host is defined and es_proxy_host != '')
+
+- debug: msg="WARNING - It is recommended you specify the parameter 'http.port'"
+  when: es_config['http.port'] is not defined
+
+- debug: msg="WARNING - It is recommended you specify the parameter 'transport.tcp.port'"
+  when: es_config['transport.tcp.port'] is not defined
+
+- debug: msg="WARNING - It is recommended you specify the parameter 'discovery.zen.ping.unicast.hosts'"
+  when: es_config['discovery.zen.ping.unicast.hosts'] is not defined
+
+#If the user attempts to lock memory they must specify a heap size
+- fail: msg="If locking memory with bootstrap.memory_lock a heap size must be specified"
+  when: es_config['bootstrap.memory_lock'] is defined and es_config['bootstrap.memory_lock'] == True and es_heap_size is not defined
+
+- name: Download elasticsearch from url (Debian/Ubuntu)
+  get_url: url={{ es_package_url }}-{{ es_version }}.deb dest=/tmp/elasticsearch-{{ es_version }}.deb validate_certs=no
+  when: ansible_os_family == 'Debian'
+
+- name: Ensure elasticsearch is installed from downloaded package (Debian/Ubuntu)
+  apt: deb=/tmp/elasticsearch-{{ es_version }}.deb
+  when: ansible_os_family == 'Debian'
+
+- name: Install Elasticsearch from url (RedHat/CentOS)
+  yum: name={{ es_package_url }}-{{ es_version }}.noarch.rpm state=present
+  when: ansible_os_family == 'RedHat'
+
+- name: Create Directories
+  file: path={{ item }} state=directory owner={{ es_user }} group={{ es_group }}
+  with_items:
+    - "{{es_log_dir}}"
+    - "{{es_conf_dir}}"
+    - "{{es_data_dir}}"
+
+#Copy the config template
+- name: Copy Configuration File
+  template: src=elasticsearch.yml.j2 dest={{es_conf_dir}}/elasticsearch.yml owner={{ es_user }} group={{ es_group }} mode=0644 force=yes
+
+- name: Copy jvm.options File for Instance
+  template: src=jvm.options.j2 dest={{es_conf_dir}}/jvm.options owner={{ es_user }} group={{ es_group }} mode=0644 force=yes
+
+- name: enable elasticsearch service and ensure it is not masked
+  systemd:
+    name: elasticsearch
+    enabled: yes
+    masked: no
+
+- name: reload elasticsearch service, in all cases
+  systemd:
+    name: elasticsearch
+    state: reloaded

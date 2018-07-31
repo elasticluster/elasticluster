@@ -1,0 +1,41 @@
+<html>
+<h1 style="color: #5e9ca0; text-align: center;">ElastiCluster Mesos</h1>
+<p style="text-align: center;">
+    <strong>Welcome, this is the links page for your elasticluster mesos installation.</strong>
+</p>
+<div style="margin: auto; width: 800;">
+    <p><em><strong>It is strongly recommended that you set up an SSH tunnel to the master node using dynamic port forwarding instead of simply opening up the network firewall.</strong></em></p>
+    <ol>
+        <li>Install FoxyProxy (or similar) as browser extension</li>
+        <li>Open a terminal</li>
+        <li>Type the following command to open an SSH tunnel on your local machine. Replace&nbsp;<em class="replaceable"><code>~/mykeypair.pem</code></em>&nbsp;with the location and file name of your&nbsp;<code>.pem/ssh</code>&nbsp;file, replace&nbsp;<em class="replaceable"><code>8157</code></em>&nbsp;with an unused, local port number.
+            <ul>
+                <li><code>ssh -i ~/mykeypair.pem -N -D 8157 ubuntu@{{hostvars[(groups.mesos_master|first)].ansible_default_ipv4.address}}</code></li>
+            </ul>
+        </li>
+        <li>Configure foxyproxy
+            <ol>
+                <li>Options</li>
+                <li>Add new proxy</li>
+                <li>Proxy Details:
+                    <ol>
+                        <li>hostname: localhost</li>
+                        <li>port: 8157 (or whatever you've chosen)</li>
+                    </ol>
+                </li>
+                <li>Url patterns</li>
+                <li>New pattern
+                    <ol>
+                        <li>pattern name: master</li>
+                        <li>url pattern:&nbsp;https?://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}*</li>
+                    </ol>
+                </li>
+            </ol>
+        </li>
+        <li>enable, and browse to one of the links</li>
+    </ol>
+</div>
+<p style="text-align: center;"><strong><a href="http://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}:5050">Mesos</a></strong></p>
+<p style="text-align: center;"><strong><a href="http://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}:8080">Marathon</strong></a></p>
+<p style="text-align: center;"><strong><a href="http://{{hostvars[(groups.spark_master|first)].ansible_default_ipv4.address}}:4400">Chronos</strong></a></p>
+</html>

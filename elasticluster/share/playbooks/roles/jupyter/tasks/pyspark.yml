@@ -1,6 +1,6 @@
 ---
 
-- name: Check if PySpark is installed
+- name: Check if PySpark is installed with BigTop
   tags:
     - jupyter
     - kernels
@@ -10,7 +10,17 @@
     path=/usr/bin/pyspark
   register: pyspark_exe_path
 
-  
+- name: Check if PySpark is installed as Binary if BigTop failed
+  tags:
+    - jupyter
+    - kernels
+    - python
+    - pyspark
+  stat:
+    path=/usr/lib/spark/bin/pyspark
+  register: pyspark_exe_path
+  when: not pyspark_exe_path.stat.exists
+
 - name: Check if the Python executable {{python_exe}} is installed
   tags:
     - jupyter
@@ -46,8 +56,8 @@
         dest='/usr/local/share/jupyter/kernels/pyspark{{python_version.stdout}}/kernel.json'
         mode=0444
     - name: Install PySpark{{python_version.stdout}} kernel (startup file)
-      copy:
-        src='usr/local/share/jupyter/kernels/pyspark{{python_version.stdout}}/startup.py'
+      template:
+        src='startup.py.j2'
         dest='/usr/local/share/jupyter/kernels/pyspark{{python_version.stdout}}/startup.py'
         mode=0444
   when: pyspark_exe_path.stat.exists and python_exe_path.stat.exists

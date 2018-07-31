@@ -1,0 +1,12 @@
+---
+
+- name: Install Kafka (Streaming) node(s)
+  hosts: kafka_streamer
+  tags:
+    - zookeeper
+    - kafka
+    - streaming
+  roles:
+    - bigtop
+    - zookeeper
+    - kafka

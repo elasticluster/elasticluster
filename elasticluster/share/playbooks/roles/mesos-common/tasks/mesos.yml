@@ -1,0 +1,26 @@
+---
+
+- name: Add mesosphere apt-key
+  apt_key: id=E56151BF keyserver=keyserver.ubuntu.com state=present
+
+- name: Add mesosphere repository
+  apt_repository:
+    repo='deb http://repos.mesosphere.com/{{ ansible_distribution | lower }} {{ ansible_distribution_release | lower }} main'
+    state=present
+    update_cache=yes
+
+- name: Install Apache Mesos and dependencies
+  apt:
+    name='{{item}}'
+    state=present
+  with_items:
+    - build-essential
+    - python-dev
+    - libcurl3
+    - libevent-dev
+    - mesos
+
+- name: Mesos Zookeeper configuration files
+  template:
+    src: 'zk.j2'
+    dest: '/etc/mesos/zk'

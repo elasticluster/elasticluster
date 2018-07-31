@@ -1,0 +1,15 @@
+[Unit]
+Description=Apache Spark Master Service
+After=alluxio.target
+
+[Service]
+Type=forking
+User=ubuntu
+Group=ubuntu
+ExecStart=/usr/lib/spark/sbin/start-master.sh
+ExecStop=/usr/lib/spark/sbin/stop-master.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

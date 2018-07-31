@@ -1,0 +1,46 @@
+---
+
+- name: Install Apache Marathon and Chronos
+  apt:
+    name='{{item}}'
+    state=present
+  with_items:
+    - marathon
+    - chronos
+
+- name: Mesos master configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/etc/mesos-master/{{item}}'
+  with_items:
+    - quorum
+    - hostname
+    - ip
+
+- name: disable and stop mesos slave service and ensure it is not masked
+  systemd:
+    name: mesos-slave
+    enabled: yes
+    masked: no
+    state: stopped
+
+- name: enable and start mesos master
+  systemd:
+    name: mesos-master
+    enabled: yes
+    masked: no
+    state: restarted
+
+- name: enable and start marathon
+  systemd:
+    name: marathon
+    enabled: yes
+    masked: no
+    state: restarted
+
+- name: enable and start chronos
+  systemd:
+    name: chronos
+    enabled: yes
+    masked: no
+    state: restarted

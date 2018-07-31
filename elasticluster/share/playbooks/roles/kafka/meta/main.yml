@@ -1,0 +1,5 @@
+---
+dependencies:
+  - { role: bigtop }
+  - role: zookeeper
+    zookeeper_hosts: '{{ groups.kafka_streamer }}'

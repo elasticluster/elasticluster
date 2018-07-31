@@ -1,0 +1,61 @@
+---
+
+- name: Create Apache NiFi group
+  group:
+    name: nifi
+    state: present
+
+- name: Create Apache NiFi user
+  user:
+    name: nifi
+    comment: "NiFi user"
+    group: nifi
+
+- name: Download Apache NiFi package
+  get_url:
+    url='https://www-eu.apache.org/dist/nifi/{{nifi_version}}/nifi-{{nifi_version}}-bin.tar.gz'
+    dest='/tmp/nifi-{{nifi_version}}-bin.tar.gz'
+
+- name: Extract Apache NiFi package
+  unarchive:
+    src='/tmp/nifi-{{nifi_version}}-bin.tar.gz'
+    dest='/opt'
+    copy=no
+
+- name: Create ZooKeeper state directory
+  file:
+    path='/opt/nifi-{{nifi_version}}/state/zookeeper'
+    state=directory
+
+- name: Setup ZooKeeper ID
+  template:
+    src='myid.j2'
+    dest='/opt/nifi-{{nifi_version}}/state/zookeeper/myid'
+
+- name: Setup ZooKeeper configuration
+  template:
+    src='zookeeper.properties.j2'
+    dest='/opt/nifi-{{nifi_version}}/conf/zookeeper.properties'
+
+
+- name: Setup NiFi cluster configuration
+  template:
+    src='nifi.properties.j2'
+    dest='/opt/nifi-{{nifi_version}}/conf/nifi.properties'
+
+- name: Reset NiFi permissions
+  file:
+    dest='/opt/nifi-{{nifi_version}}'
+    owner=nifi
+    group=nifi
+    recurse=yes
+
+- name: NiFi systemd service config
+  template:
+    src='nifi.service.j2'
+    dest='/etc/systemd/system/nifi.service'
+
+- name: Start NiFi service
+  service:
+    name: nifi
+    state: started

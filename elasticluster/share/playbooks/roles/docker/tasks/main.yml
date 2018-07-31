@@ -1,0 +1,31 @@
+---
+
+- name: Install docker GPG key (Debian/Ubuntu)
+  apt_key:
+    id: 0EBFCD88
+    url: "https://download.docker.com/linux/ubuntu/gpg"
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Add docker apt repository (Debian/Ubuntu)
+  apt_repository: repo="deb https://download.docker.com/linux/{{ ansible_distribution|lower }} {{ ansible_distribution_release }} stable" state=present
+  when: ansible_os_family == 'Debian'
+
+- name: Add docker repository (Redhat/Centos)
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
+  when: ansible_os_family == 'RedHat'
+
+- name: Install Docker dependencies (RHEL/Centos)
+  package: name={{ item }} state=present
+  with_items:
+    - yum-utils
+    - device-mapper-persistent-data
+    - lvm2
+  when: ansible_os_family == 'RedHat'
+
+- name: Install docker package
+  package:
+    name: docker-ce
+    state: present

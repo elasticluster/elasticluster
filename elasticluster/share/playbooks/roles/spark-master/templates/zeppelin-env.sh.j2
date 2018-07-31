@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#### Base configuration ####
+export JAVA_HOME=${JAVA_HOME:-"/usr/lib/jvm/default-java"}
+export MASTER=${MASTER:-"spark://{{(groups.spark_master|first)}}:7077"}
+export ZEPPELIN_MEM="-Xms{{spark_zeppelin_jvm_memory}}m -Xmx{{spark_zeppelin_jvm_memory}}m -XX:MaxPermSize=1024m"
+
+#### Spark interpreter configuration ####
+export SPARK_HOME=${SPARK_HOME:-"/usr/lib/spark"}
+export SPARK_APP_NAME=zeppelin
+export PYSPARK_PYTHON=${PYSPARK_PYTHON:-"/opt/anaconda{{anaconda_python_version}}/bin/python"}
+export PYTHONPATH=${PYTHONPATH:-"${SPARK_HOME}/python:${SPARK_HOME}/python/build:$PYTHONPATH"}
+export ZEPPELIN_SPARK_USEHIVECONTEXT=false
+export SPARK_SUBMIT_OPTIONS="--jars /usr/lib/alluxio/core/client/runtime/target/alluxio-core-client-runtime-{{spark_alluxio_version}}-jar-with-dependencies.jar"

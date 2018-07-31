@@ -11,3 +11,4 @@ dependencies:
     anaconda_python_version: '2'
     anaconda_in_path: false
   - role: r
+    r_cluster_support: false

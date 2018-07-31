@@ -1,0 +1,21 @@
+---
+
+- name: Install ZooKeeper
+  package:
+    name: zookeeperd
+    state: present
+
+- name: Zookeeper configuration files
+  template:
+    src='{{item}}.j2'
+    dest='/etc/zookeeper/conf/{{item}}'
+  with_items:
+    - myid
+    - zoo.cfg
+
+- name: enable and start zookeeper service and ensure it is not masked
+  systemd:
+    name: zookeeper
+    enabled: yes
+    masked: no
+    state: restarted

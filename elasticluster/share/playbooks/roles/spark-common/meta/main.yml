@@ -1,7 +1,6 @@
-# spark-common/meta/main.yml
 ---
 
 dependencies:
-  - { role: anaconda }
-  - { role: bigtop }
-  - { role: r }
+  - { role: java }
+  - role: anaconda
+    anaconda_in_path: true

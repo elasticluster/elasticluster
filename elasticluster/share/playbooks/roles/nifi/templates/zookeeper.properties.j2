@@ -1,0 +1,11 @@
+clientPort=2181
+initLimit=10
+autopurge.purgeInterval=24
+syncLimit=5
+tickTime=2000
+dataDir=./state/zookeeper
+autopurge.snapRetainCount=30
+
+{% for server in groups.nifi_transformer %}
+server.{{loop.index}}={{server}}:2888:3888
+{% endfor %}

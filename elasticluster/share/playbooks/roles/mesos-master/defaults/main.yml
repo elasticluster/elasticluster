@@ -1,0 +1,12 @@
+---
+
+mesos_quorum_size: "{{groups.mesos_master|length}}"
+mesos_quorum: "{% if mesos_quorum_size == '1' %}{{mesos_quorum_size}}{% else %}{{((mesos_quorum_size|int/3)*2)|round|int}}{% endif %}"
+
+mesos_zeppelin_version: 0.7.3
+mesos_zeppelin_uri_root: 'http://mirror.switch.ch/mirror/apache/dist/zeppelin/zeppelin-{{mesos_zeppelin_version}}/'
+mesos_zeppelin_package: 'zeppelin-{{mesos_zeppelin_version}}-bin-all.tgz'
+mesos_zeppelin_package_root: 'zeppelin-{{mesos_zeppelin_version}}-bin-all'
+
+mesos_zeppelin_uri: '{{mesos_zeppelin_uri_root}}{{mesos_zeppelin_package}}'
+mesos_zeppelin_server_port: 8080

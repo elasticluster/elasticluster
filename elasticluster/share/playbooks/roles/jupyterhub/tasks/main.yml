@@ -9,7 +9,7 @@
 - name: Fail if not Debian/Ubuntu compatible
   fail:
     msg: The JupyterHub role currently only supports Debian/Ubuntu
-  when: 'not {{is_debian_compatible}}'
+  when: not ansible_os_family == 'Debian'
 
 
 - name: Create directories
@@ -100,3 +100,27 @@
     jump: ACCEPT
     state: present
   become: yes
+
+- name: Restart supervisor
+  service:
+    name: supervisor
+    state: restarted
+    enabled: yes
+
+
+- name: add default user with password
+  user:
+    name: "{{ jupyter_hub_default_user }}"
+    password: "{{ jupyter_hub_default_pass | password_hash('sha512') }}"
+    comment: "Jupyter Hub user"
+
+
+- name: check for hdfs
+  stat: path=/usr/bin/hdfs
+  register: hadoop_cli_installed
+
+
+- name: create hdfs user directory
+  command: hdfs dfs -mkdir -p /user/{{ jupyter_hub_default_user }}
+  when: hadoop_cli_installed.stat.exists
+

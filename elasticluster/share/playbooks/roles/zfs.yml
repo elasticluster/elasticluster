@@ -1,0 +1,6 @@
+---
+
+- name: zfs server
+  hosts: zfs_server
+  roles:
+    - zfs

@@ -1,0 +1,51 @@
+---
+
+- name: register zookeeper service install name (Debian/Ubuntu)
+  set_fact:
+    zk_install: zookeeperd
+  when: is_debian_or_ubuntu
+
+- name: register zookeeper service install name (RHEL/Centos)
+  set_fact:
+    zk_install: zookeeper-server
+  when: is_rhel_compatible
+
+- name: Install Zookeeper packages
+  tags:
+    - zookeeper
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - zookeeper
+    - "{{zk_install}}"
+
+- name: Deploy Zookeeper/ElastiCluster configuration files
+  tags:
+    - zookeeper
+  template:
+    src='{{item}}.j2'
+    dest='{{zookeeper_conf_dir}}/{{item}}'
+  with_items:
+    - zoo.cfg
+    - myid
+
+- name: register zookeeper service name (Debian/Ubuntu)
+  set_fact:
+    zk_service: zookeeper
+  when: is_debian_or_ubuntu
+
+- name: register zookeeper service name (RHEL/Centos)
+  set_fact:
+    zk_service: zookeeper-server
+  when: is_rhel_compatible
+
+- name: Start Zookeeper services
+  tags:
+    - zookeeper
+  service:
+    name="{{item}}"
+    state=started
+    enabled=yes
+  with_items:
+    - "{{zk_service}}"

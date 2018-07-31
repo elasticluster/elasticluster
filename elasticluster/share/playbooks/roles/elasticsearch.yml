@@ -1,0 +1,9 @@
+---
+
+- name: Install Elasticsearch node(s)
+  hosts: elasticsearch
+  tags:
+    - java
+    - elasticsearch
+  roles:
+    - elasticsearch

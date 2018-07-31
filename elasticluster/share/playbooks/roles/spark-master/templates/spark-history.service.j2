@@ -1,0 +1,15 @@
+[Unit]
+Description=Apache Spark History Service
+After=alluxio.target
+
+[Service]
+Type=forking
+User=ubuntu
+Group=ubuntu
+ExecStart=/usr/lib/spark/sbin/start-history-server.sh
+ExecStop=/usr/lib/spark/sbin/stop-history-server.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

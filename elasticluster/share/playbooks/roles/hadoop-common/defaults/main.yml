@@ -4,3 +4,5 @@
 # Apache BigTop uses `/etc/hadoop/conf.*` directories and then
 # symlinks `/etc/hadoop/conf` to the actual configuration
 HADOOP_CONF_DIR: '/etc/hadoop/conf.elasticluster'
+
+hdfs_replication_factor: 1

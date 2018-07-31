@@ -1,0 +1,143 @@
+# spark-common/tasks/main.yml
+---
+
+- name: Temporarily disable SELinux (RHEL-family)
+  selinux:
+    policy=targeted
+    state=permissive
+  when: is_rhel_compatible
+
+# do not start spark-thriftserver until the spark config has been updated, driver refs in config (auto-starts after install)
+- name: Mask Spark thriftserver
+  command: systemctl mask spark-thriftserver
+  when: init_is_systemd
+
+- name: Install Spark packages (common)
+  tags:
+    - spark
+    - common
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - spark-core # Lightning-Fast Cluster Computing
+    - spark-extras # External/extra libraries for Apache Spark
+    - spark-python # Python client for Spark
+    - spark-datanucleus # DataNucleus libraries for Apache Spark
+    - spark-thriftserver # Thrift server for Spark SQL
+    - spark-yarn-shuffle # Spark YARN Shuffle Service
+
+- name: Copy Spark shuffle for YARN (dynamic resource allocation)
+  tags:
+    - spark
+  shell: rsync -ax --update --backup /usr/lib/spark/yarn/*.jar /usr/lib/hadoop-yarn/lib/
+
+- name: Check if Py4J version-independent `.zip` archive exist
+  stat:
+    path='/usr/lib/spark/python/lib/py4j-src.zip'
+    follow=no
+  register: p
+  tags:
+    - spark
+
+- name: Symlink Py4J `.zip` archive under a version-independent name
+  # XXX: We use shell globbing to find out what source file to link,
+  # assuming there is one and only one Py4J `.zip` file.  
+  shell: |
+    cd /usr/lib/spark/python/lib
+    ln -s py4j-*-src.zip py4j-src.zip
+  when: not p.stat.exists
+  tags:
+    - spark
+
+- name: Ensure Spark configuration directory exists
+  tags:
+    - spark
+  file:
+    path='{{SPARK_CONF_DIR}}'
+    state=directory
+    
+- name: Copy Spark/BigTop default configuration files
+  tags:
+    - spark
+  command:
+    'rsync -ax --update --backup /etc/spark/conf.dist/ {{SPARK_CONF_DIR}}/'
+
+- name: Deploy Spark/ElastiCluster configuration files
+  tags:
+    - spark
+  template:
+    src='{{item}}.j2'
+    dest='{{SPARK_CONF_DIR}}/{{item}}'
+  with_items:
+    - spark-defaults.conf
+    - spark-env.sh
+
+- name: Activate Spark/ElastiCluster configuration
+  alternatives:
+    name='spark-conf'
+    link='/etc/spark/conf'
+    path='{{SPARK_CONF_DIR}}'
+
+- name: Deploy PySpark configuration files
+  tags:
+    - hadoop
+    - spark
+  copy:
+    src='{{item}}'
+    dest='/{{item}}'
+  with_items:
+    - etc/profile.d/pyspark.sh
+
+- name: Create Spark History folder on hdfs
+  command: hdfs dfs -mkdir -p {{ SPARK_HISTORY_DIR }}
+
+- name: Create Spark eventlog dir on HDFS
+  command: hdfs dfs -mkdir -p {{ SPARK_EVENTLOG_DIR }}
+
+- name: Unmask Spark thriftserver
+  command: systemctl unmask spark-thriftserver
+
+- name: Enable SELinux (RHEL-family)
+  selinux:
+    policy=targeted
+    state=enforcing
+  when: is_rhel_compatible
+
+- name: Start Spark thriftserver
+  tags:
+    - hadoop
+    - spark
+  service:
+    name="{{item}}"
+    state=started
+    enabled=yes
+  with_items:
+    - spark-thriftserver
+
+- name: Set SPARK_HOME in environment
+  lineinfile: dest=/etc/environment line='export SPARK_HOME=/usr/lib/spark' insertafter='EOF' state=present
+
+- name: Install Spark History Server
+  tags:
+    - hadoop
+    - spark
+    - hsitory
+  package:
+    name='{{item}}'
+    state=present
+  with_items:
+    - spark-history-server
+  when: inventory_hostname in groups['hadoop_master']
+
+- name: Start Spark History Server
+  tags:
+    - hadoop
+    - spark
+  service:
+    name="{{item}}"
+    state=started
+    enabled=yes
+  with_items:
+    - spark-history-server
+  when: inventory_hostname in groups['hadoop_master']
