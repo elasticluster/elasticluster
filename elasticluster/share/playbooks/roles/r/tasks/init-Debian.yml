@@ -41,7 +41,7 @@
       - libcurl4-openssl-dev
     r_packages_repo: 'deb {{r_cran_mirror_url}}/bin/linux/debian {{ansible_distribution_release}}-cran35/'
     r_packages_keyserver: keys.gnupg.net
-    r_packages_signing_key: '6212B7B7931C4BB16280BA1306F90DE5381BA480'
+    r_packages_signing_key: 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
   when:
     '{{is_debian}}'
 
