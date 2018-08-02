@@ -1,93 +1,94 @@
 # broad OS family, used to set package manager, etc.
-is_debian_compatible: "('{{ansible_os_family}}' == 'Debian')"
-is_rhel_compatible:   "('{{ansible_os_family}}' == 'RedHat')"
+is_debian_compatible: "{{ ansible_os_family == 'Debian' }}"
+is_rhel_compatible:   "{{ ansible_os_family == 'RedHat' }}"
 
 # distributions by name
-is_centos: "('{{ansible_distribution}}' in ['CentOS', 'Scientific'])"
-is_debian: "('{{ansible_distribution}}' == 'Debian')"
-is_scientific_linux: "('{{ansible_distribution}}' == 'Scientific')"
-is_ubuntu: "('{{ansible_distribution}}' == 'Ubuntu')"
+is_centos: "{{ ansible_distribution in ['CentOS', 'Scientific'] }}"
+is_debian: "{{ ansible_distribution == 'Debian' }}"
+is_scientific_linux: "{{ ansible_distribution == 'Scientific' }}"
+is_ubuntu: "{{ ansible_distribution == 'Ubuntu' }}"
 
-is_debian_or_ubuntu: "({{is_debian}} or {{is_ubuntu}})"
+is_debian_or_ubuntu: "{{ is_debian or is_ubuntu }}"
 
 
 # Debian releases by codename
-is_debian_wheezy:  "({{is_debian}} and '{{ansible_distribution_release}}' == 'wheezy')"
-is_debian_jessie:  "({{is_debian}} and '{{ansible_distribution_release}}' == 'jessie')"
-is_debian_stretch: "({{is_debian}} and '{{ansible_distribution_release}}' == 'stretch')"
-is_debian_sid:     "({{is_debian}} and '{{ansible_distribution_release}}' == 'sid')"
+is_debian_wheezy:  "{{ is_debian and ansible_distribution_release == 'wheezy' }}"
+is_debian_jessie:  "{{ is_debian and ansible_distribution_release == 'jessie' }}"
+is_debian_stretch: "{{ is_debian and ansible_distribution_release == 'stretch' }}"
+is_debian_sid:     "{{ is_debian and ansible_distribution_release == 'sid' }}"
 
 # Debian releases by version
-is_debian_7: "({{is_debian}} and {{ansible_distribution_major_version}}|int == 7)"
-is_debian_8: "({{is_debian}} and {{ansible_distribution_major_version}}|int == 8)"
+is_debian_7: "{{ is_debian and ansible_distribution_major_version|int == 7 }}"
+is_debian_8: "{{ is_debian and ansible_distribution_major_version|int == 8 }}"
+is_debian_9: "{{ is_debian and ansible_distribution_major_version|int == 9 }}"
 
 # Debian release ranges
-is_debian_7_or_later: "({{is_debian}} and {{ansible_distribution_major_version}}|int >= 7)"
-is_debian_8_or_later: "({{is_debian}} and {{ansible_distribution_major_version}}|int >= 8)"
-is_debian_9_or_later: "({{is_debian}} and {{ansible_distribution_major_version}}|int >= 9)"
+is_debian_7_or_later: "{{ is_debian and ansible_distribution_major_version|int >= 7 }}"
+is_debian_8_or_later: "{{ is_debian and ansible_distribution_major_version|int >= 8 }}"
+is_debian_9_or_later: "{{ is_debian and ansible_distribution_major_version|int >= 9 }}"
 
 
 # RHEL family releases by version
-is_rhel5_compatible: "({{is_rhel_compatible}} and {{ansible_distribution_major_version}}|int == 5)"
-is_rhel6_compatible: "({{is_rhel_compatible}} and {{ansible_distribution_major_version}}|int == 6)"
-is_rhel7_compatible: "({{is_rhel_compatible}} and {{ansible_distribution_major_version}}|int == 7)"
+is_rhel5_compatible: "{{ is_rhel_compatible and ansible_distribution_major_version|int == 5 }}"
+is_rhel6_compatible: "{{ is_rhel_compatible and ansible_distribution_major_version|int == 6 }}"
+is_rhel7_compatible: "{{ is_rhel_compatible and ansible_distribution_major_version|int == 7 }}"
 
 # RHEL family release ranges
-is_rhel6_or_later_compatible: "({{is_rhel_compatible}} and {{ansible_distribution_major_version}}|int >= 6)"
-is_rhel7_or_later_compatible: "({{is_rhel_compatible}} and {{ansible_distribution_major_version}}|int >= 7)"
+is_rhel6_or_later_compatible: "{{ is_rhel_compatible and ansible_distribution_major_version|int >= 6 }}"
+is_rhel7_or_later_compatible: "{{ is_rhel_compatible and ansible_distribution_major_version|int >= 7 }}"
 
 
 # Ubuntu releases by codename
-is_ubuntu_precise: "({{is_ubuntu}} and '{{ansible_distribution_release}}' == 'precise')"
-is_ubuntu_quantal: "({{is_ubuntu}} and '{{ansible_distribution_release}}' == 'quantal')"
-is_ubuntu_raring:  "({{is_ubuntu}} and '{{ansible_distribution_release}}' == 'raring')"
-is_ubuntu_saucy:   "({{is_ubuntu}} and '{{ansible_distribution_release}}' == 'saucy')"
-is_ubuntu_trusty:  "({{is_ubuntu}} and '{{ansible_distribution_release}}' == 'trusty')"
-is_ubuntu_utopic:  "({{is_ubuntu}} and '{{ansible_distribution_release}}' == 'utopic')"
-is_ubuntu_vivid:   "({{is_ubuntu}} and '{{ansible_distribution_release}}' == 'vivid')"
-is_ubuntu_wily:    "({{is_ubuntu}} and '{{ansible_distribution_release}}' == 'wily')"
-is_ubuntu_xenial:  "({{is_ubuntu}} and '{{ansible_distribution_release}}' == 'xenial')"
-is_ubuntu_yakkety: "({{is_ubuntu}} and '{{ansible_distribution_release}}' == 'yakkety')"
-is_ubuntu_zesty: "({{is_ubuntu}} and '{{ansible_distribution_release}}' == 'zesty')"
-is_ubuntu_artful: "({{is_ubuntu}} and '{{ansible_distribution_release}}' == 'artful')"
-is_ubuntu_bionic: "({{is_ubuntu}} and '{{ansible_distribution_release}}' == 'bionic')"
+is_ubuntu_precise: "{{ is_ubuntu and ansible_distribution_release == 'precise' }}"
+is_ubuntu_quantal: "{{ is_ubuntu and ansible_distribution_release == 'quantal' }}"
+is_ubuntu_raring:  "{{ is_ubuntu and ansible_distribution_release == 'raring' }}"
+is_ubuntu_saucy:   "{{ is_ubuntu and ansible_distribution_release == 'saucy' }}"
+is_ubuntu_trusty:  "{{ is_ubuntu and ansible_distribution_release == 'trusty' }}"
+is_ubuntu_utopic:  "{{ is_ubuntu and ansible_distribution_release == 'utopic' }}"
+is_ubuntu_vivid:   "{{ is_ubuntu and ansible_distribution_release == 'vivid' }}"
+is_ubuntu_wily:    "{{ is_ubuntu and ansible_distribution_release == 'wily' }}"
+is_ubuntu_xenial:  "{{ is_ubuntu and ansible_distribution_release == 'xenial' }}"
+is_ubuntu_yakkety: "{{ is_ubuntu and ansible_distribution_release == 'yakkety' }}"
+is_ubuntu_zesty:   "{{ is_ubuntu and ansible_distribution_release == 'zesty' }}"
+is_ubuntu_artful:  "{{ is_ubuntu and ansible_distribution_release == 'artful' }}"
+is_ubuntu_bionic:  "{{ is_ubuntu and ansible_distribution_release == 'bionic' }}"
 
 # Ubuntu releases by version
-is_ubuntu_12_04: "({{is_ubuntu}} and '{{ansible_distribution_version}}' == '12.04')"
-is_ubuntu_12_10: "({{is_ubuntu}} and '{{ansible_distribution_version}}' == '12.10')"
-is_ubuntu_13_04: "({{is_ubuntu}} and '{{ansible_distribution_version}}' == '13.04')"
-is_ubuntu_13_10: "({{is_ubuntu}} and '{{ansible_distribution_version}}' == '13.10')"
-is_ubuntu_14_04: "({{is_ubuntu}} and '{{ansible_distribution_version}}' == '14.04')"
-is_ubuntu_14_10: "({{is_ubuntu}} and '{{ansible_distribution_version}}' == '14.10')"
-is_ubuntu_15_04: "({{is_ubuntu}} and '{{ansible_distribution_version}}' == '15.04')"
-is_ubuntu_15_10: "({{is_ubuntu}} and '{{ansible_distribution_version}}' == '15.10')"
-is_ubuntu_16_04: "({{is_ubuntu}} and '{{ansible_distribution_version}}' == '16.04')"
-is_ubuntu_16_10: "({{is_ubuntu}} and '{{ansible_distribution_version}}' == '16.10')"
-is_ubuntu_17_04: "({{is_ubuntu}} and '{{ansible_distribution_version}}' == '17.04')"
-is_ubuntu_17_10: "({{is_ubuntu}} and '{{ansible_distribution_version}}' == '17.10')"
-is_ubuntu_18_04: "({{is_ubuntu}} and '{{ansible_distribution_version}}' == '18.04')"
-is_ubuntu_18_10: "({{is_ubuntu}} and '{{ansible_distribution_version}}' == '18.10')"
+is_ubuntu_12_04: "{{ is_ubuntu and ansible_distribution_version == '12.04' }}"
+is_ubuntu_12_10: "{{ is_ubuntu and ansible_distribution_version == '12.10' }}"
+is_ubuntu_13_04: "{{ is_ubuntu and ansible_distribution_version == '13.04' }}"
+is_ubuntu_13_10: "{{ is_ubuntu and ansible_distribution_version == '13.10' }}"
+is_ubuntu_14_04: "{{ is_ubuntu and ansible_distribution_version == '14.04' }}"
+is_ubuntu_14_10: "{{ is_ubuntu and ansible_distribution_version == '14.10' }}"
+is_ubuntu_15_04: "{{ is_ubuntu and ansible_distribution_version == '15.04' }}"
+is_ubuntu_15_10: "{{ is_ubuntu and ansible_distribution_version == '15.10' }}"
+is_ubuntu_16_04: "{{ is_ubuntu and ansible_distribution_version == '16.04' }}"
+is_ubuntu_16_10: "{{ is_ubuntu and ansible_distribution_version == '16.10' }}"
+is_ubuntu_17_04: "{{ is_ubuntu and ansible_distribution_version == '17.04' }}"
+is_ubuntu_17_10: "{{ is_ubuntu and ansible_distribution_version == '17.10' }}"
+is_ubuntu_18_04: "{{ is_ubuntu and ansible_distribution_version == '18.04' }}"
+is_ubuntu_18_10: "{{ is_ubuntu and ansible_distribution_version == '18.10' }}"
 
 # Ubuntu release ranges
-is_ubuntu_12_04_or_later: "({{is_ubuntu}} and {{ansible_distribution_major_version}}|int >= 12)"
-is_ubuntu_13_04_or_later: "({{is_ubuntu}} and {{ansible_distribution_major_version}}|int >= 13)"
-is_ubuntu_14_04_or_later: "({{is_ubuntu}} and {{ansible_distribution_major_version}}|int >= 14)"
-is_ubuntu_15_04_or_later: "({{is_ubuntu}} and {{ansible_distribution_major_version}}|int >= 15)"
-is_ubuntu_16_04_or_later: "({{is_ubuntu}} and {{ansible_distribution_major_version}}|int >= 16)"
-is_ubuntu_18_04_or_later: "({{is_ubuntu}} and {{ansible_distribution_major_version}}|int >= 18)"
+is_ubuntu_12_04_or_later: "{{ is_ubuntu and ansible_distribution_major_version|int >= 12 }}"
+is_ubuntu_13_04_or_later: "{{ is_ubuntu and ansible_distribution_major_version|int >= 13 }}"
+is_ubuntu_14_04_or_later: "{{ is_ubuntu and ansible_distribution_major_version|int >= 14 }}"
+is_ubuntu_15_04_or_later: "{{ is_ubuntu and ansible_distribution_major_version|int >= 15 }}"
+is_ubuntu_16_04_or_later: "{{ is_ubuntu and ansible_distribution_major_version|int >= 16 }}"
+is_ubuntu_18_04_or_later: "{{ is_ubuntu and ansible_distribution_major_version|int >= 18 }}"
 
-is_ubuntu_12_10_or_later: "({{is_ubuntu}} and ('{{ansible_distribution_version}}' == '12.10' or {{ansible_distribution_major_version}}|int > 12))"
-is_ubuntu_13_10_or_later: "({{is_ubuntu}} and ('{{ansible_distribution_version}}' == '13.10' or {{ansible_distribution_major_version}}|int > 13))"
-is_ubuntu_14_10_or_later: "({{is_ubuntu}} and ('{{ansible_distribution_version}}' == '14.10' or {{ansible_distribution_major_version}}|int > 14))"
-is_ubuntu_15_10_or_later: "({{is_ubuntu}} and ('{{ansible_distribution_version}}' == '15.10' or {{ansible_distribution_major_version}}|int > 15))"
-is_ubuntu_16_10_or_later: "({{is_ubuntu}} and ('{{ansible_distribution_version}}' == '16.10' or {{ansible_distribution_major_version}}|int > 16))"
-is_ubuntu_17_10_or_later: "({{is_ubuntu}} and ('{{ansible_distribution_version}}' == '17.10' or {{ansible_distribution_major_version}}|int > 17))"
-is_ubuntu_18_10_or_later: "({{is_ubuntu}} and ('{{ansible_distribution_version}}' == '18.10' or {{ansible_distribution_major_version}}|int > 18))"
+is_ubuntu_12_10_or_later: "{{ is_ubuntu and (is_ubuntu_12_10 or ansible_distribution_major_version|int > 12) }}"
+is_ubuntu_13_10_or_later: "{{ is_ubuntu and (is_ubuntu_13_10 or ansible_distribution_major_version|int > 13) }}"
+is_ubuntu_14_10_or_later: "{{ is_ubuntu and (is_ubuntu_14_10 or ansible_distribution_major_version|int > 14) }}"
+is_ubuntu_15_10_or_later: "{{ is_ubuntu and (is_ubuntu_15_10 or ansible_distribution_major_version|int > 15) }}"
+is_ubuntu_16_10_or_later: "{{ is_ubuntu and (is_ubuntu_16_10 or ansible_distribution_major_version|int > 16) }}"
+is_ubuntu_17_10_or_later: "{{ is_ubuntu and (is_ubuntu_17_10 or ansible_distribution_major_version|int > 17) }}"
+is_ubuntu_18_10_or_later: "{{ is_ubuntu and (is_ubuntu_18_10 or ansible_distribution_major_version|int > 18) }}"
 
 
 # init system features
-init_is_systemd: "('{{ansible_service_mgr}}' == 'systemd')"
-init_is_upstart: "('{{ansible_service_mgr}}' == 'upstart')"
+init_is_systemd: "{{ ansible_service_mgr == 'systemd' }}"
+init_is_upstart: "{{ ansible_service_mgr == 'upstart' }}"
 
 
 # Local variables:
