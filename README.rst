@@ -63,7 +63,7 @@ installation instructions on `ElastiCluster's Read The Docs
 <http://elasticluster.readthedocs.io/en/latest/install.html>`_ website.
 
 To install ElastiCluster over Docker: (1) download the `elasticluster.sh`_ script
-script into a file `elastiucluster.sh`, then (2) type this at your terminal
+script into a file `elasticluster.sh`, then (2) type this at your terminal
 prompt::
 
     chmod +x elasticluster.sh
