@@ -243,6 +243,17 @@ if [ "$pull" = 'yes' ]; then
     docker pull "$elasticluster_docker_image"
 fi
 
+# cannot run as root, as mountpoints within the Docker image would be
+# in the wrong place
+if [ $(id -u) -eq 0 ]; then
+    die $EX_SOFTWARE <<__EOF__
+Cannot run as 'root' user: please run ElastiCluster with a normal,
+unprivileged user.  (But ensure this user has permission to start
+and access Docker containers; typically this means being part of
+the 'docker' group.)
+__EOF__
+fi
+
 # ensure mount points exist
 for dir in "$HOME/.ssh" "$HOME/.elasticluster"; do
     test -d "$dir" || mkdir -v "$dir"
