@@ -254,6 +254,17 @@ the 'docker' group.)
 __EOF__
 fi
 
+# cannot run `sftp` in a Docker container
+for arg in "$@"; do
+    if [ "$arg" = 'sftp' ]; then
+        die $EX_SOFTWARE <<__EOF__
+ElastiCluster's 'sftp' command cannot be run in a Docker container.
+Please see https://github.com/gc3-uzh-ch/elasticluster/issues/576
+for an explanation and possible workarounds.
+__EOF__
+    fi
+done
+
 # ensure mount points exist
 for dir in "$HOME/.ssh" "$HOME/.elasticluster"; do
     test -d "$dir" || mkdir -v "$dir"
