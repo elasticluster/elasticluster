@@ -658,7 +658,8 @@ class _SshCommand(AbstractCommand):
             description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster', help='name of the cluster')
-        parser.add_argument('-n', '--node', metavar='HOSTNAME', dest='ssh_to',
+        parser.add_argument('-n', '--node', metavar='HOSTNAME',
+                            action='store', dest='ssh_to',
                             help=("Name of node you want to connect to."
                                   " If the cluster template specifies"
                                   " an `ssh_to` option, the first node"
@@ -666,7 +667,7 @@ class _SshCommand(AbstractCommand):
                                   " connect to the first node in the group"
                                   " named `ssh`, `login`, `frontend`, or"
                                   " `master` (whichever exists)."))
-        parser.add_argument('args', metavar='args', nargs='*',
+        parser.add_argument('cmds', nargs='*', default=[],
                             help=(
                                 "Pass these additional arguments"
                                 " to the actual `{cmd}` command."
@@ -719,7 +720,7 @@ class _SshCommand(AbstractCommand):
                        expand_ssh_proxy_command(
                            cluster.ssh_proxy_command,
                            username, addr, port))]
-        cmdline.extend(self.params.args)
+        cmdline.extend(self.params.cmds)
         log.debug("Running command `%s`", str.join(' ', cmdline))
         os.execlp(self.command, *cmdline)
 
