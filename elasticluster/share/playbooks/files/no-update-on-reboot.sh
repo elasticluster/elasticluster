@@ -175,6 +175,13 @@ if have_command systemctl; then
         #         die $EX_TEMPFAIL "Service 'apt-daily' did not terminate within $max_wait seconds."
         #     fi
         # done
+
+        # Occasionally, `dpkg` is forcibly killed in the middle of a
+        # package update and then it stops working, requiring that the
+        # configure step is completed before it cannot be run again.
+        # Let's force it, since `dpkg --configure` is a no-op if no
+        # configuration is pending...
+        dpkg --configure -a
     fi
 
 else
