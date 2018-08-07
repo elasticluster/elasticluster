@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013-2016 S3IT, University of Zurich
+#   Copyright (C) 2013-2016, 2018 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -111,12 +111,12 @@ class ElastiCluster(cli.app.CommandLineApp):
         # to parse subcommands
         self.subparsers = self.argparser.add_subparsers(
             title="COMMANDS",
-            help=("Available commands. Run `elasticluster cmd --help`"
-                  " to have information on command `cmd`."))
+            help=("Available commands. Run `elasticluster CMD --help`"
+                  " to have information on command `CMD`."))
 
         for command in commands:
-            if isinstance(command, AbstractCommand):
-                command.setup(self.subparsers)
+            command.setup(self.subparsers)
+
 
     def pre_run(self):
         # Hack around http://bugs.python.org/issue9253 ?
