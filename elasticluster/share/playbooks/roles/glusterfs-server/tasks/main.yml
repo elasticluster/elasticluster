@@ -24,7 +24,7 @@
   # files define `glusterfs_server_services` as a mapping from
   # `glusterfs_version` (string) to list of service names.
   #
-  with_items: '{{ glusterfs_server_services[glusterfs_version] }}'
+  with_items: '{{ glusterfs_server_services[glusterfs_version|string] }}'
   tags:
     - gluster
     - glusterfs-server

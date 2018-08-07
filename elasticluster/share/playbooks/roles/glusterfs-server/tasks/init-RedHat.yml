@@ -18,6 +18,18 @@
         - glusterd
         - glusterfsd
         - glusterfssharedstorage
+      '3.13':
+        - glusterd
+        - glusterfsd
+        - glusterfssharedstorage
+      '4.0':
+        - glusterd
+        - glusterfsd
+        - glusterfssharedstorage
+      '4.1':
+        - glusterd
+        - glusterfsd
+        - glusterfssharedstorage
 
 
 - name: Make GlusterFS release repo available to YUM

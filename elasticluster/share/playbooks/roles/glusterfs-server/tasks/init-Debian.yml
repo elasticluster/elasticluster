@@ -15,3 +15,12 @@
       '3.12':
         - glusterd
         - glustereventsd
+      '3.13':
+        - glusterd
+        - glustereventsd
+      '4.0':
+        - glusterd
+        - glustereventsd
+      '4.1':
+        - glusterd
+        - glustereventsd
