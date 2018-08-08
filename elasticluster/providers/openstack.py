@@ -129,7 +129,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         or `None` (default, meaning try v3 first and fall-back to v2).
     :param cacert: Path to CA certificate bundle (for verifying HTTPS sessions)
         or ``None`` to use the systems' default.
-    :param bool manage_anti_affinity_groups: use openstack aaf to spread the load
     :param str anti_affinity_group_prefix: prefix for creating server groups
     """
 
@@ -151,7 +150,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                  # this is deprecated in favor of `compute_api_version`
                  nova_api_version=None,
                  cacert=None,  # keep in sync w/ default in novaclient.Client()
-                 manage_anti_affinity_groups=False,
                  anti_affinity_group_prefix=None
     ):
         # OpenStack connection params
@@ -195,7 +193,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         self.anti_affinity_group_prefix = anti_affinity_group_prefix
         # constant for anti-affinity routines.
-        self.middle_token = ".number."
+        self._middle_token = ".number."
 
     @staticmethod
     def _get_os_config_value(thing, value, varnames, default=_NO_DEFAULT):
@@ -507,10 +505,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         .format(id=volume.id, delete_on_terminate=1)),
             }
 
-
-
-        out_of_capacity = 'No valid host was found. There are not enough hosts available.'
-
         # create anti-affinity groups for spawning servers to ensure server spread
         # equally across hosts in the cloud.
         # This will create a server group, spawn hosts in the group until it's full
@@ -521,9 +515,9 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 group = self._get_current_anti_affinity_group()
                 vm_start_args['scheduler_hints']={ 'group' : group.id }
                 vm = self.nova_client.servers.create(node_name, image_id, flavor, **vm_start_args)
-                self._wait_for_status(vm, ["ACTIVE", "ERROR"], 10)
+                self._wait_for_status(vm, ["ACTIVE", "ERROR"], 30)
 
-                if vm.status == 'ERROR' and vm.fault['message'] == out_of_capacity:
+                if vm.status == 'ERROR':
                     log.debug("Deleting instance %s(%s) in group %s", vm.name, vm.id, group.name)
                     self.nova_client.servers.delete(vm.id)
 
@@ -606,7 +600,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         if groups:
             group = sorted(groups, key=lambda g: g.name)[-1]
         else:
-            group = self.nova_client.server_groups.create(name=self.anti_affinity_group_prefix + self.middle_token + "1", policies='anti-affinity')
+            group = self.nova_client.server_groups.create(name=self.anti_affinity_group_prefix + self._middle_token + "1", policies='anti-affinity')
 
         return group
 
@@ -623,7 +617,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             return '.'.join(split_name)
 
     def _list_anti_affinity_groups(self):
-        return [  group for group in self.nova_client.server_groups.list() if self.anti_affinity_group_prefix + self.middle_token in group.name ]
+        return [  group for group in self.nova_client.server_groups.list() if self.anti_affinity_group_prefix + self._middle_token in group.name ]
 
     def _check_keypair(self, name, public_key_path, private_key_path):
         """First checks if the keypair is valid, then checks if the keypair
