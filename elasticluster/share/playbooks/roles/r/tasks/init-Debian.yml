@@ -18,7 +18,7 @@
       # more dependency packages, notes from CSCS' workshop on Spark
       - libssl-dev
       - libcurl4-openssl-dev
-    r_packages_repo: 'deb {{r_cran_mirror_url}}/bin/linux/ubuntu {{ansible_distribution_release}}-cran35/'
+    r_packages_repo: 'deb {{r_cran_mirror_url}}/bin/linux/ubuntu {{ansible_distribution_release}}/'
     r_packages_keyserver: keyserver.ubuntu.com
     r_packages_signing_key: 'E084DAB9'
   when:
