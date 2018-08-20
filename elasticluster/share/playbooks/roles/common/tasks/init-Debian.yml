@@ -24,16 +24,27 @@
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
 
 - name: Install Ansible `apt` module dependencies
-  # the `apt` module depends on both `aptitude` and `python-apt` to do
-  # package-level work, so we need to resort to a raw invocation of `apt-get`
+  # the `apt` module depends on `python-apt` to do package-level work,
+  # so we need to resort to a raw invocation of `apt-get`
   command: |
     apt-get install -y {{item.name}}
   args:
     creates: '{{item.creates}}'
   become: yes
   with_items:
-    - { name: 'aptitude', creates: '/usr/bin/aptitude' }
     - { name: 'python-apt', creates: '/usr/share/doc/python-apt' }
+
+- name: Uninstall `aptitude`
+  # since Ansible 2.6, the `apt` module conflicts with `aptitude` when
+  # `allow_unauthenticated: yes` is used -- so remove it and let
+  # Ansible use `apt-get` instead
+  command: |
+    apt-get remove --purge -y {{item.name}}
+  args:
+    removes: '{{item.creates}}'
+  become: yes
+  with_items:
+    - { name: 'aptitude', creates: '/usr/bin/aptitude' }
 
 - name: Upgrade all installed packages to latest version
   apt:
