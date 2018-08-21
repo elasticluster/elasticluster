@@ -16,7 +16,7 @@
 - name: Reload SystemD configuration
   command: |
     systemctl daemon-reload
-  when: '_mask|changed'
+  when: '_mask is changed'
 
 
 - name: Ensure CTDB directories exists
@@ -76,7 +76,7 @@
 - name: Reload SystemD configuration
   command: |
     systemctl daemon-reload
-  when: '_unmask|changed'
+  when: '_unmask is changed'
 
 
 - name: Ensure SAMBA servers are *not* started at boot

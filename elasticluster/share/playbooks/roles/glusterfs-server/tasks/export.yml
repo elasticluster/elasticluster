@@ -42,7 +42,7 @@
       {{_gluster_option_replicas}}      \
       {{_gluster_option_transport}}     \
       {{_glusterfs_bricks}} force
-  when: 'gluster_volume_info|failed and is_glusterfs_main_server_node'
+  when: '(gluster_volume_info is failed) and is_glusterfs_main_server_node'
 
 - name: Check whether all the bricks have been added
   shell: |

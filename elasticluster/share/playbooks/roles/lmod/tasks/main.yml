@@ -17,7 +17,7 @@
 # ...if installing from OS packages failed, download and build sources
 - name: Build Lmod from source
   include_tasks: build.yml
-  when: 'lmod_pkg_install|failed'
+  when: '(lmod_pkg_install is failed)'
 
 
 # run post-install regardless of installation method

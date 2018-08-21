@@ -38,7 +38,7 @@
     update_cache: yes
     cache_valid_time: 0
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  when: 'is_debian_compatible and _htcondor_repository|changed'
+  when: 'is_debian_compatible and _htcondor_repository is changed'
 
 
 - name: prepare HTCondor DebConf template

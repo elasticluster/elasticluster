@@ -12,4 +12,4 @@
 - name: Create FS metadata pool
   command: |
     ceph --cluster {{ceph_cluster_name}} osd pool create {{pool_name}} {{pool_pg_num}}
-  when: '_check_ceph_pool_exists|failed'
+  when: '(_check_ceph_pool_exists is failed)'

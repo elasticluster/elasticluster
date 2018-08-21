@@ -51,7 +51,7 @@
     home: /var/lib/ceph
     system: yes
     state: present
-  when: check_user_ceph_existence|failed
+  when: (check_user_ceph_existence is failed)
 
 
 - name: Ensure working directories exist

@@ -75,7 +75,7 @@
 - name: Reload systemd unit definitions
   command: |
     systemctl daemon-reload
-  when: ceph_mds_systemd_unit|changed
+  when: ceph_mds_systemd_unit is changed
 
 
 - name: Ensure `ceph-mds` is running and (re)started at boot

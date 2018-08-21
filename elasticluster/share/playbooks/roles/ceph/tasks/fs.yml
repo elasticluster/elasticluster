@@ -31,4 +31,4 @@
     - ceph
   command: |
     ceph --cluster {{ceph_cluster_name}} fs new cephfs cephfs_metadata cephfs_data
-  when: 'check_ceph_fs_exists|failed'
+  when: '(check_ceph_fs_exists is failed)'

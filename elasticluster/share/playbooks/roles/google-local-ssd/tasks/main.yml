@@ -9,7 +9,7 @@
   set_fact:
     localssd_scsi_devices:
       stdout_lines: []
-  when: localssd_scsi_devices|failed
+  when: (localssd_scsi_devices is failed)
 
 - name: Discover SSD device names (NVME)
   shell: |
@@ -20,7 +20,7 @@
   set_fact:
     localssd_nvme_devices:
       stdout_lines: []
-  when: localssd_nvme_devices|failed
+  when: (localssd_nvme_devices is failed)
 
 - name: Set local SSD variables
   set_fact:

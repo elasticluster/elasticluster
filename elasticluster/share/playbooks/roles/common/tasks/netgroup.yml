@@ -34,4 +34,4 @@
     dest: /etc/nsswitch.conf
     line: 'netgroup: nis files'
     state: present
-  when: '_netgroup_add_nss_files|failed'
+  when: '(_netgroup_add_nss_files is failed)'
