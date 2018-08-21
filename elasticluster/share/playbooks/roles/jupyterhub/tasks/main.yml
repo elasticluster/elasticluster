@@ -83,7 +83,7 @@
   shell: |
     supervisorctl reread;
     supervisorctl update;
-  when: _deploy_supervisord_conf_for_jupyterhub|changed
+  when: _deploy_supervisord_conf_for_jupyterhub is changed
 
 
 - name: Ensure JupyterHub has been started by supervisord

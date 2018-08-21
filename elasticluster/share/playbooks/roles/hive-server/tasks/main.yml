@@ -23,7 +23,7 @@
     - hive-server
   shell:
     'psql --username="{{HIVE_METASTORE_DB_USER}}" --dbname="{{HIVE_METASTORE_DB_NAME}}" < /usr/lib/hive/scripts/metastore/upgrade/postgres/hive-schema-{{hive_schema_version}}.postgres.sql'
-  when: db_tables_check|failed
+  when: (db_tables_check is failed)
 
 
 - name: Install Hive packages (services)

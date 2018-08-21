@@ -22,7 +22,7 @@
   shell: |
     {{MATLAB_EXE}} -nojvm -nodesktop -nodisplay -nosplash -r "dir = matlabroot; fprintf('MATLABROOT=%s\n', dir); exit" | grep "^MATLABROOT=" | cut -d= -f2
   register: matlabroot
-  when: matlab_for_python_available|failed
+  when: (matlab_for_python_available is failed)
 
 
 - name: Install MATLAB engine for Python
@@ -30,7 +30,7 @@
     {{PYTHON2_EXE}} setup.py install
   args:
     chdir: '{{matlabroot.stdout}}/extern/engines/python/'
-  when: matlab_for_python_available|failed
+  when: (matlab_for_python_available is failed)
 
 
 - name: Install Jupyter/IPython kernel for MATLAB (module)

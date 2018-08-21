@@ -26,4 +26,4 @@
     - ceph
   shell: |
     ceph-authtool {{keyring}} --gen-key -n {{keyname}} {{capabilities}}
-  when: '_ceph_key_in_keyring|failed'
+  when: '(_ceph_key_in_keyring is failed)'

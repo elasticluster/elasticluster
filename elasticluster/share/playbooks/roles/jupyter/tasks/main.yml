@@ -31,4 +31,4 @@
   ignore_errors: yes
   register: matlab_run
 - include_tasks: matlab.yml
-  when: matlab_run|success
+  when: matlab_run is successful

@@ -66,7 +66,7 @@
   async: 1
   poll: 0
   register: _cgroup_reboot
-  when: 'allow_reboot|default(false) and _memsw_limit|failed and _bootparam_swapaccounting'
+  when: 'allow_reboot|default(false) and (_memsw_limit is failed) and _bootparam_swapaccounting'
 
 
 - name: Wait for server to come up again

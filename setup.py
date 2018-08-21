@@ -205,7 +205,7 @@ setup(
         'pip>=9.0.0',  ## see issue #433
         #'ara',  # optional
         'PyCLI',
-        'ansible>=2.4',
+        'ansible>=2.5',
         'click>=4.0',  ## click.prompt() added in 4.0
         'coloredlogs',
         'netaddr',

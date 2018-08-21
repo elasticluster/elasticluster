@@ -37,7 +37,7 @@
   with_items:
     - { shell: 'sh',  script: 'profile', source_cmd: '.' }
     - { shell: 'csh', script: 'cshrc',   source_cmd: 'source' }
-  when: lmod_check_for__etc_profile_d|success
+  when: lmod_check_for__etc_profile_d is successful
 
 
 - name: Deploy additional initialization scripts (verbatim)
@@ -71,4 +71,4 @@
     path='/etc/bash_completion.d/lmod'
     state=link
     src='{{ lmod_root }}/lmod/lmod/init/lmod_bash_completions'
-  when: lmod_check_for__etc_bash_completion_d|success
+  when: lmod_check_for__etc_bash_completion_d is successful
