@@ -11,7 +11,7 @@
     dest: '/var/lib/torque/mom_priv/config'
     regexp: '{{ item.regexp }}'
     line: '{{ item.line }}'
-  with_items:
+  loop:
     - { regexp: '.*pbsserver.*', line: '\$pbsserver {{ torque_master_host }}' }
     - { regexp: '.usecp .*', line: '\$usecp *:/home /home' }
   notify: restart pbs_mom

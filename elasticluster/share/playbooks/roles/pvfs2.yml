@@ -20,7 +20,7 @@
         name: '{{item}}'
         state: '{{ pkg_install_state }}'
         allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-      with_items:
+      loop:
         - build-essential
         - libdb-dev
         - bison
@@ -51,7 +51,7 @@
     - is_client: '"{{inventory_hostname}}" in {{groups.pvfs2_client}}'
   tasks:
     - action: shell scp /etc/pvfs2-fs.conf root@{{item}}:/etc/pvfs2-fs.conf
-      with_items:
+      loop:
         - "{{groups.pvfs2_meta}}"
         - "{{groups.pvfs2_data}}"
       when: inventory_hostname == groups.pvfs2_meta[0]

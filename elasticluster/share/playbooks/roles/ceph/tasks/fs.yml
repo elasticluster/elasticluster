@@ -12,7 +12,7 @@
   vars:
     pool_name: '{{item.pool_name}}'
     pool_pg_num: '{{item.pool_pg_num}}'
-  with_items:
+  loop:
     - { pool_name: 'cephfs_metadata', pool_pg_num: '{{ceph_metadata_pg_num}}' }
     - { pool_name: 'cephfs_data',     pool_pg_num: '{{ceph_data_pg_num}}' }
 

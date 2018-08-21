@@ -16,7 +16,7 @@
     name: "{{ item }}"
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  with_items:
+  loop:
     - docker.io
     - kubelet
     - kubeadm
@@ -28,7 +28,7 @@
   apt:
     name: "{{ item }}"
     allow_unauthenticated: '{{ insecure_https_downloads|default("no")|bool }}'
-  with_items:
+  loop:
     - docker.io
     - kubelet={{ kubernetes_version.apt.label }}
     - kubeadm={{ kubernetes_version.apt.label }}
@@ -40,6 +40,6 @@
     name: '{{ item }}'
     enabled: true
     state: started
-  with_items:
+  loop:
     - docker
     - kubelet

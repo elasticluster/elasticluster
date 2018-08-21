@@ -40,7 +40,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - '{{slurm_db_server_pkg}}'
     - '{{slurm_db_python_pkg}}'
 
@@ -76,6 +76,6 @@
     password='{{SLURM_ACCOUNTING_DB_PASS}}'
     priv='{{SLURM_ACCOUNTING_DB_NAME}}.*:ALL'
     state=present
-  with_items:
+  loop:
     - '{{SLURM_ACCOUNTING_HOST}}'
     - 'localhost'

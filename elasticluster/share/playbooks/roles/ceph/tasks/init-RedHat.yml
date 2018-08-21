@@ -18,7 +18,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - ceph
   when: 'is_ceph_server'
 
@@ -30,7 +30,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - ceph-common
     - ceph-fuse
     - cephfs-java

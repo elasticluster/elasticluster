@@ -32,7 +32,7 @@
     mode: 0444
     owner: root
     group: root
-  with_items:
+  loop:
     - 'cuda.sh'
     - 'cuda.csh'
 

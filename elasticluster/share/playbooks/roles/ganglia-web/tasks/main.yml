@@ -24,7 +24,7 @@
   package:
     pkg: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items: '{{ ganglia_web_packages }}'
+  loop: '{{ ganglia_web_packages }}'
 
 
 - block:
@@ -102,4 +102,4 @@
     name: '{{item}}'
     state: started
     enabled: yes
-  with_items: '{{ ganglia_web_services }}'
+  loop: '{{ ganglia_web_services }}'

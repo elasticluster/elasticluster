@@ -42,7 +42,7 @@
     mode='ug+rwx,g+s'
     owner='{{easybuild_user}}'
     group='easybuild'
-  with_items:
+  loop:
     - "{{ EASYBUILD_PREFIX }}/"
     - "{{ EASYBUILD_PREFIX }}/modules/all/EasyBuild/"
     - "{{ EASYBUILD_PREFIX }}/modules/tools/EasyBuild/"
@@ -79,7 +79,7 @@
     src='{{item}}.j2'
     dest='/{{item}}'
     mode=0444
-  with_items:
+  loop:
     - 'etc/easybuild.cfg'
     - 'etc/profile.d/easybuild.sh'
 

@@ -38,7 +38,7 @@
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
     executable: '{{PYTHON2_EXE|dirname}}/pip'
-  with_items:
+  loop:
     - matlab_kernel
 
 

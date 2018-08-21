@@ -25,7 +25,7 @@
     dest: '{{ item.path }}'
     group: '{{ ssh_keysign.stat.gr_name }}'
     mode: 'g+r'
-  with_items: '{{ _find_ssh_host_keys.files }}'
+  loop: '{{ _find_ssh_host_keys.files }}'
   notify: 'restart sshd {{ansible_os_family}}'
 
 # Alternatively:

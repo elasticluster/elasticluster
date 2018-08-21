@@ -45,7 +45,7 @@
     dest: /etc/ssh/sshd_config
     regexp: '{{item.key}}.*'
     line: "{{item.key}} {{item.value}}"
-  with_items:
+  loop:
     - { key: "HostbasedAuthentication", value: 'yes' }
     - { key: "IgnoreRhosts",            value: 'no'  }
     - { key: "PasswordAuthentication",  value: '{{ ssh_password_auth|default("yes") }}' }
@@ -57,7 +57,7 @@
     dest=/etc/ssh/ssh_config
     regexp='{{item.key}}.*'
     line="{{item.key}} {{item.value}}"
-  with_items:
+  loop:
     - { key: 'HostbasedAuthentication', value: 'yes' }
     - { key: 'EnableSSHKeysign',        value: 'yes' }
 

@@ -16,7 +16,7 @@
   package:
     pkg: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items: '{{ ganglia_gmetad_packages }}'
+  loop: '{{ ganglia_gmetad_packages }}'
 
 
 - name: Configure `gmetad`

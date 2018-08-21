@@ -30,7 +30,7 @@
   shell: |
     sacctmgr --immediate --parsable --noheader list user Account=root | grep '^{{item}}|' \
       || sacctmgr --immediate --quiet add user '{{item}}' DefaultAccount=root
-  with_items: '{{slurm_cluster_users}}'
+  loop: '{{slurm_cluster_users}}'
 
 - name: Ensure `slurmctld` is running
   tags:
@@ -40,5 +40,5 @@
     name='{{item}}'
     enabled=yes
     state=started
-  with_items:
+  loop:
     - '{{slurmctld_service_name}}'

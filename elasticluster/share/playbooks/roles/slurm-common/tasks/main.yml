@@ -36,7 +36,7 @@
     state=directory
     owner=slurm
     group=slurm
-  with_items:
+  loop:
     - /etc/slurm
     - /var/lib/slurm
     - /var/lib/slurm/checkpoint
@@ -59,7 +59,7 @@
     src='{{ item.from }}'
     state=link
     force=yes
-  with_items:
+  loop:
     - { from: '/etc/slurm',     to: '/etc/slurm-llnl' }
     - { from: '/var/lib/slurm', to: '/var/lib/slurm-llnl' }
     - { from: '/var/log/slurm', to: '/var/log/slurm-llnl' }
@@ -92,7 +92,7 @@
     owner: root
     group: root
     mode: 0444
-  with_items:
+  loop:
     - slurm.conf
 
 
@@ -100,7 +100,7 @@
   package:
     pkg: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - libopenmpi-dev
     - openmpi-bin
   when: is_debian_or_ubuntu
@@ -110,7 +110,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - openmpi-devel
   when: 'is_rhel_compatible'
 

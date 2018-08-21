@@ -31,7 +31,7 @@
   args:
     creates: '{{item.creates}}'
   become: yes
-  with_items:
+  loop:
     - { name: 'python-apt', creates: '/usr/share/doc/python-apt' }
 
 - name: Uninstall `aptitude`
@@ -43,7 +43,7 @@
   args:
     removes: '{{item.creates}}'
   become: yes
-  with_items:
+  loop:
     - { name: 'aptitude', creates: '/usr/bin/aptitude' }
 
 - name: Upgrade all installed packages to latest version
@@ -57,7 +57,7 @@
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  with_items:
+  loop:
     - apt-transport-https
     # these are required by Ansible's `debconf` module
     - debconf
@@ -72,7 +72,7 @@
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  with_items:
+  loop:
     - dbus
   when: 'is_debian_8_or_later'
 

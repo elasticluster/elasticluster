@@ -23,7 +23,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items: '{{nis_master_packages}}'
+  loop: '{{nis_master_packages}}'
 
 
 - name: Ensure `ypserv` is restarted if config files changed
@@ -35,7 +35,7 @@
     name: '{{item}}'
     state: started
     enabled: yes
-  with_items: '{{nis_master_services}}'
+  loop: '{{nis_master_services}}'
 
 
 - name: Update NIS/YP databases (NIS master server)

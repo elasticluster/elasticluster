@@ -14,7 +14,7 @@
   file:
     path='{{item.mountpoint}}'
     state=directory
-  with_items: '{{GLUSTERFS_MOUNTS}}'
+  loop: '{{GLUSTERFS_MOUNTS}}'
   tags:
       - gluster
       - glusterfs-client
@@ -28,7 +28,7 @@
     fstype=glusterfs
     opts='{{item.options|default("defaults,rw")}}'
     state='{{item.state|default("mounted")}}'
-  with_items: '{{GLUSTERFS_MOUNTS}}'
+  loop: '{{GLUSTERFS_MOUNTS}}'
   tags:
       - gluster
       - glusterfs-client

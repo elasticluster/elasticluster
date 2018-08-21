@@ -68,7 +68,7 @@
           };
         };
     __EOF__
-  with_items:
+  loop:
     - parallel
     - doParallel
     - snow

@@ -60,7 +60,7 @@
   file:
     dest: '{{item}}'
     state: directory
-  with_items:
+  loop:
     - '/etc/ceph'
     - '/var/run/ceph'
 
@@ -85,7 +85,7 @@
   tags:
     - ceph
   include_tasks: '{{playbook}}.yml'
-  with_items:
+  loop:
     - _keyring
     - _monmap
   loop_control:
@@ -102,7 +102,7 @@
     owner: ceph
     group: ceph
     mode: 0600
-  with_items:
+  loop:
     - '{{ceph_cluster_name}}.keyring'
     - monmap
   when: 'is_ceph_server'

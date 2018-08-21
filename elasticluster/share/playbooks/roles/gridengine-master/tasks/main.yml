@@ -17,7 +17,7 @@
   package:
     pkg: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items: '{{gridengine_master_packages}}'
+  loop: '{{gridengine_master_packages}}'
 
 
 - name: deploy qmaster installer config (RHEL/CentOS)
@@ -60,7 +60,7 @@
     dest='/etc/profile.d/gridengine.{{item}}'
     src='{{SGE_VAR}}/{{SGE_CELL}}/common/settings.{{item}}'
     state=link
-  with_items:
+  loop:
     - sh
     - csh
   when: is_rhel_compatible
@@ -108,7 +108,7 @@
   template:
     dest='{{SGE_ROOT}}/{{item}}.conf'
     src=newhost.qconf.j2
-  with_items: '{{groups.gridengine_worker}}'
+  loop: '{{groups.gridengine_worker}}'
 
 
   # This is required on the nodes for SGE `ìnst_sge` script to work
@@ -118,7 +118,7 @@
     - gridengine-master
   shell: |
     bash -lc 'qconf -ah "{{item}}"'
-  with_items: '{{groups.gridengine_master + groups.gridengine_worker}}'
+  loop: '{{groups.gridengine_master + groups.gridengine_worker}}'
   register: command_result
   changed_when: "'added' in command_result.stdout"
 
@@ -129,7 +129,7 @@
     - gridengine-master
   shell: |
     bash -lc '(qconf -ss | fgrep -q "{{item}}") || qconf -as "{{item}}"'
-  with_items: '{{groups.gridengine_master + groups.gridengine_worker + groups.gridengine_submit|default([]) }}'
+  loop: '{{groups.gridengine_master + groups.gridengine_worker + groups.gridengine_submit|default([]) }}'
   register: command_result
   changed_when: "'added' in command_result.stdout"
 
@@ -140,7 +140,7 @@
     - gridengine-master
   shell: |
     bash -lc 'qconf -se "{{item}}" || qconf -Ae "{{SGE_ROOT}}/{{item}}.conf"'
-  with_items: '{{groups.gridengine_worker}}'
+  loop: '{{groups.gridengine_worker}}'
   register: command_result
   changed_when: "'added' in command_result.stdout"
 

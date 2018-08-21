@@ -8,7 +8,7 @@
   package:
     name: '{{item}}'
     state: present
-  with_items:
+  loop:
     - hive
     # Java JDBC support for PostgreSQL
     - libpostgresql-jdbc-java
@@ -38,7 +38,7 @@
   template:
     src='{{item}}.j2'
     dest='{{HIVE_CONF_DIR}}/{{item}}'
-  with_items:
+  loop:
     - hive-env.sh
     - hive-site.xml
 

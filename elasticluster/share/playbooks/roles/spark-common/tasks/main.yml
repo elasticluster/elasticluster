@@ -9,7 +9,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - spark-core # Lightning-Fast Cluster Computing
     - spark-datanucleus # DataNucleus libraries for Apache Spark
     - spark-extras # External/extra libraries for Apache Spark
@@ -74,7 +74,7 @@
   template:
     src: '{{item}}.j2'
     dest: '{{SPARK_CONF_DIR}}/{{item}}'
-  with_items:
+  loop:
     - spark-defaults.conf
     #- spark-env.sh
 
@@ -93,5 +93,5 @@
   template:
     src: '{{item.src}}'
     dest: '{{item.dest}}'
-  with_items:
+  loop:
     - { src: 'pyspark.sh.j2', dest: '/etc/profile.d/pyspark.sh' }

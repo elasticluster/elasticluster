@@ -16,7 +16,7 @@
   yum:
     name: "{{ item }}"
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - docker
     - kubelet
     - kubeadm
@@ -28,6 +28,6 @@
     name: '{{ item }}'
     enabled: true
     state: started
-  with_items:
+  loop:
     - docker
     - kubelet

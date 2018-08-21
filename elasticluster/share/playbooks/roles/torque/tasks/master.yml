@@ -5,7 +5,7 @@
   yum:
     pkg: '{{item}}'
     state: latest
-  with_items:
+  loop:
     - munge
     - torque-client
     - torque-scheduler
@@ -20,7 +20,7 @@
     group: root
     mode: 0775
     recurse: yes
-  with_items:
+  loop:
     - server_priv
     - checkpoint
 
@@ -63,7 +63,7 @@
   template:
     src: 'var/lib/torque/{{ item }}.j2'
     dest: '/var/lib/torque/{{ item }}'
-  with_items:
+  loop:
     - qmgr.bootstrap
     - server_name
     - server_priv/nodes
@@ -76,7 +76,7 @@
     name: '{{item}}'
     state: started
     enabled: yes
-  with_items:
+  loop:
     - trqauthd
     - pbs_sched
     - pbs_server

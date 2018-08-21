@@ -8,7 +8,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     # see: http://easybuild.readthedocs.io/en/latest/Installation.html#dependencies
     #
     # required dependencies
@@ -42,7 +42,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - git
     - graphviz
     - mercurial
@@ -54,7 +54,7 @@
   package:
     name: '{{ item }}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - bzip2-devel
     - m4
     - ncurses-devel

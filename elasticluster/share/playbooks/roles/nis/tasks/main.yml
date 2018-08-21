@@ -20,7 +20,7 @@
     dest: '/{{item}}'
     src: '{{item}}.j2'
     mode: 0444
-  with_items:
+  loop:
     - etc/default/nis
     - etc/defaultdomain
   when: 'is_debian_compatible'
@@ -40,7 +40,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items: '{{nis_common_packages}}'
+  loop: '{{nis_common_packages}}'
 
 
 - import_tasks: ypserv.yml

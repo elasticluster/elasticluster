@@ -6,7 +6,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - glusterfs-server
     - glusterfs-client
   tags:
@@ -24,7 +24,7 @@
   # files define `glusterfs_server_services` as a mapping from
   # `glusterfs_version` (string) to list of service names.
   #
-  with_items: '{{ glusterfs_server_services[glusterfs_version|string] }}'
+  loop: '{{ glusterfs_server_services[glusterfs_version|string] }}'
   tags:
     - gluster
     - glusterfs-server
@@ -33,7 +33,7 @@
 - name: Configure peers (only on the first host)
   shell: |
     gluster peer probe '{{item}}'
-  with_items: '{{groups.glusterfs_server}}'
+  loop: '{{groups.glusterfs_server}}'
   when: is_glusterfs_main_server_node
   tags:
     - gluster
@@ -42,7 +42,7 @@
 
 # build and export volumes
 - include_tasks: export.yml
-  with_items: '{{GLUSTERFS_VOLUMES}}'
+  loop: '{{GLUSTERFS_VOLUMES}}'
   tags:
     - gluster
     - glusterfs-server

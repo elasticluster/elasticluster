@@ -13,7 +13,7 @@
     owner: ceph
     group: ceph
     mode: 0400
-  with_items:
+  loop:
     - '{{ceph_cluster_name}}.client.admin.keyring'
 
 
@@ -50,4 +50,4 @@
     - client
     - mount
   include_tasks: _mount.yml
-  with_items: '{{ CEPH_MOUNTS }}'
+  loop: '{{ CEPH_MOUNTS }}'
