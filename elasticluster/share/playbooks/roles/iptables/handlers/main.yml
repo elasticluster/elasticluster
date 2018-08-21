@@ -9,7 +9,7 @@
   service:
     name: '{{service[item]}}'
     state: reloaded
-  with_items:
+  loop:
     - 'iptables'
     - 'ip6tables'
 
@@ -18,6 +18,6 @@
   service:
     name: '{{service[item]}}'
     state: restarted
-  with_items:
+  loop:
     - 'iptables'
     - 'ip6tables'

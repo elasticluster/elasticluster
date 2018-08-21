@@ -9,7 +9,7 @@
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  with_items:
+  loop:
     # see: http://easybuild.readthedocs.io/en/latest/Installation.html#dependencies
     #
     # required dependencies
@@ -44,7 +44,7 @@
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  with_items:
+  loop:
     - git
     - graphviz
     - mercurial
@@ -58,7 +58,7 @@
     name: '{{ item }}'
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  with_items:
+  loop:
     #  required by EasyBuild to build some SW
     - fontconfig
     - graphviz

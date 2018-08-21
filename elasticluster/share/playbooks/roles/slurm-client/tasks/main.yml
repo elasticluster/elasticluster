@@ -5,7 +5,7 @@
   package:
     pkg: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - libpmi0-dev
     - libslurm-dev
     - libslurm-perl
@@ -24,7 +24,7 @@
       package:
         pkg: '{{item}}'
         state: '{{ pkg_install_state }}'
-      with_items:
+      loop:
         - libpmi0-dev
         - libslurm-dev
         - libslurm-perl
@@ -36,7 +36,7 @@
         name={{item}}
         enabled=no
         state=stopped
-      with_items:
+      loop:
         - slurm-llnl
   when: 'is_debian_or_ubuntu and not (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
 
@@ -47,7 +47,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - slurm
     - slurm-devel
     - slurm-perlapi
@@ -67,7 +67,7 @@
     name={{item}}
     enabled=no
     state=stopped
-  with_items:
+  loop:
     - slurmd
     - slurmctld
   when: 'is_rhel7_compatible'

@@ -17,7 +17,7 @@
     path: '{{item}}'
     state: directory
     mode: 0755
-  with_items:
+  loop:
     - /etc/jupyterhub
     - /var/lib/jupyterhub
 
@@ -27,7 +27,7 @@
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  with_items:
+  loop:
     - nodejs-legacy
     - npm
     - supervisor
@@ -43,7 +43,7 @@
     openssl rand -hex {{ item.bytes/2 }} | tr -d '\n' > '/var/lib/jupyterhub/{{ item.name }}'
   args:
     creates: '/var/lib/jupyterhub/{{ item.name }}'
-  with_items:
+  loop:
     - { name: jupyterhub_cookie_secret, bytes: 32 }
     - { name: jupyterhub_proxy_auth_token, bytes: 64 }
 

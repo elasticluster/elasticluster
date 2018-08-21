@@ -33,6 +33,6 @@
     src: '/etc/ceph/{{item}}'
     dest: '/tmp/{{item}}'
     flat: yes
-  with_items:
+  loop:
     - '{{ceph_cluster_name}}.keyring'
     - '{{ceph_cluster_name}}.client.admin.keyring'

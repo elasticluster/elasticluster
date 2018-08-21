@@ -15,7 +15,7 @@
   copy:
     src: "{{ item }}"
     dest: "/var/tmp/{{ item }}"
-  with_items:
+  loop:
     - create_ServiceAccount.yaml
     - create_ClusterRoleBinding.yaml
   when: kubernetes_dashboard_create_admin_account and not kubernetes_deployments.stdout.find(label)

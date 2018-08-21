@@ -7,7 +7,7 @@
     - name: Install PIP (Ubuntu)
       action: apt name={{item}}
       when: is_debian_or_ubuntu
-      with_items:
+      loop:
         - build-essential
         - gfortran
         - python-pip
@@ -19,7 +19,7 @@
 
     - name: Install PIP (CentOS)
       action: yum name={{item}}
-      with_items:
+      loop:
         - gcc
         - gcc-c++
         - python-pip
@@ -34,7 +34,7 @@
     # Note: ipython[all] does not seem to work.
     - name: Install ipython and commonly used Python packages
       action: pip name={{item}} use_mirrors=no
-      with_items:
+      loop:
         - ipython
         - ipython-cluster-helper
         - numpy

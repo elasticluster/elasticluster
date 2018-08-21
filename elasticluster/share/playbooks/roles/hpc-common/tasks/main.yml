@@ -9,14 +9,14 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items: '{{hpc_common_packages}}'
+  loop: '{{hpc_common_packages}}'
 
 
 - name: Ensure modulefiles directories exist
   file:
     dest: '{{item}}'
     state: directory
-  with_items:
+  loop:
     - '/etc/modulefiles'
     - '/etc/modulefiles/Core'
     - '/etc/modulefiles/Core/mpi'

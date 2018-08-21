@@ -9,7 +9,7 @@
   file:
     path: '{{item.mountpoint}}'
     state: directory
-  with_items: '{{CEPH_MOUNTS}}'
+  loop: '{{CEPH_MOUNTS}}'
 
 
 - name: Mount CephFS filesystem {{item.mountpoint}}
@@ -24,4 +24,4 @@
     fstype: ceph
     opts: 'name=admin,secretfile=/etc/ceph/client.admin.secret,{{item.options|default("rw")}}'
     state: '{{item.state|default("mounted")}}'
-  with_items: '{{CEPH_MOUNTS}}'
+  loop: '{{CEPH_MOUNTS}}'

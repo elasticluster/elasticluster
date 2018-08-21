@@ -17,7 +17,7 @@
     state: present
     backrefs: yes
     create: no
-  with_items:
+  loop:
     - passwd
     - group
     - shadow
@@ -28,7 +28,7 @@
     dest: '/etc/nsswitch.conf'
     regexp: '(?x) ^{{item}}: \s* (?P<pre>(\w+\s+)*) compat (?P<post>.*)$'
     replace: '{{item}}: \g<pre>files nis\g<post>'
-  with_items:
+  loop:
     - passwd
     - group
     - shadow
@@ -41,7 +41,7 @@
     enabled: yes
   notify:
     - restart ypbind
-  with_items: '{{nis_client_services}}'
+  loop: '{{nis_client_services}}'
 
 
 - name: Ensure `ypbind` is restarted if config files changed

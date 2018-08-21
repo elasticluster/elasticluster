@@ -16,7 +16,7 @@
     mode: 0444
     owner: root
     group: root
-  with_items:
+  loop:
     - 'etc/auto.master'
     - 'etc/auto.home'
 
@@ -35,7 +35,7 @@
   package:
     name: '{{ item }}'
     state: '{{ pkg_install_state }}'
-  with_items: '{{autofs_packages}}'
+  loop: '{{autofs_packages}}'
 
 
 - name: Ensure autofs is running and starts at boot

@@ -38,7 +38,7 @@
     fi
   register: '_cgroup_mount'
   changed_when: '_cgroup_mount.rc == 42'
-  with_items: '{{ slurm_cgroup_controllers }}'
+  loop: '{{ slurm_cgroup_controllers }}'
 
 
 - name: Ensure kernel is booted with swap accounting enabled
@@ -97,7 +97,7 @@
     mode: 0555
     owner: root
     group: root
-  with_items: '{{ slurm_cgroup_controllers }}'
+  loop: '{{ slurm_cgroup_controllers }}'
 
 
 - name: Deploy SLURM cgroup configuration file (main)

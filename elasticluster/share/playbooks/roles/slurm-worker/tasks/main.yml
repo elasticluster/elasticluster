@@ -13,7 +13,7 @@
     owner: root
     group: root
     mode: 0444
-  with_items:
+  loop:
     - gres.conf
 
 - name: Deploy SLURM cgroup configuration
@@ -28,7 +28,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items: '{{slurmd_packages}}'
+  loop: '{{slurmd_packages}}'
 
 - name: Ensure SLURMd starts at boot
   service:

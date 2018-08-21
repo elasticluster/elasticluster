@@ -12,7 +12,7 @@
   file:
     dest: '{{item}}'
     state: directory
-  with_items:
+  loop:
     - '/etc/modulefiles'
     - '/etc/modulefiles/Core'
     - '/etc/modulefiles/Linux'
@@ -34,7 +34,7 @@
     dest: '/etc/profile.d/modules.{{item.shell}}'
     mode: 0444
     validate: "{{item.shell}} -c '{{item.source_cmd}} %s'"
-  with_items:
+  loop:
     - { shell: 'sh',  script: 'profile', source_cmd: '.' }
     - { shell: 'csh', script: 'cshrc',   source_cmd: 'source' }
   when: lmod_check_for__etc_profile_d is successful
@@ -45,7 +45,7 @@
     dest="/{{item}}"
     src="{{item}}"
     mode=0444
-  with_items:
+  loop:
     - "etc/profile.d/000_user_is_root.sh"
 
 
@@ -54,7 +54,7 @@
     dest="/{{item}}"
     src="{{item}}.j2"
     mode=0444
-  with_items:
+  loop:
     - "etc/profile.d/z80_StdEnv.sh"
     - "etc/profile.d/z80_StdEnv.csh"
 

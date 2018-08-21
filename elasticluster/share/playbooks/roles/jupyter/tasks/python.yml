@@ -52,7 +52,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items: '{{jupyter_additional_os_packages[ansible_os_family]}}'
+  loop: '{{jupyter_additional_os_packages[ansible_os_family]}}'
 
 
 - name: Install additional %-magic modules and plugins (Python package)
@@ -60,4 +60,4 @@
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
     executable: '{{python_exe|dirname}}/pip'
-  with_items: '{{jupyter_additional_python_packages}}'
+  loop: '{{jupyter_additional_python_packages}}'

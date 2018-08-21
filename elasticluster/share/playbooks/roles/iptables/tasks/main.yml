@@ -32,7 +32,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items: '{{ packages }}'
+  loop: '{{ packages }}'
 
 
 - name: Deploy netfilter rules
@@ -47,7 +47,7 @@
   become: yes
   become_user: root
   notify: '{{reload}}'
-  with_items:
+  loop:
     - 'etc/iptables/rules.v4'
     - 'etc/iptables/rules.v6'
 
@@ -61,7 +61,7 @@
     state: started
   become: yes
   become_user: root
-  with_items:
+  loop:
     - 'iptables'
     - 'ip6tables'
 

@@ -9,7 +9,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items: '{{r_packages}}'
+  loop: '{{r_packages}}'
 
 
 - name: Create R etc directory
@@ -44,4 +44,4 @@
             })
           quit(save='no', status=0)  # successful exit
     __EOF__
-  with_items: '{{r_libraries}}'
+  loop: '{{r_libraries}}'

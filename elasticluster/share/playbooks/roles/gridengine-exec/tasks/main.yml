@@ -14,7 +14,7 @@
   package:
     pkg: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items: '{{gridengine_execd_packages}}'
+  loop: '{{gridengine_execd_packages}}'
 
 
 # - name: deploy execd installer config (RHEL/CentOS)
@@ -45,7 +45,7 @@
     dest='/etc/profile.d/gridengine.{{item}}'
     src='{{SGE_VAR}}/{{SGE_CELL}}/common/settings.{{item}}'
     state=link
-  with_items:
+  loop:
     - sh
     - csh
   when: is_rhel_compatible

@@ -8,7 +8,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - gcc
     - libc6-dev
     - make
@@ -19,7 +19,7 @@
   package:
     name: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - "@Development tools"
   when: is_rhel_compatible
 
@@ -28,7 +28,7 @@
   package:
     name: '{{ item }}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - pkg-config
     - tcl
   when: is_debian_compatible
@@ -38,7 +38,7 @@
   package:
     name: '{{ item }}'
     state: '{{ pkg_install_state }}'
-  with_items:
+  loop:
     - pkgconfig
     - tcl
   when: is_rhel_compatible
@@ -48,7 +48,7 @@
 #   package:
 #     name: '{{ item }}'
 #     state: '{{ pkg_install_state }}'
-#   with_items:
+#   loop:
 #     - lua-term
 #   ignore_errors: True
 
@@ -58,7 +58,7 @@
     dest='{{item}}'
     state=directory
     mode=0755
-  with_items:
+  loop:
     - '{{lmod_install_dir}}/'
     - '{{lmod_source_dir}}/'
     - '{{lmod_build_dir}}/'

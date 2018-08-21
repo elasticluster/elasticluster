@@ -4,11 +4,11 @@
   service:
     name: '{{item}}'
     state: restarted
-  with_items: '{{nis_master_services}}'
+  loop: '{{nis_master_services}}'
 
 
 - name: restart ypbind
   service:
     name: '{{item}}'
     state: restarted
-  with_items: '{{nis_client_services}}'
+  loop: '{{nis_client_services}}'

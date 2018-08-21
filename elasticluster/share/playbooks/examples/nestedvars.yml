@@ -42,4 +42,4 @@
 #   connection: local
 #   tasks: 
 #     - lineinfile: dest=/tmp/hostfile regexp=".* $item .*" line="${hostvars.{$item}.ansible_default_ipv4.address} $item "
-#       with_items: $hostvars
+#       loop: $hostvars

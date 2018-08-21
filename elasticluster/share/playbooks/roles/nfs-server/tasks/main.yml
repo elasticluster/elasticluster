@@ -16,7 +16,7 @@
   package:
     pkg: '{{item}}'
     state: '{{ pkg_install_state }}'
-  with_items: '{{nfs_server_packages}}'
+  loop: '{{nfs_server_packages}}'
 
 
 # exports need to be there before attempting to install/start the
@@ -32,7 +32,7 @@
     options: '{{item.options|default("rw,no_root_squash,async,no_subtree_check,crossmnt")}}'
     dest: '/etc/exports'
     state: exported
-  with_items: '{{NFS_EXPORTS}}'
+  loop: '{{NFS_EXPORTS}}'
 
 
 - name: Ensure portmapper is running
@@ -64,7 +64,7 @@
     name: '{{item}}'
     enabled: yes
     state: '{{_nfs_server_started_state}}'
-  with_items: '{{nfs_server_services}}'
+  loop: '{{nfs_server_services}}'
   when: 'not is_debian_8'
 
 

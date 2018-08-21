@@ -8,7 +8,7 @@
   command: |
     systemctl mask {{item}}
   register: _mask
-  with_items:
+  loop:
     - smbd
     - nmbd
   when: 'init_is_systemd and is_debian_compatible'
@@ -26,7 +26,7 @@
     owner: root
     group: root
     mode: 0755
-  with_items:
+  loop:
     - '/etc/ctdb'
     - '{{ ctdb_shared_dir }}/etc'
     - '{{ ctdb_shared_dir }}/var'
@@ -43,7 +43,7 @@
     owner: root
     group: root
     mode: 0444
-  with_items:
+  loop:
     - etc/default/ctdb
     - etc/ctdb/nodes
     - etc/ctdb/public_addresses
@@ -59,7 +59,7 @@
   file:
     path: '/etc/ctdb/events.d/{{ item }}'
     mode: 'a-x'
-  with_items:
+  loop:
     - 10.interface
 
 
@@ -68,7 +68,7 @@
   command: |
     systemctl unmask {{item}}
   register: _unmask
-  with_items:
+  loop:
     - smbd
     - nmbd
   when: 'init_is_systemd and is_debian_compatible'
@@ -84,7 +84,7 @@
     name: '{{ item }}'
     state: stopped
     enabled: no
-  with_items:
+  loop:
     - smbd
     - nmbd
 
