@@ -3,7 +3,7 @@
 - name: Stop if not Debian/Ubuntu compatible
   fail:
     msg: The HTCondor role currently only supports Debian/Ubuntu
-  when: 'not {{is_debian_compatible}}'
+  when: 'not is_debian_compatible'
 
 # as of March 2018, upstream does not yet package HTCondor for Debian
 # 9.x nor for Ubuntu 16.04 -- so fail here before users submit this as
@@ -11,7 +11,7 @@
 - name: Stop if not compatible Debian/Ubuntu versions
   fail:
     msg: The HTCondor role currently only supports Debian 8.x or Ubuntu 14.04
-  when: '{{is_debian_9_or_later}} or {{is_ubuntu_16_04_or_later}}'
+  when: 'is_debian_9_or_later or is_ubuntu_16_04_or_later'
 
 
 # Unfortunately, apt_repository wants to add also source repositories,

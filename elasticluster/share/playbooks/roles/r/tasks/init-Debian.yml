@@ -21,8 +21,7 @@
     r_packages_repo: 'deb {{r_cran_mirror_url}}/bin/linux/ubuntu {{ansible_distribution_release}}/'
     r_packages_keyserver: keyserver.ubuntu.com
     r_packages_signing_key: 'E084DAB9'
-  when:
-    '{{is_ubuntu}}'
+  when: is_ubuntu
 
 
 - name: Set R common playbook params (Debian)
@@ -42,8 +41,7 @@
     r_packages_repo: 'deb {{r_cran_mirror_url}}/bin/linux/debian {{ansible_distribution_release}}-cran35/'
     r_packages_keyserver: keys.gnupg.net
     r_packages_signing_key: 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
-  when:
-    '{{is_debian}}'
+  when: is_debian
 
 
 - name: add signing key for CRAN repository

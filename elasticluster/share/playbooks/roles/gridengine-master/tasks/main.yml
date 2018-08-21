@@ -7,7 +7,7 @@
   tags:
     - gridengine
     - gridengine-master
-  include: 'init-{{ansible_os_family}}.yml'
+  include_tasks: 'init-{{ansible_os_family}}.yml'
 
 
 - name: Install GridEngine master packages
@@ -88,7 +88,7 @@
 
 - name: Reload systemd service units (RHEL/CentOS 7.x)
   command: systemctl daemon-reload
-  when: 'create_systemd_gridengine_master_service|changed and ({{is_rhel7_compatible}})'
+  when: 'is_rhel7_compatible and create_systemd_gridengine_master_service|changed'
 
 
 - name: Ensure GridEngine master is started

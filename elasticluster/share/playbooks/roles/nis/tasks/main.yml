@@ -1,7 +1,7 @@
 ---
 
 - name: Load distribution-specific parameters
-  include: 'init-{{ansible_os_family}}.yml'
+  include_tasks: 'init-{{ansible_os_family}}.yml'
 
 
 - name: Pre-load debconf answer to questions (Debian/Ubuntu)
@@ -43,9 +43,9 @@
   with_items: '{{nis_common_packages}}'
 
 
-- include: ypserv.yml
+- import_tasks: ypserv.yml
   when: 'is_nis_server'
 
 
-- include: ypbind.yml
+- import_tasks: ypbind.yml
   when: 'is_nis_client'

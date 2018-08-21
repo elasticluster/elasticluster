@@ -6,7 +6,7 @@
   command: |
     service {{item}} restart
   with_items: '{{ ganglia_gmond_services }}'
-  when: '{{is_debian_compatible}} and not {{init_is_systemd}}'
+  when: 'is_debian_compatible and not init_is_systemd'
 
 
 - name: restart gmond

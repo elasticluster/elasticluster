@@ -58,5 +58,5 @@
   tags:
     - nfs
     - nfs-client
-  include: nfsmount.yml fs='{{item}}'
+  include_tasks: nfsmount.yml fs='{{item}}'
   with_items: '{{NFS_MOUNTS}}'

@@ -5,7 +5,7 @@
     - ganglia
     - ganglia-gmond
     - gmond
-  include: 'init-{{ansible_os_family}}.yml'
+  include_tasks: 'init-{{ansible_os_family}}.yml'
 
 
 - name: Install Ganglia `gmond` software

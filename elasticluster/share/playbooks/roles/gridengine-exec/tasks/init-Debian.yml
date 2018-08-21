@@ -14,5 +14,4 @@
     gridengine_execd_packages:
       - gridengine-client
       - gridengine-exec
-  when:
-    'is_debian_compatible'
+  when: is_debian_compatible

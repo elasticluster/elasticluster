@@ -14,5 +14,4 @@
       - gridengine-common
       - gridengine-master
       - gridengine-qmon
-  when:
-    'is_debian_compatible'
+  when: is_debian_compatible

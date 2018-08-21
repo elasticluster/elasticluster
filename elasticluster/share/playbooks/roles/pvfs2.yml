@@ -1,9 +1,9 @@
 ---
 - hosts: pvfs2:pvfs2_data:pvfs2_meta:pvfs2_client
   handlers:
-    - include: common/handlers/main.yml
+    - import_tasks: common/handlers/main.yml
   tasks:
-    - include: common/tasks/ssh_auth.yml hosts={{groups.all}}
+    - include_tasks: common/tasks/ssh_auth.yml hosts={{groups.all}}
 
 - hosts: pvfs2:pvfs2_data:pvfs2_meta:pvfs2_client
   vars:
@@ -14,7 +14,7 @@
     - pvfs2_storage: /srv/pvfs2
     - is_client: '"{{inventory_hostname}}" in {{groups.pvfs2_client}}'
   handlers:
-    - include: common/handlers/main.yml
+    - import_tasks: common/handlers/main.yml
   tasks:
     - apt:
         name: '{{item}}'

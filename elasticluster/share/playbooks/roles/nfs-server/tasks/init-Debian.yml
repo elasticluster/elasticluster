@@ -15,8 +15,7 @@
       - nfs-common
     # see below about this one
     _nfs_server_started_state: 'started'
-  when:
-    'is_debian_compatible'
+  when: is_debian_compatible
 
 
 # As of 2016-12-06, `systemctl status nfs-kernel-server` mistakenly reports the
@@ -29,5 +28,4 @@
     - nfs-server
   set_fact:
     _nfs_server_started_state: 'restarted'
-  when:
-    'is_debian_jessie'
+  when: is_debian_jessie

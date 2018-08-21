@@ -17,7 +17,7 @@
     # of `reload` could break existing connections (not good when
     # resizing), so do nothing and hope for the best...
     reload: 'no-op'
-  when: ({{ is_ubuntu_15_10_or_later }} or {{ is_debian_8_or_later }}) 
+  when: 'is_ubuntu_15_10_or_later or is_debian_8_or_later'
 
 
 - name: Load configuration and service names (older Debian/Ubuntu)
@@ -31,7 +31,7 @@
       'iptables':  'iptables-persistent'
       'ip6tables': 'iptables-persistent'
     reload: 'reload iptables'
-  when: not ({{ is_ubuntu_15_10_or_later }} or {{ is_debian_8_or_later }})
+  when: 'not (is_ubuntu_15_10_or_later or is_debian_8_or_later)'
 
 
 - name: Load package names (Debian/Ubuntu)

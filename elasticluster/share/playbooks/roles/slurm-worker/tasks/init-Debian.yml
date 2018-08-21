@@ -6,7 +6,7 @@
       - libpam-slurm
       - slurmd
       - slurm-wlm-basic-plugins
-  when: '{{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}'
+  when: 'is_debian_8_or_later or is_ubuntu_15_10_or_later'
 
 
 - name: Set SLURM worker playbook params (older Debian/Ubuntu)
@@ -15,17 +15,16 @@
       - libpam-slurm
       - slurm-llnl
       - slurm-llnl-basic-plugins
-  when:
-    '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
+  when: 'is_debian_or_ubuntu and not (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
 
 
 - name: Set SLURM worker service name (Debian/Ubuntu)
   set_fact:
     slurmd_service: 'slurmd'
-  when: '{{is_debian_compatible}} and ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
+  when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
 
 
 - name: Set SLURM worker service name (older Debian/Ubuntu)
   set_fact:
     slurmd_service: 'slurm-llnl'
-  when: '{{is_debian_compatible}} and (not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}))'
+  when: 'is_debian_compatible and not (is_debian_8_or_later or is_ubuntu_15_10_or_later)'

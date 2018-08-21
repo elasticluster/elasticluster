@@ -6,7 +6,7 @@
     - role: hpc-common
     - role: 'nis'
       NIS_MASTER: '{{groups.condor_master[0]}}'
-      when: '{{multiuser_cluster|default("true")|bool}}'
+      when: 'multiuser_cluster|default("true")|bool'
 
 
 - name: HTCondor master Playbook

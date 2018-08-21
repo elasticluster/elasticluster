@@ -19,5 +19,4 @@
       - gridengine-execd
       - gridengine-qmaster
       - gridengine-qmon
-  when:
-    'is_rhel_compatible'
+  when: is_rhel_compatible

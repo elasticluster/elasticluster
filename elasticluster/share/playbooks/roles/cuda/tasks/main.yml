@@ -4,7 +4,7 @@
 #
 
 - name: Load distribution-dependent parameters
-  include: 'init-{{ ansible_os_family }}.yml'
+  include_tasks: 'init-{{ ansible_os_family }}.yml'
 
 
 - name: Ensure the `nouveau` kernel module is not loaded
@@ -38,9 +38,9 @@
 
 
 - name: Check if CUDA devices exists
-  include: _check_nvidia_dev.yml
+  import_tasks: _check_nvidia_dev.yml
 
 
 - name: Enable CUDA devices by rebooting
-  include: _reboot_and_wait.yml
+  import_tasks: _reboot_and_wait.yml
   when: 'allow_reboot|default(false) and not _cuda_check_devices.stat.exists'

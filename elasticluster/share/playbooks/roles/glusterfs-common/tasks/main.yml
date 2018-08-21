@@ -1,7 +1,7 @@
 ---
 
-- include: debian.yml
+- include_tasks: debian.yml
   when: is_debian_compatible
 
-- include: rhel.yml
+- include_tasks: rhel.yml
   when: is_rhel_compatible

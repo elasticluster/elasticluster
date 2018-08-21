@@ -7,7 +7,7 @@
   tags:
     - gridengine
     - gridengine-common
-  include: 'init-{{ansible_os_family}}.yml'
+  include_tasks: 'init-{{ansible_os_family}}.yml'
 
 
 - name: Enable "backports" repo (Debian 8 "jessie")

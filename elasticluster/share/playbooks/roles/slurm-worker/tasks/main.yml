@@ -2,7 +2,7 @@
 ---
 
 - name: Load distribution-specific parameters
-  include: 'init-{{ansible_os_family}}.yml'
+  include_tasks: 'init-{{ansible_os_family}}.yml'
 
 - name: Deploy SLURM configuration files
   tags:
@@ -21,7 +21,7 @@
     - slurm
     - slurm-worker
     - cgroups
-  include: cgroup.yml
+  import_tasks: cgroup.yml
   when: '"cgroup" in slurm_taskplugin or "cgroup" in slurm_proctracktype or "cgroup" in slurm_jobacctgathertype'
 
 - name: Install SLURM worker packages

@@ -12,7 +12,7 @@
     - gcc
     - libc6-dev
     - make
-  when: '{{is_debian_compatible}}'
+  when: is_debian_compatible
 
 
 - name: Install build-time dependencies (RHEL-compatible)
@@ -21,7 +21,7 @@
     state: '{{ pkg_install_state }}'
   with_items:
     - "@Development tools"
-  when: '{{is_rhel_compatible}}'
+  when: is_rhel_compatible
 
 
 - name: Install required dependencies of Lmod (Debian-compatible)
@@ -31,7 +31,7 @@
   with_items:
     - pkg-config
     - tcl
-  when: '{{is_debian_compatible}}'
+  when: is_debian_compatible
 
 
 - name: Install required dependencies of Lmod (RHEL-compatible)
@@ -41,7 +41,7 @@
   with_items:
     - pkgconfig
     - tcl
-  when: '{{is_rhel_compatible}}'
+  when: is_rhel_compatible
 
 
 # - name: Install optional dependencies of Lmod

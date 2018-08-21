@@ -5,7 +5,7 @@
 
 
 - name: Create MON key if not existing
-  include: _create_key.yml
+  include_tasks: _create_key.yml
   vars:
     keyname: 'mon.'
     capabilities: '--cap mon "allow *"'
@@ -13,7 +13,7 @@
 
 
 - name: Create ADMIN keys in own keyring if not existing
-  include: _create_key.yml
+  include_tasks: _create_key.yml
   vars:
     keyname: 'client.admin'
     capabilities: '--cap mon "allow *" --cap osd "allow *" --cap mds "allow *" {% if ceph_requires_mgr %}--cap mgr "allow *"{% endif %}'

@@ -5,7 +5,7 @@
   roles:
     - role: 'nis'
       NIS_MASTER: "{{groups.slurm_master[0]}}"
-      when: '{{multiuser_cluster|default("true")|bool}}'
+      when: 'multiuser_cluster|default("true")|bool'
     - role: 'nfs-server'
       NFS_EXPORTS:
         - path: '/home'
@@ -18,7 +18,7 @@
   roles:
     - role: 'nis'
       NIS_MASTER: "{{groups.slurm_master[0]}}"
-      when: '{{multiuser_cluster|default("true")|bool}}'
+      when: 'multiuser_cluster|default("true")|bool'
     - role: 'nfs-client'
       NFS_MOUNTS:
         - fs: '{{groups.slurm_master[0]}}:/home'
@@ -32,7 +32,7 @@
   roles:
     - role: 'nis'
       NIS_MASTER: "{{groups.slurm_master[0]}}"
-      when: '{{multiuser_cluster|default("true")|bool}}'
+      when: 'multiuser_cluster|default("true")|bool'
     - role: 'nfs-client'
       NFS_MOUNTS:
         - fs: '{{groups.slurm_master[0]}}:/home'
@@ -47,16 +47,16 @@
     - service:
         name=slurmd
         state=restarted
-      when: '{{is_debian_compatible}} and ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
+      when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
     - service:
         name=slurm-llnl
         state=restarted
-      when: '{{is_debian_compatible}} and (not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}))'
+      when: 'is_debian_compatible and not (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
     - service:
         name=slurmd
         state=restarted
-      when: '{{is_rhel7_compatible}}'
+      when: is_rhel7_compatible
     - service:
         name=slurm
         state=restarted
-      when: '{{is_rhel6_compatible}}'
+      when: is_rhel6_compatible

@@ -1,5 +1,5 @@
 ---
-- include: init-{{ ansible_os_family }}.yml
+- include_tasks: init-{{ ansible_os_family }}.yml
 
 # for once, package names are the same on Debian/Ubuntu and RHEL/CentOS
 - name: Install GlusterFS server packages
@@ -41,7 +41,7 @@
 
 
 # build and export volumes
-- include: export.yml
+- include_tasks: export.yml
   with_items: '{{GLUSTERFS_VOLUMES}}'
   tags:
     - gluster

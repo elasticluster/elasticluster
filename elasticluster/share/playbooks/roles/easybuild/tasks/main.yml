@@ -5,7 +5,7 @@
 #
 
 - name: Install OS-level dependecies
-  include: 'deps-{{ansible_os_family}}.yml'
+  include_tasks: 'deps-{{ansible_os_family}}.yml'
 
 
 - name: Download bootstrap script
@@ -91,4 +91,4 @@
     . /etc/profile.d/modules.sh
     module load EasyBuild
     eb {{ EASYBUILD_INSTALL|join(' ') }}
-  when: '{{ EASYBUILD_INSTALL|length > 0 }}'
+  when: 'EASYBUILD_INSTALL|length > 0'

@@ -13,5 +13,4 @@
       # more dependency packages, notes from CSCS' workshop on Spark
       - openssl-devel
       - libcurl-devel
-  when:
-    '{{is_rhel_compatible}}'
+  when: is_rhel_compatible

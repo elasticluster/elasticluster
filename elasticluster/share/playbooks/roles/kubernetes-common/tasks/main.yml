@@ -1,10 +1,9 @@
 ---
 
 - name: Debian compatible install
-  include: debian.yml
+  include_tasks: debian.yml
   when: is_debian_compatible
 
 - name: Redhat compatible install
-  include: redhat.yml
+  include_tasks: redhat.yml
   when: is_rhel_compatible
-
