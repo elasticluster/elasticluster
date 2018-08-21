@@ -12,15 +12,15 @@
 # playbook below).
 #
 - name: Install MAUI on the master node (disabled)
-  include: 'maui.yml'
+  include_tasks: 'maui.yml'
   when: "false and 'torque_master' in group_names"
 
 
 - name: Install TORQUE server on the master node
-  include: 'master.yml'
+  include_tasks: 'master.yml'
   when: "'torque_master' in group_names"
 
 
 - name: Install TORQUE on worker nodes
-  include: 'worker.yml'
+  include_tasks: 'worker.yml'
   when: "'torque_worker' in group_names"

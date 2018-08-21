@@ -15,7 +15,7 @@
   when: "'failed' in token_list_result.stderr"
 
 - name: Networking
-  include: "{{ kubernetes_default_networking }}.yml"
+  include_tasks: "{{ kubernetes_default_networking }}.yml"
 
 - name: Get cluster token
   shell: kubeadm token list | awk 'NR==2{print $1}'

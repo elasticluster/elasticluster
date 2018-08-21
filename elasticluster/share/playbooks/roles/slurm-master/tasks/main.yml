@@ -2,13 +2,13 @@
 ---
 
 - name: Load distribution-specific parameters
-  include: 'init-{{ansible_os_family}}.yml'
+  include_tasks: 'init-{{ansible_os_family}}.yml'
 
-- include: db.yml
+- import_tasks: db.yml
 
-- include: install-slurmdbd.yml
+- import_tasks: install-slurmdbd.yml
 
-- include: install-slurmctld.yml
+- import_tasks: install-slurmctld.yml
 
 - name: Create cluster in accounting database
   tags:
@@ -33,7 +33,7 @@
   with_items: '{{slurm_cluster_users}}'
 
 - name: Ensure `slurmctld` is running
-  tags: 
+  tags:
     - slurm
     - slurmctld
   service:

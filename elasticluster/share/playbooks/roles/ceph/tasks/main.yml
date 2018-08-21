@@ -31,7 +31,7 @@
 - name: Run distribution-specific setup
   tags:
     - ceph
-  include: 'init-{{ansible_os_family}}.yml'
+  include_tasks: 'init-{{ansible_os_family}}.yml'
 
 
 - name: Does user `ceph` exist?
@@ -84,7 +84,7 @@
 - name: Create master files on primary MON node
   tags:
     - ceph
-  include: '{{playbook}}.yml'
+  include_tasks: '{{playbook}}.yml'
   with_items:
     - _keyring
     - _monmap
@@ -112,7 +112,7 @@
   tags:
     - ceph
     - server
-  include: mon.yml
+  import_tasks: mon.yml
   when: 'is_ceph_mon'
 
 
@@ -120,7 +120,7 @@
   tags:
     - ceph
     - server
-  include: mgr.yml
+  import_tasks: mgr.yml
   when: 'ceph_requires_mgr and is_ceph_mon'
 
 
@@ -128,7 +128,7 @@
   tags:
     - ceph
     - server
-  include: osd.yml
+  import_tasks: osd.yml
   when: 'is_ceph_osd'
 
 
@@ -136,7 +136,7 @@
   tags:
     - ceph
     - server
-  include: mds.yml
+  import_tasks: mds.yml
   when: 'is_ceph_mds'
 
 
@@ -145,11 +145,11 @@
     - ceph
     - cephfs
     - server
-  include: fs.yml
+  import_tasks: fs.yml
   # use client.admin key from mon0 host
   when: 'groups.ceph_mds|default([])|length > 0 and is_ceph_first_mon'
 
 
 - name: Install client nodes
-  include: client.yml
+  import_tasks: client.yml
   when: 'is_ceph_client'

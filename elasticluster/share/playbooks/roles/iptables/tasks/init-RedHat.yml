@@ -11,15 +11,15 @@
       'iptables':  'iptables'
       'ip6tables': 'ip6tables'
     reload: 'reload iptables'
-  when: '{{is_rhel_compatible}}'
+  when: is_rhel_compatible
 
-    
+
 - name: Load configuration and service names (RHEL6-compatible)
   set_fact:
     packages:
       - iptables
       - iptables-ipv6
-  when: '{{is_rhel6_compatible}}'
+  when: is_rhel6_compatible
 
 
 - name: Load configuration and service names (RHEL7-compatible)
@@ -27,4 +27,4 @@
     packages:
       - iptables
       - iptables-services
-  when: '{{is_rhel7_compatible}}'
+  when: is_rhel7_compatible

@@ -2,7 +2,7 @@
 ---
 
 - name: Load distribution-specific parameters
-  include: 'init-{{ansible_os_family}}.yml'
+  include_tasks: 'init-{{ansible_os_family}}.yml'
 
 
 - name: Install core R packages
@@ -26,7 +26,7 @@
 
 
 - name: Support running parallel computations with OpenMPI in R
-  include: rmpi.yml
+  include_tasks: rmpi.yml
   when: 'r_cluster_support'
 
 

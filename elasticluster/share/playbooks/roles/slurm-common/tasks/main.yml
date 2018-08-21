@@ -1,7 +1,7 @@
 ---
 
 - name: Load distribution-specific parameters
-  include: 'init-{{ansible_os_family}}.yml'
+  include_tasks: 'init-{{ansible_os_family}}.yml'
 
 
 # Otherwise `systemctl mask $someservice` fails on RHEL/CentOS7
@@ -80,7 +80,7 @@
   when: is_rhel_compatible
 
 
-- include: munge.yml
+- import_tasks: munge.yml
 
 
 - name: Deploy SLURM configuration file
@@ -103,7 +103,7 @@
   with_items:
     - libopenmpi-dev
     - openmpi-bin
-  when: '{{is_debian_or_ubuntu}}'
+  when: is_debian_or_ubuntu
 
 
 - name: Install SLURM packages (RHEL-compatible)

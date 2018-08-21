@@ -41,7 +41,7 @@
 
 
 - name: Set up SAMBA with CTDB
-  include: ctdb.yml
+  import_tasks: ctdb.yml
   when: 'samba_with_ctdb'
 
 

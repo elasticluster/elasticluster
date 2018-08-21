@@ -24,7 +24,7 @@
   command: |
     yum-config-manager --enable rhui-REGION-rhel-server-optional
   ignore_errors: yes
-  when: '{{ is_rhel_compatible }} and not {{ is_centos }}'
+  when: 'is_rhel_compatible and not is_centos'
 
 
 - name: Upgrade all installed packages to latest version

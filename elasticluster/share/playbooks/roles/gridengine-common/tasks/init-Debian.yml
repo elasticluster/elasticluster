@@ -19,4 +19,4 @@
 - name: Fail if unsupported distribution
   fail:
     msg: "GridEngine installation only supported on Ubuntu and Debian 8 or later"
-  when: '({{is_debian_compatible}}) and not ({{is_ubuntu}}) and not ({{is_debian_8_or_later}})'
+  when: 'is_debian_compatible and not (is_ubuntu or is_debian_8_or_later)'

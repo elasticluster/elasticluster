@@ -14,8 +14,7 @@
       - nfs-utils
     # see `init-Debian.yml` about this one
     _nfs_server_started_state: 'started'
-  when:
-    'is_rhel7_compatible'
+  when: is_rhel7_compatible
 
 - name: Set NFS server variables (RHEL/CentOS 6.x)
   tags:
@@ -30,5 +29,4 @@
       - nfs-utils
     # see `init-Debian.yml` about this one
     _nfs_server_started_state: 'started'
-  when:
-    'is_rhel6_compatible'
+  when: is_rhel6_compatible

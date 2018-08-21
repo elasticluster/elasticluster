@@ -5,7 +5,7 @@
     - ganglia
     - ganglia-gmetad
     - gmetad
-  include: 'init-{{ansible_os_family}}.yml'
+  include_tasks: 'init-{{ansible_os_family}}.yml'
 
 
 - name: Install `gmetad`

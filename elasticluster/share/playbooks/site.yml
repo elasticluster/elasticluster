@@ -11,7 +11,7 @@
       become: yes
 
 # for local customizations
-- include: before.yml
+- import_playbook: before.yml
 
 - name: Common setup for all hosts
   hosts: all
@@ -33,41 +33,41 @@
 
 # This needs to be run as early as possible as it may need to reboot
 # the VM to install driver support
-- include: roles/cuda.yml
+- import_playbook: roles/cuda.yml
 
 # Run all other playbooks one by one, so they get a chance of doing
 # their setup depending on configured host groups
 
 # filesystems/storage first so we could in principle use it in compute clusters
-- include: roles/google-local-ssd.yml
-- include: roles/ceph.yml
-- include: roles/glusterfs.yml
-- include: roles/pvfs2.yml
+- import_playbook: roles/google-local-ssd.yml
+- import_playbook: roles/ceph.yml
+- import_playbook: roles/glusterfs.yml
+- import_playbook: roles/pvfs2.yml
 
 # now install and set up computing infrastructure
-- include: roles/gridengine.yml
-- include: roles/hadoop.yml
-- include: roles/htcondor.yml
-- include: roles/ipython.yml
-- include: roles/jenkins.yml
-- include: roles/kubernetes.yml
-- include: roles/slurm.yml
-- include: roles/torque.yml
+- import_playbook: roles/gridengine.yml
+- import_playbook: roles/hadoop.yml
+- import_playbook: roles/htcondor.yml
+- import_playbook: roles/ipython.yml
+- import_playbook: roles/jenkins.yml
+- import_playbook: roles/kubernetes.yml
+- import_playbook: roles/slurm.yml
+- import_playbook: roles/torque.yml
 
 # add-on software
-- include: roles/anaconda.yml
-- include: roles/ansible.yml
-- include: roles/easybuild.yml
-- include: roles/ganglia.yml
-- include: roles/r.yml
-- include: roles/samba.yml
+- import_playbook: roles/anaconda.yml
+- import_playbook: roles/ansible.yml
+- import_playbook: roles/easybuild.yml
+- import_playbook: roles/ganglia.yml
+- import_playbook: roles/r.yml
+- import_playbook: roles/samba.yml
 
 # Jupyter installation comes last, to allow it to pick up any SW that's been
 # installed so far (e.g., for kernels, or for ipyparallel)
-- include: roles/jupyterhub.yml
+- import_playbook: roles/jupyterhub.yml
 
 # for local customizations
-- include: after.yml
+- import_playbook: after.yml
 
 # if we got to this point, all is well
 - name: Report success on cluster creation

@@ -59,7 +59,7 @@
 # because the configured GPU devices do not exist)
 
 - name: Check that CUDA devices exist
-  include: _check_nvidia_dev.yml
+  import_tasks: _check_nvidia_dev.yml
   vars:
     save_result_to: _cuda_check_devices_after_reboot
 

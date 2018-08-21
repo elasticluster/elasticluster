@@ -2,7 +2,7 @@
 ---
 
 - name: Load distribution-specific parameters
-  include: 'init-{{ansible_os_family}}.yml'
+  include_tasks: 'init-{{ansible_os_family}}.yml'
 
 
 - name: Install common HPC software

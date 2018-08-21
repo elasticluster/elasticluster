@@ -6,7 +6,7 @@
     slurm_db_server_pkg: mariadb-server
     slurm_db_python_pkg: python-mysqldb
     slurm_db_service_name: mysql
-  when: '{{is_debian_or_ubuntu}} and ({{is_debian_8_or_later}} or {{is_ubuntu_14_04_or_later}})'
+  when: 'is_debian_or_ubuntu and (is_debian_8_or_later or is_ubuntu_14_04_or_later)'
 
 - name: Set variables (older Debian/Ubuntu)
   set_fact:
@@ -14,7 +14,7 @@
     slurm_db_server_pkg: mysql-server
     slurm_db_python_pkg: python-mysqldb
     slurm_db_service_name: mysql
-  when: '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_14_04_or_later}})'
+  when: 'is_debian_or_ubuntu and not (is_debian_8_or_later or is_ubuntu_14_04_or_later)'
 
 - name: Set variables (RHEL 7.x)
   set_fact:

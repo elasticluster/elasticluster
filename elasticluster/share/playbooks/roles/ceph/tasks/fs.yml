@@ -8,7 +8,7 @@
 - name: Create FS pools
   tags:
     - ceph
-  include: '_create_pool.yml'
+  include_tasks: '_create_pool.yml'
   vars:
     pool_name: '{{item.pool_name}}'
     pool_pg_num: '{{item.pool_pg_num}}'

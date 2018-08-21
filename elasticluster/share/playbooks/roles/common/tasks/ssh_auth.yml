@@ -6,13 +6,13 @@
 - name: Load distribution-dependent values (Debian/Ubuntu)
   set_fact:
     ssh_keysign_path: '/usr/lib/openssh/ssh-keysign'
-  when: '{{ is_debian_compatible }}'
+  when: is_debian_compatible
 
 
 - name: Load distribution-dependent values (CentOS/RHEL)
   set_fact:
     ssh_keysign_path: '/usr/libexec/openssh/ssh-keysign'
-  when: '{{ is_rhel_compatible }}'
+  when: is_rhel_compatible
 
 
 - name: Setup SSH known hosts file
@@ -63,5 +63,5 @@
 
 
 - name: Fix SSH keysigning on CentOS/RHEL 7.x
-  include: ssh_keysign_rhel7.yml
+  include_tasks: ssh_keysign_rhel7.yml
   when: 'is_rhel7_or_later_compatible'

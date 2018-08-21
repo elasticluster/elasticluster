@@ -49,5 +49,5 @@
     - cephfs
     - client
     - mount
-  include: _mount.yml
+  include_tasks: _mount.yml
   with_items: '{{ CEPH_MOUNTS }}'

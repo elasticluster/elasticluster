@@ -7,7 +7,7 @@
   roles:
     - role: 'nis'
       NIS_MASTER: '{{ torque_master_host }}'
-      when: '{{ multiuser_cluster|default("true")|bool }}'
+      when: 'multiuser_cluster|default("true")|bool'
     - role: nfs-server
       NFS_EXPORTS:
       - path: '/home'
@@ -24,7 +24,7 @@
   roles:
     - role: 'nis'
       NIS_MASTER: '{{ torque_master_host }}'
-      when: '{{ multiuser_cluster|default("true")|bool }}'
+      when: 'multiuser_cluster|default("true")|bool'
     - role: nfs-client
       NFS_MOUNTS:
       - fs: '{{ torque_master_host }}:/home'

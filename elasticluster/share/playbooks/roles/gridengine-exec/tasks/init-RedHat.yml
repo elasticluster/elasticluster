@@ -13,5 +13,4 @@
     # packages to install
     gridengine_execd_packages:
       - gridengine-execd
-  when:
-    'is_rhel_compatible'
+  when: is_rhel_compatible

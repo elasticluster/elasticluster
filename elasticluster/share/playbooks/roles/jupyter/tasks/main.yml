@@ -10,18 +10,18 @@
     executable: '{{jupyter_python|dirname}}/conda'
 
 # install BASH kernel
-- include: bash.yml
+- import_tasks: bash.yml
 
 # install Python kernels (for Python version 2 and 3)
-- include: python.yml python_exe='{{PYTHON2_EXE}}'
-- include: python.yml python_exe='{{PYTHON3_EXE}}'
+- include_tasks: python.yml python_exe='{{PYTHON2_EXE}}'
+- include_tasks: python.yml python_exe='{{PYTHON3_EXE}}'
 
 # install PySpark kernels (for Python version 2 and 3)
-- include: pyspark.yml python_exe='{{PYTHON2_EXE}}'
-- include: pyspark.yml python_exe='{{PYTHON3_EXE}}'
+- include_tasks: pyspark.yml python_exe='{{PYTHON2_EXE}}'
+- include_tasks: pyspark.yml python_exe='{{PYTHON3_EXE}}'
 
 # install R kernel
-- include: irkernel.yml
+- include_tasks: irkernel.yml
 
 
 # install MATLAB kernel (if MATLAB available)
@@ -30,5 +30,5 @@
     {{MATLAB_EXE}} -n
   ignore_errors: yes
   register: matlab_run
-- include: matlab.yml
+- include_tasks: matlab.yml
   when: matlab_run|success

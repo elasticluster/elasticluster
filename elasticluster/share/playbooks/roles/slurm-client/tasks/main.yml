@@ -14,7 +14,7 @@
     - slurm-drmaa-dev
     - slurm-wlm-torque
     - sview
-  when: '{{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}}'
+  when: 'is_debian_8_or_later or is_ubuntu_15_10_or_later'
 
 
 - block:
@@ -38,8 +38,7 @@
         state=stopped
       with_items:
         - slurm-llnl
-  when:
-    '{{is_debian_or_ubuntu}} and not ({{is_debian_8_or_later}} or {{is_ubuntu_15_10_or_later}})'
+  when: 'is_debian_or_ubuntu and not (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
 
 
 # since all the SLURM binaries are bundled in a single package
