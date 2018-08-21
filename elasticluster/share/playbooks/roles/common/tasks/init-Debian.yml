@@ -30,6 +30,9 @@
     apt-get install -y {{item.name}}
   args:
     creates: '{{item.creates}}'
+    # we know about the `apt:` module but cannot use it here,
+    # so suppress warning
+    warn: no
   become: yes
   loop:
     - { name: 'python-apt', creates: '/usr/share/doc/python-apt' }
@@ -42,6 +45,9 @@
     apt-get remove --purge -y {{item.name}}
   args:
     removes: '{{item.creates}}'
+    # we know about the `apt:` module but cannot use it here,
+    # so suppress warning
+    warn: no
   become: yes
   loop:
     - { name: 'aptitude', creates: '/usr/bin/aptitude' }
