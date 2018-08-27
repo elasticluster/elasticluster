@@ -26,17 +26,14 @@
   register: lmod_check_for__etc_profile_d
 
 - name: Deploy shell profile snippets to load Lmod
-  # validate the file by loading it: if it loads correctly, we
-  # assume it also provides the functionality
   file:
     state: link
     src: "{{ lmod_root }}/lmod/{{ LMOD_VERSION }}/init/{{item.script}}"
     dest: '/etc/profile.d/modules.{{item.shell}}'
     mode: 0444
-    validate: "{{item.shell}} -c '{{item.source_cmd}} %s'"
   loop:
-    - { shell: 'sh',  script: 'profile', source_cmd: '.' }
-    - { shell: 'csh', script: 'cshrc',   source_cmd: 'source' }
+    - { shell: 'sh',  script: 'profile' }
+    - { shell: 'csh', script: 'cshrc'   }
   when: lmod_check_for__etc_profile_d is successful
 
 
