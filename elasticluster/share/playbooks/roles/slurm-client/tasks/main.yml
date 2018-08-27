@@ -1,19 +1,30 @@
 # slurm-client/tasks/main.yml
 ---
 
-- name: Install required SLURM packages (Debian/Ubuntu)
-  package:
-    pkg: '{{item}}'
-    state: '{{ pkg_install_state }}'
-  loop:
-    - libpmi0-dev
-    - libslurm-dev
-    - libslurm-perl
-    - libslurmdb-perl
-    - slurm-client
-    - slurm-drmaa-dev
-    - slurm-wlm-torque
-    - sview
+- block:
+    - name: Install required SLURM packages (Debian/Ubuntu)
+      package:
+        pkg: '{{item}}'
+        state: '{{ pkg_install_state }}'
+      loop:
+        - libpmi0-dev
+        - libslurm-dev
+        - libslurm-perl
+        - libslurmdb-perl
+        - slurm-client
+        - slurm-drmaa-dev
+        - slurm-wlm-torque
+        - sview
+    # these are present in some but not all releases of Debian/Ubuntu;
+    # rather than writing complex `when:` clauses, it's just easier to
+    # try to install them and ignore failure...
+    - name: Install optional SLURM packages (Debian/Ubuntu)
+      package:
+        pkg: '{{item}}'
+        state: '{{ pkg_install_state }}'
+      ignore_errors: yes
+      loop:
+        - slurm-drmaa-dev
   when: 'is_debian_8_or_later or is_ubuntu_15_10_or_later'
 
 
