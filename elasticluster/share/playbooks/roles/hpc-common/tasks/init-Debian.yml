@@ -5,10 +5,12 @@
     hpc_common_packages:
       - build-essential
       - gfortran
-      - libatlas-dev
+      - libatlas-base-dev
       - libhdf5-dev
       - libhdf5-openmpi-dev
+      - liblapack-dev
       - libnetcdf-dev
+      - libopenblas-dev
       - libopenmpi-dev
       - openmpi-bin
       - sqlite3
