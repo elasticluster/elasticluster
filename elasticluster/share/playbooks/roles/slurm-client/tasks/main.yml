@@ -12,7 +12,6 @@
         - libslurm-perl
         - libslurmdb-perl
         - slurm-client
-        - slurm-drmaa-dev
         - slurm-wlm-torque
         - sview
     # these are present in some but not all releases of Debian/Ubuntu;
