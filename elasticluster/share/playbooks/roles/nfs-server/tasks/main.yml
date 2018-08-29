@@ -19,6 +19,16 @@
   loop: '{{nfs_server_packages}}'
 
 
+- name: Ensure export directories exist
+  tags:
+    - nfs
+    - nfs-server
+  file:
+    path: "{{item.path}}"
+    state: directory
+  loop: '{{NFS_EXPORTS}}'
+
+
 # exports need to be there before attempting to install/start the
 # server, otherwise the service startup script might refuse to start
 # the NFS server
