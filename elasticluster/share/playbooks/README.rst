@@ -21,7 +21,7 @@ The structure of the repository follow this schema::
     |    - tasks       # collection of tasks executed by the playbook
     |    - templates   # templates used by the playbook
     |
-    +-- site.yml
+    +-- main.yml
     |   # This is the main playbook. It includes all the playbooks created
     |   # in `roles` directory. Each role is supposed to be applied only
     |   # to specific group of nodes. For instance, the `ganglia` role
@@ -29,7 +29,7 @@ The structure of the repository follow this schema::
     |   # `ganglia_master` groups.
     |
     +-- after.yml
-    |   # Playbook executed by `site.yml` after all the other tasks have
+    |   # Playbook executed by `main.yml` after all the other tasks have
     |   # successfully run.  Can be used to add local customizations.
     |
     +-- modules

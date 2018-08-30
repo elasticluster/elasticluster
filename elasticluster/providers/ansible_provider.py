@@ -118,7 +118,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             # requesting the filename to a directory causes all the
             # contained files and directories to be extracted as well
             playbook_dir = resource_filename('elasticluster', 'share/playbooks')
-            self._playbook_path = os.path.join(playbook_dir, 'site.yml')
+            self._playbook_path = os.path.join(playbook_dir, 'main.yml')
         else:
             self._playbook_path = os.path.expanduser(self._playbook_path)
             self._playbook_path = os.path.expandvars(self._playbook_path)
