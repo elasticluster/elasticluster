@@ -674,7 +674,7 @@ Controlling what is installed on the nodes
 ``playbook_path``
     Path to the Ansible playbook file to use when running
     ``elasticluster setup``.  The default value is to use playbook
-    ``site.yml`` in the root directory of the distributed with
+    ``main.yml`` in the root directory of the distributed with
     ElastiCluster.
 
 

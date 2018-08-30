@@ -151,7 +151,7 @@ SCHEMA = {
         Optional("playbook_path",
                  default=os.path.join(
                      resource_filename('elasticluster', 'share/playbooks'),
-                     'site.yml')): readable_file,
+                     'main.yml')): readable_file,
         Optional("ansible_command"): executable_file,
         Optional("ansible_extra_args"): str,
         #Optional("ansible_ssh_pipelining"): boolean,
@@ -281,7 +281,7 @@ def _make_defaults_dict():
     """
     env = {}
     # default location of Ansible playbooks; make it also available as
-    # `%(elasticluster_playbooks)` so one can write `%(elasticluster_playbooks)s/site.yml`
+    # `%(elasticluster_playbooks)` so one can write `%(elasticluster_playbooks)s/main.yml`
     env['ansible_pb_dir'] = env['elasticluster_playbooks'] \
                              = resource_filename('elasticluster', 'share/playbooks')
     return env

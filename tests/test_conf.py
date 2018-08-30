@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich
+#   Copyright (C) 2013, 2015, 2016, 2018 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -454,7 +454,7 @@ compute_groups = slurm_worker
 #         self.assertEqual(groups, provider.groups)
 
 #         playbook_path = resource_filename('elasticluster',
-#                                           'share/playbooks/site.yml')
+#                                           'share/playbooks/main.yml')
 #         self.assertEqual(playbook_path, provider._playbook_path)
 
 #         storage_path = configurator.general_conf['storage_path']
