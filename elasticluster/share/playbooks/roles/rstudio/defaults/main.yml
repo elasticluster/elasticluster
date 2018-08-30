@@ -1,0 +1,11 @@
+---
+
+# release number of Rstudio Server to install;
+# `LATEST` means install whichever is current
+rstudio_version: 'LATEST'
+
+# where to download the package file
+rstudio_download_dir : '{{ansible_env.TMPDIR|default("/var/tmp")}}'
+
+# remove package file after successful installation?
+rstudio_cleanup : False

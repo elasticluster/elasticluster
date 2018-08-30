@@ -43,6 +43,7 @@
 - import_playbook: roles/ceph.yml
 - import_playbook: roles/glusterfs.yml
 - import_playbook: roles/pvfs2.yml
+- import_playbook: roles/nfs-server.yml
 
 # now install and set up computing infrastructure
 - import_playbook: roles/gridengine.yml
@@ -60,6 +61,7 @@
 - import_playbook: roles/easybuild.yml
 - import_playbook: roles/ganglia.yml
 - import_playbook: roles/r.yml
+- import_playbook: roles/rstudio.yml
 - import_playbook: roles/samba.yml
 
 # Jupyter installation comes last, to allow it to pick up any SW that's been
