@@ -1,0 +1,7 @@
+---
+- name: Rstudio Server
+  hosts: rstudio
+  roles:
+    - rstudio
+  tags:
+    - rstudio

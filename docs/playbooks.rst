@@ -1250,6 +1250,72 @@ if R support is being deployed to more than 1 host.
        compute_r_libraries=[devtools,doSnow]
 
 
+R Studio Server
+---------------
+
+Supported on:
+
+* Ubuntu 16.04, 14.04
+* Debian 8 ("jessie"), 9 ("stretch")
+
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``rstudio``     Install `R Studio Server`_ (Open-Source Edition)
+==============  =======================================================
+
+This playbook installs the `R Studio Server`_ web-based IDE for the `R
+language`_.  Any valid user of the system can log in to the R Studio
+Server web interface and use the IDE features.
+
+To use the R Studio Server server:
+
+1. Note down the IP address of the server VM created by ElastiCluster
+
+   .. note::
+
+     R Studio Server is configured to authenticate users with the
+     GNU/Linux ``/etc/passwd`` database.  So, in order to log in you
+     need to create users first (or set passwords to existing users).
+
+     In order to create a new user, run the following commands at the
+     node's shell prompt::
+
+       # replace `user_name` with an actual name (e.g. `jsmith`)
+       sudo adduser user_name
+
+     In order to set the password for an existing user, run the
+     following commands at the node's shell prompt::
+
+       # replace `user_name` with an actual name (e.g. `jsmith`)
+       sudo passwd user_name
+
+2. In your browser, open https://server.ip:8787/
+
+   .. note::
+
+     You must edit the VM security group to allow connections to port
+     8787!  (ElastiCluster will not do this automatically.)
+
+   .. warning::
+
+     Connections to port 8787 will not be encrypted by default: any
+     username/password combination will be sent insecurely over the
+     network!  Do not use passwords for R Studio that you have used or
+     would use elsewhere!
+
+3. Log in using username and password
+
+The R Studio Server playbooks automatically installs the `R
+language`:ref: (see above), so variables that control installation of
+R apply to R Studio as well.
+
+The R Studio Server role can be combined with other playbooks, or can
+be used to install a stand-alone server.  A full example of how to
+install a R Studio stand-alone server can be found at:
+`<https://github.com/gc3-uzh-ch/elasticluster/blob/master/examples/rstudio-on-google.conf>`_
+
+
 SAMBA
 -----
 

@@ -1,0 +1,81 @@
+---
+# Installation instructions from:
+# http://www.rstudio.com/products/rstudio/download-server/
+
+
+- name: Check playbook compatibility with host platform
+  fail:
+    msg: "Rstudio Server installation only works on Debian/Ubuntu presently."
+  when: not is_debian_compatible
+
+
+# the following list of dependencies is correct for version 1.1.456
+- name: Install dependencies
+  package:
+    name: '{{ item }}'
+    state: '{{ pkg_install_state }}'
+  with_items:
+    - psmisc
+    - libapparmor1
+    - libedit2
+    - sudo
+    - lsb-release
+    - libssl1.0.0
+
+
+- name: Determine current version of RStudio Server
+  block:
+    - name: Download `current.ver` file
+      get_url:
+        url: http://download2.rstudio.org/current.ver
+        dest: '{{ elasticluster.output_dir }}/rstudio_current_version.txt'
+    - name: Load version number from `current.ver` file
+      set_fact:
+        rstudio_version: '{{ lookup("file", "{{ elasticluster.output_dir }}/rstudio_current_version.txt") }}'
+    - name: Delete `current.ver` file
+      file:
+        path: '{{ elasticluster.output_dir }}/rstudio_current_version.txt'
+        state: absent
+  when: 'rstudio_version == "LATEST"'
+  delegate_to: localhost
+  # no super-user power needed on localhost
+  become: no
+
+- name: Download Rstudio Server
+  get_url:
+    url: 'http://download2.rstudio.org/rstudio-server-{{ rstudio_version }}-amd64.deb'
+    dest: '{{ rstudio_download_dir }}'
+
+
+- name: Install RStudio Server package
+  command: |
+    dpkg -i rstudio-server-{{ rstudio_version }}-amd64.deb
+  args:
+    chdir: '{{ rstudio_download_dir }}'
+    creates: '/usr/lib/rstudio-server/bin/rstudio-server'
+
+
+# - name: Customize RStudio configuration
+#   lineinfile:
+#     dest: '{{ item.dest }}'
+#     line: '{{ item.line }}'
+#   with_items:
+#     - dest: '/etc/rstudio/rsession.conf'
+#       line: 'r-cran-repos=http://stat.ethz.ch/CRAN/'
+#     # use more robust file locking to avoid errors when using shared volumes,
+#     # according to: https://hub.docker.com/r/rocker/rstudio-stable/~/dockerfile/
+#     - dest: '/etc/rstudio/file-locks'
+#       line: 'lock-type=advisory'
+
+- name: Ensure Rstudio Server is (re)started at boot
+  service:
+    name: rstudio-server
+    enabled: yes
+    state: started
+
+
+- name: Clean-up package file
+  file:
+    path: '{{ rstudio_download_dir }}/rstudio-server-{{ rstudio_version }}-amd64.deb'
+    state: absent
+  when: 'rstudio_cleanup'
