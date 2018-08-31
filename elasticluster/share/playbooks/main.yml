@@ -46,6 +46,7 @@
 - import_playbook: roles/nfs-server.yml
 
 # now install and set up computing infrastructure
+- import_playbook: roles/elasticsearch.yml
 - import_playbook: roles/gridengine.yml
 - import_playbook: roles/hadoop.yml
 - import_playbook: roles/htcondor.yml
