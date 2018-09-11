@@ -5,7 +5,7 @@
 
 
 #
-# /etc/defaults/nis	Configuration settings for the NIS daemons.
+# /etc/defaults/nis     Configuration settings for the NIS daemons.
 #
 
 # Are we a NIS server and if so what kind (values: false, slave, master)?
@@ -37,7 +37,7 @@ YPSERVARGS='-p 834'
 
 # Additional options to be given to yppasswdd when it is started.  Note
 # that if -p is set then the YPPWDDIR above should be empty.
-YPPASSWDDARGS='-p 835'
+YPPASSWDDARGS='--port 835'
 
 # Additional options to be given to ypxfrd when it is started.
 YPXFRDARGS='-p 836'
