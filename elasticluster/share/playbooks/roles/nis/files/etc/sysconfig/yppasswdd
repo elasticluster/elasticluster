@@ -20,4 +20,4 @@
 #SHADOWFILE=/etc/shadow
 
 # Additional arguments passed to yppasswd
-YPPASSWDD_ARGS="-p 835"
+YPPASSWDD_ARGS="--port 835"
