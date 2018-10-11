@@ -17,7 +17,9 @@
   when: 'not upgrade_packages|default(True)|bool'
 
 - include_tasks: 'init-{{ansible_os_family}}.yml'
-- include_tasks: hosts.yml hosts={{groups.all}}
+- include_tasks: hosts.yml
+  vars:
+    hosts: '{{groups.all}}'
 - include_tasks: hostname.yml
 - include_tasks: netgroup.yml
 - include_tasks: 'software-{{ansible_os_family}}.yml'
