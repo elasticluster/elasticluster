@@ -3,7 +3,9 @@
   handlers:
     - import_tasks: common/handlers/main.yml
   tasks:
-    - include_tasks: common/tasks/ssh_auth.yml hosts={{groups.all}}
+    - include_tasks: common/tasks/ssh_auth.yml
+      vars:
+        hosts: '{{groups.all}}'
 
 - hosts: pvfs2:pvfs2_data:pvfs2_meta:pvfs2_client
   vars:
