@@ -13,12 +13,20 @@
 - import_tasks: bash.yml
 
 # install Python kernels (for Python version 2 and 3)
-- include_tasks: python.yml python_exe='{{PYTHON2_EXE}}'
-- include_tasks: python.yml python_exe='{{PYTHON3_EXE}}'
+- include_tasks: python.yml
+  vars:
+    python_exe: '{{PYTHON2_EXE}}'
+- include_tasks: python.yml
+  vars:
+    python_exe: '{{PYTHON3_EXE}}'
 
 # install PySpark kernels (for Python version 2 and 3)
-- include_tasks: pyspark.yml python_exe='{{PYTHON2_EXE}}'
-- include_tasks: pyspark.yml python_exe='{{PYTHON3_EXE}}'
+- include_tasks: pyspark.yml
+  vars:
+    python_exe: '{{PYTHON2_EXE}}'
+- include_tasks: pyspark.yml
+  vars:
+    python_exe: '{{PYTHON3_EXE}}'
 
 # install R kernel
 - include_tasks: irkernel.yml
