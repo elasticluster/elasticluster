@@ -298,7 +298,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             log.debug("Checking that Keystone API v2 session works...")
             try:
                 # if session is invalid, the following will raise some exception
-                nova = nova_client.Client(self.compute_api_version, session=sess, cacert=self._os_cacert)
+                nova = nova_client.Client(self._compute_api_version, session=sess, cacert=self._os_cacert)
                 nova.flavors.list()
             except keystoneauth1.exceptions.NotFound as err:
                 log.warning("Creating Keystone v2 session failed: %s", err)
@@ -338,7 +338,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             log.debug("Checking that Keystone API v3 session works...")
             try:
                 # if session is invalid, the following will raise some exception
-                nova = nova_client.Client(self.compute_api_version, session=sess)
+                nova = nova_client.Client(self._compute_api_version, session=sess)
                 nova.flavors.list()
             except keystoneauth1.exceptions.NotFound as err:
                 log.warning("Creating Keystone v3 session failed: %s", err)
