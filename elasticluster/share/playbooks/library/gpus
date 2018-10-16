@@ -53,9 +53,11 @@ Example output::
 
 from collections import defaultdict
 import json
+import os
 import re
 import shlex
 from subprocess import check_output
+import sys
 from urllib import urlopen
 
 from ansible.module_utils.basic import AnsibleModule
@@ -212,4 +214,12 @@ def main():
 
     print json.dumps(output)
 
-main()
+try:
+    main()
+    sys.exit(os.EX_OK)
+except Exception as err:
+    print json.dumps({
+        'failed': True,
+        'msg': ('{0}: {1}'.format(err.__class__.__name__, err)),
+    })
+    sys.exit(os.EX_SOFTWARE)
