@@ -512,7 +512,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 floating_ips = [ip for ip in self.nova_client.floating_ips.list()
                                 if ip.instance_id == vm.id]
             except AttributeError:
-                floating_ips = self.neutron_client.list_floatingips(id=vm.id)
+                floating_ips = self.neutron_client.list_floatingips(id=vm.id)['floatingips']
             # allocate new floating IP if none given
             if not floating_ips:
                 self._allocate_address(vm, network_ids)
