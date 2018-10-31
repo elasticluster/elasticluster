@@ -129,8 +129,8 @@ class Start(AbstractCommand):
             description=self.__doc__)
         parser.set_defaults(func=self)
         parser.add_argument('cluster',
-                            help="Type of cluster. It refers to a "
-                                 "configuration stanza [cluster/<name>]")
+                            help="Cluster configuration template."
+                            " Must name a configuration stanza [cluster/<name>]")
         parser.add_argument('-n', '--name', dest='cluster_name',
                             help='Name of the cluster.')
         parser.add_argument('--nodes', metavar='N1:GROUP[,N2:GROUP2,...]',
