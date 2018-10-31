@@ -403,7 +403,6 @@ def _read_config_files(paths):
     # read given config files
     configparser = SafeConfigParser()
     configparser.read(paths)
-
     # temporarily modify environment to allow both `${...}` and `%(...)s`
     # variable substitution in config values
     defaults = _make_defaults_dict()
@@ -416,7 +415,6 @@ def _read_config_files(paths):
                 value = configparser.get(section, key, vars=defaults)
                 # `expandvars()` performs the `${...}` substitutions
                 config[section][key] = expandvars(value)
-
     return config
 
 
