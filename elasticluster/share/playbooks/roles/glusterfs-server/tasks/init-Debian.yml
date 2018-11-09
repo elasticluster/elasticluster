@@ -2,25 +2,14 @@
 
 - name: Load GlusterFS service names for Debian-compatible
   set_fact:
-    # Service names are different across GlusterFS versions;
-    # the following list has been updated last 2017-11-28
     glusterfs_server_services:
-      '3.8':
+        - glusterd
+        - glustereventsd
+
+# Service names are different across GlusterFS versions;
+# provide exceptions for older releases (last updated 2018-11-06)
+- name: Load GlusterFS service names for Debian-compatible (older GlusterFS releases)
+  set_fact:
+    glusterfs_server_services:
         - glusterfs-server
-      '3.10':
-        - glusterfs-server
-      '3.11':
-        - glusterd
-        - glustereventsd
-      '3.12':
-        - glusterd
-        - glustereventsd
-      '3.13':
-        - glusterd
-        - glustereventsd
-      '4.0':
-        - glusterd
-        - glustereventsd
-      '4.1':
-        - glusterd
-        - glustereventsd
+  when: glusterfs_version in ['3.8', '3.10']
