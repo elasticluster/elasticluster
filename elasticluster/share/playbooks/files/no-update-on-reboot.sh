@@ -181,7 +181,7 @@ if have_command systemctl; then
         # configure step is completed before it cannot be run again.
         # Let's force it, since `dpkg --configure` is a no-op if no
         # configuration is pending...
-        env DEBIAN_FRONTEND=noninteractive dpkg --configure -a
+        env DEBIAN_FRONTEND=noninteractive dpkg --configure -a < /dev/null
     fi
 
 else
