@@ -1,6 +1,6 @@
 ---
 
-- name:
+- name: Mount Google local SSD storage
   hosts: all
   tags:
     - google
