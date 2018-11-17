@@ -460,7 +460,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             self.ssh_pipelining = True
 
 
-    def _write_extra_vars(self, cluster, filename='/tmp/extra_vars.yml'):
+    def _write_extra_vars(self, cluster, filename='extra_vars.yml'):
         # build dict of "extra vars"
         # XXX: we should not repeat here names of attributes that
         # should not be exported... it would be better to use a simple
