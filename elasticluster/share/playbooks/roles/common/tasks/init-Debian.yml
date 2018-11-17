@@ -9,6 +9,7 @@
     url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
     dest: /etc/apt/trusted.gpg.d/google-cloud-packages-archive-keyring.gpg
     backup: yes
+    validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
 
 - name: Ensure extra repositories are present (Ubuntu)
   apt_repository:
