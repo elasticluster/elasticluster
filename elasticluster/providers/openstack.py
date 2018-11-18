@@ -189,6 +189,28 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._instances = {}
         self._cached_instances = {}
 
+    def to_vars_dict(self):
+        """
+        Return local state which is relevant for the cluster setup process.
+        """
+        return {
+            # connection data (= what is in the "openrc" file)
+            'os_auth_url':             self._os_auth_url,
+            'os_cacert':               (self._os_cacert or ''),
+            'os_password':             self._os_password,
+            'os_project_domain_name':  self._os_project_domain_name,
+            'os_region_name':          self._os_region_name,
+            'os_tenant_name':          self._os_tenant_name,
+            'os_user_domain_name':     self._os_user_domain_name,
+            'os_username':             self._os_username,
+            # API versioning
+            'os_compute_api_version':   self._compute_api_version,
+            'os_identity_api_version':  self._identity_api_version,
+            'os_image_api_version':     self._image_api_version,
+            'os_network_api_version':   self._network_api_version,
+            'os_volume_api_version':    self._volume_api_version,
+        }
+
     @staticmethod
     def _get_os_config_value(thing, value, varnames, default=_NO_DEFAULT):
         assert varnames, "List of env variable names cannot be empty"

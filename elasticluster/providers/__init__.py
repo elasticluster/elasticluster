@@ -38,6 +38,13 @@ class AbstractCloudProvider:
         pass
 
     @abstractmethod
+    def to_vars_dict(self):
+        """
+        Return local state which is relevant for the cluster setup process.
+        """
+        return {}
+
+    @abstractmethod
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
                        username=None, node_name=None):

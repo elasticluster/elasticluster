@@ -129,6 +129,19 @@ class AzureCloudProvider(AbstractCloudProvider):
         self._resource_groups_created = set()
 
 
+    def to_vars_dict(self):
+        """
+        Return local state which is relevant for the cluster setup process.
+        """
+        return {
+            'azure_client_id':        self.client_id,
+            'azure_location':         self.location,
+            'azure_secret':           self.secret,
+            'azure_subscription_id':  self.subscription_id,
+            'azure_tenant_id':        self.tenant_id,
+        }
+
+
     def _init_az_api(self):
         """
         Initialise client objects for talking to Azure API.
