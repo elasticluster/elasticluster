@@ -211,6 +211,21 @@ class Cluster(Struct):
                 del result[key]
         return result
 
+    def to_vars_dict(self):
+        """
+        Return local state which is relevant to the cluster setup process.
+        """
+        return self.to_dict(omit=[
+            '_cloud_provider',
+            '_naming_policy',
+            '_setup_provider',
+            'repository',
+            'ssh_proxy_command',
+            'ssh_to',
+            'storage_file',
+            'thread_pool_max_size',
+        ])
+
     def __getstate__(self):
         return self.to_dict(omit=('_cloud_provider', '_naming_policy',
                                   '_setup_provider',))
@@ -1325,6 +1340,18 @@ class Node(Struct):
             if key in result:
                 del result[key]
         return result
+
+    def to_vars_dict(self):
+        """
+        Return local state which is relevant to the cluster setup process.
+        """
+        return self.to_dict(omit=[
+            '_cloud_provider',
+            'ssh_proxy_command',
+            'cluster_name',
+            'user_key_public',
+            'user_key_private',
+        ])
 
     def pprint(self):
         """Pretty print information about the node.

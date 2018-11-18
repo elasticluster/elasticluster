@@ -111,6 +111,18 @@ class BotoCloudProvider(AbstractCloudProvider):
         self._cached_instances = []
         self._images = None
 
+    def to_vars_dict(self):
+        """
+        Return local state which is relevant for the cluster setup process.
+        """
+        return {
+            'aws_access_key_id':      self._access_key,
+            'aws_secret_access_key':  self._secret_key,
+            'aws_region':             self._region_name,
+            'aws_vpc_name':           (self._vpc or ''),
+            'aws_vpc_id':             (self._vpc_id or ''),
+        }
+
     def _connect(self):
         """
         Connect to the EC2 cloud provider.

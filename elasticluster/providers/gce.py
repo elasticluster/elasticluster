@@ -114,6 +114,18 @@ class GoogleCloudProvider(AbstractCloudProvider):
         self._cached_instances = []
         self._images = None
 
+    def to_vars_dict(self):
+        """
+        Return local state which is relevant for the cluster setup process.
+        """
+        return {
+            'gcloud_client_id':      self._client_id,
+            'gcloud_client_secret':  self._client_secret,
+            'gcloud_network':        self._network,
+            'gcloud_project_id':     self._project_id,
+            'gcloud_zone':           self._zone,
+        }
+
     def _connect(self):
         """Connects to the cloud web services. If this is the first
         authentication, a web browser will be started to authenticate

@@ -98,6 +98,17 @@ class LibCloudProvider(AbstractCloudProvider):
             driver_class.__name__)
         self.driver = driver_class(*args, **options)
 
+    def to_vars_dict(self):
+        """
+        Return local state which is relevant for the cluster setup process.
+        """
+        log.warn(
+            "ElastiCluster's LibCloud backend is unable"
+            " to export cloud connection information to the setup process."
+            " Cloud access (e.g., auto-mounting of storage)"
+            " will not be available from within the cluster.")
+        return {}
+
     def __get_instance(self, instance_id):
         for node in self.driver.list_nodes():
             if node.id == instance_id:
