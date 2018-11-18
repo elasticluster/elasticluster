@@ -6,7 +6,7 @@
 me="$(basename $0)"
 
 # kill 'apt-daily.service' if running
-kill='y'
+kill='n'
 
 # wait until 'apt-daily.service' job is done
 wait='y'
@@ -26,9 +26,10 @@ be holding the lock on '/var/apt/lists/lock'.
 Options:
 
   --kill, -k
-      Kill any running 'apt-daily.service' job (default).
+      Kill any running 'apt-daily.service' job.
   --no-kill
-      Do not kill 'apt-daily.service' systemd jobs, if any.
+      Do not kill 'apt-daily' and 'apt-daily-upgrade'
+      systemd jobs (default).
 
   --wait, -w
       Wait until no 'apt-daily.service' job is done (default).
@@ -155,27 +156,9 @@ if have_command systemctl; then
         if ! flock -w "$max_wait" /var/lib/apt/lists/lock /bin/true; then
             die $EX_TEMPFAIL "Lock still held on '/var/lib/apt/lists/lock' after $max_wait seconds. Failed to kill 'apt-daily.service'?"
         fi
-        # Alternatively, we could look for traces of the processes
-        # that would hold the lock::
-        #
-        # waited=0
-        # # Apparently, `systemctl status` can report that a unit is in
-        # # "dead" state even if some processes belonging to it are
-        # # still running... So bake our own very crude one-liner to
-        # # check that no processes named like `apt` or `dpkg` are
-        # # running, without depending on procps utilities like `pgrep`
-        # # which may not be installed.
-        # while egrep -q 'apt|dpkg' /proc/[0-9]*/stat;
-        # do
-        #     sleep 1
-        #     waited=$(expr 1 + $waited)
-        #     if [ "$waited" -gt "$max_wait" ]; then
-        #         warn "After $max_wait seconds, the following 'apt' and 'dpkg' processes are still running:"
-        #         egrep 'apt|dpkg' /proc/[0-9]*/stat;
-        #         die $EX_TEMPFAIL "Service 'apt-daily' did not terminate within $max_wait seconds."
-        #     fi
-        # done
+    fi
 
+    if [ "$kill" = 'y' ]; then
         # Occasionally, `dpkg` is forcibly killed in the middle of a
         # package update and then it stops working, requiring that the
         # configure step is completed before it cannot be run again.
