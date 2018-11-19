@@ -26,7 +26,7 @@ import yaml
 
 # Elasticluster imports
 from elasticluster import log
-from elasticluster.exceptions import ClusterNotFound
+from elasticluster.exceptions import ClusterNotFound, ClusterError
 
 def migrate_cluster(cluster):
     """Called when loading a cluster when it comes from an older version
@@ -286,6 +286,8 @@ class YamlRepository(DiskRepository):
 
     def load(self, fp):
         data = yaml.load(fp)
+        if not data:
+            raise ClusterError("Empty yml file: {0}.".format(fp.name))
         from elasticluster import Cluster
         cluster = Cluster(**data)
         cluster.repository = self
@@ -345,6 +347,8 @@ class MultiDiskRepository(AbstractClusterRepository):
                 except (ImportError, AttributeError) as ex:
                     log.error("Unable to load cluster %s: `%s`", fname, ex)
                     log.error("If cluster %s was created with a previous version of elasticluster, you may need to run `elasticluster migrate %s %s` to update it.", fname, self.storage_path, fname)
+                except (ClusterError, ClusterNotFound) as cx:
+                    log.error("Unable to load cluster {0}: `{1}`".format(fname,cx))
         return clusters
 
     def _get_store_by_name(self, name):
