@@ -263,7 +263,11 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             elasticluster.log.debug(
                 "Calling `ansible-playbook` with the following environment:")
             for var, value in sorted(ansible_env.items()):
-                elasticluster.log.debug("- %s=%r", var, value)
+                # sanity check. Do not print password content....
+                if "password" in var.lower():
+                    elasticluster.log.debug("- %s=******", var)
+                else:
+                    elasticluster.log.debug("- %s=%r", var, value)
 
         elasticluster.log.debug("Using playbook file %s.", self._playbook_path)
 
