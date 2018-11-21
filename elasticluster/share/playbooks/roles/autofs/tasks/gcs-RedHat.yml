@@ -1,0 +1,15 @@
+---
+
+- name: Add Google Cloud packages repository (CentOS/RHEL)
+  yum_repository:
+    name: 'gcsfuse'
+    description: 'gcsfuse (packages.cloud.google.com)'
+    baseurl: 'https://packages.cloud.google.com/yum/repos/gcsfuse-el7-x86_64'
+    enabled: yes
+    gpgcheck: yes
+    repo_gpgcheck: yes
+    gpgkey:
+      - https://packages.cloud.google.com/yum/doc/yum-key.gpg
+      - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    sslverify: '{{ not insecure_https_downloads|default("no")|bool }}'
+    state: present

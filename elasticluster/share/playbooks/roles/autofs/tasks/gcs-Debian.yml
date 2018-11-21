@@ -1,0 +1,7 @@
+---
+
+- name: Add Google Cloud packages repository (Debian/Ubuntu)
+  apt_repository:
+    filename: 'gcsfuse'
+    repo: "deb http://packages.cloud.google.com/apt gcsfuse-{{ansible_distribution_release}} main"
+    state: present

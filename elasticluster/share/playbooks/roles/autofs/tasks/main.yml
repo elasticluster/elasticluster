@@ -31,6 +31,11 @@
   when: is_debian_compatible
 
 
+- name: Deploy support for Google Storage
+  include_tasks: 'gcs.yml'
+  when: 'elasticluster.cloud.gcloud_project_id is defined'
+
+
 - name: Install Autofs
   package:
     name: '{{ item }}'
