@@ -20,6 +20,9 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 import sys
+python_version = sys.version_info[:2]
+if python_version != (2, 7):
+    raise RuntimeError("ElastiCluster requires Python 2.7")
 
 # fix Python issue 15881 (on Python <2.7.5)
 try:
@@ -67,92 +70,6 @@ class Tox(TestCommand):
         sys.exit(errno)
 
 
-## conditional dependencies
-#
-# Although PEP-508 and a number of predecessors specify a syntax for
-# conditional dependencies in Python packages, support for it is inconsistent
-# (at best) among the PyPA tools. An attempt to use the conditional syntax has
-# already caused issues #308, #249, #227, and many more headaches to me while
-# trying to find a combination of `pip`, `setuptools`, `wheel`, and dependency
-# specification syntax that would work reliably across all supported Linux
-# distributions. I give up, and revert to computing the dependencies via
-# explicit Python code in `setup.py`; this will possibly break wheels but it's
-# the least damage I can do ATM.
-
-python_version = sys.version_info[:2]
-if python_version == (2, 6):
-    version_dependent_requires = [
-        # Alternate dependencies for Python 2.6:
-        # - PyCLI requires argparse,
-        'argparse',
-        # GCE cloud
-        'google-api-python-client<1.6.0',
-        'google-compute-engine',
-        'oauth2client<4.0.0',
-        # - OpenStack's "keystoneclient" requires `importlib`
-        'importlib',
-        # Paramiko ceased support for Python 2.6 in version 2.4.0
-        'paramiko<2.4',
-        # - support for Python 2.6 was removed from `novaclient` in commit
-        #   81f8fa655ccecd409fe6dcda0d3763592c053e57 which is contained in
-        #   releases 3.0.0 and above; however, we also need to pin down
-        #   the version of `oslo.config` and all the dependencies thereof,
-        #   otherwise `pip` will happily download the latest and
-        #   incompatible version,since `python-novaclient` specifies only
-        #   the *minimal* version of dependencies it is compatible with...
-        'stevedore<1.10.0',
-        'debtcollector<1.0.0',
-        'keystoneauth<2.0.0',
-        # yes, there"s `keystoneauth` and `keystoneauth1` !!
-        'keystoneauth1<2.0.0',
-        'oslo.config<3.0.0',
-        'oslo.i18n<3.1.0',
-        'oslo.serialization<2.1.0',
-        'oslo.utils<3.1.0',
-        'python-keystoneclient<2.0.0',
-        'python-novaclient<3.0.0',
-        'python-cinderclient<1.6.0',
-    ]
-elif python_version == (2, 7):
-    version_dependent_requires = [
-        # Paramiko ceased support for Python 2.6 so we need it here
-        'paramiko',
-        # GCE cloud
-        'google-api-python-client',
-        'google-compute-engine',
-        'oauth2client',
-        # OpenStack
-        'python-keystoneclient',
-        'python-glanceclient',
-        'python-neutronclient',
-        'python-cinderclient',
-        'python-novaclient<=9.1.2',
-        # fix dependency conflict among OpenStack libraries:
-        # `osc-lib` has a more strict dependency specifier
-        # which is not picked up by `pip` because it's not
-        # a top-level dependency of ElastiCluster
-        # FIXME: Babel<2.6.0 is for keeping compatibility with Py 2.6
-        'Babel>=2.3.4,!=2.4.0,<2.6.0',
-        'pbr>=2.0.0,!=2.1.0',
-        # MS-Azure
-        'azure-common',
-        'azure-mgmt-compute',
-        'azure-mgmt-network',
-        'azure-mgmt-resource',
-        'msrestazure',
-        ## the following 6 are all required dependencies
-        ## which are not picked up, see issue #500
-        'enum34',
-        'functools32',
-        'ipaddress',
-        'pathlib2',
-        'scandir',
-        'secretstorage<=2.3.1',
-    ]
-else:
-    raise RuntimeError("ElastiCluster requires Python 2.6 or 2.7")
-
-
 ## real setup description begins here
 #
 from setuptools import setup, find_packages
@@ -184,7 +101,6 @@ setup(
         "Operating System :: POSIX :: Other",
         "Programming Language :: Python",
         "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
         "Topic :: System :: Clustering",
         "Topic :: Education",
@@ -209,24 +125,49 @@ setup(
         'click>=4.0',  ## click.prompt() added in 4.0
         'coloredlogs',
         'netaddr',
+        'paramiko',
         'schema',
         'subprocess32',  ## stdlib subprocess but correct under multithreading
+        # Azure cloud
+        'azure-common',
+        'azure-mgmt-compute',
+        'azure-mgmt-network',
+        'azure-mgmt-resource',
+        'msrestazure',
         # EC2 clouds
         'boto>=2.48',
         'pycrypto',   # for computing RSA key hash, see: PR #132
-        # GCE cloud
-        # (main packages are version-dependent)
+        # Google Cloud
+        'google-api-python-client',
+        'google-compute-engine',
+        'oauth2client',
         'python-gflags',
-        'simplejson>=2.5.0', # needed by `uritemplate` but somehow not picked up
         'pytz',   ## required by `positional` but somehow not picked up
-        # Azure cloud
-        #'azure',  ## only available on Py 2.7, see `version_dependent_requires`
-        # OpenStack clouds
+        'simplejson>=2.5.0', # needed by `uritemplate` but somehow not picked up
+        # OpenStack
         'netifaces',
         'apache-libcloud>=0.14.0',
         'requests~=2.16',  ## see issue #441 and #566
-        #'python-novaclient' ## this needs special treatment depending on Python version
-    ] + version_dependent_requires),
+        'python-keystoneclient',
+        'python-glanceclient',
+        'python-neutronclient',
+        'python-cinderclient',
+        'python-novaclient<=9.1.2',
+        # fix dependency conflict among OpenStack libraries:
+        # `osc-lib` has a more strict dependency specifier
+        # which is not picked up by `pip` because it's not
+        # a top-level dependency of ElastiCluster
+        'Babel>=2.3.4,!=2.4.0',
+        'pbr>=2.0.0,!=2.1.0',
+        ## the following 6 are all required dependencies
+        ## which are not picked up, see issue #500
+        'enum34',
+        'functools32',
+        'ipaddress',
+        'pathlib2',
+        'scandir',
+        'secretstorage<=2.3.1',
+    ],
     tests_require=['tox', 'mock', 'pytest>=2.10'],  # read right-to-left
     cmdclass={'test': Tox},
 )
