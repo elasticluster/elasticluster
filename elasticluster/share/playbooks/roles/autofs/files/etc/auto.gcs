@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+bucket="$1"
+
+echo "${bucket} -fstype=gcsfuse,allow_other,implicit_dirs,nosuid,nodev ${bucket}"

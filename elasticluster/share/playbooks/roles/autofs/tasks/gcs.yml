@@ -1,0 +1,31 @@
+---
+
+#
+# Deploy support for transparently accessing Google Cloud Storage
+# as an auto-mounted filesystem
+#
+
+- name: Perform distribution-specific tasks
+  include_tasks: 'gcs-{{ansible_os_family}}.yml'
+
+- name: Install `gcsfuse`
+  package:
+    name: gcsfuse
+    state: '{{ pkg_install_state }}'
+
+- name: Deploy autofs mount script for Google Cloud Storage
+  copy:
+    dest: '/etc/auto.gcs'
+    src: 'etc/auto.gcs'
+    mode: 0555
+    owner: root
+    group: root
+
+- name: Add default user to `fuse` group (Ubuntu 14.04)
+  # It's not clear from the Ansible docs whether `user: { name: ...,
+  # groups: 'fuse' }` will *add* the named user to the `fuse` group,
+  # or whether it will set the list of secondary groups to just
+  # `fuse`.  Since in doubt, use `usermod` ...
+  command: |
+    usermod -a -G fuse {{ansible _user}}
+  when: is_ubuntu_trusty
