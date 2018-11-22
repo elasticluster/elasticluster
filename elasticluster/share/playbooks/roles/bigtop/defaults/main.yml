@@ -2,4 +2,7 @@
 ---
 
 # What release of Apache Bigtop to get packages from
-bigtop_release: '1.2.1'
+bigtop_release: '1.3.0'
+
+# Where to get BigTop files from
+bigtop_mirror: 'http://mirrors.ibiblio.org/apache'

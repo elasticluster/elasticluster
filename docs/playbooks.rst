@@ -330,8 +330,9 @@ Hadoop + Spark
 
 Supported on:
 
+* CentOS 7
+* Debian 9 ("stretch")
 * Ubuntu 16.04
-* Debian 8 ("jessie")
 
 This playbook installs a Hadoop_ 2.x cluster with Spark_ and Hive_,
 using the packages provided by the Apache Bigtop_ project.  The
@@ -389,6 +390,9 @@ installed on the cluster (NIS master on the cluster master node, compute nodes
 are NIS slaves) to make it easier to add users to the cluster (just run the
 ``adduser`` command on the master).
 
+Spark configuration
++++++++++++++++++++
+
 The following variables can be used to control the defaults for
 running Spark applications.  (Note that they set a *default*, hence
 can be overridden by applications when creating a Spark context; on
@@ -421,6 +425,44 @@ the other hand, these defaults are *exactly* what is used when running
        memory (counted in MBs) to use per Python worker process during
        aggregation.  If the memory used during aggregation goes above
        this amount, Spark starts spilling the data into disks.
+
+Controlling version and origin
+++++++++++++++++++++++++++++++
+
+The following variables can be used to change the version of the
+installed software:
+
+.. list-table:: BigTop distribution settings
+   :widths: 30 20 50
+   :header-rows: 1
+
+   * - Variable
+     - Default value
+     - Description
+   * - ``bigtop_release``          1
+     - ``1.3.0``
+     - Release of Apache BigTop_ to use for installing Spark/Hadoop
+       packages.  As of Nov. 2018, ElastiCluster supports BigTop
+       1.3.0 (default), 1.2.1, and 1.2.0.
+
+       BigTop release 1.3.0 installs Hadoop 2.8.4, Hive 2.3.3, and
+       Spark 2.2.1; it supports CentOS 7, Debian 9 ("stretch") and
+       Ubuntu 16.04 ("xenial") as base operating systems.
+
+       BigTop release 1.2.x installs Hadoop 2.7.3, Hive 1.2.1, and
+       Spark 2.1.1; it supports CentOS 7, Debian 8 ("jessie") and
+       Ubuntu 16.04 ("xenial") as base operating systems.
+   * - ``bigtop_mirror``
+     - ``http://mirrors.ibiblio.org/apache``
+     - URL of the mirror to use; should point at the root of the
+       Apache mirror (i.e., there should be a ``bigtop/`` directory
+       immediately under it).  The complete list of Apache mirrors can
+       be found at: `<http://www.apache.org/mirrors/>`_.  There is
+       little reason to ever change this value from the default: the
+       mirror server is only used to download the GPG key and the
+       repository definition file; it is *not* used for actual
+       download of the Apache BigTop software.
+
 
 
 HTCondor
