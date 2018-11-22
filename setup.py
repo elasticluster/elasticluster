@@ -114,9 +114,8 @@ setup(
             'elasticluster = elasticluster.__main__:main',
         ]
     },
-    # FIXME: Babel<2.6.0 is for keeping compatibility with Py 2.6
-    setup_requires=['Babel>=2.3.4,!=2.4.0,<2.6.0'],  # see Issue #268
-    install_requires=([
+    setup_requires=['Babel>=2.3.4,!=2.4.0'],  # see Issue #268
+    install_requires=[
         # ElastiCluster core requirements
         'pip>=9.0.0',  ## see issue #433
         #'ara',  # optional
