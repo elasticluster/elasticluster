@@ -8,15 +8,14 @@
 
 - name: add signing key for Apache Bigtop repository
   apt_key:
-    url: "http://www.apache.org/dist/bigtop/bigtop-{{ bigtop_release }}/repos/GPG-KEY-bigtop"
+    url: "{{ bigtop_mirror }}/bigtop/bigtop-{{ bigtop_release }}/repos/GPG-KEY-bigtop"
     state: present
 
 
 - name: add Apache Bigtop repository
-  apt_repository:
-    # download from: http://www.apache.org/dist/bigtop/bigtop-1.2.1/repos/ubuntu16.04/bigtop.list
-    repo: 'deb http://repos.bigtop.apache.org/releases/{{bigtop_release}}/{{ansible_distribution|lower}}/{{ansible_distribution_version}}/x86_64 bigtop contrib'
-    state: present
+  get_url:
+    url: '{{ bigtop_mirror }}/bigtop/bigtop-{{bigtop_release}}/repos/{{ansible_distribution|lower}}{{ansible_distribution_version}}/bigtop.list'
+    dest: '/etc/apt/sources.list.d/bigtop.list'
   register: _bigtop_add_apt_repo
 
 
@@ -27,6 +26,5 @@
 - name: update APT cache
   apt:
     update_cache: yes
-    cache_valid_time: 86400
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   when: '_bigtop_add_apt_repo is changed'
