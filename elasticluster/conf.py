@@ -1075,7 +1075,7 @@ class Creator(object):
                 continue
             node_kind = key[:-len('_groups')]
             group_names = [group_name.strip()
-                           for group_name in value.split(',')]
+                           for group_name in value.split(',') if group_name.strip()]
             for group_name in group_names:
                 # handle renames
                 if group_name in self._RENAMED_NODE_GROUPS:
