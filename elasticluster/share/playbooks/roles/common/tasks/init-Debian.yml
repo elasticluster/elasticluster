@@ -102,3 +102,34 @@
     dest: '/etc/policy-rc.d'
     src: 'etc/policy-rc.d'
     mode: 0555
+
+
+# Debian's `adduser` (resp. `deluser`) scripts will run
+# `/usr/local/sbin/adduser.local` (resp. `deluser.local`) if it
+# exists.  Different installed systems need to perform different
+# operations upon user addition/removal (e.g., SAMBA needs
+# `smbpasswd`, SLURM needs `sacctmgr add user`), so we set up a
+# directory where each playbook can drop their user management
+# scripts, and they will be executed in order using run-parts(1)
+
+- name: Allow other playbooks to deploy their own add/remove user scripts (I)
+  file:
+    dest: '/etc/{{ item }}.d'
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  loop:
+    - adduser
+    - deluser
+
+- name: Allow other playbooks to deploy their own add/remove user scripts (II)
+  copy:
+    dest: '/usr/local/sbin/{{ item }}.local'
+    src: 'usr/local/sbin/{{ item }}.local'
+    owner: root
+    group: root
+    mode: 0555
+  loop:
+    - adduser
+    - deluser
