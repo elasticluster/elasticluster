@@ -73,3 +73,4 @@
     - doParallel
     - snow
     - snowfall
+    - doSNOW
