@@ -39,8 +39,17 @@ from paramiko.ssh_exception import SSHException
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.providers import AbstractCloudProvider
-from elasticluster.exceptions import VpcError, SecurityGroupError, \
-    SubnetError, KeypairError, ImageError, InstanceError, InstanceNotFoundError, ClusterError
+from elasticluster.exceptions import (
+    CloudProviderError,
+    ClusterError,
+    ImageError,
+    InstanceError,
+    InstanceNotFoundError,
+    KeypairError,
+    SecurityGroupError,
+    SubnetError,
+    VpcError,
+)
 
 
 class BotoCloudProvider(AbstractCloudProvider):
@@ -147,7 +156,12 @@ class BotoCloudProvider(AbstractCloudProvider):
                 port=self._ec2port,
                 path=self._ec2path,
             )
-            log.debug("EC2 connection has been successful.")
+            if ec2_connection:
+                log.debug("EC2 connection has been successful: %r.", ec2_connection)
+            else:
+                raise CloudProviderError(
+                    "Cannot establish connection to EC2 region {0}"
+                    .format(self._region_name))
 
             if not self._vpc:
                 vpc_connection = None
