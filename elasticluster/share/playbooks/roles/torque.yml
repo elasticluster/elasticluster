@@ -30,6 +30,5 @@
       - fs: '{{ torque_master_host }}:/home'
         mountpoint: '/home'
         options: 'rw,async'
-    - role: autofs
     - role: hpc-common
     - role: torque
