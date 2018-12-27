@@ -911,9 +911,32 @@ class Creator(object):
         :return: cloud provider instance that fulfills the contract of
                  :py:class:`elasticluster.providers.AbstractCloudProvider`
         """
-        cloud_conf = self.cluster_conf[cluster_template]['cloud']
-        provider = cloud_conf['provider']
-
+        try:
+            conf_template = self.cluster_conf[cluster_template]
+        except KeyError:
+            raise ConfigurationError(
+                "No cluster template `{0}` found in configuration file"
+                .format(cluster_template))
+        try:
+            cloud_conf = conf_template['cloud']
+        except KeyError:
+            # this should have been caught during config validation!
+            raise ConfigurationError(
+                "No cloud section for cluster template `{0}`"
+                " found in configuration file"
+                .format(cluster_template))
+        try:
+            provider = cloud_conf['provider']
+        except KeyError:
+            # this should have been caught during config validation!
+            raise ConfigurationError(
+                "No `provider` configuration defined"
+                " in cloud section `{0}`"
+                " of cluster template `{1}`"
+                .format(
+                    cloud_conf.get('name', '***'),
+                    cluster_template
+                ))
         try:
             ctor = _get_provider(provider, CLOUD_PROVIDERS)
         except KeyError:
@@ -1025,7 +1048,20 @@ class Creator(object):
         :param str cluster_template: template of the cluster
         :param str name: name of the cluster to read configuration properties
         """
-        conf = self.cluster_conf[cluster_template]['setup']
+        try:
+            conf_template = self.cluster_conf[cluster_template]
+        except KeyError as err:
+            raise ConfigurationError(
+                "No cluster template `{0}` found in configuration file"
+                .format(cluster_template))
+        try:
+            conf = conf_template['setup']
+        except KeyError as err:
+            # this should have been caught during config validation!
+            raise ConfigurationError(
+                "No setup section for cluster template `{0}`"
+                " found in configuration file"
+                .format(cluster_template))
         if name:
             conf['cluster_name'] = name
         conf_login = self.cluster_conf[cluster_template]['login']
