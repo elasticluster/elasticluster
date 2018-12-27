@@ -24,6 +24,10 @@ import sys
 import utils
 import warnings
 
+# workaround for issue #592 -- must be applied before we get a chance
+# to `import boto`
+os.environ['BOTO_USE_ENDPOINT_HEURISTICS'] = 'True'
+
 # External modules
 import cli.app
 
