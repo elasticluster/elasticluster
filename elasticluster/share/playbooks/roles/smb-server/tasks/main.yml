@@ -47,11 +47,12 @@
 
 - name: Ensure users are given SMB access when created
   copy:
-    dest: '/usr/local/sbin/{{ item }}'
-    src: 'usr/local/sbin/{{ item }}'
+    dest: '/etc/{{ item }}.d/smb-server'
+    src:  'etc/{{ item }}.d/smb-server'
     owner: root
     group: root
     mode: 0555
   loop:
-    - adduser.local
-    - deluser.local
+    - adduser
+    - deluser
+  when: is_debian_compatible
