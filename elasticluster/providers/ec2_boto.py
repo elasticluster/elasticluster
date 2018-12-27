@@ -156,8 +156,15 @@ class BotoCloudProvider(AbstractCloudProvider):
                 port=self._ec2port,
                 path=self._ec2path,
             )
-            if ec2_connection:
-                log.debug("EC2 connection has been successful: %r.", ec2_connection)
+            # With the loose setting `BOTO_USE_ENDPOINT_HEURISTICS`
+            # which is necessary to work around issue #592, Boto will
+            # now accept *any* string as an AWS region name;
+            # furthermore, it *always* returns a connection object --
+            # so the only way to check that we are not going to run
+            # into trouble is to check that there *is* a valid host
+            # name on the other end of the connection.
+            if ec2_connection.host:
+                log.debug("EC2 connection has been successful.")
             else:
                 raise CloudProviderError(
                     "Cannot establish connection to EC2 region {0}"
