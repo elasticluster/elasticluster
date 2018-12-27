@@ -5,7 +5,7 @@
 
 127.0.0.1  localhost localhost.localdomain localhost4 localhost4.localdomain4
 
-{% for host in hosts|default(groups['all'])|sort if not host.startswith('localhost') %}
+{% for host in hosts|default(groups.all)|sort if not host.startswith('localhost') %}
 {%- set fqdn = hostvars[host].ansible_fqdn -%}
 {{hostvars[host].ansible_default_ipv4.address}} {{host}} {% if not fqdn.startswith('localhost') %}{{fqdn}} {{fqdn.split('.')[0]}}{% endif %}
 
