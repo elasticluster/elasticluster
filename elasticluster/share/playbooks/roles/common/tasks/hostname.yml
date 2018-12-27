@@ -3,11 +3,6 @@
 # Ensure the node host name matches the Ansible inventory name
 #
 
-- name: Set host name to Ansible "inventory name"
-  hostname:
-    name: '{{inventory_hostname}}'
-
-
 - name: Check for cloud-init conf file
   tags:
     - cloud-init
