@@ -7,47 +7,46 @@
 # temporarily set distribution ID to "Scientific Linux"
 - name: Patch `/etc/redhat-release`
   replace:
-        dest='/etc/redhat-release'
-        regexp='Scientific Linux CERN SLC'
-        replace='Scientific Linux'
+        dest: '/etc/redhat-release'
+        regexp: 'Scientific Linux CERN SLC'
+        replace: 'Scientific Linux'
   when: 'ansible_distribution == "Scientific"'
 
 
 - name: Set host name to Ansible "inventory name"
-  hostname: 
-    name='{{inventory_hostname}}'
+  hostname:
+    name: '{{inventory_hostname}}'
 
 
 # undo SLC workaround
 - name: Undo patch to `/etc/redhat-release`
   replace:
-        dest='/etc/redhat-release'
-        regexp='Scientific Linux'
-        replace='Scientific Linux CERN SLC'
+        dest: '/etc/redhat-release'
+        regexp: 'Scientific Linux'
+        replace: 'Scientific Linux CERN SLC'
   when: 'ansible_distribution == "Scientific"'
 
 
 - name: Check for cloud-init conf file
-  stat:
-    path='/etc/cloud/cloud.cfg'
-    follow=yes
-  register: cloud_cfg
   tags:
     - cloud-init
     - hostname
     - common
+  stat:
+    path: '/etc/cloud/cloud.cfg'
+    follow: yes
+  register: cloud_cfg
 
 
 - name: Ensure changes to hostname are not overwritten by cloud-init
-  lineinfile:
-    name='/etc/cloud/cloud.cfg'
-    backup=yes
-    regexp='^preserve_hostname:.*'
-    line='preserve_hostname{{__colon__}} true'
-    insertbefore=BOF
-  when: cloud_cfg.stat.exists
   tags:
     - cloud-init
     - hostname
     - common
-
+  lineinfile:
+    name: '/etc/cloud/cloud.cfg'
+    backup: yes
+    regexp: '^preserve_hostname:.*'
+    line: 'preserve_hostname{{__colon__}} true'
+    insertbefore: BOF
+  when: cloud_cfg.stat.exists
