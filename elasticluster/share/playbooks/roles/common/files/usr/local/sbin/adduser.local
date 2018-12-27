@@ -1,0 +1,22 @@
+#! /bin/sh
+#
+# Run all executable scripts in `/etc/adduser.d/`;
+# the order of execution is determined by `run-parts(1)`.
+# Any command-line argument is forwarded to each script.
+#
+
+script_dir=/etc/adduser.d
+
+# nothing to do if `/etc/adduser.d` does not exist
+if ! [ -d "$script_dir" ]; then
+    exit 0
+fi
+
+# forward all args; this requires passing each argument separately
+# using `run-parts`' `--arg=` command-line argument
+args=''
+for arg in "$@"; do
+    args="$args --arg='$arg'"
+done
+
+eval exec run-parts --exit-on-error $args "'$script_dir'"
