@@ -52,8 +52,8 @@
     - slurm
     - slurmctld
   service:
-    name='{{item}}'
-    enabled=yes
-    state=started
+    name: '{{item}}'
+    enabled: yes
+    state: started
   loop:
     - '{{slurmctld_service_name}}'

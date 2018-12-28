@@ -43,9 +43,9 @@
         - slurm-llnl-sview
         - slurm-llnl-torque
     - service:
-        name={{item}}
-        enabled=no
-        state=stopped
+        name: {{item}}
+        enabled: no
+        state: stopped
       loop:
         - slurm-llnl
   when: 'is_debian_or_ubuntu and not (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
@@ -67,16 +67,16 @@
 
 - name: Stop SLURM services (RHEL/CentOS 6.x)
   service:
-    name='slurm'
-    enabled=no
-    state=stopped
+    name: 'slurm'
+    enabled: no
+    state: stopped
   when: 'is_rhel6_compatible'
 
 - name: Stop SLURM services (RHEL/CentOS 7.x)
   service:
-    name={{item}}
-    enabled=no
-    state=stopped
+    name: {{item}}
+    enabled: no
+    state: stopped
   loop:
     - slurmd
     - slurmctld

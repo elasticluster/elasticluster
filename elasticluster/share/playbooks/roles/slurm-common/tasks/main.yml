@@ -7,35 +7,35 @@
 # Otherwise `systemctl mask $someservice` fails on RHEL/CentOS7
 - name: Temporarily disable SELinux (RHEL-family)
   selinux:
-    policy=targeted
-    state=permissive
+    policy: targeted
+    state: permissive
   when: 'is_rhel_compatible'
 
 
 # need to do this here, as the SLURM packages are not yet installed
 - name: Create `slurm` system group
   group:
-    name=slurm
-    system=yes
+    name: slurm
+    system: yes
   tags:
     - slurm
 
 
 - name: Create `slurm` system user
   user:
-    name=slurm
-    group=slurm
-    system=yes
+    name: slurm
+    group: slurm
+    system: yes
   tags:
     - slurm
 
 
 - name: Create work directory {{item}}
   file:
-    path='{{item}}'
-    state=directory
-    owner=slurm
-    group=slurm
+    path: '{{item}}'
+    state: directory
+    owner: slurm
+    group: slurm
   loop:
     - /etc/slurm
     - /var/lib/slurm
@@ -55,10 +55,10 @@
 # playbooks and config files
 - name: Make compatibility symlinks
   file:
-    path='{{ item.to }}'
-    src='{{ item.from }}'
-    state=link
-    force=yes
+    path: '{{ item.to }}'
+    src: '{{ item.from }}'
+    state: link
+    force: yes
   loop:
     - { from: '/etc/slurm',     to: '/etc/slurm-llnl' }
     - { from: '/var/lib/slurm', to: '/var/lib/slurm-llnl' }
@@ -74,9 +74,9 @@
   tags:
     - slurm
   template:
-    src=copr-slurm.repo.j2
-    dest='/etc/yum.repos.d/copr-slurm.repo'
-    mode=0444
+    src: copr-slurm.repo.j2
+    dest: '/etc/yum.repos.d/copr-slurm.repo'
+    mode: 0444
   when: is_rhel_compatible
 
 
@@ -117,8 +117,8 @@
 
 - name: Enable SELinux (RHEL-family)
   selinux:
-    policy=targeted
-    state=enforcing
+    policy: targeted
+    state: enforcing
   when: 'is_rhel_compatible'
 
 - name: Restore SELinux labels on `/` (RHEL-family)
