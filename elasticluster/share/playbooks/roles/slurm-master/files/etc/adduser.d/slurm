@@ -1,0 +1,51 @@
+#! /bin/sh
+#
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+
+### Allow user to submit jobs to SLURM.
+
+## defaults
+
+# ElastiCluster's default setup is to collect all users under a single
+# `root` account. This can in principle be changed by modifying the
+# `slurm_account` parameter below, but you need to ensure that the
+# account used exists and has permissions to submit to all partitions.
+slurm_account='root'
+
+
+## exit codes (from `/usr/include/sysexits.h`)
+EX_OK=0
+EX_USAGE=64
+EX_OSFILE=72
+
+
+## parse command-line
+username="$1"
+if [ -z "$username" ]; then
+    echo "$0: missing mandatory 'username' argument" 1>&2
+    exit $EX_USAGE
+fi
+
+
+## environment checks
+if ! command -v sacctmgr >/dev/null; then
+    echo "$0: cannot run the 'sacctmgr' command" 1>&2
+    exit $EX_OSFILE
+fi
+
+
+## add user to SLURM's "root" account
+if ! (sacctmgr --immediate --parsable --noheader \
+               list user Account="$slurm_account" \
+          | grep "^${username}|")
+then
+    exec sacctmgr --immediate \
+             add user "${username}" DefaultAccount="$slurm_account"
+else
+    # user already exists in SLURM DB, nothing to do
+    exit $EX_OK
+fi

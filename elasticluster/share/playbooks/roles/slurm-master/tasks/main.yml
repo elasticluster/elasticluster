@@ -32,6 +32,21 @@
       || sacctmgr --immediate --quiet add user '{{item}}' DefaultAccount=root
   loop: '{{slurm_cluster_users}}'
 
+- name: Deploy user add/delete scripts
+  tags:
+    - slurm
+    - multiuser
+  copy:
+    dest: '/etc/{{item}}.d/slurm'
+    src:  'etc/{{item}}.d/slurm'
+    owner: root
+    group: root
+    mode: 0555
+  loop:
+    - adduser
+    - deluser
+  when: 'is_debian_compatible and multiuser_cluster|default("true")|bool'
+
 - name: Ensure `slurmctld` is running
   tags:
     - slurm
