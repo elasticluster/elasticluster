@@ -55,4 +55,4 @@
   loop:
     - adduser
     - deluser
-  when: is_debian_compatible
+  when: 'is_debian_compatible and multiuser_cluster|default("true")|bool'

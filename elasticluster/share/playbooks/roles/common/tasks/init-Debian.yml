@@ -122,6 +122,7 @@
   loop:
     - adduser
     - deluser
+  when: 'multiuser_cluster|default("true")|bool'
 
 - name: Allow other playbooks to deploy their own add/remove user scripts (II)
   copy:
@@ -133,3 +134,4 @@
   loop:
     - adduser
     - deluser
+  when: 'multiuser_cluster|default("true")|bool'
