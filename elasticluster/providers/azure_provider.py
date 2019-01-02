@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-#
 #
-# Copyright (C) 2018 University of Zurich. All rights reserved.
+# Copyright (C) 2018-2019 University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -266,7 +266,7 @@ class AzureCloudProvider(AbstractCloudProvider):
 
         # the `instance_id` is a composite type since we need both the
         # resource group name and the vm name to uniquely identify a VM
-        return (cluster_name, node_name)
+        return [cluster_name, node_name]
 
     @staticmethod
     def _split_image_id(image_id):
