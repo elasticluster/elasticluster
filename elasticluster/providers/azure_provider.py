@@ -89,11 +89,17 @@ from elasticluster.exceptions import (
 _VM_TEMPLATE = json.loads(resource_string(
     'elasticluster', 'share/etc/azure_vm_template.json'))
 """
-Template description for starting a new VM.
+Resource Manager template for starting a new VM.
 
 Initially taken from:
 https://github.com/Azure-Samples/resource-manager-python-template-deployment/blob/master/templates/template.json
 Copyright (c) 2015 Microsoft Corporation
+"""
+
+_NET_TEMPLATE = json.loads(resource_string(
+    'elasticluster', 'share/etc/azure_net_template.json'))
+"""
+Resource Manager template for creating a new network.
 """
 
 
@@ -127,6 +133,7 @@ class AzureCloudProvider(AbstractCloudProvider):
         self._inventory = {}
         self._vm_details = {}
         self._resource_groups_created = set()
+        self._networks_created = set()
 
 
     def to_vars_dict(self):
@@ -234,7 +241,27 @@ class AzureCloudProvider(AbstractCloudProvider):
         if not security_group:
             security_group = (cluster_name + '-secgroup')
 
-        parameters = {
+        net_parameters = {
+            'networkSecurityGroupName': {
+                'value': security_group,
+            },
+            'subnetName':     { 'value': cluster_name },
+        }
+        net_name = net_parameters['subnetName']['value']
+        with self.__lock:
+            if net_name not in self._networks_created:
+                log.debug(
+                    "Creating network `%s` in Azure ...", net_name)
+                oper = self._resource_client.deployments.create_or_update(
+                    cluster_name, net_name, {
+                        'mode':       DeploymentMode.incremental,
+                        'template':   _NET_TEMPLATE,
+                        'parameters': net_parameters,
+                    })
+                oper.wait()
+                self._networks_created.add(net_name)
+
+        vm_parameters = {
             'adminUserName':  { 'value': username },
             'imagePublisher': { 'value': image_publisher },  # e.g., 'canonical'
             'imageOffer':     { 'value': image_offer },      # e.g., ubuntuserver
@@ -252,15 +279,14 @@ class AzureCloudProvider(AbstractCloudProvider):
             'vmName':         { 'value': node_name },
             'vmSize':         { 'value': flavor },
         }
-
         log.debug(
             "Deploying `%s` VM template to Azure ...",
-            parameters['vmName']['value'])
+            vm_parameters['vmName']['value'])
         oper = self._resource_client.deployments.create_or_update(
             cluster_name, node_name, {
                 'mode':       DeploymentMode.incremental,
                 'template':   _VM_TEMPLATE,
-                'parameters': parameters,
+                'parameters': vm_parameters,
             })
         oper.wait()
 
