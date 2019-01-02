@@ -43,7 +43,7 @@
         - slurm-llnl-sview
         - slurm-llnl-torque
     - service:
-        name: {{item}}
+        name: '{{item}}'
         enabled: no
         state: stopped
       loop:
@@ -74,7 +74,7 @@
 
 - name: Stop SLURM services (RHEL/CentOS 7.x)
   service:
-    name: {{item}}
+    name: '{{item}}'
     enabled: no
     state: stopped
   loop:
