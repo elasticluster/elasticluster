@@ -1,0 +1,11 @@
+---
+
+docker_apt_release_channel: 'stable'
+
+# The URL of the apt repository.
+docker_apt_repository: 'deb https://download.docker.com/linux/{{ ansible_distribution|lower }} {{ ansible_distribution_release }} {{ docker_apt_release_channel }}'
+
+# List of users that we want to add to the `docker` group.
+# We add at least the user running ansible and the current username (they may be different)
+docker_group_members:
+  - '{{ansible_user}}'
