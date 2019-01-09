@@ -6,9 +6,8 @@
 # 2) ca-certificates, a bundle of common certificate authorities' certificates
 - name: 'install docker dependencies'
   apt:
-  name: ['apt-transport-https', 'ca-certificates']
-  state: 'present'
-
+    name: ['apt-transport-https', 'ca-certificates']
+    state: 'present'
 
 # We must inform apt about the docker public key
 - name: 'add docker key'
