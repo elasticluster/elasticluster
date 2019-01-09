@@ -1,0 +1,9 @@
+{
+  "experimental": true,
+  "icc": false,
+  "max-concurrent-downloads": 30,
+  "max-concurrent-uploads": 30,
+  "metrics-addr": "0.0.0.0:9102",
+  "storage-driver": "overlay2",
+  "userland-proxy": false
+}
