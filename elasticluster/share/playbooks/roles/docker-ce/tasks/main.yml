@@ -6,15 +6,11 @@
 # 2) ca-certificates, a bundle of common certificate authorities' certificates
 - name: 'install docker dependencies'
   apt:
-    name: '{{ item }}'
-    state: 'present'
-  with_items:
-    - 'apt-transport-https'
-    - 'ca-certificates'
-  loop: '{{groups.docker_node}}'
+  name: ['apt-transport-https', 'ca-certificates']
+  state: 'present'
 
 
-# We must inform apt about the docker public key.
+# We must inform apt about the docker public key
 - name: 'add docker key'
   apt_key:
     url: 'https://download.docker.com/linux/ubuntu/gpg'
@@ -22,15 +18,9 @@
     state: 'present'
   register: 'add_repository_key'
   ignore_errors: true
-  loop: '{{groups.docker_node}}'
 
 
-# Add the official docker apt repository so that `apt`
-# can list packages from it and then fetch them from
-# there.
-# With `update_cache` we force an `apt update` which
-# would essentially be the equivalent of updating the
-# list of packages from a list of source repositories.
+# Add the official docker apt repository
 - name: 'add Docker repository'
   apt_repository:
     repo: '{{ docker_apt_repository }}'
@@ -43,7 +33,6 @@
   apt:
     name: 'docker-ce'
     state: 'present'
-  loop: '{{groups.docker_node}}'
 
 
 # Enable docker as service by default
@@ -52,7 +41,6 @@
     name: 'docker'
     state: 'started'
     enabled: 'yes'
-  loop: '{{groups.docker_node}}'
 
 
 # Configure the docker daemon via the configuration
@@ -61,7 +49,6 @@
   copy:
     src: 'daemon.json'
     dest: '/etc/docker/daemon.json'
-  loop: '{{groups.docker_node}}'
 
 # Prune dangling containers by setting a cron job to clean thing ups
 - name: 'set periodic docker system prune'
@@ -70,7 +57,6 @@
     minute: '0'
     hour: '*/2'
     job: 'docker container prune -f'
-  loop: '{{groups.docker_node}}'
 
 
 # Add unprivileged users to the `docker` group
@@ -81,5 +67,4 @@
     append: 'yes'
   with_items: '{{ docker_group_members }}'
   when: 'docker_group_members is defined'
-  loop: '{{groups.docker_node}}'
 
