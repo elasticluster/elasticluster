@@ -1,0 +1,7 @@
+---
+- name: Docker Playbook
+  hosts: docker_node
+  tags:
+    - docker
+  roles:
+    - role: 'docker-ce'
