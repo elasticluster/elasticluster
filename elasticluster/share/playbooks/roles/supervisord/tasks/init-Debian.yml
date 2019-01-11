@@ -1,0 +1,11 @@
+---
+#
+# Debian/Ubuntu-specific parameters
+#
+
+- name: Load Debian/Ubuntu-specific parameters
+  set_fact:
+    # how additional configs should be named,
+    # according to the default distro config
+    supervisor_conf_dir: '/etc/supervisor/conf.d'
+    supervisor_conf_suffix: '.conf'
