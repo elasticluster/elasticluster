@@ -1,0 +1,23 @@
+---
+#
+# Deploy additional configuration snippets
+# and start the associated programs
+#
+
+- name: Deploy additional configuration snippet
+  copy:
+    dest: '{{ supervisor_conf_dir }}/{{ svd_program }}{{ supervisor_conf_suffix }}'
+    content: '{{ svd_config }}'
+    mode: 0444
+  register: '_supervisor_conf_for_{{ svd_program }}'
+
+
+- name: Ensure supervisord re-reads config
+  shell: |
+    supervisorctl reread;
+    supervisorctl update;
+  when: '_supervisor_conf_for_{{ svd_program }} is changed'
+
+
+- name: Ensure program has been started by supervisord
+  command: 'supervisorctl start {{ svd_program }}'

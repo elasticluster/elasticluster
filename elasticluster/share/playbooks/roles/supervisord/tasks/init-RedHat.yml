@@ -1,0 +1,11 @@
+---
+#
+# CentOS/RHEL-specific parameters
+#
+
+- name: Load CentOS/RHEL-specific parameters
+  set_fact:
+    # how additional configs should be named,
+    # according to the default distro config
+    supervisor_conf_dir: '/etc/supervisord.d'
+    supervisor_conf_suffix: '.ini'

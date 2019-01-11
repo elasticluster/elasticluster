@@ -1,0 +1,26 @@
+---
+#
+# Install Supervisor
+#
+
+- name: Load distribution-specific parameters
+  include_tasks: 'init-{{ansible_os_family}}.yml'
+
+
+- name: Install SW dependencies
+  apt:
+    name: 'supervisor'
+    state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
+
+
+- name: Ensure supervisord is running and starts again at boot
+  service:
+    name: supervisor
+    enabled: yes
+    state: started
+
+
+- name: Configure additional programs
+  include: extra.yml
+  when: 'svd_config is defined'

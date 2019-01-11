@@ -1,0 +1,6 @@
+---
+
+- name: supervisor re-read config
+  shell: |
+    supervisorctl reread;
+    supervisorctl update;
