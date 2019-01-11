@@ -30,7 +30,6 @@
   loop:
     - nodejs-legacy
     - npm
-    - supervisor
 
 
 - name: Install JupyterHub
@@ -63,32 +62,35 @@
     creates: /etc/jupyterhub/jupyterhub.key.pem
 
 
-# FIXME: should the following be reworked into an independent `supervisord` role?
 - name: Manage JupyterHub with `supervisord`
-  copy:
-    dest: '/etc/supervisor/conf.d/jupyterhub.conf'
-    src: 'etc/supervisor/conf.d/jupyterhub.conf'
-    mode: 0444
-  register: _deploy_supervisord_conf_for_jupyterhub
+  import_role:
+    name: supervisord
+  vars:
+    svd_program: jupyterhub
+    svd_config: |
+      # THIS FILE IS CONTROLLED BY ELASTICLUSTER
+      # local modifications will be overwritten
+      # the next time `elasticluster setup` is run!
+      #
 
+      # Control (auto)start of JupyterHub through `supervisor` (http://supervisord.org/)
+      #
+      # Initial version taken from:
+      # https://github.com/jupyterhub/jupyterhub-tutorial/blob/master/supervisor/jupyterhub.conf
 
-- name: Ensure supervisord is running and starts again at boot
-  service:
-    name: supervisor
-    enabled: yes
-    state: started
-
-
-- name: Ensure supervisord re-reads config
-  shell: |
-    supervisorctl reread;
-    supervisorctl update;
-  when: _deploy_supervisord_conf_for_jupyterhub is changed
-
-
-- name: Ensure JupyterHub has been started by supervisord
-  command: |
-    supervisorctl start jupyterhub
+      [program:jupyterhub]
+      command=/opt/anaconda3/bin/jupyterhub -f /etc/jupyterhub/jupyterhub_config.py
+      directory=/var/lib/jupyterhub
+      autostart=true
+      autorestart=true
+      startretries=3
+      exitcodes=0,2
+      stopsignal=TERM
+      redirect_stderr=true
+      stdout_logfile=/var/log/jupyterhub.log
+      stdout_logfile_maxbytes=1MB
+      stdout_logfile_backups=10
+      user=root
 
 
 - name: Allow inbound HTTPS connections
