@@ -12,7 +12,7 @@ env:
 
 install:
   - "pip install --upgrade 'setuptools' 'pip>=8.1.2'"
-  - "pip install 'pytest>=2.10' 'pytest-cov' 'mock' 'tox'"
+  - "pip install 'pytest>=2.10' 'pytest-cov<2.6.0' 'mock' 'tox'"
   - "pip install ."
 
 script:
