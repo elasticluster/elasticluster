@@ -1,0 +1,32 @@
+---
+
+- name: Ensure base OS is RHEL/CentOS
+  fail:
+    msg: "PBSPro clusters can only be based on RHEL/CentOS 7"
+  when: 'not is_rhel7_compatible'
+
+
+- name: Download PBSPro binaries
+  get_url:
+    url: 'https://github.com/PBSPro/pbspro/releases/download/v{{ pbspro_version }}/pbspro_{{ pbspro_version }}.centos7.zip'
+    dest: '/var/tmp'
+    validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
+
+
+- name: Unpack PBSPro distribution archive
+  unarchive:
+    src: '/var/tmp/pbspro_{{ pbspro_version }}.centos7.zip'
+    dest: '/root'
+    remote_src: yes
+    exclude: '__MACOSX/*'
+    creates: '/root/pbspro_{{ pbspro_version }}.centos7/LICENSE'
+
+
+- name: Install PBSPro server on the master node
+  include_tasks: 'master.yml'
+  when: "'pbspro_master' in group_names"
+
+
+- name: Install PBSPro on worker nodes
+  include_tasks: 'worker.yml'
+  when: "'pbspro_worker' in group_names"

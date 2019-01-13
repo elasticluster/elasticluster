@@ -1,0 +1,17 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+{% set is_pbspro_master = ('pbspro_master' in group_names)|int -%}
+{% set is_pbspro_worker = ('pbspro_worker' in group_names)|int -%}
+
+PBS_EXEC=/opt/pbs
+PBS_SERVER={{ groups.pbspro_master[0]|default("pbspro") }}
+PBS_START_SERVER={{ is_pbspro_master }}
+PBS_START_SCHED={{ is_pbspro_master }}
+PBS_START_COMM={{ is_pbspro_master }}
+PBS_START_MOM={{ is_pbspro_worker }}
+PBS_HOME=/var/spool/pbs
+PBS_CORE_LIMIT=unlimited
+PBS_SCP=/bin/scp

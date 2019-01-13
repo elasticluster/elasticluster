@@ -52,6 +52,7 @@
 - import_playbook: roles/ipython.yml
 - import_playbook: roles/jenkins.yml
 - import_playbook: roles/kubernetes.yml
+- import_playbook: roles/pbspro.yml
 - import_playbook: roles/slurm.yml
 - import_playbook: roles/torque.yml
 

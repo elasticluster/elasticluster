@@ -1,0 +1,51 @@
+---
+
+- name: PBS master node
+  hosts: pbspro_master
+  vars:
+    pbspro_master_host: '{{ groups.pbspro_master[0] }}'
+  roles:
+    - role: 'nis'
+      NIS_MASTER: '{{ pbspro_master_host }}'
+      when: 'multiuser_cluster|default("true")|bool'
+    - role: nfs-server
+      NFS_EXPORTS:
+      - path: '/home'
+        clients: '{{groups.pbspro_worker}}'
+        options: 'rw,no_root_squash,async'
+    - role: hpc-common
+    - role: pbspro
+
+
+- name: PBS worker nodes
+  hosts: pbspro_worker
+  vars:
+    pbspro_master_host: '{{ groups.pbspro_master[0] }}'
+  roles:
+    - role: 'nis'
+      NIS_MASTER: '{{ pbspro_master_host }}'
+      when: 'multiuser_cluster|default("true")|bool'
+    - role: nfs-client
+      NFS_MOUNTS:
+      - fs: '{{ pbspro_master_host }}:/home'
+        mountpoint: '/home'
+        options: 'rw,async'
+    - role: hpc-common
+    - role: pbspro
+
+
+- name: PBS client nodes
+  hosts: pbspro_client
+  vars:
+    pbspro_master_host: '{{ groups.pbspro_master[0] }}'
+  roles:
+    - role: 'nis'
+      NIS_MASTER: '{{ pbspro_master_host }}'
+      when: 'multiuser_cluster|default("true")|bool'
+    - role: nfs-client
+      NFS_MOUNTS:
+      - fs: '{{ pbspro_master_host }}:/home'
+        mountpoint: '/home'
+        options: 'rw,async'
+    - role: hpc-common
+    - role: pbspro

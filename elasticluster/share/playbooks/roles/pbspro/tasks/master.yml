@@ -1,0 +1,80 @@
+---
+
+- name: Ensure configuration directories exist
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: root
+    group: root
+  loop:
+    - /etc
+    - /var
+    - /var/spool
+    - /var/spool/pbs
+
+
+- name: Deploy PBSPro configuration files
+  template:
+    src: '{{ item }}.j2'
+    dest: '/{{ item }}'
+    mode: 0444
+    owner: root
+    group: root
+  register: _pbspro_master_deploy_conf
+  loop:
+    - var/spool/pbs/qmgr.bootstrap
+    - etc/pbs.conf
+
+
+- name: Install prerequisites
+  yum:
+    pkg: '{{ item }}'
+    state: present
+  loop:
+    # deps, according to https://github.com/PBSPro/pbspro/blob/master/INSTALL
+    - expat
+    - libedit
+    - libical
+    - postgresql-contrib
+    - postgresql-server  # FIXME: use available `postgres` role?
+    - python
+    - sendmail
+    - sudo
+    - tcl
+    - tk
+    # server RPM deps
+    - compat-libical1
+    - hwloc-libs
+    - libICE
+    - libSM
+    - perl
+    - perl-Env
+    - perl-Switch
+
+
+- name: Install PBSPro server packages
+  shell: |
+    env PBS_SERVER='{{ pbspro_master_host }}' rpm -iv pbspro-server-{{ pbspro_version }}-*.rpm
+  args:
+    chdir: '/root/pbspro_{{ pbspro_version }}.centos7'
+    creates: '/opt/pbs/sbin/pbs_server'
+  register: _pbspro_master_install_pkg
+
+
+# - name: Run PBSPro post-configuration script
+#   command: |
+#     /opt/pbs/libexec/pbs_habitat
+#   when: '(_pbspro_master_deploy_conf is changed) or (_pbspro_master_install_pkg is changed)'
+
+- name: Ensure PBS services are running
+  service:
+    name: 'pbs'
+    state: started
+    enabled: yes
+
+
+- name: Load default configuration into server
+  shell: |
+    /opt/pbs/bin/qmgr '{{ pbspro_master_host }}' < /var/spool/pbs/qmgr.bootstrap
+  args:
+    creates: /var/spool/pbs/server_priv/queues/default

@@ -536,6 +536,67 @@ SSH into the cluster and execute 'sudo kubectl --kubeconfig
 /etc/kubernetes/admin.conf get nodes' to view the cluster.
 
 
+PBSPro
+------
+
+Supported on:
+
+* CentOS 7.x
+
++-------------------+----------------------------------+
+| ansible groups    | role                             |
++===================+==================================+
+|``pbspro_master``  | Act as scheduler, submission and |
+|                   | communication host.              |
++-------------------+----------------------------------+
+|``pbspro_worker``  | Act as execution host only.      |
++-------------------+----------------------------------+
+
+This playbook will install the `PBSPro`_ workload manager and job
+scheduler using the `packages released on GitHub`__.
+
+.. __: https://github.com/PBSPro/pbspro/releases/
+
+The PBSPro server will be configured with a single queue, named
+``workq``; all worker nodes will belong to this queue.  The only
+deviation from the stock configuration of the PBSPro server is that
+job history is enabled.
+
+The ``/home`` filesystem is exported *from* the ``pbspro_master`` node
+to the ``pbspro_worker`` nodes.
+
+A *snippet* of a typical configuration for a PBSPro cluster is::
+
+    [cluster/pbspro]
+    setup=pbspro
+    frontend_nodes=1
+    compute_nodes=4
+    # ...
+
+    [setup/pbspro]
+    frontend_groups=pbspro_master
+    compute_groups=pbspro_worker
+    # ...
+
+
+The installed version can be controlled by editing the `setup/` section:
+
+.. list-table:: PBSPro settings
+   :widths: 30 20 50
+   :header-rows: 1
+
+   * - Variable
+     - Default value
+     - Description
+   * - ``pbspro_version``
+     - 18.1.3
+     - What release of PBSPro to install.  Must match the numeric part
+       of a `release tag on GitHub`__.
+
+       .. __: https://github.com/PBSPro/pbspro/releases/
+
+
+
 TORQUE
 ------
 
