@@ -1,0 +1,19 @@
+---
+
+- name: Deploy PBSPro main configuration file
+  template:
+    src: 'etc/pbs.conf.j2'
+    dest: '/etc/pbs.conf'
+    mode: 0444
+    owner: root
+    group: root
+  register: _pbspro_master_deploy_conf
+
+
+- name: Install PBSPro client packages
+  shell: |
+    env PBS_MASTER='{{ pbspro_master_host }}' rpm -iv pbspro-client-{{ pbspro_version }}-*.rpm
+  args:
+    chdir: '/root'
+    creates: '/opt/pbs/sbin/pbs_server'
+  register: _pbspro_master_install_pkg

@@ -49,6 +49,7 @@
 .. _`mailing-list`: https://groups.google.com/forum/#!forum/elasticluster
 .. _`OpenStack`: http://www.openstack.org/
 .. _`OrangeFS`: http://orangefs.org/
+.. _`PBSPro`: https://www.pbspro.org/
 .. _`pip`: https://pypi.python.org/pypi/pip
 .. _`PyPI`: https://pypi.python.org/pypi
 .. _`python virtualenv`: https://pypi.python.org/pypi/virtualenv

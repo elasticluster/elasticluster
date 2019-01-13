@@ -1,0 +1,13 @@
+#
+# Set server attributes.
+#
+set server scheduling = True
+#set server scheduler_iteration = 30
+set server flatuid = True
+set server job_history_enable = True
+#
+# create worker nodes
+#
+{% for host in groups.pbspro_worker %}
+create node {{ host }}
+{% endfor %}

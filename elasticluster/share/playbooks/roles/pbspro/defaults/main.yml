@@ -1,0 +1,7 @@
+---
+
+# the release of PBSPro to install
+pbspro_version: '18.1.3'
+
+# name of host where the PBSPro server is running
+pbspro_master_host: '{{ groups.pbspro_master[0]|default("master") }}'
