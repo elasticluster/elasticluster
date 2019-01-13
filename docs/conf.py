@@ -102,7 +102,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'elasticluster'
-copyright = u'2013-2015, Services and Support for Science IT, University of Zurich'
+copyright = u'2013-2019, University of Zurich'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
