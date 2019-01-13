@@ -622,19 +622,29 @@ using the packages provided in the EPEL_ repository.
    Due to a change in the licensing policy, the last available version
    in EPEL_ is TORQUE 4.2.10 (released in March 2015) while the latest
    version (as of this writing, April 2018) is 6.1.2; the cluster
-   installed by ElastiClyuster will thus lack recent features.
+   installed by ElastiCluster will thus lack recent features.
 
    For the same licensing reasons, TORQUE is no longer available in
-   recent Debian and Ubuntu distributionsm and hence cannot currently
+   recent Debian and Ubuntu distributions and hence cannot currently
    be installed by ElastiCluster.
 
 The TORQUE server will be configured with a single queue, named
 ``default``; all worker nodes will belong to this queue.
 
+.. note::
+
+   The MAUI scheduler, which has been the only open-source companion
+   scheduler for TORQUE, is no longer supported nor packaged for any
+   modern distribution.  Therefore, TORQUE is installed and configured
+   with the default FIFO scheduler.  This is probably sub-optimal for
+   almost any workload; consider using PBSPro instead, which has a
+   compatible interface and a flexible scheduler.
+
+
 The ``/home`` filesystem is exported *from* the ``torque_master`` node
 to the ``torque_worker`` nodes.
 
-A *snippet* of a typical configuration for a slurm cluster is::
+A *snippet* of a typical configuration for a TORQUE cluster is::
 
     [cluster/torque]
     setup=torque
