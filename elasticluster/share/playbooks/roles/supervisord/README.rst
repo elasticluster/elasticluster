@@ -42,7 +42,7 @@ distribution's default configuration).
 ``svd_config``
   Additional configuration for Supervisor_.  Typically, this should be
   a configuration snippet that configures the program named in
-  ``sv_program`` (see below).  *Note:* this variable should contain
+  ``svd_program`` (see below).  *Note:* this variable should contain
   the *actual configuration text*, not the path to a file name! (See
   the example section below.)
 
