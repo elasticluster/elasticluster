@@ -96,7 +96,7 @@
     - gridengine
     - gridengine-master
   service:
-    name: gridengine-master
+    name: '{{gridengine_master_service}}'
     enabled: yes
     state: started
 
