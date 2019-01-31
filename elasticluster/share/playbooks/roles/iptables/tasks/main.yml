@@ -21,10 +21,10 @@
 
 
 - name: Temporarily disable SELinux (RHEL-family)
-  when: is_rhel_compatible
+  when: 'is_rhel_compatible and ansible_selinux.status == "enabled"'
   selinux:
-    policy=targeted
-    state=permissive
+    policy: targeted
+    state: permissive
 
 
 - name: Install iptables packages
@@ -71,13 +71,13 @@
 
 
 - name: Enable SELinux (RHEL-family)
-  when: is_rhel_compatible
+  when: 'is_rhel_compatible and ansible_selinux.status == "enabled"'
   selinux:
-    policy=targeted
-    state=enforcing
+    policy: targeted
+    state: enforcing
 
 
 - name: Restore SELinux labels on `/` (RHEL-family)
   command: |
     restorecon -r /
-  when: 'is_rhel_compatible'
+  when: 'is_rhel_compatible and ansible_selinux.status == "enabled"'
