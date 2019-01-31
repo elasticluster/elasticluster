@@ -9,7 +9,7 @@
   selinux:
     policy: targeted
     state: permissive
-  when: 'is_rhel_compatible'
+  when: 'is_rhel_compatible and ansible_selinux.status == "enabled"'
 
 
 # need to do this here, as the SLURM packages are not yet installed
@@ -119,9 +119,9 @@
   selinux:
     policy: targeted
     state: enforcing
-  when: 'is_rhel_compatible'
+  when: 'is_rhel_compatible and ansible_selinux.status == "enabled"'
 
 - name: Restore SELinux labels on `/` (RHEL-family)
   command: |
     restorecon -r /
-  when: 'is_rhel_compatible'
+  when: 'is_rhel_compatible and ansible_selinux.status == "enabled"'
