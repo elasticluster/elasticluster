@@ -5,7 +5,7 @@
 
 
 # Otherwise `systemctl mask $someservice` fails on RHEL/CentOS7
-- name: Temporarily disable SELinux (RHEL-family)
+- name: Temporarily put SELinux in "permissive" mode (RHEL-family)
   selinux:
     policy: targeted
     state: permissive
@@ -119,9 +119,9 @@
   selinux:
     policy: targeted
     state: enforcing
-  when: 'is_rhel_compatible and ansible_selinux.status == "enabled"'
+  when: 'is_rhel_compatible and ansible_selinux.status == "enabled" and not disable_selinux|default("no")|bool'
 
 - name: Restore SELinux labels on `/` (RHEL-family)
   command: |
     restorecon -r /
-  when: 'is_rhel_compatible and ansible_selinux.status == "enabled"'
+  when: 'is_rhel_compatible and ansible_selinux.status == "enabled" and not disable_selinux|default("no")|bool'
