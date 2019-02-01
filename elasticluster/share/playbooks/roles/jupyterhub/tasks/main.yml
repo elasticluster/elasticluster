@@ -47,10 +47,30 @@
     - { name: jupyterhub_proxy_auth_token, bytes: 64 }
 
 
+# the following stanzas are needed to determine what exactly is the
+# correct value for Jupyter's `data_files_path` config; Ansible's
+# `with_first_found:` won't help since it's a *lookup* hence local to
+# the machine where Ansible is running...
+- name: Set Jupyter HTML data directory path
+  set_fact:
+    jupyterhub_data_files_path: '/opt/anaconda3/share/jupyterhub'
+- name: Check that Jupyter data files path exists
+  stat:
+    path: '{{ jupyterhub_data_files_path }}'
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
+  register: _jupyterhub_data_files
+- name: Use older Jupyter HTML data directory path
+  set_fact:
+    jupyterhub_data_files_path: '/opt/anaconda3/share/jupyter/hub'
+  when: 'not _jupyterhub_data_files.stat.exists'
+
+
 - name: Deploy configuration file
-  copy:
+  template:
     dest: '/etc/jupyterhub/jupyterhub_config.py'
-    src:  'etc/jupyterhub/jupyterhub_config.py'
+    src:  'etc/jupyterhub/jupyterhub_config.py.j2'
     mode: 0400
 
 
