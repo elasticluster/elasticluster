@@ -49,7 +49,7 @@ c.JupyterHub.cookie_secret = open('/var/lib/jupyterhub/jupyterhub_cookie_secret'
 c.JupyterHub.cookie_secret_file = 'jupyterhub_cookie_secret'
 
 ## The location of jupyterhub data files (e.g. /usr/local/share/jupyter/hub)
-c.JupyterHub.data_files_path = '/opt/anaconda3/share/jupyter/hub'
+c.JupyterHub.data_files_path = '{{ jupyterhub_data_files_path }}'
 
 ## Include any kwargs to pass to the database connection. See
 #  sqlalchemy.create_engine for details.
