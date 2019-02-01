@@ -3,6 +3,11 @@
 # Set up the package manager and its Ansible module for installing packages
 #
 
+- name: Disable SELinux (RHEL-family)
+  include_tasks: selinux.yml
+  when: 'disable_selinux|bool and ansible_selinux.status == "enabled"'
+
+
 - name: Is the EPEL repo already available? (RHEL/CentOS)
   stat:
     path='/etc/yum.repos.d/epel.repo'

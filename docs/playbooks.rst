@@ -59,6 +59,17 @@ Variable name                      Default             Description
 ``allow_reboot``                   no                  Allow rebooting nodes if needed.  Be careful
                                                        if this is set when resizing clusters, as you
                                                        may lose running jobs.
+``disable_selinux``                no                  If ``yes``, then SELinux is disabled at the
+                                                       beginning of the "setup" phase on all nodes
+                                                       of the cluster. Note that disabling SELinux
+                                                       may require a reboot; so, if ``allow_reboot``
+                                                       (see above) is ``yes``, ElastiCluster will
+                                                       reboot cluster nodes if needed while setting the
+                                                       cluster up, if ``allow_reboot`` is ``no`` (default)
+                                                       then the node will only be configured to disable
+                                                       SELinux after the next reboot but the "setup"
+                                                       phase will run with SELinux enabled.
+                                                       (Applies to RHEL/CentOS hosts only)
 ``insecure_https_downloads``       no                  If ``no`` (default), require that web sites, from
                                                        where software is downloaded, present a valid
                                                        SSL/TLS certificate.  However, it may happen

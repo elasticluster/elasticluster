@@ -20,8 +20,8 @@
   tags: iptables
 
 
-- name: Temporarily disable SELinux (RHEL-family)
-  when: 'is_rhel_compatible and ansible_selinux.status == "enabled"'
+- name: Temporarily put SELinux in "permissive" mode (RHEL-family)
+  when: 'is_rhel_compatible and ansible_selinux.status == "enabled" and not disable_selinux|default("no")|bool'
   selinux:
     policy: targeted
     state: permissive
@@ -71,7 +71,7 @@
 
 
 - name: Enable SELinux (RHEL-family)
-  when: 'is_rhel_compatible and ansible_selinux.status == "enabled"'
+  when: 'is_rhel_compatible and ansible_selinux.status == "enabled" and not disable_selinux|default("no")|bool'
   selinux:
     policy: targeted
     state: enforcing
@@ -80,4 +80,4 @@
 - name: Restore SELinux labels on `/` (RHEL-family)
   command: |
     restorecon -r /
-  when: 'is_rhel_compatible and ansible_selinux.status == "enabled"'
+  when: 'is_rhel_compatible and ansible_selinux.status == "enabled" and not disable_selinux|default("no")|bool'

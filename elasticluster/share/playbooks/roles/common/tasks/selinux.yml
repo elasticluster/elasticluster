@@ -1,0 +1,40 @@
+---
+#
+# Disable SELinux on RHEL/CentOS hosts
+#
+
+- name: Disable SELinux on next reboot
+  replace:
+    path: '/etc/selinux/config'
+    regexp: '^ *SELINUX=.*'
+    replace: 'SELINUX=disabled'
+    backup: yes
+
+- name: Disable SELinux now
+  selinux:
+    state: disabled
+  register: '_selinux_disable_now'
+
+- name: Reboot to disable SELinux
+  # the initial `sleep` command is there to give time to Ansible to
+  # background the task and disconnect; otherwise the SSH connection
+  # is torn by the reboot and Ansible marks the host as "unreachable"
+  shell: |
+    sleep 3;
+    /sbin/shutdown -r now "Rebooting to disable SELinux ...";
+  async: 1
+  poll: 0
+  register: _selinux_disable_reboot
+  when: 'allow_reboot|default(false) and _selinux_disable_now.reboot_required'
+
+
+- name: Wait for server to come up again
+  become: no
+  wait_for:
+    host: "{{ ansible_host }}"
+    search_regex: 'OpenSSH'
+    port: 22
+    delay: 10
+    timeout: 300
+  delegate_to: localhost
+  when: 'not _selinux_disable_reboot|skipped'
