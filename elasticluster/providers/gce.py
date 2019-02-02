@@ -503,6 +503,60 @@ class GoogleCloudProvider(AbstractCloudProvider):
             log.error("Error creating instance `%s`" % e)
             raise InstanceError("Error creating instance `%s`" % e)
 
+    def pause_instance(self, instance_id):
+        """Pauses the instance, retaining disk and config.
+
+        :param str instance_id: instance identifier
+        :raises: `InstanceError` if instance cannot be paused
+
+        :return: dict - information needed to restart instance.
+        """
+
+        if not instance_id:
+            log.info("Instance to pause has no instance id.")
+            return
+
+        gce = self._connect()
+
+        try:
+            request = gce.instances().stop(project=self._project_id,
+                                           instance=instance_id,
+                                           zone=self._zone)
+            operation = self._execute_request(request)
+            response = self._wait_until_done(operation)
+            self._check_response(response)
+            return {"instance_id": instance_id}
+        except HttpError as e:
+            log.error("Error stopping instance: `%s", e)
+            raise InstanceError("Error stopping instance `%s`", e)
+
+    def resume_instance(self, paused_info):
+        """Restarts a paused instance, retaining disk and config.
+
+        :param str instance_id: instance identifier
+        :raises: `InstanceError` if instance cannot be resumed.
+
+        :return: dict - information needed to restart instance.
+        """
+
+        if not paused_info.get("instance_id"):
+            log.info("Instance to stop has no instance id.")
+            return
+
+        gce = self._connect()
+
+        try:
+            request = gce.instances().start(project=self._project_id,
+                                            instance=paused_info["instance_id"],
+                                            zone=self._zone)
+            operation = self._execute_request(request)
+            response = self._wait_until_done(operation)
+            self._check_response(response)
+            return
+        except HttpError as e:
+            log.error("Error restarting instance: `%s", e)
+            raise InstanceError("Error restarting instance `%s`", e)
+
     def stop_instance(self, instance_id):
         """Stops the instance gracefully.
 
@@ -510,8 +564,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :raises: `InstanceError` if instance can not be stopped
         """
         if not instance_id:
-          log.info("Instance to stop has no instance id")
-          return
+            log.info("Instance to stop has no instance id")
+            return
 
         gce = self._connect()
 

@@ -52,6 +52,8 @@ from elasticluster.subcommands import (
     SshFrontend,
     Start,
     Stop,
+    Resume,
+    Pause,
 )
 from elasticluster.conf import Creator
 from elasticluster.exceptions import ConfigurationError
@@ -98,6 +100,8 @@ class ElastiCluster(cli.app.CommandLineApp):
         # subcommands.abstract_command contract
         commands = [Start(self.params),
                     Stop(self.params),
+                    Pause(self.params),
+                    Resume(self.params),
                     ListClusters(self.params),
                     ListNodes(self.params),
                     ListTemplates(self.params),
