@@ -276,6 +276,65 @@ class Stop(AbstractCommand):
         cluster.stop(force=self.params.force, wait=self.params.wait)
 
 
+class Pause(AbstractCommand):
+    """
+    Pause the nodes in the cluster, retaining disks and configuration.
+    """
+
+    def setup(self, subparsers):
+        parser = subparsers.add_parser(
+                "pause", help="Pause a cluster by shutting down existing "
+                "VMs, retaining disks and configuration.")
+        parser.set_defaults(func=self)
+        parser.add_argument('cluster', help='name of the cluster')
+        parser.add_argument('--yes', action="store_true", default=False,
+                            help="Assume `yes` to all queries and "
+                                 "do not prompt.")
+
+    def execute(self):
+        """Pause the cluster if it is running."""
+        cluster_name = self.params.cluster
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
+        try:
+            cluster = creator.load_cluster(cluster_name)
+        except (ClusterNotFound, ConfigurationError) as e:
+            log.error("Cannot load cluster `%s`: %s", cluster_name, e)
+            return os.EX_NOINPUT
+        if not self.params.yes:
+            confirm_or_abort(
+                "Do you want really want to pause cluster `{cluster_name}`?"
+                .format(cluster_name=cluster_name),
+                msg="Aborting upon user request.")
+        print("Pausing cluster `%s` ..." % cluster_name)
+        cluster.pause()
+
+
+class Resume(AbstractCommand):
+    """
+    Pause the nodes in the cluster, retaining disks and configuration.
+    """
+
+    def setup(self, subparsers):
+        parser = subparsers.add_parser(
+                "resume", help="Pause a cluster by shutting down existing "
+                "VMs, retaining disks and configuration.")
+        parser.set_defaults(func=self)
+        parser.add_argument('cluster', help='name of the cluster')
+
+    def execute(self):
+        """Resume the cluster if it is paused."""
+        cluster_name = self.params.cluster
+        creator = make_creator(self.params.config,
+                               storage_path=self.params.storage)
+        try:
+            cluster = creator.load_cluster(cluster_name)
+        except (ClusterNotFound, ConfigurationError) as e:
+            log.error("Cannot load cluster `%s`: %s", cluster_name, e)
+            return os.EX_NOINPUT
+        print("Resuming cluster `%s` ..." % cluster_name)
+        cluster.resume()
+
 class ResizeCluster(AbstractCommand):
     """
     Resize the cluster by adding or removing compute nodes.
@@ -686,6 +745,8 @@ class _SshCommand(AbstractCommand):
         # XXX: the default value of `self.params.ssh_to` should = the
         # default value for `ssh_to` in `Cluster.get_ssh_to_node()`
         frontend = cluster.get_ssh_to_node(self.params.ssh_to)
+        log.debug("Updating the ip addresses of `%s`.", frontend.name)
+        frontend.update_ips()
 
         # ensure we can connect to the host
         try:
