@@ -8,7 +8,3 @@
   become: yes
   roles:
     - role: nfs-server
-      NFS_EXPORTS:
-        - path: '/data'
-          clients: 'localhost'
-          options: 'rw,no_root_squash,async,no_subtree_check,crossmnt'
