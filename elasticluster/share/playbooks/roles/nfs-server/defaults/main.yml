@@ -1,6 +1,6 @@
 ---
 
 NFS_EXPORTS:
-  - path: '/home'
-    clients: 'localhost'
-    options: 'rw,no_root_squash'
+  - path: '/data'
+    clients: '{{ nfs_clients|default(groups.all)|list }}'
+    options: 'rw,no_root_squash,async,no_subtree_check,crossmnt'
