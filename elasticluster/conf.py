@@ -402,6 +402,9 @@ def _read_config_files(paths):
     """
     # read given config files
     configparser = SafeConfigParser()
+    # Preventing automatic lowercase of config keys
+    # see: https://stackoverflow.com/questions/19359556/configparser-reads-capital-keys-and-make-them-lower-case
+    configparser.optionxform = str
     configparser.read(paths)
     # temporarily modify environment to allow both `${...}` and `%(...)s`
     # variable substitution in config values
