@@ -779,6 +779,12 @@ class Cluster(Struct):
                     "restarted.  Check error messages above and consider "
                     "re-running `elasticluster resume %s` if "
                     "necessary.", self.name)
+            return
+        self._run_resume_provisioner()
+        if not self._setup_provider.resume_cluster(self):
+            log.warning("Elasticluster was not able to guarantee that the "
+                        "cluster restarted correctly - check the errors "
+                        "above and check your config.")
 
     def _delete_saved_data(self):
         self._setup_provider.cleanup(self)
@@ -861,6 +867,9 @@ class Cluster(Struct):
         for node_name in successfully_resumed:
             del self.paused_nodes[node_name]
         return len(self.paused_nodes)
+
+    def _run_resume_provisioner(self):
+        pass
 
     def get_ssh_to_node(self, ssh_to=None):
         """
