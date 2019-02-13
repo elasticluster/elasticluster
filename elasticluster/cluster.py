@@ -780,7 +780,6 @@ class Cluster(Struct):
                     "re-running `elasticluster resume %s` if "
                     "necessary.", self.name)
             return
-        self._run_resume_provisioner()
         if not self._setup_provider.resume_cluster(self):
             log.warning("Elasticluster was not able to guarantee that the "
                         "cluster restarted correctly - check the errors "
@@ -825,51 +824,79 @@ class Cluster(Struct):
                     node.name, node.instance_id, err, err.__class__)
         return failed
 
-    def _pause_all_nodes(self):
+    def _pause_all_nodes(self, max_thread_pool_size=0):
         """Pause all cluster nodes - ensure that we store data so that in
         the future the nodes can be restarted.
 
         :return: int - number of failures.
         """
         failed = 0
-        for node in self.get_all_nodes():
+
+        try:
+            if max_thread_pool_size == 0:
+                max_thread_pool_size = 4 * get_num_processors()
+        except RuntimeError:
+            log.warning(
+                "Cannot determine number of processors!"
+                " will start nodes sequentially...")
+            max_thread_pool_size = 1
+
+        def _pause_specific_node(node):
             if not node.instance_id:
                 log.warning("Node `%s` has no instance id."
                             " It is either already stopped, or"
                             " never created properly.  Not attempting"
                             " to stop it again.", node.name)
-                continue
+                return None
             try:
-                self.paused_nodes[node.name] = node.pause()
-            except InstanceNotFoundError as e:
-                log.info("Node `%s` could not be found - assuming that "
-                         "it no longer exists and removing it from cluster "
-                         "`%s`.", node.name, self.name)
-                self.nodes[node.kind].remove(node)
+                return node.pause()
             except Exception as err:
-                failed += 1
                 log.error(
                     "Could not stop node `%s` (instance ID `%s`): %s %s",
                     node.name, node.instance_id, err, err.__class__)
                 node.update_ips()
+                return None
+
+        nodes = self.get_all_nodes()
+        thread_pool_size = min(len(nodes), max_thread_pool_size)
+        thread_pool = Pool(processes=thread_pool_size)
+        for node, state in zip(nodes, thread_pool.map(_pause_specific_node, nodes)):
+            if state is None:
+                failed += 1
+            else:
+                self.paused_nodes[node.name] = state
+
         return failed
 
-    def _resume_all_nodes(self):
-        successfully_resumed = []
-        for node_name, node_state in self.paused_nodes.iteritems():
+    def _resume_all_nodes(self, max_thread_pool_size=0):
+        if not self.paused_nodes:
+            log.warning("Didn't find any paused nodes - not resuming anything.")
+            return
+        try:
+            if max_thread_pool_size == 0:
+                max_thread_pool_size = 4 * get_num_processors()
+        except RuntimeError:
+            log.warning(
+                "Cannot determine number of processors!"
+                " will start nodes sequentially...")
+            max_thread_pool_size = 1
+        thread_pool_size = min(len(self.paused_nodes), max_thread_pool_size)
+        thread_pool = Pool(processes=thread_pool_size)
+
+        def _resume_single_node(node_name):
+            node_state = self.paused_nodes[node_name]
             try:
                 log.debug("Resuming node `%s`.", node_name)
                 self._cloud_provider.resume_instance(node_state)
                 log.debug("Successfully resumed node `%s`.", node_name)
-                successfully_resumed.append(node_name)
+                return node_name
             except Exception as err:
                 log.error("Could not resume node `%s` - %s.", node_name, err)
-        for node_name in successfully_resumed:
+                return None
+
+        for node_name in thread_pool.map(_resume_single_node, self.paused_nodes):
             del self.paused_nodes[node_name]
         return len(self.paused_nodes)
-
-    def _run_resume_provisioner(self):
-        pass
 
     def get_ssh_to_node(self, ssh_to=None):
         """
