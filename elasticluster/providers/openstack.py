@@ -569,6 +569,12 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         instance.delete()
         del self._instances[instance_id]
 
+    def resume_instance(self, instance_state):
+        raise NotImplementedError("This provider does not support pause / resume logic.")
+
+    def pause_instance(self, instance_id):
+        raise NotImplementedError("This provider does not support pause / resume logic.")
+
     def get_ips(self, instance_id):
         """Retrieves all IP addresses associated to a given instance.
 

@@ -362,6 +362,12 @@ class AzureCloudProvider(AbstractCloudProvider):
                 oper.wait()
                 self._inventory = {}
 
+    def resume_instance(self, instance_state):
+        raise NotImplementedError("This provider does not support pause / resume logic.")
+
+    def pause_instance(self, instance_id):
+        raise NotImplementedError("This provider does not support pause / resume logic.")
+
 
     def get_ips(self, instance_id):
         """
