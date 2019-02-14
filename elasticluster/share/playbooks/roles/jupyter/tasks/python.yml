@@ -39,7 +39,7 @@
         # PostGreSQL
         - libpq-dev
         # MySQL compatible
-        - libmysqlclient-dev
+        - default-libmysqlclient-dev
       RedHat:
         - postgresql-devel
     jupyter_additional_python_packages:
