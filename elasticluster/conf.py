@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013-2016, 2018 University of Zurich.
+# Copyright (C) 2013-2016, 2018, 2019 University of Zurich.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ SCHEMA = {
         'provider': Or('azure', 'ec2_boto', 'google', 'openstack', 'libcloud'),
         # allow other keys w/out restrictions; each cloud provider has its own
         # set of keys, which are handled separately
-        str: str,
+        Optional(str): str,
     },
     'cluster': {
         'cloud': str,
