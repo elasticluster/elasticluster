@@ -3,7 +3,7 @@
 # @(#)openstack.py
 #
 #
-# Copyright (C) 2013, 2015 S3IT, University of Zurich. All rights reserved.
+# Copyright (C) 2013, 2015, 2019 S3IT, University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -129,6 +129,18 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         or `None` (default, meaning try v3 first and fall-back to v2).
     :param cacert: Path to CA certificate bundle (for verifying HTTPS sessions)
         or ``None`` to use the systems' default.
+
+    Parameters *username*, *password*, *user_domain_name*,
+    *project_name*, *project_domain_name*, and *region_name* will be
+    taken from the environment if not provided.  Similarly,
+    environmental variables can be used to set values for the
+    preferred version of identity, compute, image, network, and volume
+    API to use.
+
+    In all these cases, any value explicitly passed to the constructor
+    takes precedence over the corresponding environmental variable,
+    which in turn takes precedence over the default value in the class
+    (if any).
     """
 
     __node_start_lock = threading.Lock()
@@ -136,7 +148,11 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     Lock used for node startup.
     """
 
-    def __init__(self, username, password, project_name, auth_url,
+    def __init__(self,
+                 username=None,
+                 password=None,
+                 project_name=None,
+                 auth_url=None,
                  user_domain_name="default", project_domain_name="default",
                  region_name=None, storage_path=None,
                  request_floating_ip=False,

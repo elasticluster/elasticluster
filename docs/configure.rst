@@ -482,6 +482,14 @@ For Google Compute Engine you can use::
     gce_client_secret=****REPLACE WITH YOUR SECRET KEY****
     gce_project_id=****REPLACE WITH YOUR PROJECT ID****
 
+In order to connect to an OpenStack instance, source the "openrc" file
+(v2 or v3) that you can download from the web interface, and use the
+following simple configuration stanza::
+
+    [cloud/openstack]
+    provider=openstack
+    # any other value is taken from the environment
+
 If you would want to use libcloud to connect to openstack using password authentication
 you can configure the following::
 
