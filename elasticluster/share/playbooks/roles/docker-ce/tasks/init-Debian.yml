@@ -1,0 +1,40 @@
+---
+
+- name: 'Fail if base OS not supported'
+  fail:
+    msg: 'Docker CE installation only supported on Debian 9 or later, and Ubuntu 16.04 or later'
+  when: 'not (is_debian_9_or_later or is_ubuntu_16_04_or_later)'
+
+
+- name: 'Uninstall old versions'
+  apt:
+    name: ['docker', 'docker-engine', 'docker.io', 'containerd', 'runc']
+    state: absent
+  ignore_errors: yes
+
+
+# Install the following deps:
+# 1) apt-transport-https to enable
+#   TLS in the transport of packages coming
+#   from APT repositories
+# 2) ca-certificates, a bundle of common certificate authorities' certificates
+- name: 'Install Docker CE dependencies'
+  apt:
+    name: ['apt-transport-https', 'ca-certificates']
+    state: '{{ pkg_install_state }}'
+
+
+# Add key, or APT will refuse to install packages from the Docker repo
+- name: 'Add Docker packages signing key'
+  apt_key:
+    url: 'https://download.docker.com/linux/{{ ansible_distribution|lower }}/gpg'
+    id: '9DC858229FC7DD38854AE2D88D81803C0EBFCD88'
+    state: 'present'
+
+
+# Add the official docker apt repository
+- name: 'Add Docker repository to APT sources list'
+  apt_repository:
+    repo: 'deb https://download.docker.com/linux/{{ ansible_distribution|lower }} {{ ansible_distribution_release }} {{ docker_release_channel }}'
+    state: 'present'
+    update_cache: 'yes'

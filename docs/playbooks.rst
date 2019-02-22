@@ -1109,6 +1109,58 @@ Variable name    Default value Description
 The default is to install CUDA tooklit and runtime version 8.0
 
 
+Docker CE
+---------
+
+Supported on:
+
+* Debian 9 ("stretch") and later
+* Ubuntu 16.04 and later
+* RHEL/CentOS 7.x
+
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``docker``      Install `Docker CE`_
+==============  =======================================================
+
+This playbook installs the `Docker CE`_ engine and client.  Using
+customization variables you can choose what update channel to download
+the software from ("stable", "test", or "nightly"), and what users
+should be able to use Docker.
+
+The following variables may be set to alter the role behavior:
+
+.. list-table:: Docker CE role variables in ElastiCluster
+   :widths: 10 15 75
+   :header-rows: 1
+
+   * - Variable
+     - Default value
+     - Description
+   * - ``docker_release_channel``
+     - ``stable``
+     - What release/update channel to download the Docker software
+       from; choose among ``stable``, ``test``, or ``nightly``.  (See
+       `Docker CE`_ about page for an explanation of the different
+       policies in each channel.)
+   * - ``docker_group_members``
+     - ``[]``
+     - List of users that are authorized to call the ``docker``
+       client.  **Note:** the distribution's default user
+       (e.g., user ``ubuntu`` on Ubuntu VMs) is *always* authorized
+       to run ``docker`` by ElastiCluster.
+
+For instance, the following configuration snippet requests that
+ElastiCluster and Ansible install Docker CE on the worker nodes of a
+SLURM cluster::
+
+     [setup/slurm+docker]
+     # ... same as usual SLURM setup, but:
+     master_groups=slurm_master
+     worker_groups=slurm_worker,docker
+
+
 EasyBuild
 ---------
 

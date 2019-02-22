@@ -1,55 +1,39 @@
 ---
-# Install the following deps:
-# 1) apt-transport-https to enable
-#   TLS in the transport of packages coming
-#   from APT repositories
-# 2) ca-certificates, a bundle of common certificate authorities' certificates
-- name: 'install docker dependencies'
+#
+# Install Docker Community Edition
+# See: https://docs.docker.com/install/
+#
+# Initially contributed by Manuele Simi
+#
+
+
+- name: Perform distribution-dependent steps
+  include_tasks: 'init-{{ansible_os_family}}.yml'
+
+
+- name: 'Deploy default Docker daemon configuration'
+  copy:
+    src: 'etc/docker/daemon.json'
+    dest: '/etc/docker/daemon.json'
+
+
+- name: 'Install Docker Community Edition'
   apt:
-    name: ['apt-transport-https', 'ca-certificates']
-    state: 'present'
-
-# We must inform apt about the docker public key
-- name: 'add docker key'
-  apt_key:
-    url: 'https://download.docker.com/linux/ubuntu/gpg'
-    id: '9DC858229FC7DD38854AE2D88D81803C0EBFCD88'
-    state: 'present'
-  register: 'add_repository_key'
-  ignore_errors: true
+    name: ['docker-ce', 'docker-ce-cli']
+    state: '{{ pkg_install_state }}'
 
 
-# Add the official docker apt repository
-- name: 'add Docker repository'
-  apt_repository:
-    repo: '{{ docker_apt_repository }}'
-    state: 'present'
-    update_cache: 'yes'
-
-
-# Install the latest docker CE
-- name: 'install docker Community Edition'
-  apt:
-    name: 'docker-ce'
-    state: 'present'
-
-
-# Enable docker as service by default
-- name: 'enable docker systemd service'
+- name: 'Enable Docker service and ensure it (re)starts at boot'
   service:
     name: 'docker'
     state: 'started'
     enabled: 'yes'
 
 
-# Configure the docker daemon via the configuration
-# file /etc/docker/daemon.json
-- name: 'prepare default daemon configuration'
-  copy:
-    src: 'daemon.json'
-    dest: '/etc/docker/daemon.json'
-
 # Prune dangling containers by setting a cron job to clean thing ups
+#
+# FIXME: we should allow a way to customize cron job schedule
+#
 - name: 'set periodic docker system prune'
   cron:
     name: 'docker-prune'
@@ -58,12 +42,19 @@
     job: 'docker container prune -f'
 
 
-# Add unprivileged users to the `docker` group
-- name: 'add users to docker group'
+
+# always allow default OS user to use `docker`
+- name: 'add default OS user to group `docker`'
+  user:
+    name: '{{ ansible_user }}'
+    groups: 'docker'
+    append: 'yes'
+
+
+# Add more users to the `docker` group
+- name: 'Add users to docker group'
   user:
     name: '{{ item }}'
     groups: 'docker'
     append: 'yes'
-  with_items: '{{ docker_group_members }}'
-  when: 'docker_group_members is defined'
-
+  loop: '{{ docker_group_members }}'
