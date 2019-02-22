@@ -1,0 +1,40 @@
+---
+
+- name: 'Fail if base OS not supported'
+  fail:
+    msg: 'Docker CE installation only supported on RHEL/CentOS 7.x or later'
+  when: 'not is_rhel7_or_later'
+
+
+- name: 'Uninstall old versions'
+  yum:
+    name:
+      - 'docker'
+      - 'docker-client'
+      - 'docker-client-latest'
+      - 'docker-common'
+      - 'docker-latest'
+      - 'docker-latest-logrotate'
+      - 'docker-logrotate'
+      - 'docker-engine'
+    state: absent
+  ignore_errors: yes
+
+
+- name: Download Docker CE repo definition
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
+    force: no
+    backup: yes
+    owner: root
+    group: root
+    mode: 0644
+
+
+- name: Enable Docker CE repo
+  ini_file:
+    dest: /etc/yum.repos.d/docker-ce.repo
+    section: 'docker-ce-{{ docker_release_channel }}'
+    option: enabled
+    value: 1

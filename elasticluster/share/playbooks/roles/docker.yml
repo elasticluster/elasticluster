@@ -1,6 +1,6 @@
 ---
 - name: Docker Playbook
-  hosts: docker_node
+  hosts: docker
   tags:
     - docker
   roles:

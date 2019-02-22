@@ -25,6 +25,7 @@
 .. _`CentOS`: http://www.centos.org/
 .. _`Ceph`: http://ceph.com/
 .. _`Debian GNU/Linux`: http://www.debian.org
+.. _`Docker CE`: https://docs.docker.com/install/
 .. _EasyBuild: http://easybuild.readthedocs.io/
 .. _`elasticluster`: http://gc3-uzh-ch.github.io/elasticluster/
 .. _`EPEL`: https://fedoraproject.org/wiki/EPEL
