@@ -23,6 +23,9 @@
 - name: Handle potential IP changes.
   hosts: all
   tasks:
+    - name: Set up environment
+      include_tasks: roles/common/tasks/pre.yml
+
     - name: Set hostnames.
       include_tasks: roles/common/tasks/hostname.yml
 
@@ -41,7 +44,7 @@
 # additional customization.
 # - import_playbook: roles/gridengine-resume.yml
 # - import_playbook: roles/hadoop-resume.yml
-# 
+#
 # Remaining cluster types may or may not work after resuming.
 #
 # Report success, as all went well!
