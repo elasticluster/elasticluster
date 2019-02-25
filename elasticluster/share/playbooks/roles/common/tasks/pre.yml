@@ -1,0 +1,20 @@
+---
+#
+# A few environment setup tasks that may be needed by any other playbook.
+#
+
+- name: Provide workaround for YAML syntax error in lines containing colon+space
+  set_fact:
+    __colon__: ':'
+  tags:
+    - cloud-init
+
+- name: Allow package updates
+  set_fact:
+    pkg_install_state: 'latest'
+  when: 'upgrade_packages|default(True)|bool'
+
+- name: Disallow package updates
+  set_fact:
+    pkg_install_state: 'present'
+  when: 'not upgrade_packages|default(True)|bool'
