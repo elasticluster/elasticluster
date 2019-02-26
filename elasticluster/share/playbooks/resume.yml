@@ -1,15 +1,4 @@
 ---
-- name: Prepare VM for running Ansible
-  hosts: all
-  gather_facts: no
-  tasks:
-    - name: Ensure Python is installed
-      script: |
-        install-py2.sh {{ ansible_python_interpreter|default("/usr/bin/python") }}
-      args:
-        creates: '{{ ansible_python_interpreter|default("/usr/bin/python") }}'
-      become: yes
-
 # for local customizations
 - import_playbook: before.yml
 
@@ -48,6 +37,9 @@
 # Remaining cluster types may or may not work after resuming.
 #
 # Report success, as all went well!
+
+- import_playbook: after.yml
+
 - name: Report success on cluster creation
   hosts: all
   gather_facts: no
