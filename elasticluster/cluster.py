@@ -775,7 +775,6 @@ class Cluster(Struct):
         if failed:
             log.warning(
                     "Not all cluster nodes have been successfully "
-                    "stopped.  Some nodes may still be running - "
                     "restarted.  Check error messages above and consider "
                     "re-running `elasticluster resume %s` if "
                     "necessary.", self.name)
