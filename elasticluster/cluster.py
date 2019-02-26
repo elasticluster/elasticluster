@@ -823,14 +823,7 @@ class Cluster(Struct):
                     node.name, node.instance_id, err, err.__class__)
         return failed
 
-    def _pause_all_nodes(self, max_thread_pool_size=0):
-        """Pause all cluster nodes - ensure that we store data so that in
-        the future the nodes can be restarted.
-
-        :return: int - number of failures.
-        """
-        failed = 0
-
+    def _make_thread_pool(self, max_thread_pool_size):
         try:
             if max_thread_pool_size == 0:
                 max_thread_pool_size = 4 * get_num_processors()
@@ -839,6 +832,16 @@ class Cluster(Struct):
                 "Cannot determine number of processors!"
                 " will start nodes sequentially...")
             max_thread_pool_size = 1
+        thread_pool_size = min(len(self.get_all_nodes()), max_thread_pool_size)
+        return Pool(processes=thread_pool_size)
+
+    def _pause_all_nodes(self, max_thread_pool_size=0):
+        """Pause all cluster nodes - ensure that we store data so that in
+        the future the nodes can be restarted.
+
+        :return: int - number of failures.
+        """
+        failed = 0
 
         def _pause_specific_node(node):
             if not node.instance_id:
@@ -857,8 +860,7 @@ class Cluster(Struct):
                 return None
 
         nodes = self.get_all_nodes()
-        thread_pool_size = min(len(nodes), max_thread_pool_size)
-        thread_pool = Pool(processes=thread_pool_size)
+        thread_pool = self._make_thread_pool(max_thread_pool_size)
         for node, state in zip(nodes, thread_pool.map(_pause_specific_node, nodes)):
             if state is None:
                 failed += 1
@@ -871,16 +873,7 @@ class Cluster(Struct):
         if not self.paused_nodes:
             log.warning("Didn't find any paused nodes - not resuming anything.")
             return
-        try:
-            if max_thread_pool_size == 0:
-                max_thread_pool_size = 4 * get_num_processors()
-        except RuntimeError:
-            log.warning(
-                "Cannot determine number of processors!"
-                " will start nodes sequentially...")
-            max_thread_pool_size = 1
-        thread_pool_size = min(len(self.paused_nodes), max_thread_pool_size)
-        thread_pool = Pool(processes=thread_pool_size)
+        thread_pool = self._make_thread_pool(max_thread_pool_size)
 
         def _resume_single_node(node_name):
             node_state = self.paused_nodes[node_name]
