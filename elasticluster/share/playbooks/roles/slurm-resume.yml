@@ -5,19 +5,19 @@
   tasks:
     - service:
         name: slurmctld
-        state=restarted
+        state: restarted
       when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
     - service:
-        name=slurmctl-llnl
-        state=restarted
+        name: slurmctl-llnl
+        state: restarted
       when: 'is_debian_compatible and not (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
     - service:
-        name=slurmctld
-        state=restarted
+        name: slurmctld
+        state: restarted
       when: is_rhel7_compatible
     - service:
-        name=slurmctl
-        state=restarted
+        name: slurmctl
+        state: restarted
       when: is_rhel6_compatible
 
 - name: Restart SLURMd
@@ -29,18 +29,18 @@
         state: directory
       when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
     - service:
-        name=slurmd
-        state=restarted
+        name: slurmd
+        state: restarted
       when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
     - service:
-        name=slurm-llnl
-        state=restarted
+        name: slurm-llnl
+        state: restarted
       when: 'is_debian_compatible and not (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
     - service:
-        name=slurmd
-        state=restarted
+        name: slurmd
+        state: restarted
       when: is_rhel7_compatible
     - service:
-        name=slurm
-        state=restarted
+        name: slurm
+        state: restarted
       when: is_rhel6_compatible
