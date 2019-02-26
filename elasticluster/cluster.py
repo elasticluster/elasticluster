@@ -748,7 +748,7 @@ class Cluster(Struct):
         """Pause all VMs in this cluster and store data so that they
         can be restarted later.
         """
-        log.debug("Pausing cluster `%s`", self.name)
+        log.info("Pausing cluster `%s` ...", self.name)
         failed = self._pause_all_nodes()
         if os.path.exists(self.known_hosts_file):
             os.remove(self.known_hosts_file)
@@ -765,7 +765,7 @@ class Cluster(Struct):
         """
         Resume all paused VMs in this cluster.
         """
-        log.debug("Resuming cluster `%s`", self.name)
+        log.info("Resuming cluster `%s` ...", self.name)
         failed = self._resume_all_nodes()
         for node in self.get_all_nodes():
             node.update_ips()
