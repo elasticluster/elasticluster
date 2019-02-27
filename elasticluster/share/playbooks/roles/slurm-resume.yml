@@ -28,9 +28,19 @@
         path: /var/run/slurm-llnl
         state: directory
       when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
-    - service:
+
+    - name: Get running slurm processes
+      shell: "ps -ef | grep -v grep | grep -w slurmd | awk '{print $2}'"
+      register: running_slurm
+      when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
+    - name: Kill running slurm processes
+      shell: "kill -9 {{ item }}"
+      with_items: "{{ running_slurm.stdout_lines }}"
+      when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
+
+    - systemd:
         name: slurmd
-        state: restarted
+        state: started
       when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
     - service:
         name: slurm-llnl
