@@ -4,4 +4,4 @@
   set_fact:
     ntpd_service: ntpd
     ntpd_package: ntp
-  when: '{{is_rhel_compatible}}'
+  when: 'is_rhel_compatible'
