@@ -1322,7 +1322,7 @@ class Node(Struct):
         if self.instance_id is None:
             raise ValueError("Trying to stop unstarted node.")
         resp = self._cloud_provider.pause_instance(self.instance_id)
-        self.update_ips()
+        self.preferred_ip = None
         return resp
 
     def is_alive(self):
