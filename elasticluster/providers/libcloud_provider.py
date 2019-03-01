@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013-2018 S3IT, University of Zurich
+#   Copyright (C) 2013-2019 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -190,10 +190,10 @@ class LibCloudProvider(AbstractCloudProvider):
         instance.destroy()
 
     def resume_instance(self, instance_state):
-        raise NotImplementedError("This provider does not support pause / resume logic.")
+        raise NotImplementedError("This provider does not (yet) support pause / resume logic.")
 
     def pause_instance(self, instance_id):
-        raise NotImplementedError("This provider does not support pause / resume logic.")
+        raise NotImplementedError("This provider does not (yet) support pause / resume logic.")
 
     def get_ips(self, instance_id):
         instance = self.__get_instance(instance_id)
