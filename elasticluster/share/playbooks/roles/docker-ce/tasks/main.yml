@@ -11,6 +11,12 @@
   include_tasks: 'init-{{ansible_os_family}}.yml'
 
 
+- name: 'Create Docker configuration directory'
+  file:
+    dest: '/etc/docker'
+    state: directory
+
+
 - name: 'Deploy default Docker daemon configuration'
   copy:
     src: 'etc/docker/daemon.json'
