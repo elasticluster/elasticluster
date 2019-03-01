@@ -59,6 +59,10 @@
     name: '{{service[item]}}'
     enabled: yes
     state: started
+  # line `ignore_errors:` is here to handle the case in issue #609
+  # when reboots are not allowed yet we want the playbook to continue
+  # despite possibly failing installing ip6tables...
+  ignore_errors: '{{ is_debian_9_or_later and debian_kernel_upgraded }}'
   become: yes
   become_user: root
   loop:
