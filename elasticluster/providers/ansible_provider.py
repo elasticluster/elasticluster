@@ -24,13 +24,10 @@ __author__ = str.join(', ', [
 from collections import defaultdict
 import logging
 import os
-import re
 import tempfile
 import shlex
 import shutil
 from subprocess import call
-import sys
-import re
 from warnings import warn
 
 
@@ -131,6 +128,12 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             raise ConfigurationError(
                 "playbook `{playbook_path}` is not a file"
                 .format(playbook_path=self._playbook_path))
+        potential_resume_playbook = os.path.join(os.path.dirname(self._playbook_path),
+                                                 'resume.yml')
+        if os.path.exists(potential_resume_playbook):
+            self._resume_playbook_path = potential_resume_playbook
+        else:
+            self._resume_playbook_path = None
 
         if self._storage_path:
             self._storage_path = os.path.expanduser(self._storage_path)
@@ -141,7 +144,6 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         else:
             self._storage_path = tempfile.mkdtemp()
             self._storage_path_tmp = True
-
 
     def setup_cluster(self, cluster, extra_args=tuple()):
         """
@@ -164,6 +166,39 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         :raises: `ConfigurationError` if the playbook can not be found
                  or is corrupt.
         """
+        return self._run_playbook(cluster, self._playbook_path, extra_args)
+
+    def resume_cluster(self, cluster, extra_args=tuple()):
+        """
+        As `setup_cluster`, but prefers to run a resume playbook, if
+        one is available.  A resume playbook is a playbook which is
+        designed to restart a cluster after it has been paused, and
+        can be more efficient than a setup playbook (since it can
+        assume that the required software is already installed).
+        If no such playbook is available, it will use the standard
+        setup playbook and print a warning.
+
+        :param cluster: cluster to configure
+        :type cluster: :py:class:`elasticluster.cluster.Cluster`
+
+        :param list extra_args:
+          List of additional command-line arguments
+          that are appended to each invocation of the setup program.
+
+        :return: ``True`` on success, ``False`` otherwise. Please note, if nothing
+                 has to be configured, then ``True`` is returned.
+
+        :raises: `ConfigurationError` if the playbook can not be found
+                 or is corrupt.
+        """
+        if self._resume_playbook_path is not None:
+            return self._run_playbook(cluster, self._resume_playbook_path, extra_args)
+        else:
+            log.warning("No resume playbook is available - falling back to the setup "
+                        "playbook, which could be slow.")
+            return self.setup_cluster(cluster, extra_args)
+
+    def _run_playbook(self, cluster, playbook, extra_args):
         inventory_path = self._build_inventory(cluster)
         if inventory_path is None:
             # no inventory file has been created: this can only happen
@@ -182,7 +217,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 # ... then ElastiCluster's built-in defaults
                 resource_filename('elasticluster', 'share/playbooks'),
                 # ... then wherever the playbook is
-                os.path.dirname(self._playbook_path),
+                os.path.dirname(playbook),
         ]:
             for path in [
                     root_path,
@@ -269,13 +304,13 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 else:
                     elasticluster.log.debug("- %s=%r", var, value)
 
-        elasticluster.log.debug("Using playbook file %s.", self._playbook_path)
+        elasticluster.log.debug("Using playbook file %s.", playbook)
 
         # build `ansible-playbook` command-line
         cmd = shlex.split(self.extra_conf.get('ansible_command', 'ansible-playbook'))
         cmd += [
             ('--private-key=' + cluster.user_key_private),
-            os.path.realpath(self._playbook_path),
+            os.path.realpath(playbook),
             ('--inventory=' + inventory_path),
         ]
 

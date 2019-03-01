@@ -361,6 +361,12 @@ class BotoCloudProvider(AbstractCloudProvider):
         instance.terminate()
         del self._instances[instance_id]
 
+    def resume_instance(self, instance_state):
+        raise NotImplementedError("This provider does not support pause / resume logic.")
+
+    def pause_instance(self, instance_id):
+        raise NotImplementedError("This provider does not support pause / resume logic.")
+
     def get_ips(self, instance_id):
         """Retrieves the private and public ip addresses for a given instance.
 

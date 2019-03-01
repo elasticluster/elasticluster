@@ -1,0 +1,53 @@
+---
+# for local customizations
+- import_playbook: before.yml
+
+# First, perform important setup tasks, like resetting hostnames
+# to the ansible-known inventory names, and pushing up a new
+# and correct /etc/hosts, in the event that either hostname
+# or ip addresses have changed on restart.  These are
+# standard behavior on at least one cloud each, and are
+# idempotent and therefore safe to apply on all clouds.
+
+- name: Handle potential IP changes.
+  hosts: all
+  tasks:
+    - name: Set up environment
+      include_tasks: roles/common/tasks/pre.yml
+
+    - name: Set hostnames.
+      include_tasks: roles/common/tasks/hostname.yml
+
+    - name: Push up hosts files.
+      include_tasks: roles/common/tasks/hosts.yml
+
+# Next, ensure that the services that run this cluster are
+# started.  It's common for a service to fail to restart
+# during machine boot (because, e.g. it cannot contact the
+# master, whose ip address has changed).  Cluster-type
+# specific updates may also be listed in these playbooks.
+
+- import_playbook: roles/slurm-resume.yml
+#
+# These cluster types have been confirmed not to need
+# additional customization.
+# - import_playbook: roles/gridengine-resume.yml
+# - import_playbook: roles/hadoop-resume.yml
+#
+# Remaining cluster types may or may not work after resuming.
+#
+# Report success, as all went well!
+
+- import_playbook: after.yml
+
+- name: Report success on cluster creation
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Mark host as successfully configured
+      shell: |
+        echo 'done' > '{{ elasticluster.output_dir }}/{{ inventory_hostname }}.log'
+      delegate_to: 'localhost'
+      # this is necessary as we might not have/want superuser rights
+      # where ElastiCluster is running
+      become: no

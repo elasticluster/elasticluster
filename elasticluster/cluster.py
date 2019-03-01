@@ -170,6 +170,10 @@ class Cluster(Struct):
                     assert 'name' in node
                     self.add_node(**node)
             del extra['nodes']
+        if 'paused_nodes' in extra:
+            self.paused_nodes = dict(extra['paused_nodes'])
+        else:
+            self.paused_nodes = {}
 
         self.extra = {}
         # FIXME: ugly fix needed when saving and loading the same
@@ -740,6 +744,46 @@ class Cluster(Struct):
         else:
             self._delete_saved_data()
 
+    def pause(self):
+        """Pause all VMs in this cluster and store data so that they
+        can be restarted later.
+        """
+        log.info("Pausing cluster `%s` ...", self.name)
+        failed = self._pause_all_nodes()
+        if os.path.exists(self.known_hosts_file):
+            os.remove(self.known_hosts_file)
+        self.repository.save_or_update(self)
+        if failed:
+            log.warning(
+                    "Not all cluster nodes have been successfully "
+                    "stopped.  Some nodes may still be running - "
+                    "check error messages above and consider "
+                    "re-running `elasticluster pause %s` if "
+                    "necessary.", self.name)
+
+    def resume(self):
+        """
+        Resume all paused VMs in this cluster.
+        """
+        log.info("Resuming cluster `%s` ...", self.name)
+        failed = self._resume_all_nodes()
+        for node in self.get_all_nodes():
+            node.update_ips()
+        self._gather_node_ip_addresses(
+            self.get_all_nodes(), self.start_timeout, self.ssh_probe_timeout)
+        self.repository.save_or_update(self)
+        if failed:
+            log.warning(
+                    "Not all cluster nodes have been successfully "
+                    "restarted.  Check error messages above and consider "
+                    "re-running `elasticluster resume %s` if "
+                    "necessary.", self.name)
+            return
+        if not self._setup_provider.resume_cluster(self):
+            log.warning("Elasticluster was not able to guarantee that the "
+                        "cluster restarted correctly - check the errors "
+                        "above and check your config.")
+
     def _delete_saved_data(self):
         self._setup_provider.cleanup(self)
         self.repository.delete(self)
@@ -779,6 +823,72 @@ class Cluster(Struct):
                     node.name, node.instance_id, err, err.__class__)
         return failed
 
+    def _make_thread_pool(self, max_thread_pool_size):
+        try:
+            if max_thread_pool_size == 0:
+                max_thread_pool_size = 4 * get_num_processors()
+        except RuntimeError:
+            log.warning(
+                "Cannot determine number of processors!"
+                " will start nodes sequentially...")
+            max_thread_pool_size = 1
+        thread_pool_size = min(len(self.get_all_nodes()), max_thread_pool_size)
+        return Pool(processes=thread_pool_size)
+
+    def _pause_all_nodes(self, max_thread_pool_size=0):
+        """Pause all cluster nodes - ensure that we store data so that in
+        the future the nodes can be restarted.
+
+        :return: int - number of failures.
+        """
+        failed = 0
+
+        def _pause_specific_node(node):
+            if not node.instance_id:
+                log.warning("Node `%s` has no instance id."
+                            " It is either already stopped, or"
+                            " never created properly.  Not attempting"
+                            " to stop it again.", node.name)
+                return None
+            try:
+                return node.pause()
+            except Exception as err:
+                log.error(
+                    "Could not stop node `%s` (instance ID `%s`): %s %s",
+                    node.name, node.instance_id, err, err.__class__)
+                node.update_ips()
+                return None
+
+        nodes = self.get_all_nodes()
+        thread_pool = self._make_thread_pool(max_thread_pool_size)
+        for node, state in zip(nodes, thread_pool.map(_pause_specific_node, nodes)):
+            if state is None:
+                failed += 1
+            else:
+                self.paused_nodes[node.name] = state
+
+        return failed
+
+    def _resume_all_nodes(self, max_thread_pool_size=0):
+        if not self.paused_nodes:
+            log.warning("Didn't find any paused nodes - not resuming anything.")
+            return
+        thread_pool = self._make_thread_pool(max_thread_pool_size)
+
+        def _resume_single_node(node_name):
+            node_state = self.paused_nodes[node_name]
+            try:
+                log.debug("Resuming node `%s`.", node_name)
+                self._cloud_provider.resume_instance(node_state)
+                log.debug("Successfully resumed node `%s`.", node_name)
+                return node_name
+            except Exception as err:
+                log.error("Could not resume node `%s` - %s.", node_name, err)
+                return None
+
+        for node_name in thread_pool.map(_resume_single_node, self.paused_nodes):
+            del self.paused_nodes[node_name]
+        return len(self.paused_nodes)
 
     def get_ssh_to_node(self, ssh_to=None):
         """
@@ -1205,6 +1315,16 @@ class Node(Struct):
             # forgetting about the instance id.
             self.instance_id = None
 
+    def pause(self):
+        """
+        Pause the VM  instance and return the info needed to restart it.
+        """
+        if self.instance_id is None:
+            raise ValueError("Trying to stop unstarted node.")
+        resp = self._cloud_provider.pause_instance(self.instance_id)
+        self.preferred_ip = None
+        return resp
+
     def is_alive(self):
         """Checks if the current node is up and running in the cloud. It
         only checks the status provided by the cloud interface. Therefore a
@@ -1321,6 +1441,8 @@ class Node(Struct):
         consider calling this method multiple times during a certain timeout.
         """
         self.ips = self._cloud_provider.get_ips(self.instance_id)
+        if self.preferred_ip not in self.ips:
+            self.preferred_ip = None
         return self.ips[:]
 
     def __str__(self):

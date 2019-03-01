@@ -17,7 +17,14 @@
     url: '{{ bigtop_mirror }}/bigtop/bigtop-{{bigtop_release}}/repos/{{ansible_distribution|lower}}{{ansible_distribution_version}}/bigtop.list'
     dest: '/etc/apt/sources.list.d/bigtop.list'
   register: _bigtop_add_apt_repo
+  when: is_ubuntu
 
+- name: add Apache Bigtop repository
+  get_url:
+    url: '{{ bigtop_mirror }}/bigtop/bigtop-{{bigtop_release}}/repos/{{ansible_distribution|lower}}{{ansible_distribution_major_version}}/bigtop.list'
+    dest: '/etc/apt/sources.list.d/bigtop.list'
+  register: _bigtop_add_apt_repo
+  when: not is_ubuntu
 
 # this is run as task and not as a handler, since handlers are all
 # executed after *all* tasks in the play have run, and we need the

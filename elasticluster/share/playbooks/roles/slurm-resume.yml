@@ -1,0 +1,49 @@
+---
+
+- name: Restart SLURMcltd
+  hosts: slurm_master
+  tasks:
+    - service:
+        name: slurmctld
+        state: restarted
+      when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
+    - service:
+        name: slurmctl-llnl
+        state: restarted
+      when: 'is_debian_compatible and not (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
+    - service:
+        name: slurmctld
+        state: restarted
+      when: is_rhel7_compatible
+    - service:
+        name: slurmctl
+        state: restarted
+      when: is_rhel6_compatible
+
+- name: Restart SLURMd
+  hosts: slurm_worker
+  tasks:
+    - name: Create pidfile directory to deal with slurm restart bug.
+      file:
+        path: /var/run/slurm-llnl
+        state: directory
+      when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
+    - name: Kill any running slurm processes
+      shell: "killall -w -g slurmd"
+      when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
+    - systemd:
+        name: slurmd
+        state: started
+      when: 'is_debian_compatible and (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
+    - service:
+        name: slurm-llnl
+        state: restarted
+      when: 'is_debian_compatible and not (is_debian_8_or_later or is_ubuntu_15_10_or_later)'
+    - service:
+        name: slurmd
+        state: restarted
+      when: is_rhel7_compatible
+    - service:
+        name: slurm
+        state: restarted
+      when: is_rhel6_compatible

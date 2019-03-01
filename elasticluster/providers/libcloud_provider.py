@@ -189,6 +189,12 @@ class LibCloudProvider(AbstractCloudProvider):
         log.info('stopping %s', instance.name)
         instance.destroy()
 
+    def resume_instance(self, instance_state):
+        raise NotImplementedError("This provider does not support pause / resume logic.")
+
+    def pause_instance(self, instance_id):
+        raise NotImplementedError("This provider does not support pause / resume logic.")
+
     def get_ips(self, instance_id):
         instance = self.__get_instance(instance_id)
         if not instance:

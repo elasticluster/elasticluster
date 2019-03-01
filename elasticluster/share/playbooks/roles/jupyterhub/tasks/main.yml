@@ -21,16 +21,21 @@
     - /etc/jupyterhub
     - /var/lib/jupyterhub
 
+- name: Nodejs apt signing key
+  apt_key:
+    url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+    state: present
+
+- name: Nodejs apt repo
+  apt_repository:
+    repo: deb https://deb.nodesource.com/node_8.x {{ansible_distribution_release}} main
+    state: present
 
 - name: Install SW dependencies
   apt:
-    name: '{{item}}'
+    name: 'nodejs'
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  loop:
-    - nodejs-legacy
-    - npm
-
 
 - name: Install JupyterHub
   command: |
