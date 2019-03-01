@@ -60,6 +60,54 @@
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   when: 'upgrade_packages|default(True)'
 
+# the following seemingly pointless obsession with kernel versions is
+# needed to determine whether the `apt upgrade` stanza above actually
+# upgraded the kernel: if so, we may need to reboot or ignore some
+# errors down the road on Debian 9... (See issue #609 for context)
+- name: Determine running Linux kernel package version
+  shell: |
+    uname -a | cut -d' ' -f7
+  register: debian_running_kernel_package_version
+
+- name: Determine installed Linux kernel package version
+  shell: |
+    dpkg-query --show --showformat '${Version}\n' linux-image-$(uname -r)
+  register: debian_installed_kernel_package_version
+
+- name: Record that kernel was upgraded
+  set_fact:
+    debian_kernel_upgraded: '{{ debian_running_kernel_package_version != debian_installed_kernel_package_version }}'
+
+- name: Reboot if kernel was upgraded
+  # the initial `sleep` command is there to give Ansible time to
+  # background the task and disconnect; otherwise the SSH connection
+  # is torn by the reboot and Ansible marks the host as "unreachable"
+  shell: |
+    sleep 3;
+    /sbin/shutdown -r now "Rebooting to load new kernel ...";
+  async: 1
+  poll: 0
+  register: _common_reboot
+  when: 'allow_reboot|default(false) and debian_kernel_upgraded|default(false)'
+
+- name: Wait for server to come up again (max 5 minutes)
+  become: no
+  wait_for:
+    host: "{{ ansible_host }}"
+    search_regex: 'OpenSSH'
+    port: 22
+    delay: 15
+    timeout: 300
+    sleep: 5
+  delegate_to: localhost
+  when: 'not _common_reboot|skipped'
+
+- name: Record that kernel is now up-to-date
+  set_fact:
+    debian_kernel_upgraded: false
+  when: 'not _common_reboot|skipped'
+
+
 - name: Ensure additional packages are installed
   apt:
     name: '{{item}}'
