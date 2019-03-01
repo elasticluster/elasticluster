@@ -38,8 +38,6 @@
       Debian:
         # PostGreSQL
         - libpq-dev
-        # MySQL compatible
-        - libmysqlclient-dev
       RedHat:
         - postgresql-devel
     jupyter_additional_python_packages:
@@ -54,6 +52,17 @@
     state: '{{ pkg_install_state }}'
   loop: '{{jupyter_additional_os_packages[ansible_os_family]}}'
 
+- name: Install mysql development package.
+  package:
+    name: 'mysqlclient-dev'
+    state: '{{pkg_install_state}}'
+  when: is_ubuntu_15_10_or_later
+
+- name: Install mysql development package.
+  package:
+    name: 'default-mysqlclient-dev'
+    state: '{{pkg_install_state}}'
+  when: is_debian_8_or_later
 
 - name: Install additional %-magic modules and plugins (Python package)
   pip:
