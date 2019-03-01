@@ -39,7 +39,7 @@
         # PostGreSQL
         - libpq-dev
         # MySQL compatible
-        - default-libmysqlclient-dev
+        - '{% if ansible_distribution == "Debian" %}default-libmysqlclient-dev{% else %}libmysqlclient-dev{% endif %}'
       RedHat:
         - postgresql-devel
     jupyter_additional_python_packages:
