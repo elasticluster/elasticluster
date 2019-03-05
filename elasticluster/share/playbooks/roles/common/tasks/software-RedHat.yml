@@ -12,33 +12,35 @@
 
 - name: Install commonly needed software (RHEL-family)
   package:
-    name: '{{item}}'
+    name: "{{ packages }}"
     state: '{{ pkg_install_state }}'
-  loop:
-    # compression and archivers
-    - bzip2
-    - cpio
-    - gzip
-    - lzip
-    - p7zip
-    - tar
-    - unzip
-    - xz
-    - zip
-    # version control systems
-    - git
-    - mercurial
-    - subversion
-    # basic build environment
-    - gcc
-    - gcc-c++
-    - gcc-gfortran
-    - glibc-devel
-    - make
-    # other "standard" utilities
-    - kexec-tools
-    - m4
-    - rsync
-    - screen
-    - tmux
-    - vim
+  vars:
+    packages:
+      # compression and archivers
+      - bzip2
+      - cpio
+      - gzip
+      - lzip
+      - p7zip
+      - tar
+      - unzip
+      - xz
+      - zip
+      # version control systems
+      - git
+      - mercurial
+      - subversion
+      # basic build environment
+      - gcc
+      - gcc-c++
+      - gcc-gfortran
+      - glibc-devel
+      - make
+      # other "standard" utilities
+      - bash-completion
+      - kexec-tools
+      - m4
+      - rsync
+      - screen
+      - tmux
+      - vim

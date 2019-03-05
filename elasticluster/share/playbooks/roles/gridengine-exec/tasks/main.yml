@@ -12,9 +12,8 @@
 
 - name: Install GridEngine execd packages
   package:
-    pkg: '{{item}}'
+    name: '{{gridengine_execd_packages}}'
     state: '{{ pkg_install_state }}'
-  loop: '{{gridengine_execd_packages}}'
 
 
 # - name: deploy execd installer config (RHEL/CentOS)
