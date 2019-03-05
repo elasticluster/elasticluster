@@ -15,9 +15,8 @@
     - gridengine
     - gridengine-master
   package:
-    pkg: '{{item}}'
+    name: '{{gridengine_master_packages}}'
     state: '{{ pkg_install_state }}'
-  loop: '{{gridengine_master_packages}}'
 
 
 - name: deploy qmaster installer config (RHEL/CentOS)

@@ -7,9 +7,8 @@
 
 - name: Install common HPC software
   package:
-    name: '{{item}}'
+    name: '{{hpc_common_packages}}'
     state: '{{ pkg_install_state }}'
-  loop: '{{hpc_common_packages}}'
 
 
 - name: Ensure modulefiles directories exist
