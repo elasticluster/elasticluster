@@ -37,6 +37,8 @@
     name: '*'
     state: latest
     update_cache: yes
+    # Very slow, especially with dkms/nvidia, and not useful for first boot.
+    exclude: "kernel*"
 
 
 - name: Provide workaround for https://github.com/ansible/ansible-modules-core/issues/4472

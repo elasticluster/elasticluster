@@ -12,32 +12,33 @@
 
 - name: Install commonly needed software (Debian-family)
   package:
-    name: '{{item}}'
+    name: '{{packages}}'
     state: '{{ pkg_install_state }}'
-  loop:
-    # compression and archivers
-    - bzip2
-    - cpio
-    - gzip
-    - lzip
-    - p7zip-full
-    - tar
-    - unzip
-    - xz-utils
-    - zip
-    # version control systems
-    - git
-    - mercurial
-    - subversion
-    # basic build environment
-    - g++
-    - gcc
-    - libc6-dev
-    - make
-    # other "standard" utilities
-    - kexec-tools
-    - m4
-    - rsync
-    - screen
-    - tmux
-    - vim
+  vars:
+    packages:
+      # compression and archivers
+      - bzip2
+      - cpio
+      - gzip
+      - lzip
+      - p7zip-full
+      - tar
+      - unzip
+      - xz-utils
+      - zip
+      # version control systems
+      - git
+      - mercurial
+      - subversion
+      # basic build environment
+      - g++
+      - gcc
+      - libc6-dev
+      - make
+      # other "standard" utilities
+      - kexec-tools
+      - m4
+      - rsync
+      - screen
+      - tmux
+      - vim
