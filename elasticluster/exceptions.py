@@ -25,6 +25,10 @@ class ConfigurationError(Exception):
     pass
 
 
+class CredentialsError(Exception):
+    pass
+
+
 class UnsupportedError(ConfigurationError):
     pass
 
