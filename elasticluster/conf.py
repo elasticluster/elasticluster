@@ -198,9 +198,9 @@ CLOUD_PROVIDER_SCHEMAS = {
 
     'google': {
         "provider": 'google',
-        "gce_client_id": nonempty_str,
-        "gce_client_secret": nonempty_str,
         "gce_project_id": nonempty_str,
+        Optional("gce_client_id"): nonempty_str,
+        Optional("gce_client_secret"): nonempty_str,
         Optional("network", default="default"): nonempty_str,
         Optional("noauth_local_webserver"): boolean,
         Optional("zone", default="us-central1-a"): nonempty_str,
