@@ -40,13 +40,15 @@ from apiclient.discovery import build
 from apiclient.errors import HttpError
 from oauth2client.file import Storage
 from oauth2client.client import OAuth2WebServerFlow
+from oauth2client.client import GoogleCredentials
+from oauth2client.client import ApplicationDefaultCredentialsError
 from oauth2client.tools import run_flow
 from oauth2client.tools import argparser
 
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.providers import AbstractCloudProvider
-from elasticluster.exceptions import ImageError, InstanceError, InstanceNotFoundError, CloudProviderError
+from elasticluster.exceptions import InstanceError, InstanceNotFoundError, CloudProviderError, CredentialsError
 
 
 # constants and defaults
@@ -88,9 +90,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
     __gce_lock = threading.Lock()
 
     def __init__(self,
-                 gce_client_id,
-                 gce_client_secret,
                  gce_project_id,
+                 gce_client_id='',
+                 gce_client_secret='',
                  email=GCE_DEFAULT_SERVICE_EMAIL,
                  network='default',
                  noauth_local_webserver=False,
@@ -126,6 +128,49 @@ class GoogleCloudProvider(AbstractCloudProvider):
             'gcloud_zone':           self._zone,
         }
 
+    def _get_credentials(self):
+        if self._client_id and self._client_secret:
+            flow = OAuth2WebServerFlow(self._client_id, self._client_secret,
+                                       GCE_SCOPE)
+            # The `Storage` object holds the credentials that your
+            # application needs to authorize access to the user's
+            # data. The name of the credentials file is provided. If the
+            # file does not exist, it is created. This object can only
+            # hold credentials for a single user. It stores the access
+            # priviledges for the application, so a user only has to grant
+            # access through the web interface once.
+            storage_path = os.path.join(self._storage_path,
+                                        self._client_id + '.oauth.dat')
+            storage = Storage(storage_path)
+
+            credentials = storage.get()
+            if credentials is not None and not credentials.invalid:
+                return credentials
+            else:
+                log.info("Determined that provided credentials are not valid.")
+
+        try:
+            # Next, check to see if there is a set of application
+            # default credentials to use.
+            log.info("Attempting to use Google Application Default Credentials.")
+            return GoogleCredentials.get_application_default()
+        except ApplicationDefaultCredentialsError:
+            log.info("Failed to use Google Application Default Credentials, falling back to config.")
+            log.debug("(Original traceback follows.)", exc_info=True)
+
+        try:
+            # Finally, try to start a browser to have the user authenticate with Google
+            args = argparser.parse_args([])
+            args.noauth_local_webserver = self._noauth_local_webserver
+            return run_flow(flow, storage, flags=args)
+        except Exception as err:
+            log.error("Could not run authentication flow: %s", err)
+            log.debug("(Original traceback follows.)", exc_info=True)
+        raise CredentialsError("No method to obtain GCE credentials was successful!  Either "
+                               "set up Application Default Credentials using gcloud, or "
+                               "provide a client id and client secret from an oauth flow, "
+                               "or go through the oauth flow that elasticluster runs.")
+
     def _connect(self):
         """Connects to the cloud web services. If this is the first
         authentication, a web browser will be started to authenticate
@@ -138,33 +183,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         with GoogleCloudProvider.__gce_lock:
             # check for existing connection
             if not self._gce:
-                flow = OAuth2WebServerFlow(self._client_id, self._client_secret,
-                                           GCE_SCOPE)
-                # The `Storage` object holds the credentials that your
-                # application needs to authorize access to the user's
-                # data. The name of the credentials file is provided. If the
-                # file does not exist, it is created. This object can only
-                # hold credentials for a single user. It stores the access
-                # priviledges for the application, so a user only has to grant
-                # access through the web interface once.
-                storage_path = os.path.join(self._storage_path,
-                                            self._client_id + '.oauth.dat')
-                storage = Storage(storage_path)
-
-                credentials = storage.get()
-                if credentials is None or credentials.invalid:
-                    args = argparser.parse_args([])
-                    args.noauth_local_webserver = self._noauth_local_webserver
-                    # try to start a browser to have the user authenticate with Google
-                    # TODO: what kind of exception is raised if the browser
-                    #       cannot be started?
-                    try:
-                        credentials = run_flow(flow, storage, flags=args)
-                    except Exception as err:
-                        log.error("Could not run authentication flow: %s", err)
-                        log.debug("(Original traceback follows.)", exc_info=True)
-                        raise
-
+                credentials = self._get_credentials()
                 http = httplib2.Http()
                 self._auth_http = credentials.authorize(http)
 
