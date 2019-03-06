@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013-2018 University of Zurich
+# Copyright (C) 2013-2019 University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,12 +38,14 @@ import uuid
 # External modules
 from apiclient.discovery import build
 from apiclient.errors import HttpError
+import googleapiclient
 from oauth2client.file import Storage
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.client import GoogleCredentials
 from oauth2client.client import ApplicationDefaultCredentialsError
 from oauth2client.tools import run_flow
 from oauth2client.tools import argparser
+import pkg_resources
 
 # Elasticluster imports
 from elasticluster import log
@@ -183,8 +185,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
         with GoogleCloudProvider.__gce_lock:
             # check for existing connection
             if not self._gce:
+                version = pkg_resources.get_distribution("elasticluster").version
+                http = googleapiclient.http.set_user_agent(httplib2.Http(), "elasticluster/%s" % version)
                 credentials = self._get_credentials()
-                http = httplib2.Http()
                 self._auth_http = credentials.authorize(http)
 
                 self._gce = build(GCE_API_NAME, GCE_API_VERSION, http=http)
