@@ -38,6 +38,7 @@ import uuid
 # External modules
 from apiclient.discovery import build
 from apiclient.errors import HttpError
+import googleapiclient
 from oauth2client.file import Storage
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.tools import run_flow
@@ -165,7 +166,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                         log.debug("(Original traceback follows.)", exc_info=True)
                         raise
 
-                http = httplib2.Http()
+                http = googleapiclient.http.set_user_agent(httplib2.Http(), "elasticluster")
                 self._auth_http = credentials.authorize(http)
 
                 self._gce = build(GCE_API_NAME, GCE_API_VERSION, http=http)
