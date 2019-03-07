@@ -12,10 +12,7 @@
 
 - name: Install commonly needed software (RHEL-family)
   package:
-    name: "{{ packages }}"
-    state: '{{ pkg_install_state }}'
-  vars:
-    packages:
+    name:
       # compression and archivers
       - bzip2
       - cpio
@@ -44,3 +41,4 @@
       - screen
       - tmux
       - vim
+    state: '{{ pkg_install_state }}'

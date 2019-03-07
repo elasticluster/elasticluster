@@ -110,15 +110,13 @@
 
 - name: Ensure additional packages are installed
   apt:
-    name: '{{packages}}'
-    state: '{{ pkg_install_state }}'
-    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  vars:
-    packages:
+    name:
       - apt-transport-https
       # these are required by Ansible's `debconf` module
       - debconf
       - debconf-utils
+    state: '{{ pkg_install_state }}'
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
 
 
 # Apparently some systemd commands (e.g., `hostnamectl` -- possibly others)
@@ -126,12 +124,9 @@
 # (see issues #392, #393).  So, ensure it is installed.
 - name: Ensure additional packages are installed (Debian 8)
   apt:
-    name: '{{packages}}'
+    name: 'dbus'
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  vars:
-    packages:
-      - dbus
   when: 'is_debian_8_or_later'
 
 
