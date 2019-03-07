@@ -43,6 +43,7 @@ from oauth2client.file import Storage
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.tools import run_flow
 from oauth2client.tools import argparser
+import pkg_resources
 
 # Elasticluster imports
 from elasticluster import log
@@ -166,7 +167,8 @@ class GoogleCloudProvider(AbstractCloudProvider):
                         log.debug("(Original traceback follows.)", exc_info=True)
                         raise
 
-                http = googleapiclient.http.set_user_agent(httplib2.Http(), "elasticluster")
+                version = pkg_resources.get_distribution("elasticluster").version
+                http = googleapiclient.http.set_user_agent(httplib2.Http(), "elasticluster/%s" % version)
                 self._auth_http = credentials.authorize(http)
 
                 self._gce = build(GCE_API_NAME, GCE_API_VERSION, http=http)
