@@ -451,14 +451,7 @@ Valid configuration keys for ``openstack``
   the environment variable is used instead.
 
 ``request_floating_ip``
-  request assignment of a "floating IP" when the instance is
-  started. Valid values are ``yes`` (or ``True`` or ``1``) and ``no``
-  (or ``False`` or ``0``; default).  Some cloud providers do not
-  automatically assign a public IP to the instances, but this is often
-  needed if you want to connect to the VM from outside. Setting
-  ``request_floating_ip`` to ``yes`` will force `elasticluster` to
-  request such a floating IP if the instance doesn't get one
-  automatically.
+  **See ``request_floating_ip`` in the ``[cluster/...]`` section instead.**
 
 
 Examples
@@ -1170,6 +1163,20 @@ Additional optional configuration keys for OpenStack clouds
     Define the size of boot disk to use.  Values are specified in
     gigabytes.  There is no default; this option is mandatory of
     ``boot_disk_type`` is also specified.
+
+``floating_network_id``
+    If ``request_floating_ip`` (which see below) is true, then
+    request that the floating IP be allocated on this network.
+
+``request_floating_ip``
+    Request assignment of a "floating IP" when the instance is
+    started. Valid values are ``yes`` (or ``True`` or ``1``) and
+    ``no`` (or ``False`` or ``0``; default).  Some cloud providers do
+    not automatically assign a public IP to the instances, but this is
+    often needed if you want to connect to the VM from
+    outside. Setting ``request_floating_ip`` to ``yes`` will force
+    ElastiCluster to request such a floating IP if the instance
+    doesn't get one automatically.
 
 
 Examples

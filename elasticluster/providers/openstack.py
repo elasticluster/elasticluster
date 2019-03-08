@@ -153,7 +153,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                  auth_url=None,
                  user_domain_name="default", project_domain_name="default",
                  region_name=None, storage_path=None,
-                 request_floating_ip=False,
                  compute_api_version=DEFAULT_OS_COMPUTE_API_VERSION,
                  image_api_version=DEFAULT_OS_IMAGE_API_VERSION,
                  network_api_version=DEFAULT_OS_NETWORK_API_VERSION,
@@ -163,6 +162,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                  # this is deprecated in favor of `compute_api_version`
                  nova_api_version=None,
                  cacert=None,  # keep in sync w/ default in novaclient.Client()
+                 request_floating_ip=None,  ## DEPRECATED, will be removed
     ):
         # OpenStack connection params
         self._os_auth_url = self._get_os_config_value('auth URL', auth_url, ['OS_AUTH_URL']).rstrip('/')
@@ -199,9 +199,16 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self.cinder_client = None
 
         # local state
-        self.request_floating_ip = request_floating_ip
         self._instances = {}
         self._cached_instances = {}
+
+        if request_floating_ip is not None:
+            warn('Deprecated parameter `request_floating_ip` given'
+                 ' to OpenStackProvider; place it in the cluster'
+                 ' or node configuration instead.', DeprecationWarning)
+        self._request_floating_ip_default = request_floating_ip
+
+
 
     def to_vars_dict(self):
         """
@@ -541,7 +548,11 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         vm = self.nova_client.servers.create(node_name, image_id, flavor, **vm_start_args)
 
         # allocate and attach a floating IP, if requested
-        if self.request_floating_ip:
+        request_floating_ip = kwargs.get(
+            'request_floating_ip',
+            self._request_floating_ip_default)
+
+        if request_floating_ip:
 
             # wait for server to come up (otherwise floating IP can't be associated)
             log.info("Waiting for instance `%s` (%s) to come up ...", node_name, vm.id)
