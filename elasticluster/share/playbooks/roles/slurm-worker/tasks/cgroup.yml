@@ -53,6 +53,9 @@
 - name: Check if swap accouting is enabled (may fail!)
   stat:
     path: '/sys/fs/cgroup/memory/memory.memsw.limit_in_bytes'
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
   register: _memsw_limit
 
 

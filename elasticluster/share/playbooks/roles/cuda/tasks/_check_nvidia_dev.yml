@@ -10,4 +10,7 @@
   # we only need to check for the first device node to see if any are present
   stat:
     path: '/dev/nvidia0'
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
   register: '{{ save_result_to|default("_cuda_check_devices") }}'

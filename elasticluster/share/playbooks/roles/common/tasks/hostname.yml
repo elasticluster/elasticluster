@@ -16,6 +16,9 @@
   stat:
     path: '/etc/cloud/cloud.cfg'
     follow: yes
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
   register: cloud_cfg
 
 

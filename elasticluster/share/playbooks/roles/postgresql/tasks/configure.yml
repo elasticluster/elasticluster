@@ -47,6 +47,9 @@
 - name: PostgreSQL | Check whether the postgres data directory is initialized
   stat:
     path: "{{ postgresql_data_directory }}/PG_VERSION"
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
   when: ansible_os_family == "RedHat" and not postgresql_cluster_reset
   register: pgdata_dir_initialized
 

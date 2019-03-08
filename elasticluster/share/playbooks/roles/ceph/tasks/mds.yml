@@ -34,6 +34,9 @@
 - name: Does MDS keyring exist?
   stat:
     path: '{{_ceph_daemon_dir}}/keyring'
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
   register: ceph_mds_keyring_file
   ignore_errors: yes
 
