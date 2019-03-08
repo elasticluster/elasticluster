@@ -19,15 +19,16 @@ Cloud provider for the Google Compute Engine.
 
 See <https://code.google.com/p/google-cloud-platform-samples/source/browse/python-client-library-example/gce.py?repo=compute> for reference.
 """
-__author__ = 'Riccardo Murri <riccardo.murri@uzh.ch>, ' \
-             'Nicolas Baer <nicolas.baer@gmail.com>, '  \
-             'Antonio Messina <antonio.s.messina@gmail.com>'
+__author__ = ', '.join([
+    'Riccardo Murri <riccardo.murri@uzh.ch>',
+    'Nicolas Baer <nicolas.baer@gmail.com>',
+    'Antonio Messina <antonio.s.messina@gmail.com>'
+])
 
 
 # stdlib imports
 import collections
 import copy
-import httplib2
 import os
 import random
 import threading
@@ -39,6 +40,7 @@ import uuid
 from apiclient.discovery import build
 from apiclient.errors import HttpError
 import googleapiclient
+import httplib2
 from oauth2client.file import Storage
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.client import GoogleCredentials
