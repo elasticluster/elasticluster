@@ -32,11 +32,10 @@
     - hive
     - hive-server
   package:
-    name: '{{item}}'
+    name:
+      - hive-metastore
+      - hive-server2
     state: '{{ pkg_install_state }}'
-  loop:
-    - hive-metastore
-    - hive-server2
 
 
 - name: Enable and start Hive services

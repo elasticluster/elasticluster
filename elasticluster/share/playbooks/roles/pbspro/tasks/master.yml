@@ -28,28 +28,27 @@
 
 - name: Install prerequisites
   yum:
-    pkg: '{{ item }}'
-    state: present
-  loop:
-    # deps, according to https://github.com/PBSPro/pbspro/blob/master/INSTALL
-    - expat
-    - libedit
-    - libical
-    - postgresql-contrib
-    - postgresql-server  # FIXME: use available `postgres` role?
-    - python
-    - sendmail
-    - sudo
-    - tcl
-    - tk
-    # server RPM deps
-    - compat-libical1
-    - hwloc-libs
-    - libICE
-    - libSM
-    - perl
-    - perl-Env
-    - perl-Switch
+    name:
+      # deps, according to https://github.com/PBSPro/pbspro/blob/master/INSTALL
+      - expat
+      - libedit
+      - libical
+      - postgresql-contrib
+      - postgresql-server  # FIXME: use available `postgres` role?
+      - python
+      - sendmail
+      - sudo
+      - tcl
+      - tk
+      # server RPM deps
+      - compat-libical1
+      - hwloc-libs
+      - libICE
+      - libSM
+      - perl
+      - perl-Env
+      - perl-Switch
+    state: '{{ pkg_install_state }}'
 
 
 - name: Install PBSPro server packages

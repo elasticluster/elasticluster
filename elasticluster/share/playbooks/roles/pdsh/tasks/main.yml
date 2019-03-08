@@ -10,12 +10,11 @@
   # note: the following requires EPEL repos
 - name: Install pdsh packages (RHEL-family)
   package:
-    name: '{{item}}'
+    name:
+      - pdsh
+      - pdsh-rcmd-ssh
+      - pdsh-mod-genders
     state: '{{ pkg_install_state }}'
-  loop:
-    - pdsh
-    - pdsh-rcmd-ssh
-    - pdsh-mod-genders
   when: is_centos
 
 - name: Create genders file for PDSH

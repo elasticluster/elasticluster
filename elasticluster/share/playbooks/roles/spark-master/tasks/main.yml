@@ -52,11 +52,10 @@
     - spark
     - master
   package:
-    name: '{{item}}'
+    name:
+      - spark-history-server # History server for Apache Spark
+      - spark-master # Server for Spark master
     state: '{{ pkg_install_state }}'
-  loop:
-    - spark-history-server # History server for Apache Spark
-    - spark-master # Server for Spark master
 
 
 - name: Start Spark master services

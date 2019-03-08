@@ -30,9 +30,8 @@
 - name: Install iptables packages
   tags: iptables
   package:
-    name: '{{item}}'
+    name: '{{ packages }}'
     state: '{{ pkg_install_state }}'
-  loop: '{{ packages }}'
 
 
 - name: Deploy netfilter rules

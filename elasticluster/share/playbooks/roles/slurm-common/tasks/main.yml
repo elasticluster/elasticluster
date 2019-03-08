@@ -98,20 +98,18 @@
 
 - name: Install support packages (Debian/Ubuntu)
   package:
-    pkg: '{{item}}'
+    name:
+      - libopenmpi-dev
+      - openmpi-bin
     state: '{{ pkg_install_state }}'
-  loop:
-    - libopenmpi-dev
-    - openmpi-bin
   when: is_debian_or_ubuntu
 
 
 - name: Install SLURM packages (RHEL-compatible)
   package:
-    name: '{{item}}'
+    name:
+      - openmpi-devel
     state: '{{ pkg_install_state }}'
-  loop:
-    - openmpi-devel
   when: 'is_rhel_compatible'
 
 

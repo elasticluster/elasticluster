@@ -38,9 +38,8 @@
 
 - name: Install Autofs
   package:
-    name: '{{ item }}'
+    name: '{{autofs_packages}}'
     state: '{{ pkg_install_state }}'
-  loop: '{{autofs_packages}}'
 
 
 - name: Ensure autofs is running and starts at boot

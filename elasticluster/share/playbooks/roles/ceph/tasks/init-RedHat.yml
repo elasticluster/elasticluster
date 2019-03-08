@@ -16,10 +16,8 @@
     - ceph
     - server
   package:
-    name: '{{item}}'
+    name: 'ceph'
     state: '{{ pkg_install_state }}'
-  loop:
-    - ceph
   when: 'is_ceph_server'
 
 
@@ -28,13 +26,12 @@
     - ceph
     - client
   package:
-    name: '{{item}}'
+    name:
+      - ceph-common
+      - ceph-fuse
+      - cephfs-java
+      - rbd-fuse
     state: '{{ pkg_install_state }}'
-  loop:
-    - ceph-common
-    - ceph-fuse
-    - cephfs-java
-    - rbd-fuse
   when: 'is_ceph_client'
 
 

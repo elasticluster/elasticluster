@@ -7,13 +7,12 @@
     - hdfs
     - namenode
   package:
-    name: '{{item}}'
+    name:
+      - hadoop-hdfs # The Hadoop Distributed File System
+      - hadoop-hdfs-namenode # The Hadoop namenode manages the block locations of HDFS files
+      - hadoop-hdfs-secondarynamenode # Hadoop Secondary namenode
+      - sudo # needed by task "Format HDFS"
     state: '{{ pkg_install_state }}'
-  loop:
-    - hadoop-hdfs # The Hadoop Distributed File System
-    - hadoop-hdfs-namenode # The Hadoop namenode manages the block locations of HDFS files
-    - hadoop-hdfs-secondarynamenode # Hadoop Secondary namenode
-    - sudo # needed by task "Format HDFS"
 
 - name: Format HDFS
   tags:

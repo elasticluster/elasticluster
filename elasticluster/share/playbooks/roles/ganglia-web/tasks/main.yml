@@ -22,9 +22,8 @@
     - http
     - web
   package:
-    pkg: '{{item}}'
+    name: '{{ ganglia_web_packages }}'
     state: '{{ pkg_install_state }}'
-  loop: '{{ ganglia_web_packages }}'
 
 
 - block:

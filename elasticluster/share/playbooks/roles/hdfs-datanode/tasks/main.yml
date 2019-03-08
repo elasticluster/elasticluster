@@ -7,10 +7,9 @@
     - hdfs
     - datanode
   package:
-    name: '{{item}}'
+    name:
+      - hadoop-hdfs-datanode # Hadoop Data Node
     state: '{{ pkg_install_state }}'
-  loop:
-    - hadoop-hdfs-datanode # Hadoop Data Node
 
 
 - name: Start HDFS services (DataNode)

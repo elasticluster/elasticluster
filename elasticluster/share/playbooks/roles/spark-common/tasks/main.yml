@@ -7,15 +7,14 @@
     - spark
     - common
   package:
-    name: '{{item}}'
+    name:
+      - spark-core # Lightning-Fast Cluster Computing
+      - spark-datanucleus # DataNucleus libraries for Apache Spark
+      - spark-extras # External/extra libraries for Apache Spark
+      - spark-python # Python client for Spark
+      - spark-thriftserver # Thrift server for Spark SQL
+      - spark-yarn-shuffle # Spark YARN Shuffle Service
     state: '{{ pkg_install_state }}'
-  loop:
-    - spark-core # Lightning-Fast Cluster Computing
-    - spark-datanucleus # DataNucleus libraries for Apache Spark
-    - spark-extras # External/extra libraries for Apache Spark
-    - spark-python # Python client for Spark
-    - spark-thriftserver # Thrift server for Spark SQL
-    - spark-yarn-shuffle # Spark YARN Shuffle Service
 
 
 - name: Check if Py4J version-independent `.zip` archive exist

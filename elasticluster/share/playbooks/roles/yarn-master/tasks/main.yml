@@ -8,14 +8,13 @@
     - master
     - resourcemanager
   package:
-    name: '{{item}}'
+    name:
+      - hadoop-mapreduce # The Hadoop MapReduce (MRv2)
+      - hadoop-mapreduce-historyserver # MapReduce History Server
+      - hadoop-yarn # The Hadoop NextGen MapReduce (YARN)
+      - hadoop-yarn-proxyserver # YARN Web Proxy
+      - hadoop-yarn-resourcemanager # YARN Resource Manager
     state: '{{ pkg_install_state }}'
-  loop:
-    - hadoop-mapreduce # The Hadoop MapReduce (MRv2)
-    - hadoop-mapreduce-historyserver # MapReduce History Server
-    - hadoop-yarn # The Hadoop NextGen MapReduce (YARN)
-    - hadoop-yarn-proxyserver # YARN Web Proxy
-    - hadoop-yarn-resourcemanager # YARN Resource Manager
 
 
 - name: Start YARN master services

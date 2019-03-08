@@ -8,7 +8,12 @@
 
 - name: 'Uninstall old versions'
   apt:
-    name: ['docker', 'docker-engine', 'docker.io', 'containerd', 'runc']
+    name:
+      - docker
+      - docker-engine
+      - docker.io
+      - containerd
+      - runc
     state: absent
   ignore_errors: yes
 
@@ -20,7 +25,9 @@
 # 2) ca-certificates, a bundle of common certificate authorities' certificates
 - name: 'Install Docker CE dependencies'
   apt:
-    name: ['apt-transport-https', 'ca-certificates']
+    name:
+      - apt-transport-https
+      - ca-certificates
     state: '{{ pkg_install_state }}'
 
 

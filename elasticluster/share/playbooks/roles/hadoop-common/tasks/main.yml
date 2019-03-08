@@ -5,21 +5,20 @@
   tags:
     - hadoop
   package:
-    name=default-jre-headless
-    state=present
+    name: default-jre-headless
+    state: '{{ pkg_install_state }}'
 
 
 - name: Install Hadoop packages (common)
   tags:
     - hadoop
   package:
-    name: '{{item}}'
+    name:
+      - hadoop # Hadoop is a software platform for processing vast amounts of data
+      - hadoop-client # Hadoop client side dependencies
+      - hadoop-doc # Hadoop Documentation
+      - hadoop-hdfs-fuse # Mountable HDFS
     state: '{{ pkg_install_state }}'
-  loop:
-    - hadoop # Hadoop is a software platform for processing vast amounts of data
-    - hadoop-client # Hadoop client side dependencies
-    - hadoop-doc # Hadoop Documentation
-    - hadoop-hdfs-fuse # Mountable HDFS
 
 
 - name: Ensure Hadoop configuration directory exists

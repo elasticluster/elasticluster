@@ -6,82 +6,80 @@
 
 - name: Install required dependencies of EasyBuild (Debian/Ubuntu)
   apt:
-    name: '{{item}}'
+    name:
+      # see: http://easybuild.readthedocs.io/en/latest/Installation.html#dependencies
+      #
+      # required dependencies
+      - python2.7
+      - g++
+      - gcc
+      - gfortran
+      - libc6-dev
+      - make
+      - tcsh
+      # required shell tools
+      - bzip2
+      - gzip
+      - tar
+      - unzip
+      - xz-utils
+      - patch
+      - mlocate
+      # SW needed to build toolchains and common recipes
+      - libibverbs-dev
+      - python2.7-dev
+      - python-pip
+      - python-virtualenv
+      - libgsl0-dev
+      - libcurl4-openssl-dev
+      - libxml2-dev
+      - libssl-dev
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  loop:
-    # see: http://easybuild.readthedocs.io/en/latest/Installation.html#dependencies
-    #
-    # required dependencies
-    - python2.7
-    - g++
-    - gcc
-    - gfortran
-    - libc6-dev
-    - make
-    - tcsh
-    # required shell tools
-    - bzip2
-    - gzip
-    - tar
-    - unzip
-    - xz-utils
-    - patch
-    - mlocate
-    # SW needed to build toolchains and common recipes
-    - libibverbs-dev
-    - python2.7-dev
-    - python-pip
-    - python-virtualenv
-    - libgsl0-dev
-    - libcurl4-openssl-dev
-    - libxml2-dev
-    - libssl-dev
 
 
 - name: Install optional dependencies of EasyBuild (Debian/Ubuntu)
   apt:
-    name: '{{item}}'
+    name:
+      - git
+      - graphviz
+      - mercurial
+      - python-pygraph
+      - subversion
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  loop:
-    - git
-    - graphviz
-    - mercurial
-    - python-pygraph
-    - subversion
   ignore_errors: True
 
 
 - name: Install "filtered dependency" software (Debian/Ubuntu)
   apt:
-    name: '{{ item }}'
+    name:
+      #  required by EasyBuild to build some SW
+      - fontconfig
+      - graphviz
+      - libbz2-dev
+      - libfontconfig1-dev
+      - libibverbs-dev
+      - libncurses-dev
+      - libncurses5-dev
+      - libreadline-dev
+      - libssl-dev
+      - m4
+      - perl-modules # Thread::Queue is needed to build `automake`
+      - zlib1g-dev
+      # required by X11 software
+      - libgl1-mesa-glx
+      - libxi6
+      - libxmu6
+      - libxrandr2
+      - libxt6
+      - libxtst6
+      - libx11-dev
+      - libxext-dev
+      - libxft-dev
+      - libxinerama-dev
+      - libxt-dev
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   loop:
-    #  required by EasyBuild to build some SW
-    - fontconfig
-    - graphviz
-    - libbz2-dev
-    - libfontconfig1-dev
-    - libibverbs-dev
-    - libncurses-dev
-    - libncurses5-dev
-    - libreadline-dev
-    - libssl-dev
-    - m4
-    - perl-modules # Thread::Queue is needed to build `automake`
-    - zlib1g-dev
-    # required by X11 software
-    - libgl1-mesa-glx
-    - libxi6
-    - libxmu6
-    - libxrandr2
-    - libxt6
-    - libxtst6
-    - libx11-dev
-    - libxext-dev
-    - libxft-dev
-    - libxinerama-dev
-    - libxt-dev
   ignore_errors: True

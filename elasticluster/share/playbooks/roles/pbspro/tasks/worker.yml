@@ -11,17 +11,16 @@
 
 - name: Install prerequisites
   yum:
-    pkg: '{{ item }}'
+    name:
+      # "execution" RPM deps
+      - libICE
+      - libSM
+      - libXft
+      - perl
+      - perl-Env
+      - perl-Switch
+      - tk
     state: present
-  loop:
-    # "execution" RPM deps
-    - libICE
-    - libSM
-    - libXft
-    - perl
-    - perl-Env
-    - perl-Switch
-    - tk
 
 - name: Install PBSPro worker packages
   shell: |

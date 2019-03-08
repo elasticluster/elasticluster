@@ -6,59 +6,56 @@
 
 - name: Install required dependencies of EasyBuild (RHEL-compatible)
   package:
-    name: '{{item}}'
+    name:
+      # see: http://easybuild.readthedocs.io/en/latest/Installation.html#dependencies
+      #
+      # required dependencies
+      - python
+      - "@Development tools"
+      - gcc
+      - gcc-c++
+      - gcc-gfortran
+      - glibc-devel
+      - make
+      # required shell tools
+      - bzip2
+      - gzip
+      - mlocate
+      - patch
+      - tar
+      - unzip
+      - xz
+      # SW needed to build toolchains and common recipes
+      - gsl-devel
+      - libcurl-devel
+      - libibverbs-devel
+      - libxml2-devel
+      - openssl-devel
+      - python-devel
+      - python-pip
+      - python-virtualenv
     state: '{{ pkg_install_state }}'
-  loop:
-    # see: http://easybuild.readthedocs.io/en/latest/Installation.html#dependencies
-    #
-    # required dependencies
-    - python
-    - "@Development tools"
-    - gcc
-    - gcc-c++
-    - gcc-gfortran
-    - glibc-devel
-    - make
-    # required shell tools
-    - bzip2
-    - gzip
-    - mlocate
-    - patch
-    - tar
-    - unzip
-    - xz
-    # SW needed to build toolchains and common recipes
-    - gsl-devel
-    - libcurl-devel
-    - libibverbs-devel
-    - libxml2-devel
-    - openssl-devel
-    - python-devel
-    - python-pip
-    - python-virtualenv
 
 
 - name: Install optional dependencies of EasyBuild (RHEL-compatible)
   package:
-    name: '{{item}}'
+    name:
+      - git
+      - graphviz
+      - mercurial
+      - subversion
     state: '{{ pkg_install_state }}'
-  loop:
-    - git
-    - graphviz
-    - mercurial
-    - subversion
   ignore_errors: True
 
 
 - name: Install "filtered dependency" software (RHEL-compatible)
   package:
-    name: '{{ item }}'
+    name:
+      - bzip2-devel
+      - m4
+      - ncurses-devel
+      - ncurses-static
+      - readline-devel
+      - readline-static
     state: '{{ pkg_install_state }}'
-  loop:
-    - bzip2-devel
-    - m4
-    - ncurses-devel
-    - ncurses-static
-    - readline-devel
-    - readline-static
   ignore_errors: True

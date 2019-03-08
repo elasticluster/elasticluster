@@ -26,9 +26,8 @@
 
 - name: Install SLURM worker packages
   package:
-    name: '{{item}}'
+    name: '{{slurmd_packages}}'
     state: '{{ pkg_install_state }}'
-  loop: '{{slurmd_packages}}'
 
 - name: Ensure SLURMd starts at boot
   service:

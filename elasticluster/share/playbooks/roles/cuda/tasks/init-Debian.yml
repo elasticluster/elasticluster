@@ -2,11 +2,10 @@
 
 - name: Install software prerequisites
   package:
-    name: '{{ item }}'
+    name:
+      - 'linux-headers-generic'
+      - 'gcc'
     state: present
-  loop:
-    - 'linux-headers-generic'
-    - 'gcc'
 
 
 - name: Add signing key for CUDA repository

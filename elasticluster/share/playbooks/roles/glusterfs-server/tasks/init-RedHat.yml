@@ -19,7 +19,7 @@
 
 - name: Make GlusterFS release repo available to YUM
   yum:
-    name=centos-release-gluster{{ glusterfs_version | replace('.', '') }}
+    name: 'centos-release-gluster{{ glusterfs_version | replace('.', '') }}'
   tags:
     - gluster
     - glusterfs-server

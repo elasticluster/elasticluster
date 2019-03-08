@@ -7,9 +7,8 @@
 
 - name: Install core R packages
   package:
-    name: '{{item}}'
+    name: '{{r_packages}}'
     state: '{{ pkg_install_state }}'
-  loop: '{{r_packages}}'
 
 
 - name: Create R etc directory
