@@ -3,13 +3,12 @@
 - name: Install TORQUE packages
   when: is_rhel_compatible
   yum:
-    pkg: '{{item}}'
+    name:
+      - munge
+      - torque-client
+      - torque-scheduler
+      - torque-server
     state: latest
-  loop:
-    - munge
-    - torque-client
-    - torque-scheduler
-    - torque-server
 
 
 - name: Create spool directories

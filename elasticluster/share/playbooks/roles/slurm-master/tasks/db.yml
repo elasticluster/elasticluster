@@ -38,11 +38,10 @@
     - slurm
     - slurmdbd
   package:
-    name: '{{item}}'
+    name:
+      - '{{slurm_db_server_pkg}}'
+      - '{{slurm_db_python_pkg}}'
     state: '{{ pkg_install_state }}'
-  loop:
-    - '{{slurm_db_server_pkg}}'
-    - '{{slurm_db_python_pkg}}'
 
 
 - name: Ensure {{slurm_db_server_name}} daemon is up

@@ -21,9 +21,8 @@
 
 - name: Install NIS master server packages
   package:
-    name: '{{item}}'
+    name: '{{nis_master_packages}}'
     state: '{{ pkg_install_state }}'
-  loop: '{{nis_master_packages}}'
 
 
 - name: Ensure `ypserv` is restarted if config files changed

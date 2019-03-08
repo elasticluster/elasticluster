@@ -25,7 +25,9 @@
 
 - name: 'Install Docker Community Edition'
   apt:
-    name: ['docker-ce', 'docker-ce-cli']
+    name:
+      - docker-ce
+      - docker-ce-cli
     state: '{{ pkg_install_state }}'
 
 

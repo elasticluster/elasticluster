@@ -38,9 +38,8 @@
 
 - name: Install NIS common packages
   package:
-    name: '{{item}}'
+    name: '{{nis_common_packages}}'
     state: '{{ pkg_install_state }}'
-  loop: '{{nis_common_packages}}'
 
 
 - import_tasks: ypserv.yml

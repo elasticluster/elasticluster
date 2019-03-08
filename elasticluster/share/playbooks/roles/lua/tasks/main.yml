@@ -6,25 +6,23 @@
 
 - name: Install Lua from the OS repository (Debian-compatible)
   apt:
-    name: '{{ item }}'
+    name:
+      # Luarocks requires Lua 5.1, at least on Ubuntu 16.04
+      - lua5.1
+      - liblua5.1-dev
+      - luarocks
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  loop:
-    # Luarocks requires Lua 5.1, at least on Ubuntu 16.04
-    - lua5.1
-    - liblua5.1-dev
-    - luarocks
   when: is_debian_compatible
 
 
 - name: Install Lua from the OS repository (RHEL-compatible)
   yum:
-    name: '{{ item }}'
+    name:
+      - lua
+      - lua-devel
+      - luarocks
     state: '{{ pkg_install_state }}'
-  loop:
-    - lua
-    - lua-devel
-    - luarocks
   when: is_rhel_compatible
 
 

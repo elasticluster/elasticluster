@@ -5,11 +5,10 @@
     - nfs
     - nfs-client
   package:
-    pkg: '{{item}}'
+    name:
+      - nfs-common
+      - nfs4-acl-tools
     state: '{{pkg_install_state}}'
-  loop:
-    - nfs-common
-    - nfs4-acl-tools
   when: is_debian_compatible
 
 - name: install NFS client software (RHEL-compatible)
@@ -17,11 +16,10 @@
     - nfs
     - nfs-client
   package:
-    pkg: '{{item}}'
+    name:
+      - nfs-utils
+      - nfs4-acl-tools
     state: '{{pkg_install_state}}'
-  loop:
-    - nfs-utils
-    - nfs4-acl-tools
   when: is_rhel_compatible
 
 

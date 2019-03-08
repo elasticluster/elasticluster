@@ -12,15 +12,14 @@
 # the following list of dependencies is correct for version 1.1.456
 - name: Install dependencies
   package:
-    name: '{{ item }}'
+    name:
+      - psmisc
+      - libapparmor1
+      - libedit2
+      - sudo
+      - lsb-release
+      - libssl1.0.0
     state: '{{ pkg_install_state }}'
-  with_items:
-    - psmisc
-    - libapparmor1
-    - libedit2
-    - sudo
-    - lsb-release
-    - libssl1.0.0
 
 
 - name: Determine current version of RStudio Server

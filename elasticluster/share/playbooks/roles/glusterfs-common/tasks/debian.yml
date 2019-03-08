@@ -48,11 +48,10 @@
 
 - name: Install GlusterFS packages (Debian/Ubuntu)
   apt:
-    name: '{{item}}'
+    name:
+      - attr
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  loop:
-    - attr
   when: is_debian_or_ubuntu
   tags:
     - gluster

@@ -50,9 +50,8 @@
 
 - name: Install additional %-magic modules and plugins (OS dependencies)
   package:
-    name: '{{item}}'
+    name: '{{jupyter_additional_os_packages[ansible_os_family]}}'
     state: '{{ pkg_install_state }}'
-  loop: '{{jupyter_additional_os_packages[ansible_os_family]}}'
 
 
 - name: Install additional %-magic modules and plugins (Python package)

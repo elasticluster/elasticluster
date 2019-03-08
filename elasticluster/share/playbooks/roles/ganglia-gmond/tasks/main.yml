@@ -14,9 +14,8 @@
     - ganglia-gmond
     - gmond
   package:
-    pkg: '{{item}}'
+    pkg: '{{ ganglia_gmond_packages }}'
     state: '{{ pkg_install_state }}'
-  loop: '{{ ganglia_gmond_packages }}'
 
 
 - name: Configure `gmond`

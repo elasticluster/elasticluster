@@ -25,12 +25,9 @@
     - ceph
     - server
   apt:
-    pkg: '{{item}}'
+    name: 'ceph'
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  loop:
-    - ceph
-    #- linux-image-extra-{{ansible_kernel}}
   when: 'is_ceph_server'
 
 
@@ -39,12 +36,11 @@
     - ceph
     - client
   package:
-    name: '{{item}}'
+    name:
+      - ceph-common
+      - ceph-fuse
+      - rbd-fuse
     state: '{{ pkg_install_state }}'
-  loop:
-    - ceph-common
-    - ceph-fuse
-    - rbd-fuse
   when: 'is_ceph_client'
 
 

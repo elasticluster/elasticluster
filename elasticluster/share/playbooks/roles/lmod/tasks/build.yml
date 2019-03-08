@@ -6,41 +6,36 @@
 
 - name: Install build-time dependencies (Debian-compatible)
   package:
-    name: '{{item}}'
+    name:
+      - gcc
+      - libc6-dev
+      - make
     state: '{{ pkg_install_state }}'
-  loop:
-    - gcc
-    - libc6-dev
-    - make
   when: is_debian_compatible
 
 
 - name: Install build-time dependencies (RHEL-compatible)
   package:
-    name: '{{item}}'
+    name: "@Development tools"
     state: '{{ pkg_install_state }}'
-  loop:
-    - "@Development tools"
   when: is_rhel_compatible
 
 
 - name: Install required dependencies of Lmod (Debian-compatible)
   package:
-    name: '{{ item }}'
+    name:
+      - pkg-config
+      - tcl
     state: '{{ pkg_install_state }}'
-  loop:
-    - pkg-config
-    - tcl
   when: is_debian_compatible
 
 
 - name: Install required dependencies of Lmod (RHEL-compatible)
   package:
-    name: '{{ item }}'
+    name:
+      - pkgconfig
+      - tcl
     state: '{{ pkg_install_state }}'
-  loop:
-    - pkgconfig
-    - tcl
   when: is_rhel_compatible
 
 

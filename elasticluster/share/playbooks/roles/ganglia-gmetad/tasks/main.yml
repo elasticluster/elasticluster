@@ -14,9 +14,8 @@
     - ganglia-gmetad
     - gmetad
   package:
-    pkg: '{{item}}'
+    name: '{{ ganglia_gmetad_packages }}'
     state: '{{ pkg_install_state }}'
-  loop: '{{ ganglia_gmetad_packages }}'
 
 
 - name: Configure `gmetad`

@@ -14,9 +14,8 @@
     - nfs
     - nfs-server
   package:
-    pkg: '{{item}}'
+    pkg: '{{nfs_server_packages}}'
     state: '{{ pkg_install_state }}'
-  loop: '{{nfs_server_packages}}'
 
 
 - name: Ensure export directories exist

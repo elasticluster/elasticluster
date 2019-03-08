@@ -18,9 +18,8 @@
 
 - name: Install SLURM DBD packages
   package:
-    pkg: '{{item}}'
+    name: '{{ slurmdbd_packages }}'
     state: '{{ pkg_install_state }}'
-  loop: '{{ slurmdbd_packages }}'
 
 
 - name: Ensure `slurmdbd` is running

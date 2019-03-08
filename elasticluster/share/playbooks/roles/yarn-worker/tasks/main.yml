@@ -8,12 +8,11 @@
     - worker
     - nodemanager
   package:
-    name: '{{item}}'
-    state: '{{pkg_install_state}}'
-  loop:
+    name:
     - hadoop-mapreduce # The Hadoop MapReduce (MRv2)
     - hadoop-yarn # The Hadoop NextGen MapReduce (YARN)
     - hadoop-yarn-nodemanager # YARN Node Manager
+    state: '{{pkg_install_state}}'
 
 
 - name: Start YARN worker services (NodeManager)
@@ -23,8 +22,6 @@
     - worker
     - nodemanager
   service:
-    name="{{item}}"
-    state=started
-    enabled=yes
-  loop:
-    - hadoop-yarn-nodemanager
+    name: "hadoop-yarn-nodemanager"
+    state: started
+    enabled: yes

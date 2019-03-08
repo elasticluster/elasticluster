@@ -21,12 +21,11 @@
 
 - name: Install Samba server packages
   package:
-    name: '{{item}}'
+    name:
+      - cifs-utils
+      - samba
+      - smbclient
     state: '{{ pkg_install_state }}'
-  loop:
-    - cifs-utils
-    - samba
-    - smbclient
 
 
 - name: Ensure SAMBA servers are started at boot

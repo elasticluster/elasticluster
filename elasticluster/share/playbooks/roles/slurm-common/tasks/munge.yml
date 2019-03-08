@@ -34,7 +34,7 @@
     - munge
     - debian
   package:
-    pkg: munge
+    name: munge
     state: '{{ pkg_install_state }}'
   when: is_debian_compatible
 
@@ -45,7 +45,7 @@
     - munge
     - rhel
   package:
-    pkg: slurm-munge
+    name: slurm-munge
     state: '{{ pkg_install_state }}'
   when: is_rhel_compatible
 

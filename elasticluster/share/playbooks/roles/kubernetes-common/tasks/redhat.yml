@@ -14,14 +14,13 @@
 
 - name: Install kubeadm packages
   yum:
-    name: "{{ item }}"
+    name:
+      - docker
+      - kubelet
+      - kubeadm
+      - kubectl
+      - kubernetes-cni
     state: '{{ pkg_install_state }}'
-  loop:
-    - docker
-    - kubelet
-    - kubeadm
-    - kubectl
-    - kubernetes-cni
 
 - name: Enable and start kubeadm services
   service:

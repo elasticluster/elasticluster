@@ -6,12 +6,11 @@
     - hadoop
     - hive
   package:
-    name: '{{item}}'
+    name:
+      - hive
+      # Java JDBC support for PostgreSQL
+      - libpostgresql-jdbc-java
     state: present
-  loop:
-    - hive
-    # Java JDBC support for PostgreSQL
-    - libpostgresql-jdbc-java
 
 
 - name: Ensure Hive configuration directory exists

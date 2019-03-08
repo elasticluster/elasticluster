@@ -4,11 +4,10 @@
 # for once, package names are the same on Debian/Ubuntu and RHEL/CentOS
 - name: Install GlusterFS server packages
   package:
-    name: '{{item}}'
+    name:
+      - glusterfs-server
+      - glusterfs-client
     state: '{{ pkg_install_state }}'
-  loop:
-    - glusterfs-server
-    - glusterfs-client
   tags:
     - gluster
     - glusterfs-server

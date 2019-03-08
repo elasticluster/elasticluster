@@ -18,11 +18,10 @@
 
 - name: Install jenkins
   apt:
-    pkg: '{{item}}'
+    name: '{{j_packages}}'
     state: '{{ pkg_install_state }}'
     force: yes
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  loop: j_packages
   when: is_debian_or_ubuntu
 
 # Only if this is a CentOS (NOT TESTED!)

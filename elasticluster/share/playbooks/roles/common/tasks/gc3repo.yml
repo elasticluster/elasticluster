@@ -5,7 +5,7 @@
 
 - name: Install required package for apt_repository. BUG!
   apt:
-    pkg: python-software-properties
+    name: python-software-properties
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
   when: is_debian_or_ubuntu
