@@ -122,6 +122,7 @@ SCHEMA = {
                 Optional("min_cpu_platform"): nonempty_str,
                 # only on OpenStack
                 Optional('floating_network_id'): str,
+                Optional("request_floating_ip"): boolean,
                 # allow other string keys w/out restrictions
                 Optional(str): str,
             },
@@ -138,6 +139,7 @@ SCHEMA = {
         Optional("min_cpu_platform"): nonempty_str,
         # only on OpenStack
         Optional('floating_network_id'): str,
+        Optional("request_floating_ip"): boolean,
         # allow other string keys w/out restrictions
         Optional(str): str,
     },
@@ -219,15 +221,14 @@ CLOUD_PROVIDER_SCHEMAS = {
         Optional("user_domain_name"): nonempty_str,
         Optional("project_domain_name"): nonempty_str,
         Optional("project_name"): nonempty_str,
-        Optional("request_floating_ip"): boolean,
+        Optional("request_floating_ip"): boolean,  ## DEPRECATED, place in cluster or node config
         Optional("region_name"): nonempty_str,
         Optional("compute_api_version"): Or('1.1', '2'),
         Optional("image_api_version"): Or('1', '2'),
         Optional("network_api_version"): Or('2.0'),
         Optional("volume_api_version"): Or('1', '2', '3'),
         Optional("identity_api_version"): Or('3', '2'),  # no default, can auto-detect
-        ## DEPRECATED, use `compute_api_version` instead
-        Optional("nova_api_version"): nova_api_version,
+        Optional("nova_api_version"): nova_api_version,  ## DEPRECATED, use `compute_api_version` instead
     },
 
     'libcloud': {
@@ -688,6 +689,7 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'tags'
             # OpenStack only
             'floating_network_id',
+            'request_floating_ip',
             #'user_key_name',    ## from `login/*`
             #'user_key_private', ## from `login/*`
             #'user_key_public',  ## from `login/*`
