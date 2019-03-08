@@ -10,7 +10,10 @@
 
 - name: Is the EPEL repo already available? (RHEL/CentOS)
   stat:
-    path='/etc/yum.repos.d/epel.repo'
+    path: '/etc/yum.repos.d/epel.repo'
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
   register: epel_repo_file
 
 

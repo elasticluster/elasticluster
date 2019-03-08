@@ -9,6 +9,9 @@
 - name: Load info about the `ssh-keysign` executable
   stat:
     path: '{{ ssh_keysign_path }}'
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
   register: ssh_keysign
 
 

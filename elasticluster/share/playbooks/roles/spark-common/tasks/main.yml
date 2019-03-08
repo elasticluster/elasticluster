@@ -19,8 +19,11 @@
 
 - name: Check if Py4J version-independent `.zip` archive exist
   stat:
-    path='/usr/lib/spark/python/lib/py4j-src.zip'
-    follow=no
+    path: '/usr/lib/spark/python/lib/py4j-src.zip'
+    follow: no
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
   register: p
   tags:
     - hadoop

@@ -3,6 +3,9 @@
 - name: Check that the /etc/kubernetes/kubelet.conf exists
   stat:
     path: /etc/kubernetes/kubelet.conf
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
   register: kubelet_presence
 
 - name: Join Kubernetes cluster

@@ -7,10 +7,13 @@
     - python
     - pyspark
   stat:
-    path=/usr/bin/pyspark
+    path: /usr/bin/pyspark
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
   register: pyspark_exe_path
 
-  
+
 - name: Check if the Python executable {{python_exe}} is installed
   tags:
     - jupyter
@@ -18,10 +21,13 @@
     - python
     - pyspark
   stat:
-    path='{{python_exe}}'
+    path: '{{python_exe}}'
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
   register: python_exe_path
 
-  
+
 - name: Determine version of Python interpreter {{python_exe}}
   tags:
     - jupyter
@@ -32,8 +38,8 @@
     '{{python_exe}} -c "import sys; sys.stdout.write(str(sys.version_info.major))"'
   register: python_version
   when: python_exe_path.stat.exists
-  
-  
+
+
 - block:
     - name: Install PySpark{{python_version.stdout}} kernel (directory)
       file:
@@ -57,4 +63,3 @@
     - kernels
     - python
     - pyspark
-  

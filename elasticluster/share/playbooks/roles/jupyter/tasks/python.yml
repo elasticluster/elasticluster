@@ -6,7 +6,10 @@
     - kernels
     - python
   stat:
-    path='{{python_exe}}'
+    path: '{{python_exe}}'
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
   register: python_exe_path
 
 
