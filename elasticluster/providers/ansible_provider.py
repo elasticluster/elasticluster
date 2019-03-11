@@ -274,11 +274,14 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             ara_dir = os.getcwd()
             ansible_env['ARA_DIR'] = ara_dir
             ansible_env['ARA_DATABASE'] = (
-                'sqlite:///{ara_dir}/ansible.sqlite'
-                .format(ara_dir=ara_dir))
+                'sqlite:///{ara_dir}/{run_id}.ara.sqlite'
+                .format(ara_dir=ara_dir, run_id=run_id))
+            ansible_env['ARA_LOG_CONFIG'] = (
+                '{run_id}.ara.yml'
+                .format(ara_dir=ara_dir, run_id=run_id))
             ansible_env['ARA_LOG_FILE'] = (
-                '{ara_dir}/ara.log'
-                .format(ara_dir=ara_dir))
+                '{run_id}.ara.log'
+                .format(ara_dir=ara_dir, run_id=run_id))
             ansible_env['ARA_LOG_LEVEL'] = 'DEBUG'
             ansible_env['ARA_PLAYBOOK_PER_PAGE'] = '0'
             ansible_env['ARA_RESULT_PER_PAGE'] = '0'
