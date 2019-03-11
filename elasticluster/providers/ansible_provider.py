@@ -22,8 +22,10 @@ __author__ = str.join(', ', [
 
 # stdlib imports
 from collections import defaultdict
+from datetime import datetime
 import logging
 import os
+import platform
 import tempfile
 import shlex
 import shutil
@@ -199,6 +201,15 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             return self.setup_cluster(cluster, extra_args)
 
     def _run_playbook(self, cluster, playbook, extra_args):
+        run_id = (
+            'elasticluster.{name}.{date}.{pid}@{host}'
+            .format(
+                name=cluster.name,
+                date=datetime.now().isoformat(),
+                pid=os.getpid(),
+                host=platform.node(),
+            )
+        )
         inventory_path = self._build_inventory(cluster)
         if inventory_path is None:
             # no inventory file has been created: this can only happen
