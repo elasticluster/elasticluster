@@ -299,7 +299,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                 "Calling `ansible-playbook` with the following environment:")
             for var, value in sorted(ansible_env.items()):
                 # sanity check. Do not print password content....
-                if "password" in var.lower():
+                if "password" in var.lower() or "secret" in var.lower():
                     elasticluster.log.debug("- %s=******", var)
                 else:
                     elasticluster.log.debug("- %s=%r", var, value)
