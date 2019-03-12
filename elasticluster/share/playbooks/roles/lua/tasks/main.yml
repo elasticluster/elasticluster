@@ -22,9 +22,13 @@
       - lua
       - lua-devel
       - luarocks
+      - lua-bit32
+      - lua-term
+      - lua-filesystem
+      - lua-posix
     state: '{{ pkg_install_state }}'
   when: is_rhel_compatible
-
+  register: _lua_rpm_installed
 
 - name: Find out actual installed Lua version
   command: |
@@ -54,3 +58,4 @@
     - lua-term
     - luafilesystem
     - luaposix
+  when: _lua_rpm_installed is not defined
