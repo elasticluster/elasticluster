@@ -25,6 +25,12 @@
   ignore_errors: True
   register: lmod_check_for__etc_profile_d
 
+- name: Check for existence of Lmod RPM shell profile snippets
+  stat: 
+    path: /etc/profile.d/z00_lmod.sh
+  ignore_errors: True
+  register: lmod_check_for_rpm_shell_profile_snippets
+
 - name: Deploy shell profile snippets to load Lmod
   file:
     state: link
@@ -34,7 +40,7 @@
   loop:
     - { shell: 'sh',  script: 'profile' }
     - { shell: 'csh', script: 'cshrc'   }
-  when: lmod_check_for__etc_profile_d is successful
+  when: lmod_check_for__etc_profile_d is successful and lmod_check_for_rpm_shell_profile_snippets is undefined
 
 
 - name: Deploy additional initialization scripts (verbatim)
@@ -68,4 +74,4 @@
     path='/etc/bash_completion.d/lmod'
     state=link
     src='{{ lmod_root }}/lmod/lmod/init/lmod_bash_completions'
-  when: lmod_check_for__etc_bash_completion_d is successful
+  when: lmod_check_for__etc_bash_completion_d is successful and lmod_check_for_rpm_shell_profile_snippets is undefined

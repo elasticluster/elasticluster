@@ -14,6 +14,15 @@
   register: lmod_pkg_install
 
 
+# try installing from OS packages first...
+- name: Install Lmod from the OS repository (RedHat-compatible)
+  package:
+    name: 'Lmod{{__at__}}{{ LMOD_VERSION }}*'
+    state: '{{ pkg_install_state }}'
+  ignore_errors: True
+  register: lmod_pkg_install
+  when: is_rhel7_compatible
+
 # ...if installing from OS packages failed, download and build sources
 - name: Build Lmod from source
   include_tasks: build.yml
