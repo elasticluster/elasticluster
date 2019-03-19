@@ -22,5 +22,5 @@
 
 
 - name: Configure additional programs
-  include: extra.yml
+  import_playbook: extra.yml
   when: 'svd_config is defined'
