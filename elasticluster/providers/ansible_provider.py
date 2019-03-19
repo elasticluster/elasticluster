@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013-2018 University of Zurich
+# Copyright (C) 2013-2019 University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -516,14 +516,14 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         # naming convention (e.g., omit whatever starts with `_`)
 
         extra_vars = cluster.to_vars_dict()
-        extra_vars.update(extra_vars.pop('extra'))
+        extra_vars.update(extra_vars.pop('extra', {}))
         extra_vars['cloud'] = cluster.cloud_provider.to_vars_dict()
         nodes = extra_vars.pop('nodes')
         extra_vars['nodes'] = {}
         for kind, instances in nodes.iteritems():
             for node in instances:
                 node_vars = node.to_vars_dict()
-                node_vars.update(node_vars.pop('extra'))
+                node_vars.update(node_vars.pop('extra', {}))
                 extra_vars['nodes'][node.name] = node_vars
         extra_vars['output_dir'] = os.getcwd()
         # save it to a YAML file
