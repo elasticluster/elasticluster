@@ -81,7 +81,7 @@
     delay: 10
     timeout: 300
   delegate_to: localhost
-  when: 'not _cgroup_reboot|skipped'
+  when: '_cgroup_reboot is not skipped'
 
 
 - name: Ensure release agent directory exists

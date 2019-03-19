@@ -37,4 +37,4 @@
     delay: 10
     timeout: 300
   delegate_to: localhost
-  when: 'not _selinux_disable_reboot|skipped'
+  when: '_selinux_disable_reboot is not skipped'
