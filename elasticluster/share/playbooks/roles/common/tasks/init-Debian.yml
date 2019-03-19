@@ -100,12 +100,12 @@
     timeout: 300
     sleep: 5
   delegate_to: localhost
-  when: 'not _common_reboot|skipped'
+  when: '_common_reboot is not skipped'
 
 - name: Record that kernel is now up-to-date
   set_fact:
     debian_kernel_upgraded: false
-  when: 'not _common_reboot|skipped'
+  when: '_common_reboot is not skipped'
 
 
 - name: Ensure additional packages are installed
