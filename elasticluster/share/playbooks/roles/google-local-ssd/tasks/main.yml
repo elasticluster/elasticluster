@@ -30,7 +30,7 @@
 - name: Install prerequisites
   package:
     name: mdadm
-    state: installed
+    state: present
 
 - name: Make RAID0 device
   shell: |
