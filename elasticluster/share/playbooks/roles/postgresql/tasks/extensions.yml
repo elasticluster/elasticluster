@@ -1,8 +1,8 @@
 # file: postgresql/tasks/extensions.yml
 
-- import_playbook: extensions/contrib.yml
+- import_tasks: extensions/contrib.yml
   when: postgresql_ext_install_contrib
-- import_playbook: extensions/dev_headers.yml
+- import_tasks: extensions/dev_headers.yml
   when: postgresql_ext_install_dev_headers
-- import_playbook: extensions/postgis.yml
+- import_tasks: extensions/postgis.yml
   when: postgresql_ext_install_postgis
