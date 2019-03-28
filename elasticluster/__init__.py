@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich
+#   Copyright (C) 2013-2016, 2019 S3IT, University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -16,13 +16,15 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
+__version__ = '1.3.dev8'
 
 
+# stdlib imports
 import logging
 
+
+# public API
 log = logging.getLogger("gc3.elasticluster")
 
-
-# API
 from elasticluster.cluster import Cluster
 from elasticluster.repository import AbstractClusterRepository, MultiDiskRepository

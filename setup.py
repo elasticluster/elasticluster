@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-#
 #
-#
-# Copyright (C) 2013-2018 University of Zurich. All rights reserved.
-#
+# Copyright (C) 2013-2019 University of Zurich. All rights reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -76,7 +74,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="elasticluster",
-    version=read_whole_file("version.txt").strip(),
+    version='1.3.dev8',
     description="A command line tool to create, manage and setup computing clusters hosted on a public or private cloud infrastructure.",
     long_description=read_whole_file('README.rst'),
     author=", ".join([
