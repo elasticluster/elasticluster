@@ -101,7 +101,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'elasticluster'
+project = u'ElastiCluster'
 copyright = u'2013-2019, University of Zurich'
 
 # The version info for the project you're documenting, acts as replacement for
