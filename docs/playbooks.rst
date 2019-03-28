@@ -829,8 +829,8 @@ GlusterFS
 
 Supported on:
 
-* Ubuntu 14.04 and later
-* Debian 8 and later
+* Ubuntu 16.04 and later
+* Debian 9 and later
 * RHEL/CentOS 6.x, 7.x
 
 +--------------------+----------------------------------------------------+
@@ -850,22 +850,30 @@ and any ``glusterfs_client`` to mount this filesystem over directory
 To manage the GlusterFS filesystem you need to connect to a
 ``gluster_server`` node.
 
+Several versions of GlusterFS are concurrently maintained and packaged upstream;
+the actual version of GlusterFS installed by ElastiCluster can be set using global
+variable ``gluster_version`` in the ``[setup/...]`` section (see
+below).
+
+.. note::
+
+   Not all versions of GlusterFS are available on all the operating
+   systems listed above; check out the availability matrix at
+   `<https://gluster.readthedocs.io/en/latest/Install-Guide/Community_Packages/>`_
+
+.. note::
+
+   If GlusterFS is already installed on a cluster, changing the value
+   of ``gluster_version`` and running ``elasticluster setup`` may not
+   correctly upgrade the software.  To upgrade GlusterFS to a more
+   recent version, you need to follow the procedure detailed at:
+   `<https://docs.gluster.org/en/latest/Upgrade-Guide/>`_
+
 By default the GlusterFS volume is "pure distributed": i.e., there is
 no redundancy in the server setup (if a server goes offline, so does
 the data that resides there), and neither is the data replicated nor
 striped, i.e., replica and stripe number is set to 1.  This can be
 changed by defining the following variables in the `setup/` section:
-
-+----------------------+------------+---------------------------------------------+
-| variable name        | default    | description                                 |
-+======================+============+=============================================+
-|``gluster_stripes``   | no stripe  | set the stripe value for default volume     |
-+----------------------+------------+---------------------------------------------+
-|``gluster_replicas``  | no replica | set replica value for default volume        |
-+----------------------+------------+---------------------------------------------+
-|``gluster_redundancy``| 0          | nr. of servers that can fail or be          |
-|                      |            | offline without affecting data availability |
-+----------------------+------------+---------------------------------------------+
 
 Note that setting ``gluster_redundancy`` to a non-zero value will
 force the volume to be "dispersed", which is incompatible with
@@ -874,6 +882,19 @@ option is incompatible with ``gluster_stripes`` and/or
 ``gluster_replicas``.  You can read more about the GlusterFS volume
 types and permitted combinations at
 `<http://docs.gluster.org/en/latest/Administrator%20Guide/Setting%20Up%20Volumes/>`_.
+
++----------------------+------------+---------------------------------------------+
+| variable name        | default    | description                                 |
++======================+============+=============================================+
+|``gluster_version``   | 4.1        | version of GlusterFS to be installed        |
++----------------------+------------+---------------------------------------------+
+|``gluster_stripes``   | no stripe  | set the stripe value for default volume     |
++----------------------+------------+---------------------------------------------+
+|``gluster_replicas``  | no replica | set replica value for default volume        |
++----------------------+------------+---------------------------------------------+
+|``gluster_redundancy``| 0          | nr. of servers that can fail or be          |
+|                      |            | offline without affecting data availability |
++----------------------+------------+---------------------------------------------+
 
 The following example configuration sets up a GlusterFS cluster using 8 data nodes
 and providing 2 replicas for each file::
@@ -916,6 +937,26 @@ offlined without impacting data availability::
 
     # set redundancy and force "dispersed" volume
     server_var_gluster_redundancy=2
+
+The following example configuration sets up a pure distributed GlusterFS
+volume over 3 server nodes, installing GlusterFS version 6:
+
+  [cluster/gluster]
+    client_nodes=1
+    server_nodes=3
+    ssh_to=client
+
+    setup_provider=gluster
+    # ... rest of cluster params as usual ...
+
+  [setup/gluster]
+    provider=ansible
+
+    client_groups=glusterfs_client
+    server_groups=glusterfs_server,glusterfs_client
+
+    # set redundancy and force "dispersed" volume
+    global_var_gluster_version=6
 
 The "GlusterFS" playbook depends on the following Ansible roles being
 available:
