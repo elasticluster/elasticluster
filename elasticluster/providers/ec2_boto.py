@@ -65,7 +65,7 @@ from elasticluster.exceptions import (
 # whereas iterating over the latter gives small integers.  I
 # could find no simple incantation that works on both, so
 # here's a conditional definition...
-if sys.version_info == 2:
+if sys.version_info[0] == 2:
     def byte_to_hex(byte):
         return byte.encode('hex')
 else:
