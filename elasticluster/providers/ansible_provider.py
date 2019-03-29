@@ -17,6 +17,9 @@
 
 from __future__ import division
 
+# compatiblity imports
+from future import standard_library
+standard_library.install_aliases()
 
 # stdlib imports
 from builtins import str
@@ -45,7 +48,7 @@ from elasticluster.providers import AbstractSetupProvider
 from elasticluster.utils import parse_ip_address_and_port, temporary_dir
 
 
-__author__ = str.join(', ', [
+__author__ = ','.join([
     'Nicolas Baer <nicolas.baer@uzh.ch>',
     'Antonio Messina <antonio.s.messina@gmail.com>',
     'Riccardo Murri <riccardo.murri@gmail.com>',
