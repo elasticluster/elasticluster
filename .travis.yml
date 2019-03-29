@@ -26,11 +26,13 @@ matrix:
     - python: "3.4"
     - python: "3.5"
     - python: "3.6"
+    - python: "3.7"
 
   allow_failures:
     - python: "3.4"
     - python: '3.5'
     - python: '3.6'
+    - python: "3.7"
 
 
 # build Docker image and publish it on hub.docker.com
