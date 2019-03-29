@@ -236,14 +236,21 @@ class Cluster(Struct):
         ])
 
     def __getstate__(self):
-        return self.to_dict(omit=('_cloud_provider', '_naming_policy',
-                                  '_setup_provider',))
+        return self.to_dict(omit=(
+            '_cloud_provider',
+            '_naming_policy',
+            '_setup_provider',))
 
     def __setstate__(self, state):
         self.__dict__ = state
         self.__dict__['_setup_provider'] = None
         self.__dict__['_cloud_provider'] = None
-        self.__dict__['_naming_policy'] = None
+        # restore naming policy state
+        naming_policy = NodeNamingPolicy()
+        for kind, nodes in self.nodes.items():
+            for node in nodes:
+                naming_policy.use(kind, node.name)
+        self.__dict__['_naming_policy'] =  naming_policy
 
     def __update_option(self, cfg, key, attr):
         oldvalue = getattr(self, attr)
