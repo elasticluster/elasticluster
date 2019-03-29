@@ -51,7 +51,7 @@ from urllib.parse import urlparse
 from warnings import warn
 
 if sys.version_info[0] == 2:
-    from configparser import SafeConfigParser as ConfigParser
+    from ConfigParser import SafeConfigParser as ConfigParser
 else:
     # `SafeConfigParser` was deprecated in Py3 in favor of `ConfigParser`
     from configparser import ConfigParser
