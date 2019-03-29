@@ -32,7 +32,11 @@ import shutil
 import sys
 import tempfile
 import time
-import UserDict
+try:
+    # Python 2
+    from UserDict import DictMixin
+except ImportError:
+    from collections import MutableMapping as DictMixin
 
 # 3rd party imports
 import click
@@ -397,7 +401,7 @@ def string_to_boolean(word):
         return False
 
 
-class Struct(object, UserDict.DictMixin):
+class Struct(DictMixin):
     """
     A `dict`-like object, whose keys can be accessed with the usual
     '[...]' lookup syntax, or with the '.' get attribute syntax.
