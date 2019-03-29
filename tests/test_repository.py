@@ -78,33 +78,11 @@ class MemRepositoryTests(unittest.TestCase):
         assert cluster.name not in self.storage.clusters
 
 
-class PickleRepositoryTests(MemRepositoryTests):
+class _DiskRepositoryTests(object):
+
     def setUp(self):
         self.path = tempfile.mkdtemp()
-        self.storage = PickleRepository(self.path)
-
-    def tearDown(self):
-        shutil.rmtree(self.path, ignore_errors=True)
-        del self.storage
-
-    def test_delete(self):
-        pass
-
-    def test_save_and_delete(self):
-        cluster = Cluster('test1')
-        self.storage.save_or_update(cluster)
-
-        clusterpath = os.path.join(self.path, 'test1.pickle')
-        assert os.path.exists(clusterpath)
-
-        self.storage.delete(cluster)
-        assert not os.path.exists(clusterpath)
-
-
-class JsonRepositoryTests(unittest.TestCase):
-    def setUp(self):
-        self.path = tempfile.mkdtemp()
-        self.storage = JsonRepository(self.path)
+        self.storage = self.repository_ctor(self.path)
 
     def tearDown(self):
         shutil.rmtree(self.path, ignore_errors=True)
@@ -146,7 +124,7 @@ class JsonRepositoryTests(unittest.TestCase):
                           user_key_name='key')
         self.storage.save_or_update(cluster)
 
-        clusterpath = os.path.join(self.path, 'test1.json')
+        clusterpath = os.path.join(self.path, 'test1' + self.saved_file_suffix)
         assert os.path.exists(clusterpath)
 
         self.storage.delete(cluster)
@@ -169,71 +147,19 @@ class JsonRepositoryTests(unittest.TestCase):
         assert cluster.nodes['foo'][0].name == 'foo123'
 
 
-class YamlRepositoryTests(unittest.TestCase):
-    def setUp(self):
-        self.path = tempfile.mkdtemp()
-        self.storage = YamlRepository(self.path)
+class PickleRepositoryTests(_DiskRepositoryTests, unittest.TestCase):
+    repository_ctor = PickleRepository
+    saved_file_suffix = '.pickle'
 
-    def tearDown(self):
-        shutil.rmtree(self.path, ignore_errors=True)
-        del self.storage
 
-    def test_get_all(self):
-        clusters = [Cluster(name='test_%d' % i,
-                            cloud_provider=None,
-                            setup_provider=None,
-                            user_key_name='key') for i in range(10)]
-        cluster_names = [c.name for c in clusters]
+class JsonRepositoryTests(_DiskRepositoryTests, unittest.TestCase):
+    repository_ctor = JsonRepository
+    saved_file_suffix = '.json'
 
-        for cluster in clusters:
-            self.storage.save_or_update(cluster)
 
-        new_clusters = self.storage.get_all()
-        cluster_names = [c.name for c in clusters]
-        for cluster in new_clusters:
-            assert cluster.name in cluster_names
-
-    def test_get(self):
-        clusters = [Cluster('test_%d' % i) for i in range(10)]
-
-        for cluster in clusters:
-            self.storage.save_or_update(cluster)
-
-        new_clusters = [self.storage.get(cluster.name) for cluster in clusters]
-        for cluster in new_clusters:
-            assert cluster in clusters
-
-    def test_delete(self):
-        pass
-
-    def test_save_and_delete(self):
-        cluster = Cluster(name='test1',
-                          cloud_provider=None,
-                          setup_provider=None,
-                          user_key_name='key')
-        self.storage.save_or_update(cluster)
-
-        clusterpath = os.path.join(self.path, 'test1.yaml')
-        assert os.path.exists(clusterpath)
-
-        self.storage.delete(cluster)
-        assert not os.path.exists(clusterpath)
-
-    def test_saving_cluster_with_nodes(self):
-        cluster = Cluster(name='test1',
-                          cloud_provider=None,
-                          setup_provider=None,
-                          user_key_name='key',
-                          repository=self.storage)
-        cluster.add_node(kind='foo', image_id='123',
-                         image_user='s3it', flavor='m1.tiny',
-                         security_group='default', name='foo123')
-        self.storage.save_or_update(cluster)
-        new = self.storage.get(cluster.name)
-        assert 'foo' in cluster.nodes
-        assert len(cluster.nodes['foo']) > 0
-        assert isinstance(cluster.nodes['foo'][0], Node)
-        assert cluster.nodes['foo'][0].name == 'foo123'
+class YamlRepositoryTests(_DiskRepositoryTests, unittest.TestCase):
+    repository_ctor = YamlRepository
+    saved_file_suffix = '.yaml'
 
 
 class TestMultiDiskRepository(unittest.TestCase):
