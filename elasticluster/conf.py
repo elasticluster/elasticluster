@@ -41,7 +41,6 @@ standard_library.install_aliases()
 from builtins import zip
 from builtins import object
 from collections import defaultdict
-from configparser import SafeConfigParser
 from importlib import import_module
 import os
 from os.path import expanduser, expandvars
@@ -49,6 +48,13 @@ import re
 import sys
 from urllib.parse import urlparse
 from warnings import warn
+
+if sys.version_info[0] == 2:
+    from configparser import SafeConfigParser as ConfigParser
+else:
+    # `SafeConfigParser` was deprecated in Py3 in favor of `ConfigParser`
+    from configparser import ConfigParser
+
 
 # 3rd-party modules
 from pkg_resources import resource_filename
@@ -412,7 +418,7 @@ def _read_config_files(paths):
     :param paths: list of filesystem paths of files to read
     """
     # read given config files
-    configparser = SafeConfigParser()
+    configparser = ConfigParser(strict=False)
     # Preventing automatic lowercase of config keys
     # see: https://stackoverflow.com/questions/19359556/configparser-reads-capital-keys-and-make-them-lower-case
     configparser.optionxform = str
