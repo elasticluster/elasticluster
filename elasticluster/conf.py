@@ -51,10 +51,14 @@ from urllib.parse import urlparse
 from warnings import warn
 
 if sys.version_info[0] == 2:
-    from ConfigParser import SafeConfigParser as ConfigParser
+    from ConfigParser import SafeConfigParser
+    def make_config_parser():
+        return SafeConfigParser()
 else:
     # `SafeConfigParser` was deprecated in Py3 in favor of `ConfigParser`
     from configparser import ConfigParser
+    def make_config_parser():
+        return ConfigParser(strict=False)
 
 
 # 3rd-party modules
@@ -419,7 +423,7 @@ def _read_config_files(paths):
     :param paths: list of filesystem paths of files to read
     """
     # read given config files
-    configparser = ConfigParser(strict=False)
+    configparser = make_config_parser()
     # Preventing automatic lowercase of config keys
     # see: https://stackoverflow.com/questions/19359556/configparser-reads-capital-keys-and-make-them-lower-case
     configparser.optionxform = str
