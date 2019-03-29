@@ -28,6 +28,7 @@ standard_library.install_aliases()
 from builtins import range
 import hashlib
 import os
+import sys
 import urllib.request, urllib.parse, urllib.error
 import threading
 import time
@@ -55,6 +56,20 @@ from elasticluster.exceptions import (
     SubnetError,
     VpcError,
 )
+
+
+# Paramiko's `PKey.get_fingerprint()` returns a `str` object
+# in Python 2, and a `bytes` object in Python 3; iterating
+# over the former gives characters (i.e., `str` of length 1),
+# whereas iterating over the latter gives small integers.  I
+# could find no simple incantation that works on both, so
+# here's a conditional definition...
+if sys.version_info == 2:
+    def byte_to_hex(byte):
+        return byte.encode('hex')
+else:
+    def byte_to_hex(byte):
+        return '{:02x}'.format(byte)
 
 
 class BotoCloudProvider(AbstractCloudProvider):
@@ -574,8 +589,9 @@ class BotoCloudProvider(AbstractCloudProvider):
                     fingerprint = ':'.join(digest[i:(i + 2)]
                                            for i in range(0, len(digest), 2))
                 else:
-                    fingerprint = ':'.join(i.encode('hex')
-                                           for i in pkey.get_fingerprint())
+                    fingerprint = ':'.join(byte_to_hex(byte)
+                                           for byte in pkey.get_fingerprint())
+
 
                 if fingerprint != cloud_keypair.fingerprint:
                     if "amazon" in self._ec2host:
@@ -587,6 +603,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                         raise KeypairError(
                             "Keypair `%s` is present but has "
                             "different fingerprint. Aborting!" % name)
+
 
     def _check_security_group(self, name):
         """Checks if the security group exists.
