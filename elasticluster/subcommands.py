@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013-2018  University of Zurich
+# Copyright (C) 2013-2019  University of Zurich.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,11 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = ', '.join([
-    'Nicolas Baer <nicolas.baer@uzh.ch>',
-    'Antonio Messina <antonio.messina@s3it.uzh.ch>',
-    'Riccardo Murri <riccardo.murri@gmail.com>',
-])
+from __future__ import print_function
 
 # stdlib imports
 from abc import ABCMeta, abstractmethod
@@ -32,7 +28,6 @@ import sys
 import tempfile
 import re
 
-
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.conf import make_creator
@@ -43,6 +38,13 @@ from elasticluster.utils import (
     expand_ssh_proxy_command,
     parse_ip_address_and_port
 )
+
+
+__author__ = ', '.join([
+    'Nicolas Baer <nicolas.baer@uzh.ch>',
+    'Antonio Messina <antonio.messina@s3it.uzh.ch>',
+    'Riccardo Murri <riccardo.murri@gmail.com>',
+])
 
 
 class AbstractCommand():
@@ -411,9 +413,9 @@ class ResizeCluster(AbstractCommand):
             #       complicated for the user
             if (not grp in cluster.nodes or not cluster.nodes[grp]) \
                     and not template:
-                print "Elasticluster can not infer which template to use for "\
+                print("Elasticluster can not infer which template to use for "\
                       "the new node(s). Please provide the template with " \
-                      "the `-t` or `--template` option"
+                      "the `-t` or `--template` option")
                 return
 
             if not template:

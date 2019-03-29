@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013-2016, 2018 S3IT, University of Zurich
+#   Copyright (C) 2013-2019 University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -16,12 +16,15 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# System imports
+from __future__ import print_function
+from __future__ import absolute_import
+
+# stdlib imports
 import logging
 import os
 import shutil
 import sys
-import utils
+from . import utils
 import warnings
 
 # workaround for issue #592 -- must be applied before we get a chance
