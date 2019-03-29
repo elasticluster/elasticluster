@@ -212,7 +212,7 @@ duplication of code.
 
         path = self._get_cluster_storage_path(cluster.name)
         cluster.storage_file = path
-        with open(path, 'wb') as storage:
+        with open(path, 'w') as storage:
             self.dump(cluster, storage)
 
     def delete(self, cluster):
