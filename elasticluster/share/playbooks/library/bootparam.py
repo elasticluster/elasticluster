@@ -150,7 +150,6 @@ RETURN = """
 ## stdlib imports
 #
 
-from abc import ABCMeta, abstractmethod
 from builtins import str
 from builtins import object
 
@@ -220,15 +219,12 @@ class Bootloader(object):
     Interface that concrete bootloader handlers must conform to.
     """
 
-    __metaclass__ = ABCMeta
-
     __slots__ = ['module']
 
     def __init__(self, module):
         # reference Ansible module for e.g. `run_command`
         self.module = module
 
-    @abstractmethod
     def edit(self, config, state, name, value=None):
         """
         Change all occurrences of `name` in a kernel boot line in the
