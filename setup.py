@@ -127,6 +127,7 @@ setup(
     setup_requires=['Babel>=2.3.4,!=2.4.0'],  # see Issue #268
     install_requires=[
         # ElastiCluster core requirements
+        'future',
         'pip>=9.0.0',  ## see issue #433
         #'ara',  # optional
         'PyCLI',
@@ -170,13 +171,13 @@ setup(
         'pbr>=2.0.0,!=2.1.0',
         ## the following 6 are all required dependencies
         ## which are not picked up, see issue #500
-        'enum34',
-        'functools32',
+        'enum34; python_version<"3.4"',
+        'functools32; python_version<"3.2"',
         'ipaddress',
-        'pathlib2',
+        'pathlib2; python_version<"3.4"',
         'scandir',
         'secretstorage<=2.3.1',
     ],
-    tests_require=['tox', 'mock', 'pytest>=2.10'],  # read right-to-left
+    tests_require=['tox', 'mock', 'pytest-coverage', 'pytest>=2.10'],  # read right-to-left
     cmdclass={'test': Tox},
 )
