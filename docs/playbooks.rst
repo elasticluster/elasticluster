@@ -886,7 +886,7 @@ types and permitted combinations at
 +----------------------+------------+---------------------------------------------+
 | variable name        | default    | description                                 |
 +======================+============+=============================================+
-|``gluster_version``   | 4.1        | version of GlusterFS to be installed        |
+|``gluster_version``   | 6          | version of GlusterFS to be installed        |
 +----------------------+------------+---------------------------------------------+
 |``gluster_stripes``   | no stripe  | set the stripe value for default volume     |
 +----------------------+------------+---------------------------------------------+
@@ -939,7 +939,7 @@ offlined without impacting data availability::
     server_var_gluster_redundancy=2
 
 The following example configuration sets up a pure distributed GlusterFS
-volume over 3 server nodes, installing GlusterFS version 6:
+volume over 3 server nodes, installing GlusterFS version 4.1:
 
   [cluster/gluster]
     client_nodes=1
@@ -956,7 +956,7 @@ volume over 3 server nodes, installing GlusterFS version 6:
     server_groups=glusterfs_server,glusterfs_client
 
     # set redundancy and force "dispersed" volume
-    global_var_gluster_version=6
+    global_var_gluster_version=4.1
 
 The "GlusterFS" playbook depends on the following Ansible roles being
 available:
