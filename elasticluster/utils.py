@@ -455,11 +455,20 @@ class Struct(DictMixin):
 
     # the `DictMixin` class defines all std `dict` methods, provided
     # that `__getitem__`, `__setitem__` and `keys` are defined.
-    def __setitem__(self, name, val):
-        self.__dict__[name] = val
+    def __delitem__(self, name):
+        del self.__dict__[name]
 
     def __getitem__(self, name):
         return self.__dict__[name]
+
+    def __setitem__(self, name, val):
+        self.__dict__[name] = val
+
+    def __iter__(self):
+        return iter(self.__dict__)
+
+    def __len__(self):
+        return len(self.__dict__)
 
     def keys(self):
         return list(self.__dict__.keys())
