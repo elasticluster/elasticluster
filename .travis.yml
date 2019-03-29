@@ -1,6 +1,4 @@
 language: python
-python:
-  - "2.7"
 
 env:
   global:
@@ -10,15 +8,30 @@ env:
   # DOCKER_PASS
   - secure: "c2ImpLoN/71+uZ1JAA06ENPYWon9Ohrq0HoKBhZ+6nyYiIl1BznPraWmQZOkx/rgg9IOBM4BMIdfOFhimrI6LDV2m5XlIpSct77wM/qVJyZi6TNuoS6zmRUfcJ9Rm3oAzRhv17Z0gvX1jTlKtlLJXPPyaLjlBAG8OAo7/aklqRk="
 
+
 install:
   - "pip install --upgrade 'setuptools' 'pip>=8.1.2'"
   - "pip install 'pytest>=2.10' 'pytest-cov<2.6.0' 'mock' 'tox'"
   - "pip install ."
 
-script:
-  - py.test --cov=elasticluster
-sudo: false
 
+script:
+  - pytest --cov=elasticluster
+
+matrix:
+  include:
+    - python: "2.7"
+    - python: "3.4"
+    - python: "3.5"
+    - python: "3.6"
+
+  allow_failures:
+    - python: "3.4"
+    - python: '3.5'
+    - python: '3.6'
+
+
+# build Docker image and publish it on hub.docker.com
 after_success:
   - if [ $(echo "$TRAVIS_PYTHON_VERSION" | cut -d. -f1-2) != '2.7' ]; then echo "Only building on Py2.7, this is $TRAVIS_PYTHON_VERSION"; exit 0; fi
   - if [ -z "$DOCKER_USER" ]; then echo "Untrusted build - cannot access docker environment variables."; exit 0; fi
