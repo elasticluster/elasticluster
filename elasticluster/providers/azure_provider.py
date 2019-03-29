@@ -56,11 +56,11 @@ except ImportError:
                  " A placeholder object will be used instead, but it will raise"
                  " `ImportError` later if there is any actual attempt at using it."
                  .format(module=self.__missing), ImportWarning)
-            def __call__(self, *args, **kwargs):
-                raise ImportError(
-                    "Trying to actually use client class from module `{module}`"
-                    " which could not be imported. Aborting."
-                    .format(module=self.__missing))
+        def __call__(self, *args, **kwargs):
+            raise ImportError(
+                "Trying to actually use client class from module `{module}`"
+                " which could not be imported. Aborting."
+                .format(module=self.__missing))
     ServicePrincipalCredentials = _Unavailable("azure.common.credentials")
     ResourceManagementClient = _Unavailable("azure.mgmt.resource")
     NetworkManagementClient = _Unavailable("azure.mgmt.network")
