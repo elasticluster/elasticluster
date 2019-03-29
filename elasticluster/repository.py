@@ -188,7 +188,7 @@ duplication of code.
         path = self._get_cluster_storage_path(name)
 
         try:
-            with open(path, 'r') as storage:
+            with open(path, self.open_mode_for_loading) as storage:
                 cluster = self.load(storage)
                 # Compatibility with previous version of Node
                 for node in sum(cluster.nodes.values(), []):
@@ -212,7 +212,7 @@ duplication of code.
 
         path = self._get_cluster_storage_path(cluster.name)
         cluster.storage_file = path
-        with open(path, 'w') as storage:
+        with open(path, self.open_mode_for_saving) as storage:
             self.dump(cluster, storage)
 
     def delete(self, cluster):
@@ -236,6 +236,9 @@ class PickleRepository(DiskRepository):
     """
 
     file_ending = 'pickle'
+    open_mode_for_loading = 'rb'
+    open_mode_for_saving = 'wb'
+
     def __init__(self, storage_path):
         DiskRepository.__init__(self, storage_path)
         self.repository_types = [PickleRepository]
@@ -259,6 +262,8 @@ class JsonRepository(DiskRepository):
                              information
     """
     file_ending = 'json'
+    open_mode_for_loading = 'r'
+    open_mode_for_saving = 'w'
 
     def load(self, fp):
         data = json.load(fp)
@@ -287,6 +292,8 @@ class YamlRepository(DiskRepository):
                              information
     """
     file_ending = 'yaml'
+    open_mode_for_loading = 'r'
+    open_mode_for_saving = 'w'
 
     def load(self, fp):
         data = yaml.load(fp)
