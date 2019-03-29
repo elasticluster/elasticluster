@@ -34,6 +34,7 @@ rest of ElastiCluster happens in three stages:
 
 from __future__ import (print_function, division, absolute_import)
 
+# compatibility imports
 from future import standard_library
 standard_library.install_aliases()
 
