@@ -23,14 +23,16 @@
 __docformat__ = 'reStructuredText'
 __author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
 
-
+# compatibility imports
 from future import standard_library
 standard_library.install_aliases()
 
+# stdlib imports
 from configparser import RawConfigParser
 import re
 from io import StringIO
 
+# local imports
 from elasticluster import log
 
 # NODELIST          NODES PARTITION       STATE CPUS    S:C:T MEMORY TMP_DISK WEIGHT FEATURES REASON

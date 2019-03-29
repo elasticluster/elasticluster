@@ -21,6 +21,7 @@ Custom validator functions for checking the configuration file.
 
 from __future__ import (print_function, division, absolute_import)
 
+# compatibility imports
 from future import standard_library
 standard_library.install_aliases()
 

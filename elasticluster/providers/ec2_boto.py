@@ -21,6 +21,7 @@ __author__ = ', '.join([
     'Riccardo Murri <riccardo.murri@gmail.com>',
 ])
 
+# compatibility imports
 from future import standard_library
 standard_library.install_aliases()
 
