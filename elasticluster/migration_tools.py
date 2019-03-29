@@ -22,6 +22,7 @@
 
 from __future__ import print_function
 
+from builtins import object
 import os
 import sys
 
@@ -41,7 +42,7 @@ __author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
 #     Rename `ClusterRepository` to `PickleRepository`
 repository.ClusterRepository = repository.PickleRepository
 
-class NotPresent:
+class NotPresent(object):
     def __str__(self):
         return "Not present before"
 
@@ -80,7 +81,7 @@ def __setstate_upgrade__(self, state):
     if 'thread_pool_max_size' not in state:
         self._patches['thread_pool_max_size'] = (NotPresent(), 10)
 
-    for attr, values in self._patches.items():
+    for attr, values in list(self._patches.items()):
         self.__dict__[attr] = values[1]
 
 def patch_cluster():
@@ -116,7 +117,7 @@ class MigrationCommand(AbstractCommand):
         clusters = [i[:-7] for i in os.listdir(self.params.storage_path) if i.endswith('.pickle')]
 
         if self.params.cluster:
-            clusters = filter(lambda x: x in self.params.cluster, clusters)
+            clusters = [x for x in clusters if x in self.params.cluster]
 
         if not clusters:
             print("No clusters")
@@ -129,7 +130,7 @@ class MigrationCommand(AbstractCommand):
             cl = repo.get(cluster)
             if cl._patches:
                 print("Attributes changed: ")
-                for attr, val in cl._patches.items():
+                for attr, val in list(cl._patches.items()):
                     print("  %s: %s -> %s" % (attr, val[0], val[1]))
             else:
                 print("No upgrade needed")

@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2016 S3IT, University of Zurich
+# Copyright (C) 2016, 2019  University of Zurich.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ __author__ = ('Riccardo Murri <riccardo.murri@gmail.com>')
 
 
 # imports etc
+from builtins import object
 import logging
 import os
 import sys

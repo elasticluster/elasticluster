@@ -14,13 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-__author__ = str.join(', ', [
-    'Nicolas Baer <nicolas.baer@uzh.ch>',
-    'Antonio Messina <antonio.s.messina@gmail.com>',
-    'Riccardo Murri <riccardo.murri@gmail.com>',
-])
+
+from __future__ import division
+
 
 # stdlib imports
+from builtins import str
 from collections import defaultdict
 from datetime import datetime
 import logging
@@ -44,6 +43,13 @@ from elasticluster import log
 from elasticluster.exceptions import ConfigurationError, ClusterSizeError
 from elasticluster.providers import AbstractSetupProvider
 from elasticluster.utils import parse_ip_address_and_port, temporary_dir
+
+
+__author__ = str.join(', ', [
+    'Nicolas Baer <nicolas.baer@uzh.ch>',
+    'Antonio Messina <antonio.s.messina@gmail.com>',
+    'Riccardo Murri <riccardo.murri@gmail.com>',
+])
 
 
 class AnsibleSetupProvider(AbstractSetupProvider):
@@ -340,7 +346,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         # log level (we cannot read `ElastiCluster().params.verbose`
         # here, still we can access the log configuration since it's
         # global).
-        verbosity = (logging.WARNING - elasticluster.log.getEffectiveLevel()) / 10
+        verbosity = int((logging.WARNING - elasticluster.log.getEffectiveLevel()) / 10)
         if verbosity > 0:
             cmd.append('-' + ('v' * verbosity))  # e.g., `-vv`
 
@@ -520,7 +526,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         extra_vars['cloud'] = cluster.cloud_provider.to_vars_dict()
         nodes = extra_vars.pop('nodes')
         extra_vars['nodes'] = {}
-        for kind, instances in nodes.iteritems():
+        for kind, instances in nodes.items():
             for node in instances:
                 node_vars = node.to_vars_dict()
                 node_vars.update(node_vars.pop('extra', {}))

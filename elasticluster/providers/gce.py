@@ -19,6 +19,7 @@ Cloud provider for the Google Compute Engine.
 
 See <https://code.google.com/p/google-cloud-platform-samples/source/browse/python-client-library-example/gce.py?repo=compute> for reference.
 """
+
 __author__ = ', '.join([
     'Riccardo Murri <riccardo.murri@uzh.ch>',
     'Nicolas Baer <nicolas.baer@gmail.com>',
@@ -27,6 +28,7 @@ __author__ = ', '.join([
 
 
 # stdlib imports
+from builtins import range
 import collections
 import copy
 import os
@@ -356,7 +358,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
             image_url = image_id
         else:
             # allow image shortcuts (see docstring for IMAGE_NAME_SHORTCUTS)
-            for prefix, os_cloud in self.IMAGE_NAME_SHORTCUTS.iteritems():
+            for prefix, os_cloud in self.IMAGE_NAME_SHORTCUTS.items():
                 if image_id.startswith(prefix + '-'):
                     image_url = '%s%s/global/images/%s' % (
                         GCE_URL, os_cloud, image_id)

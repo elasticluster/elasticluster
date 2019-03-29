@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-#
 #
-# Copyright (C) 2016, 2018 University of Zurich. All rights reserved.
+# Copyright (C) 2016, 2018, 2019 University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -21,6 +21,8 @@ __docformat__ = 'reStructuredText'
 __author__ = 'Riccardo Murri <riccardo.murri@gmail.com>'
 
 # stdlib imports
+from builtins import str
+from builtins import object
 from contextlib import contextmanager
 import functools
 import os
@@ -456,7 +458,7 @@ class Struct(object, UserDict.DictMixin):
         return self.__dict__[name]
 
     def keys(self):
-        return self.__dict__.keys()
+        return list(self.__dict__.keys())
 
 
 @contextmanager

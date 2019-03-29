@@ -1,6 +1,6 @@
 #! /usr/bin/python
 #
-# Copyright (C) 2016, 2018 University of Zurich.
+# Copyright (C) 2016, 2018, 2019 University of Zurich.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,10 +21,14 @@ Custom validator functions for checking the configuration file.
 
 from __future__ import (print_function, division, absolute_import)
 
+from future import standard_library
+standard_library.install_aliases()
+
 # stdlib imports
+from builtins import str
 import os
 import string
-from urlparse import urlparse
+from urllib.parse import urlparse
 from warnings import warn
 
 # 3rd-party modules

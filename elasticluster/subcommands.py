@@ -18,6 +18,8 @@
 from __future__ import print_function
 
 # stdlib imports
+from builtins import range
+from builtins import object
 from abc import ABCMeta, abstractmethod
 from fnmatch import fnmatch
 from zipfile import ZipFile
@@ -38,6 +40,7 @@ from elasticluster.utils import (
     expand_ssh_proxy_command,
     parse_ip_address_and_port
 )
+from future.utils import with_metaclass
 
 
 __author__ = ', '.join([
@@ -47,13 +50,12 @@ __author__ = ', '.join([
 ])
 
 
-class AbstractCommand():
+class AbstractCommand(with_metaclass(ABCMeta, object)):
     """
     Defines the general contract every command has to fulfill in
     order to be recognized by the arguments list and executed
     afterwards.
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, params):
         """
@@ -186,7 +188,7 @@ class Start(AbstractCommand):
 
         # possibly overwrite node mix from config
         cluster_nodes_conf = creator.cluster_conf[cluster_template]['nodes']
-        for kind, num in self.params.nodes_override.iteritems():
+        for kind, num in self.params.nodes_override.items():
             if kind not in cluster_nodes_conf:
                 raise ConfigurationError(
                     "No node group `{kind}` defined"
@@ -587,12 +589,12 @@ class ListTemplates(AbstractCommand):
         config = creator.cluster_conf
 
         print("""%d cluster templates found in configuration file.""" % len(config))
-        templates = config.keys()
         for pattern in self.params.clusters:
-            templates = [t for t in templates if fnmatch(t, pattern)]
+            templates = [t for t in config.keys() if fnmatch(t, pattern)]
 
         if self.params.clusters:
-            print("""%d cluter templates found matching pattern(s) '%s'""" % (len(templates), str.join(", ", self.params.clusters)))
+            print("""%d cluster templates found matching pattern(s) '%s'"""
+                  % (len(templates), str.join(", ", self.params.clusters)))
 
         for template in templates:
             try:
