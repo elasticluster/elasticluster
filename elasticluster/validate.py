@@ -124,7 +124,7 @@ def hostname(value):
             " letters, digits or the hyphen character (`-`)"
             .format(value))
 
-_ALLOWED_HOSTNAME_CHARS = set(string.letters + string.digits + '-')
+_ALLOWED_HOSTNAME_CHARS = set(string.ascii_letters + string.digits + '-')
 
 
 @validator
