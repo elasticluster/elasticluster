@@ -16,6 +16,9 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
 
+# compatibility imports
+from future.utils import with_metaclass
+
 # stdlib imports
 from builtins import object
 import os
@@ -24,9 +27,6 @@ from abc import ABCMeta, abstractmethod
 import glob
 import json
 import yaml
-
-# 3rd party imports
-from future.utils import with_metaclass
 
 # Elasticluster imports
 from elasticluster import log

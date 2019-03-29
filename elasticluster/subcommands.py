@@ -17,6 +17,9 @@
 #
 from __future__ import print_function
 
+# compatibility imports
+from future.utils import with_metaclass
+
 # stdlib imports
 from builtins import range
 from builtins import object
@@ -40,7 +43,6 @@ from elasticluster.utils import (
     expand_ssh_proxy_command,
     parse_ip_address_and_port
 )
-from future.utils import with_metaclass
 
 
 __author__ = ', '.join([

@@ -18,11 +18,12 @@
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 
+# compatibility imports
+from future.utils import with_metaclass
+
 # stdlib imports
 from builtins import object
 from abc import ABCMeta, abstractmethod
-
-from future.utils import with_metaclass
 
 
 class AbstractCloudProvider(with_metaclass(ABCMeta, object)):
