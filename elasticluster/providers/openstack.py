@@ -17,13 +17,16 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
 __docformat__ = 'reStructuredText'
 __author__ = ', '.join([
     'Antonio Messina <antonio.s.messina@gmail.com>',
     'Riccardo Murri <riccardo.murri@gmail.com>'
     ])
 
-# System imports
+# stdlib imports
+from builtins import range
+from builtins import object
 import os
 import threading
 from warnings import warn
@@ -1023,7 +1026,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 'user_domain_name': self._os_user_domain_name,
                 'region_name': self._os_region_name,
                 'request_floating_ip': self.request_floating_ip,
-                'instance_ids': self._instances.keys(),
+                'instance_ids': list(self._instances.keys()),
                 'compute_api_version': self.compute_api_version,
             }
 

@@ -3,7 +3,7 @@
 # @(#)test_repository.py
 #
 #
-# Copyright (C) 2013, 2015, 2016 S3IT, University of Zurich. All rights reserved.
+# Copyright (C) 2013, 2015, 2016, 2019  University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -26,6 +26,7 @@ from __future__ import absolute_import
 import logging
 logging.basicConfig()
 
+from builtins import range
 import json
 import os
 import shutil

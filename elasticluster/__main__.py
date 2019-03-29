@@ -20,6 +20,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 # stdlib imports
+from builtins import str
 import logging
 import os
 import shutil

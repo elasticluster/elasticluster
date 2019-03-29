@@ -22,6 +22,10 @@ Riccardo Murri <riccardo.murri@gmail.com>
 '''
 
 # System imports
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
 from collections import defaultdict
 from copy import copy
 from functools import reduce
@@ -185,7 +189,7 @@ class Cluster(Struct):
 
         # attributes that have already been defined trump whatever is
         # in the `extra` dictionary
-        for key in extra.keys():
+        for key in list(extra.keys()):
             if hasattr(self, key):
                 del extra[key]
         self.extra.update(extra)
@@ -547,7 +551,7 @@ class Cluster(Struct):
 
             # keep only nodes that were successfully started
             return set(node for node, ok
-                       in itertools.izip(nodes, result.get()) if ok)
+                       in zip(nodes, result.get()) if ok)
 
     @staticmethod
     def _start_node(node):
@@ -679,7 +683,7 @@ class Cluster(Struct):
         """
         # finding all node groups with an unsatisfied amount of nodes
         unsatisfied = 0
-        for kind, required in min_nodes.iteritems():
+        for kind, required in min_nodes.items():
             available = len(self.nodes[kind])
             if available < required:
                 log.error(
@@ -698,7 +702,7 @@ class Cluster(Struct):
 
         :return: list of :py:class:`Node`
         """
-        nodes = self.nodes.values()
+        nodes = list(self.nodes.values())
         if nodes:
             return reduce(operator.add, nodes, list())
         else:
@@ -1265,7 +1269,7 @@ class Node(Struct):
         self.preferred_ip = extra.pop('preferred_ip', None)
         self.ips = extra.pop('ips', [])
         # Remove extra arguments, if defined
-        for key in extra.keys():
+        for key in list(extra.keys()):
             if hasattr(self, key):
                 del extra[key]
         self.extra = {}

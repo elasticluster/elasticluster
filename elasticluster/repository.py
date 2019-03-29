@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-#
-# Copyright (C) 2013, 2015 S3IT, University of Zurich
+# Copyright (C) 2013, 2015, 2019  University of Zurich.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +16,8 @@
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>, Antonio Messina <antonio.s.messina@gmail.com>'
 
-# System imports
+# stdlib imports
+from builtins import object
 import os
 import pickle
 from abc import ABCMeta, abstractmethod
@@ -24,9 +25,13 @@ import glob
 import json
 import yaml
 
+# 3rd party imports
+from future.utils import with_metaclass
+
 # Elasticluster imports
 from elasticluster import log
 from elasticluster.exceptions import ClusterNotFound, ClusterError
+
 
 def migrate_cluster(cluster):
     """Called when loading a cluster when it comes from an older version
@@ -51,11 +56,10 @@ def migrate_cluster(cluster):
     return cluster
 
 
-class AbstractClusterRepository:
+class AbstractClusterRepository(with_metaclass(ABCMeta, object)):
     """Defines the contract for a cluster repository to store clusters in a
     persistent state.
     """
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def save_or_update(self, cluster):
@@ -129,7 +133,7 @@ class MemRepository(AbstractClusterRepository):
 
         :return: list of :py:class:`elasticluster.cluster.Cluster`
         """
-        return self.clusters.values()
+        return list(self.clusters.values())
 
     def delete(self, cluster):
         """Deletes the cluster from memory.

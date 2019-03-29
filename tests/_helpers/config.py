@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2016, 2018 S3IT, University of Zurich
+#   Copyright (C) 2016, 2018, 2019  University of Zurich.
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 from __future__ import (absolute_import, division, print_function)
 
 # stdlib imports
+from builtins import object
 from string import Template
 
 # 3rd party imports

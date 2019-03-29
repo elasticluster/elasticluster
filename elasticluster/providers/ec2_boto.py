@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013, 2018, 2019 S3IT, University of Zurich
+# Copyright (C) 2013, 2018, 2019  University of Zurich.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,16 +14,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
 __author__ = ', '.join([
     'Nicolas Baer <nicolas.baer@uzh.ch>',
     'Antonio Messina <antonio.s.messina@gmail.com>',
     'Riccardo Murri <riccardo.murri@gmail.com>',
 ])
 
-# System imports
+from future import standard_library
+standard_library.install_aliases()
+
+# stdlib imports
+from builtins import range
 import hashlib
 import os
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import threading
 import time
 from warnings import warn
@@ -96,9 +101,9 @@ class BotoCloudProvider(AbstractCloudProvider):
         self.timeout = timeout
 
         # read all parameters from url
-        proto, opaqueurl = urllib.splittype(ec2_url)
-        self._host, self._ec2path = urllib.splithost(opaqueurl)
-        self._ec2host, port = urllib.splitport(self._host)
+        proto, opaqueurl = urllib.parse.splittype(ec2_url)
+        self._host, self._ec2path = urllib.parse.splithost(opaqueurl)
+        self._ec2host, port = urllib.parse.splitport(self._host)
 
         if port:
             port = int(port)
