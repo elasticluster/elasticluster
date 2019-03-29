@@ -591,8 +591,10 @@ class ListTemplates(AbstractCommand):
         config = creator.cluster_conf
 
         print("""%d cluster templates found in configuration file.""" % len(config))
+        templates = config.keys()
+        # filter results by AND'ing all patterns on the cmd line
         for pattern in self.params.clusters:
-            templates = [t for t in config.keys() if fnmatch(t, pattern)]
+            templates = [t for t in templates if fnmatch(t, pattern)]
 
         if self.params.clusters:
             print("""%d cluster templates found matching pattern(s) '%s'"""
