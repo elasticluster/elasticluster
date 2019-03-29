@@ -296,7 +296,7 @@ class YamlRepository(DiskRepository):
     open_mode_for_saving = 'w'
 
     def load(self, fp):
-        data = yaml.load(fp)
+        data = yaml.safe_load(fp)
         if not data:
             raise ClusterError("Empty yml file: {0}.".format(fp.name))
         from elasticluster import Cluster
