@@ -559,7 +559,7 @@ class ListClusters(AbstractCommand):
 The following clusters have been started.
 Please note that there's no guarantee that they are fully configured:
 """)
-            for cluster in sorted(clusters):
+            for cluster in sorted(clusters, key=(lambda cluster: cluster.name)):
                 print("%s " % cluster.name)
                 print("-" * len(cluster.name))
                 print("  name:           %s" % cluster.name)
