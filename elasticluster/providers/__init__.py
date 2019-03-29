@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013, 2015 S3IT, University of Zurich
+# Copyright (C) 2013, 2015, 2019 University of Zurich.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,18 +14,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
 
 
 # stdlib imports
+from builtins import object
 from abc import ABCMeta, abstractmethod
 
+from future.utils import with_metaclass
 
-class AbstractCloudProvider:
+
+class AbstractCloudProvider(with_metaclass(ABCMeta, object)):
     """Defines the contract for a cloud provider to proper function with
     elasticluster.
     """
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def __init__(self, **config):
@@ -116,11 +119,10 @@ class AbstractCloudProvider:
         pass
 
 
-class AbstractSetupProvider:
+class AbstractSetupProvider(with_metaclass(ABCMeta, object)):
     """
     TODO: define...
     """
-    __metaclass__ = ABCMeta
 
     #: to identify this provider type in messages; override in subclasses
     HUMAN_READABLE_NAME = 'setup provider'

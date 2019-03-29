@@ -3,7 +3,7 @@
 # @(#)gc3pie_config.py
 #
 #
-# Copyright (C) 2013-2014 S3IT, University of Zurich. All rights reserved.
+# Copyright (C) 2013-2014, 2019 University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -23,9 +23,13 @@
 __docformat__ = 'reStructuredText'
 __author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
 
-from ConfigParser import RawConfigParser
+
+from future import standard_library
+standard_library.install_aliases()
+
+from configparser import RawConfigParser
 import re
-from StringIO import StringIO
+from io import StringIO
 
 from elasticluster import log
 

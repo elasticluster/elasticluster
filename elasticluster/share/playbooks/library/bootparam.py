@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-#
 #
-# Copyright (C) 2017, 2018 Riccardo Murri <riccardo.murri@gmail.com>
+# Copyright (C) 2017, 2018, 2019 Riccardo Murri <riccardo.murri@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -151,6 +151,9 @@ RETURN = """
 #
 
 from abc import ABCMeta, abstractmethod
+from builtins import str
+from builtins import object
+
 from collections import OrderedDict
 import os
 from os.path import basename, dirname
@@ -377,7 +380,7 @@ BOOTLOADERS = {
 
 
 def find_bootloader_config():
-    for path, bootloader in PATHS.iteritems():
+    for path, bootloader in PATHS.items():
         if os.path.exists(path):
             return path, bootloader
     raise LookupError(

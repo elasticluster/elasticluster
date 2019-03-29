@@ -257,7 +257,7 @@ def test_dict_mixin(tmpdir):
     # FIXME: why on earth are node numbers converted to string?
     assert cluster_as_dict['extra']['misc_nodes'] == '10'
     assert cluster_as_dict['ssh_to'] == 'misc'
-    assert cluster_as_dict['nodes'].keys() == cluster.nodes.keys()
+    assert list(cluster_as_dict['nodes'].keys()) == list(cluster.nodes.keys())
 
     # non-public attrs should not be exported
     with raises(KeyError):

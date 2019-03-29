@@ -34,14 +34,19 @@ rest of ElastiCluster happens in three stages:
 
 from __future__ import (print_function, division, absolute_import)
 
+from future import standard_library
+standard_library.install_aliases()
+
 # stdlib imports
+from builtins import zip
+from builtins import object
 from collections import defaultdict
-from ConfigParser import SafeConfigParser
+from configparser import SafeConfigParser
 import os
 from os.path import expanduser, expandvars
 import re
 import sys
-from urlparse import urlparse
+from urllib.parse import urlparse
 from warnings import warn
 
 # 3rd-party modules
@@ -447,7 +452,7 @@ def _arrange_config_tree(raw_config):
     ``C['cluster']['gridengine']['nodes']['qmaster']``.
     """
     tree = {}
-    for sect_name, sect_items in raw_config.iteritems():
+    for sect_name, sect_items in raw_config.items():
         # skip empty sections
         if not sect_items:
             continue
@@ -543,7 +548,7 @@ def _perform_key_renames(tree, changes=KEY_RENAMES):
                 " This will almost certainly end up causing an error later on.",
                 section)
             continue
-        for stanza, pairs in tree[section].iteritems():
+        for stanza, pairs in tree[section].items():
             # ensure we work on a copy of the keys collection,
             # so we can mutate the tree down below
             for key in list(pairs.keys()):
@@ -591,7 +596,7 @@ def _dereference_config_tree(tree, evict_on_error=True):
     ``'login': 'ubuntu'``, this will be replaced with ``'login': { ... }``.
     """
     to_evict = []
-    for cluster_name, cluster_conf in tree['cluster'].iteritems():
+    for cluster_name, cluster_conf in tree['cluster'].items():
         for key in ['cloud', 'login', 'setup']:
             try:
                 refname = cluster_conf[key]
@@ -640,13 +645,13 @@ def _build_node_section(tree):
     See also function `_gather_node_kind_info`:func: for more details on how
     the kind-level configuration is built.
     """
-    for cluster_name, cluster_conf in tree['cluster'].iteritems():
+    for cluster_name, cluster_conf in tree['cluster'].items():
         node_kind_config = dict((key, value)
-                                for key, value in cluster_conf.iteritems()
+                                for key, value in cluster_conf.items()
                                 if key.endswith('_nodes'))
         if 'nodes' not in cluster_conf:
             cluster_conf['nodes'] = {}
-        for key in node_kind_config.iterkeys():
+        for key in node_kind_config.keys():
             kind_name = key[:-len('_nodes')]
             # nodes can inherit the properties of cluster or overwrite them
             kind_values = _gather_node_kind_info(kind_name, cluster_name, cluster_conf)
@@ -699,7 +704,7 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
 
     # override with node-specific attrs (if given)
     if kind_name in cluster_conf['nodes']:
-        for key, value in cluster_conf['nodes'][kind_name].iteritems():
+        for key, value in cluster_conf['nodes'][kind_name].items():
             kind_values[key] = value
 
     kind_values['num'], kind_values['min_num'] = \
@@ -737,12 +742,12 @@ def _compute_desired_and_minimum_number_of_nodes(kind_name, cluster_name, cluste
 
 def _validate_and_convert(cfgtree, evict_on_error=True):
     objtree = {}
-    for section, model in SCHEMA.iteritems():
+    for section, model in SCHEMA.items():
         if section not in cfgtree:
             continue
         stanzas = cfgtree[section]
         objtree[section] = {}
-        for name, properties in stanzas.iteritems():
+        for name, properties in stanzas.items():
             log.debug("Checking section `%s/%s` ...", section, name)
             try:
                 objtree[section][name] = Schema(model).validate(properties)
@@ -790,7 +795,7 @@ def _cross_validate_final_config(objtree, evict_on_error=True):
         valid = True
         # ensure all cluster node kinds are defined in the `setup/*` section
         setup_sect = cluster['setup']
-        for groupname, properties in cluster['nodes'].items():
+        for groupname, properties in list(cluster['nodes'].items()):
             if (groupname + '_groups') not in setup_sect:
                 log.error("Cluster `%s` requires nodes of kind `%s`,"
                           " but no such group is defined"
@@ -816,7 +821,7 @@ def _cross_validate_final_config(objtree, evict_on_error=True):
         # EC2-specific checks
         if cluster['cloud']['provider'] == 'ec2_boto':
             cluster_uses_vpc = ('vpc' in cluster['cloud'])
-            for groupname, properties in cluster['nodes'].items():
+            for groupname, properties in list(cluster['nodes'].items()):
                 if cluster_uses_vpc and 'network_ids' not in properties:
                     log.error(
                         "Node group `%s/%s` is being used in a VPC,"
@@ -1089,7 +1094,7 @@ class Creator(object):
 
         groups = self._read_node_groups(conf)
         environment_vars = {}
-        for node_kind, grps in groups.iteritems():
+        for node_kind, grps in groups.items():
             if not isinstance(grps, list):
                 groups[node_kind] = [grps]
 

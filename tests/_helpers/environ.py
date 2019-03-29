@@ -31,11 +31,11 @@ __author__ = ('Riccardo Murri <riccardo.murri@gmail.com>')
 ## actual code
 
 def clean_os_environ_ec2():
-    for varname in os.environ.keys():
+    for varname in list(os.environ.keys()):
         if varname.startswith('EC2_') or varname.startswith('AWS_'):
             del os.environ[varname]
 
 def clean_os_environ_openstack():
-    for varname in os.environ.keys():
+    for varname in list(os.environ.keys()):
         if varname.startswith('OS_'):
             del os.environ[varname]
