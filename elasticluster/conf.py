@@ -42,6 +42,7 @@ from builtins import zip
 from builtins import object
 from collections import defaultdict
 from configparser import SafeConfigParser
+from importlib import import_module
 import os
 from os.path import expanduser, expandvars
 import re
@@ -278,7 +279,7 @@ def _get_provider(name, provider_map):
       in `provider_map` does not exist in the module.
     """
     modname, clsname = provider_map[name]
-    mod = __import__(modname, globals(), locals(), [clsname], -1)
+    mod = import_module(modname)
     cls = getattr(mod, clsname)
     log.debug("Using class %r from module %r to instanciate provider '%s'",
               cls, mod, name)
