@@ -373,7 +373,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
         elif scheduling is not None:
             raise InstanceError("Unknown scheduling option: '%s'" % scheduling)
 
-        if isinstance(tags, types.StringTypes):
+        if isinstance(tags, (str,)):
             tags = tags.split(',')
         elif isinstance(tags, collections.Sequence):
             # ok, nothing to do
