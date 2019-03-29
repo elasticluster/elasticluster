@@ -1281,6 +1281,16 @@ class Node(Struct):
         if 'image_id' not in state and 'image' in state:
             state['image_id'] = state['image']
 
+    def __hash__(self):
+        # FIXME: this is incorrect, since `DictMixin` (which is a
+        # superclass of `Node`) implements `__eq__`; still, `__hash__
+        # = id` is what Python 2 does, and it has not broken
+        # ElastiCluster so far... (But we should definitely
+        # restructure the code!)  See:
+        # - https://docs.python.org/3/reference/datamodel.html#object.__hash__
+        # - https://docs.python.org/2/reference/datamodel.html#object.__hash__
+        return id(self)
+
     def start(self):
         """
         Start the node on the cloud using the given instance properties.
