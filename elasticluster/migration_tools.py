@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-# 
+# -*- coding: utf-8 -*-#
 # @(#)migration_tools.py
-# 
-# 
-# Copyright (C) 2014 S3IT, University of Zurich. All rights reserved.
-# 
-# 
+#
+#
+# Copyright (C) 2014, 2019 University of Zurich. All rights reserved.
+#
+#
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
 # Free Software Foundation; either version 2 of the License, or (at your
@@ -20,8 +20,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-__docformat__ = 'reStructuredText'
-__author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
+from __future__ import print_function
 
 import os
 import sys
@@ -29,6 +28,11 @@ import sys
 from elasticluster.subcommands import AbstractCommand
 
 from elasticluster import repository, cluster
+
+
+__docformat__ = 'reStructuredText'
+__author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
+
 
 # commit 73979e27b3cd8e62d2f023d915ffd162d36bb301
 # Author: Antonio Messina <antonio.s.messina@gmail.com>
@@ -82,9 +86,9 @@ def __setstate_upgrade__(self, state):
 def patch_cluster():
     """
     Patch Cluster class to allow Pickle to load old clusters
-    """    
+    """
     cluster.Cluster.__setstate__ = __setstate_upgrade__
-    
+
 
 class MigrationCommand(AbstractCommand):
     """
@@ -117,7 +121,7 @@ class MigrationCommand(AbstractCommand):
         if not clusters:
             print("No clusters")
             sys.exit(0)
-        
+
         patch_cluster()
         for cluster in clusters:
             print("Cluster `%s`" % cluster)
@@ -136,5 +140,3 @@ class MigrationCommand(AbstractCommand):
                     del cl._patches
                     print("Changes saved to disk")
                     cl.repository.save_or_update(cl)
-            
-                

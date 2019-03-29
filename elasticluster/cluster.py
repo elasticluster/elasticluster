@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013-2018 University of Zurich
+# Copyright (C) 2013-2019 University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ Riccardo Murri <riccardo.murri@gmail.com>
 # System imports
 from collections import defaultdict
 from copy import copy
+from functools import reduce
 import itertools
 import operator
 import os
