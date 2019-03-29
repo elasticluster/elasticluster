@@ -23,9 +23,6 @@ script:
 matrix:
   include:
     - python: "2.7"
-    - python: "3.4"
-      env:
-        - ELASTICLUSTER_FORCE_INSTALL="yes"
     - python: "3.5"
       env:
         - ELASTICLUSTER_FORCE_INSTALL="yes"
@@ -37,9 +34,6 @@ matrix:
         - ELASTICLUSTER_FORCE_INSTALL="yes"
 
   allow_failures:
-    - python: "3.4"
-      env:
-        - ELASTICLUSTER_FORCE_INSTALL="yes"
     - python: '3.5'
       env:
         - ELASTICLUSTER_FORCE_INSTALL="yes"
