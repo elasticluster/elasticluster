@@ -47,3 +47,4 @@ after_success:
   - docker tag $DOCKER_DEST:$COMMIT $DOCKER_DEST:$TAG
   - docker tag $DOCKER_DEST:$COMMIT $DOCKER_DEST:travis-$TRAVIS_BUILD_NUMBER
   - docker push $DOCKER_DEST
+  - codecov
