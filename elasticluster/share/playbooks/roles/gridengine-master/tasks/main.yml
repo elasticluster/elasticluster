@@ -192,22 +192,3 @@
     bash -lc 'qconf -sq all.q &> /dev/null || qconf -Aq {{SGE_ROOT}}/all.q.conf'
   register: command_result
   changed_when: "'added' in command_result.stdout"
-
-
-- name: add hosts to the default queue
-  tags:
-    - gridengine
-    - gridengine-master
-  shell: |
-    bash -lc 'qconf -aattr queue hostlist @allhosts all.q'
-  register: command_result
-  changed_when: "'added' in command_result.stdout"
-
-
-# - name: Export gridengine cell to the clients
-#   nfsexport: path='{{SGE_VAR}}/{{SGE_CELL}}/common' dest=/etc/exports clients="{{groups.gridengine_worker}}" options=ro,no_root_squash,async
-#   notify:
-#     - ensure nfs service is running
-#     - reload exports
-#   tags:
-#     - sge
