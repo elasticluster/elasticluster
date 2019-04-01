@@ -28,6 +28,7 @@
     src='install_template.conf.j2'
   when: is_rhel_compatible
 
+
 - name: qmaster installation (RHEL/CentOS)
   tags:
     - gridengine
@@ -38,6 +39,7 @@
     chdir: '{{SGE_ROOT}}'
     creates: '{{SGE_CELL}}/common/cluster_name'
   when: is_rhel_compatible
+
 
 - name: Create GridEngine accounting file
   tags:
@@ -51,6 +53,7 @@
     owner: sgeadmin
     group: sgeadmin
 
+
 - name: Load GridEngine settings at login (RHEL/CentOS)
   tags:
     - gridengine
@@ -63,6 +66,7 @@
     - sh
     - csh
   when: is_rhel_compatible
+
 
 - name: Create GridEngine service file (RHEL/CentOS 6.x)
   tags:
@@ -105,8 +109,8 @@
     - gridengine
     - gridengine-master
   template:
-    dest='{{SGE_ROOT}}/{{item}}.conf'
-    src=newhost.qconf.j2
+    dest: '{{SGE_ROOT}}/{{item}}.conf'
+    src: newhost.qconf.j2
   loop: '{{groups.gridengine_worker}}'
 
 
@@ -149,8 +153,8 @@
     - gridengine
     - gridengine-master
   template:
-    dest='{{SGE_ROOT}}/allhosts.grp.conf'
-    src=allhosts.grp.conf.j2
+    dest: '{{SGE_ROOT}}/allhosts.grp.conf'
+    src: allhosts.grp.conf.j2
 
 
 - name: add default group
@@ -176,8 +180,8 @@
     - gridengine
     - gridengine-master
   copy:
-    dest='{{SGE_ROOT}}/all.q.conf'
-    src=all.q.conf
+    dest: '{{SGE_ROOT}}/all.q.conf'
+    src: all.q.conf
 
 
 - name: create default queue
