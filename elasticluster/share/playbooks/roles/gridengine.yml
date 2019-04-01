@@ -41,3 +41,18 @@
         - fs: '{{groups.gridengine_master[0]}}:{{SGE_VAR}}/{{SGE_CELL}}/common'
           mountpoint: '{{SGE_VAR}}/{{SGE_CELL}}/common'
     - role: gridengine-exec
+
+
+- name: GridEngine post-install configuration
+  hosts: gridengine_master
+  gather_facts: no
+  tags:
+    - gridengine
+    - gridengine-master
+  tasks:
+      - name: update default queue
+        tags:
+          - gridengine
+          - gridengine-master
+        shell: |
+            bash -lc 'qconf -Mq {{SGE_ROOT}}/all.q.conf'

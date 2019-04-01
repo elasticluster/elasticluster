@@ -1,5 +1,5 @@
 qname                 all.q
-hostlist              NONE
+hostlist              @allhosts
 seq_no                0
 load_thresholds       np_load_avg=1.75
 suspend_thresholds    NONE
@@ -10,11 +10,11 @@ min_cpu_interval      00:05:00
 processors            UNDEFINED
 qtype                 BATCH INTERACTIVE
 ckpt_list             NONE
-pe_list               make
+pe_list               make smp mpi
 rerun                 FALSE
 slots                 {{ groups.gridengine_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|sum }}
 tmpdir                /tmp
-shell                 /bin/csh
+shell                 /bin/sh
 prolog                NONE
 epilog                NONE
 shell_start_mode      posix_compliant
