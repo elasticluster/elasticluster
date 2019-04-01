@@ -12,7 +12,7 @@ qtype                 BATCH INTERACTIVE
 ckpt_list             NONE
 pe_list               make
 rerun                 FALSE
-slots                 1
+slots                 {{ groups.gridengine_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|sum }}
 tmpdir                /tmp
 shell                 /bin/csh
 prolog                NONE

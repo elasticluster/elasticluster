@@ -179,9 +179,9 @@
   tags:
     - gridengine
     - gridengine-master
-  copy:
+  template:
     dest: '{{SGE_ROOT}}/all.q.conf'
-    src: all.q.conf
+    src: all.q.conf.j2
 
 
 - name: create default queue
