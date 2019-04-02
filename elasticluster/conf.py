@@ -807,7 +807,7 @@ def _cross_validate_final_config(objtree, evict_on_error=True):
         valid = True
         # ensure all cluster node kinds are defined in the `setup/*` section
         setup_sect = cluster['setup']
-        for groupname, properties in list(cluster['nodes'].items()):
+        for groupname, properties in cluster['nodes'].items():
             if (groupname + '_groups') not in setup_sect:
                 log.error("Cluster `%s` requires nodes of kind `%s`,"
                           " but no such group is defined"
@@ -833,7 +833,7 @@ def _cross_validate_final_config(objtree, evict_on_error=True):
         # EC2-specific checks
         if cluster['cloud']['provider'] == 'ec2_boto':
             cluster_uses_vpc = ('vpc' in cluster['cloud'])
-            for groupname, properties in list(cluster['nodes'].items()):
+            for groupname, properties in cluster['nodes'].items():
                 if cluster_uses_vpc and 'network_ids' not in properties:
                     log.error(
                         "Node group `%s/%s` is being used in a VPC,"
