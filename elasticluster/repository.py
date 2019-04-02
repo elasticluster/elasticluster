@@ -340,7 +340,7 @@ class MultiDiskRepository(AbstractClusterRepository):
         except KeyError:
             raise ValueError(
                 "Invalid storage type %s. Allowed values: %s" % (
-                    default_store, str.join(', ', self.storage_type_map)))
+                    default_store, ', '.join(self.storage_type_map)))
 
     def get_all(self):
         clusters = []

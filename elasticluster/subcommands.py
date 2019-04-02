@@ -462,7 +462,7 @@ class ResizeCluster(AbstractCommand):
                   "" % (n_to_rm, grp))
             to_remove = cluster.nodes[grp][-n_to_rm:]
             print("The following nodes will be removed from the cluster.")
-            print("    " + str.join("\n    ", [n.name for n in to_remove]))
+            print("    " + "\n    ".join([n.name for n in to_remove]))
 
             if not self.params.yes:
                 confirm_or_abort("Do you really want to remove them?",
@@ -600,7 +600,7 @@ class ListTemplates(AbstractCommand):
 
         if self.params.clusters:
             print("""%d cluster templates found matching pattern(s) '%s'"""
-                  % (len(templates), str.join(", ", self.params.clusters)))
+                  % (len(templates), ", ".join(self.params.clusters)))
 
         for template in templates:
             try:
@@ -665,7 +665,7 @@ class ListNodes(AbstractCommand):
                 print("")
                 for node in cluster.nodes[cls]:
                     txt = ["    " + i for i in node.pprint().splitlines()]
-                    print('  - ' + str.join("\n", txt)[4:])
+                    print('  - ' + "\n".join(txt)[4:])
                     print("")
 
 
@@ -792,7 +792,7 @@ class _SshCommand(AbstractCommand):
                            cluster.ssh_proxy_command,
                            username, addr, port))]
         cmdline.extend(self.params.cmds)
-        log.debug("Running command `%s`", str.join(' ', cmdline))
+        log.debug("Running command `%s`", ' '.join(cmdline))
         os.execlp(self.command, *cmdline)
 
 

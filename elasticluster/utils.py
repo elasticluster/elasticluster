@@ -132,7 +132,7 @@ def expand_ssh_proxy_command(command, user, addr, port=22):
         else:
             translated.append(char)
             continue
-    return str.join('', translated)
+    return ''.join(translated)
 
 
 def get_num_processors():
