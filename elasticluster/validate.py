@@ -26,7 +26,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 # stdlib imports
-from builtins import str
 import os
 import string
 from urllib.parse import urlparse

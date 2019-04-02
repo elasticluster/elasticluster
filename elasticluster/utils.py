@@ -21,7 +21,6 @@ __docformat__ = 'reStructuredText'
 __author__ = 'Riccardo Murri <riccardo.murri@gmail.com>'
 
 # stdlib imports
-from builtins import str
 from builtins import object
 from contextlib import contextmanager
 import functools
