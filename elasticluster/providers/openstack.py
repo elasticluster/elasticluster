@@ -692,8 +692,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
             # Check if it has the correct keypair, but only if we can read the local key
             if pkey:
-                fingerprint = str.join(
-                    ':', (i.encode('hex') for i in pkey.get_fingerprint()))
+                fingerprint = ':'.join(i.encode('hex') for i in pkey.get_fingerprint())
                 if fingerprint != keypair.fingerprint:
                     raise KeypairError(
                         "Keypair `%s` is present but has "

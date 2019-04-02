@@ -3,7 +3,7 @@
 # @(#)nfsexport
 #
 #
-# Copyright (C) 2013, GC3, University of Zurich. All rights reserved.
+# Copyright (C) 2013, 2019, University of Zurich. All rights reserved.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -70,7 +70,7 @@ def reload_nfs_exports(path=None):
     exported_paths = [i.split()[0] for i in output.splitlines()]
     if path and path in exported_paths:
         # No need to reload, it's already exported.
-        return False        
+        return False
 
     cmd = ["exportfs", "-r"]
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -101,7 +101,7 @@ def main():
     exports = []
     for client in client_list:
         exports.append("%s(%s)" % (client, params['options']))
-    clients = str.join(' ', exports)
+    clients = ' '.join(exports)
 
     exportline = "%s %s\n" % (params['path'], clients )
     # Check if destination file exists already
@@ -113,7 +113,7 @@ def main():
             path = line.split()[0].strip()
             if path == params['path']:
                 if line.split(' ', 1)[1].strip() == clients:
-                    # It matches, but it's not changed.                    
+                    # It matches, but it's not changed.
                     if reload_exports:
                         module.exit_json(changed=reload_nfs_exports(params['path']))
                     else:

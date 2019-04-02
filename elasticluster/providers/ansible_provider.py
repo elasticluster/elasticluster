@@ -458,7 +458,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                                   self.environment[node.kind].items())
             for group in self.groups[node.kind]:
                 inventory_data[group].append(
-                    (node.name, ip_addr, str.join(' ', extra_vars)))
+                    (node.name, ip_addr, ' '.join(extra_vars)))
 
         if not inventory_data:
             log.info("No inventory file was created.")
