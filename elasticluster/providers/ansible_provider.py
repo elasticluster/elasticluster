@@ -22,7 +22,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 # stdlib imports
-from builtins import str
 from collections import defaultdict
 from datetime import datetime
 import logging
