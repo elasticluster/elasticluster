@@ -17,21 +17,10 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-import os
-if (os.environ.get('ELASTICLUSTER_FORCE_INSTALL', 'no').lower()
-    in ['1', 'y', 'yes', 'true', 'on']):
-    force_install = True
-else:
-    force_install = False  # default
-
-
 import sys
 python_version = sys.version_info[:2]
-if python_version != (2, 7) and not force_install:
-    raise RuntimeError("ElastiCluster requires Python 2.7")
-else:
-    from warnings import warn
-    warn("Elasticluster is only supported on Python 2.7")
+if not (python_version == (2, 7) or python_version >= (3, 5)):
+    raise RuntimeError("ElastiCluster requires Python 2.7 or 3.5+")
 
 
 # fix Python issue 15881 (on Python <2.7.5)
