@@ -81,7 +81,7 @@ def __setstate_upgrade__(self, state):
     if 'thread_pool_max_size' not in state:
         self._patches['thread_pool_max_size'] = (NotPresent(), 10)
 
-    for attr, values in list(self._patches.items()):
+    for attr, values in self._patches.items():
         self.__dict__[attr] = values[1]
 
 def patch_cluster():
@@ -130,7 +130,7 @@ class MigrationCommand(AbstractCommand):
             cl = repo.get(cluster)
             if cl._patches:
                 print("Attributes changed: ")
-                for attr, val in list(cl._patches.items()):
+                for attr, val in cl._patches.items():
                     print("  %s: %s -> %s" % (attr, val[0], val[1]))
             else:
                 print("No upgrade needed")

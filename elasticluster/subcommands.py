@@ -402,7 +402,8 @@ class ResizeCluster(AbstractCommand):
             cluster = creator.load_cluster(cluster_name)
             cluster.update()
         except (ClusterNotFound, ConfigurationError) as ex:
-            log.error("Listing nodes from cluster %s: %s", cluster_name, ex)
+            log.error("Error listing nodes from cluster %s: %s",
+                      cluster_name, ex)
             return
         for grp in self.params.nodes_to_add:
             print("Adding %d %s node(s) to the cluster"
@@ -417,9 +418,10 @@ class ResizeCluster(AbstractCommand):
             #       complicated for the user
             if (not grp in cluster.nodes or not cluster.nodes[grp]) \
                     and not template:
-                print("Elasticluster can not infer which template to use for "\
-                      "the new node(s). Please provide the template with " \
-                      "the `-t` or `--template` option")
+                log.error(
+                    "Elasticluster can not infer which template to use for"
+                    " the new node(s). Please provide the template with"
+                    " the `-t` or `--template` option")
                 return
 
             if not template:
