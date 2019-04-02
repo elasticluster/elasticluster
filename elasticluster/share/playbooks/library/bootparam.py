@@ -150,9 +150,6 @@ RETURN = """
 ## stdlib imports
 #
 
-from builtins import str
-from builtins import object
-
 from collections import OrderedDict
 import os
 from os.path import basename, dirname
