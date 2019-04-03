@@ -275,12 +275,16 @@ class Cluster(Struct):
                 ('ssh_to', 'ssh_to'),
         ]:
             oldvalue = getattr(self, attr)
-            newvalue = cluster_config[key]
+            try:
+                newvalue = cluster_config[key]
+            except KeyError:
+                continue
             if key in cluster_config and newvalue != oldvalue:
                 setattr(self, attr, newvalue)
                 log.debug(
                     "Configuration attribute `%s` updated: %s -> %s",
                     key, oldvalue, newvalue)
+
 
 
     # a kind must *not* end with a digit, otherwise we'll have a hard
