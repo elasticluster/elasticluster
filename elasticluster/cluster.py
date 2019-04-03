@@ -168,20 +168,15 @@ class Cluster(Struct):
         self._naming_policy = NodeNamingPolicy()
 
         self.nodes = {}
-        if 'nodes' in extra:
-            # Build the internal nodes. This is mostly useful when loading
-            # the cluster from json files.
-            for kind, nodes in extra['nodes'].items():
-                for node in nodes:
-                    # adding un-named nodes before NodeNamingPolicy has
-                    # been fully populated can lead to duplicate names
-                    assert 'name' in node
-                    self.add_node(**node)
-            del extra['nodes']
-        if 'paused_nodes' in extra:
-            self.paused_nodes = dict(extra['paused_nodes'])
-        else:
-            self.paused_nodes = {}
+        # Build the internal nodes. This is mostly useful when loading
+        # the cluster from JSON files.
+        for kind, nodes in extra.pop('nodes', {}).items():
+            for node in nodes:
+                # adding un-named nodes before NodeNamingPolicy has
+                # been fully populated can lead to duplicate names
+                assert 'name' in node
+                self.add_node(**node)
+        self.paused_nodes = dict(extra.pop('paused_nodes', {}))
 
         self.extra = {}
         # FIXME: ugly fix needed when saving and loading the same
@@ -192,10 +187,9 @@ class Cluster(Struct):
 
         # attributes that have already been defined trump whatever is
         # in the `extra` dictionary
-        for key in list(extra.keys()):
-            if hasattr(self, key):
-                del extra[key]
-        self.extra.update(extra)
+        for key, value in extra.items():
+            if key not in self:
+                self.extra[key] = value
 
     @property
     def known_hosts_file(self):
@@ -287,6 +281,7 @@ class Cluster(Struct):
                 log.debug(
                     "Configuration attribute `%s` updated: %s -> %s",
                     key, oldvalue, newvalue)
+
 
     # a kind must *not* end with a digit, otherwise we'll have a hard
     # time extracting the node index with the default naming policy
@@ -711,11 +706,8 @@ class Cluster(Struct):
 
         :return: list of :py:class:`Node`
         """
-        nodes = list(self.nodes.values())
-        if nodes:
-            return reduce(operator.add, nodes, list())
-        else:
-            return []
+        return sum(self.nodes.values(), [])
+
 
     def get_node_by_name(self, nodename):
         """Return the node corresponding with name `nodename`
@@ -723,13 +715,15 @@ class Cluster(Struct):
         :params nodename: Name of the node
         :type nodename: str
         """
-        nodes = dict((n.name, n) for n in self.get_all_nodes())
-        try:
-            return nodes[nodename]
-        except KeyError:
+        for kind, nodes in self.nodes.items():
+            for node in nodes:
+                if node.name == nodename:
+                    return node
+        else:
             raise NodeNotFound(
                 "Node `{0}` not found in cluster `{1}`"
                 .format(nodename, self.name))
+
 
     def stop(self, force=False, wait=False):
         """

@@ -365,14 +365,18 @@ class MultiDiskRepository(AbstractClusterRepository):
     def _get_store_by_name(self, name):
         """Return an instance of the correct DiskRepository based on the *first* file that matches the standard syntax for repository files"""
         for cls in self.storage_type_map.values():
-            cluster_files = glob.glob(
-                '%s/%s.%s' % (self.storage_path, name, cls.file_ending))
-            if cluster_files:
+            filename = os.path.join(self.storage_path,
+                                    '{name}.{ending}'.format(
+                                        name=name,
+                                        ending=cls.file_ending))
+            if os.path.exists(filename):
                 try:
                     return cls(self.storage_path)
                 except:
                     continue
-        raise ClusterNotFound("No cluster %s was found" % name)
+        raise ClusterNotFound(
+            "No state file for cluster `{name}` was found in directory `{path}`"
+            .format(name=name, path=self.storage_path))
 
 
     def get(self, name):
