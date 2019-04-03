@@ -299,7 +299,7 @@ class YamlRepository(DiskRepository):
     def load(self, fp):
         data = yaml.safe_load(fp)
         if not data:
-            raise ClusterError("Empty yml file: {0}.".format(fp.name))
+            raise ClusterError("Empty cluster state file: {0}".format(fp.name))
         cluster = Cluster(**data)
         cluster.repository = self
         return cluster
