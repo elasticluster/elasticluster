@@ -53,7 +53,6 @@ from elasticluster.exceptions import (
     NodeNotFound,
     TimeoutError,
 )
-from elasticluster.repository import MemRepository
 from elasticluster.utils import (
     Struct,
     expand_ssh_proxy_command,
@@ -150,7 +149,12 @@ class Cluster(Struct):
         self.start_timeout = start_timeout
         self.thread_pool_max_size = thread_pool_max_size
         self.user_key_name = user_key_name
-        self.repository = repository if repository else MemRepository()
+        if repository is not None:
+            self.repository = repository
+        else:
+            # lazily import here otherwise we have a circular import issue
+            from elasticluster.repository import MemRepository
+            self.repository = MemRepository()
 
         self.ssh_to = extra.pop('ssh_to', None)
 
