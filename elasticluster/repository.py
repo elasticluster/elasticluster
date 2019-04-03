@@ -199,8 +199,9 @@ duplication of code.
                         node.preferred_ip = None
                 cluster.storage_file = path
                 return cluster
-        except IOError as ex:
-            raise ClusterNotFound("Error accessing storage file %s: %s" % (path, ex))
+        except (IOError, OSError, ClusterNotFound) as err:
+            raise ClusterNotFound(
+                "Error reading cluster state file `%s`: %s" % (path, err))
 
     def save_or_update(self, cluster):
         """Save or update the cluster to persistent state.
