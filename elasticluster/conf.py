@@ -920,10 +920,8 @@ class Creator(object):
         """
         repository = self.create_repository()
         cluster = repository.get(cluster_name)
-        if not cluster._setup_provider:
-            cluster._setup_provider = self.create_setup_provider(cluster.template)
-        if not cluster.cloud_provider:
-            cluster.cloud_provider = self.create_cloud_provider(cluster.template)
+        cluster._setup_provider = self.create_setup_provider(cluster.template)
+        cluster.cloud_provider = self.create_cloud_provider(cluster.template)
         cluster.update_config(self.cluster_conf[cluster.template])
         return cluster
 
