@@ -69,7 +69,8 @@ if sys.version_info[0] == 2:
     def byte_to_hex(byte):
         return byte.encode('hex')
 else:
-    byte_to_hex = bytes.hex
+    def byte_to_hex(byte):
+        return '{:02x}'.format(byte)
 
 
 class BotoCloudProvider(AbstractCloudProvider):
