@@ -30,6 +30,7 @@ import yaml
 
 # Elasticluster imports
 from elasticluster import log
+from elasticluster.cluster import Cluster
 from elasticluster.exceptions import ClusterNotFound, ClusterError
 
 
@@ -267,7 +268,6 @@ class JsonRepository(DiskRepository):
 
     def load(self, fp):
         data = json.load(fp)
-        from elasticluster import Cluster
         cluster = Cluster(**data)
         cluster.repository = self
         return cluster
@@ -299,7 +299,6 @@ class YamlRepository(DiskRepository):
         data = yaml.safe_load(fp)
         if not data:
             raise ClusterError("Empty yml file: {0}.".format(fp.name))
-        from elasticluster import Cluster
         cluster = Cluster(**data)
         cluster.repository = self
         return cluster
