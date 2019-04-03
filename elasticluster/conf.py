@@ -924,10 +924,7 @@ class Creator(object):
             cluster._setup_provider = self.create_setup_provider(cluster.template)
         if not cluster.cloud_provider:
             cluster.cloud_provider = self.create_cloud_provider(cluster.template)
-        cluster.update_config(
-            self.cluster_conf[cluster.template],
-            self.cluster_conf[cluster.template]['login']
-        )
+        cluster.update_config(self.cluster_conf[cluster.template])
         return cluster
 
 

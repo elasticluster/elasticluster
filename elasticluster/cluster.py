@@ -251,13 +251,6 @@ class Cluster(Struct):
                 naming_policy.use(kind, node.name)
         self.__dict__['_naming_policy'] =  naming_policy
 
-    def __update_option(self, cfg, key, attr):
-        oldvalue = getattr(self, attr)
-        if key in cfg and cfg[key] != oldvalue:
-            setattr(self, attr, cfg[key])
-            return oldvalue
-        return False
-
     def keys(self):
         """Only expose some of the attributes when using as a dictionary"""
         keys = Struct.keys(self)
@@ -272,7 +265,7 @@ class Cluster(Struct):
                 keys.remove(key)
         return keys
 
-    def update_config(self, cluster_config, login_config):
+    def update_config(self, cluster_config):
         """Update current configuration.
 
         This method is usually called after loading a `Cluster`
@@ -280,10 +273,16 @@ class Cluster(Struct):
         are actually updated, but only those that can be safely
         updated.
         """
-
-        oldvalue = self.__update_option(cluster_config, 'ssh_to', 'ssh_to')
-        if oldvalue:
-            log.debug("Attribute 'ssh_to' updated: %s -> %s", oldvalue, self.ssh_to)
+        for key, attr in [
+                ('ssh_to', 'ssh_to'),
+        ]:
+            oldvalue = getattr(self, attr)
+            newvalue = cluster_config[key]
+            if key in cluster_config and newvalue != oldvalue:
+                setattr(self, attr, newvalue)
+                log.debug(
+                    "Configuration attribute `%s` updated: %s -> %s",
+                    key, oldvalue, newvalue)
 
     # a kind must *not* end with a digit, otherwise we'll have a hard
     # time extracting the node index with the default naming policy
