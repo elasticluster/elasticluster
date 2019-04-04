@@ -13,7 +13,7 @@ env:
 
 install:
   - "pip install --upgrade 'setuptools' 'pip>=8.1.2'"
-  - "pip install 'pytest' 'pytest-cov' 'mock' 'tox'"
+  - "pip install 'pytest' 'pytest-cov' 'mock' 'tox' 'codecov'"
   - "pip install ."
 
 
@@ -37,6 +37,7 @@ matrix:
 
 # build Docker image and publish it on hub.docker.com
 after_success:
+  - codecov
   - if [ $(echo "$TRAVIS_PYTHON_VERSION" | cut -d. -f1-2) != '2.7' ]; then echo "Only building on Py2.7, this is $TRAVIS_PYTHON_VERSION"; exit 0; fi
   - if [ -z "$DOCKER_USER" ]; then echo "Untrusted build - cannot access docker environment variables."; exit 0; fi
   - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
@@ -47,4 +48,3 @@ after_success:
   - docker tag $DOCKER_DEST:$COMMIT $DOCKER_DEST:$TAG
   - docker tag $DOCKER_DEST:$COMMIT $DOCKER_DEST:travis-$TRAVIS_BUILD_NUMBER
   - docker push $DOCKER_DEST
-  - codecov
