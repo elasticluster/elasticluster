@@ -29,30 +29,26 @@
   # the `apt` module depends on `python-apt` to do package-level work,
   # so we need to resort to a raw invocation of `apt-get`
   command: |
-    apt-get install -y {{item.name}}
+    apt-get install -y python-apt
   args:
-    creates: '{{item.creates}}'
+    creates: '/usr/share/doc/python-apt'
     # we know about the `apt:` module but cannot use it here,
     # so suppress warning
     warn: no
   become: yes
-  loop:
-    - { name: 'python-apt', creates: '/usr/share/doc/python-apt' }
 
 - name: Uninstall `aptitude`
   # since Ansible 2.6, the `apt` module conflicts with `aptitude` when
   # `allow_unauthenticated: yes` is used -- so remove it and let
   # Ansible use `apt-get` instead
   command: |
-    apt-get remove --purge -y {{item.name}}
+    apt-get remove --purge -y aptitude
   args:
-    removes: '{{item.creates}}'
+    removes: '/usr/bin/aptitude'
     # we know about the `apt:` module but cannot use it here,
     # so suppress warning
     warn: no
   become: yes
-  loop:
-    - { name: 'aptitude', creates: '/usr/bin/aptitude' }
 
 - name: Upgrade all installed packages to latest version
   apt:
