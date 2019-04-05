@@ -44,8 +44,9 @@ def _run_command(monkeypatch, argv, exit_code=None):
     fakestderr = StringIO()
     monkeypatch.setattr(sys, "stdout", fakestdout)
     monkeypatch.setattr(sys, "stderr", fakestderr)
+    monkeypatch.setattr(sys, "argv", ["does not matter"] + argv)
     with pytest.raises(SystemExit) as cme:
-        __main__.main(argv=["does not matter"] + argv)
+        __main__.main()
 
     return fakestdout.getvalue(), fakestderr.getvalue(), cme.value.code
 
@@ -58,10 +59,10 @@ def test_main_help(monkeypatch):
 
 
 def test_main_version(monkeypatch):
-    out, err, code = _run_command(monkeypatch, argv=["--help"])
-    assert out.rstrip() == "elasticluster version %s" % __version__
+    out, err, code = _run_command(monkeypatch, argv=["--version"])
     assert not err
     assert not code
+    assert out.rstrip() == "elasticluster version %s" % __version__
 
 
 # most probably would need to be disabled or fixed to be tested on a real box
