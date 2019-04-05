@@ -71,7 +71,14 @@ except ImportError:
 from paramiko import DSSKey, RSAKey, PasswordRequiredException
 from paramiko.ssh_exception import SSHException
 
-from pkg_resources import resource_string
+if sys.version_info[:2] != (3, 5):
+    from pkg_resources import resource_string
+else:
+    # on Python 3.5, `pkg_resources.resource_string` returns a `bytes`
+    # object, which cannot directly be fed into `json.loads()`
+    from pkg_resources import resource_string as _resource_string
+    def resource_string(pkgname, resource):
+        return _resource_string(pkgname, resource).decode('utf-8')
 
 
 # Elasticluster imports
