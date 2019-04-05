@@ -18,6 +18,7 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import str
 
 # stdlib imports
 import logging
@@ -134,7 +135,7 @@ class ElastiCluster(cli.app.CommandLineApp):
         if "--version" in sys.argv:
             import pkg_resources
             version = pkg_resources.get_distribution("elasticluster").version
-            print("elasticluster version %s" % version)
+            print("elasticluster version %s" % str(version))
             sys.exit(0)
 
         cli.app.CommandLineApp.pre_run(self)
