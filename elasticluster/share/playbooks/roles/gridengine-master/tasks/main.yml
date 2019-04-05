@@ -184,11 +184,43 @@
     src: all.q.conf.j2
 
 
+# The following configuration (PEs and default queue) is already
+# performed on CentOS by the RPM install, so we only need to run it on
+# Debian/Ubuntu
+
+- name: Deploy PE configuration files
+  tags:
+    - gridengine
+    - gridengine-master
+  template:
+    dest: '{{SGE_ROOT}}/{{item}}.pe.conf'
+    src: '{{item}}.pe.conf.j2'
+  loop:
+    # keep in sync with the contents of `all.q.conf`!
+    - make
+    - smp
+    - mpi
+  when: is_debian_compatible
+
+
+- name: Create PE
+  tags:
+    - gridengine
+    - gridengine-master
+  shell: |
+    bash -lc '(qconf -spl | fgrep -q "{{item}}") || qconf -Ap {{SGE_ROOT}}/{{item}}.pe.conf'
+  loop:
+    # keep in sync with the contents of `all.q.conf`!
+    - make
+    - smp
+    - mpi
+  when: is_debian_compatible
+
+
 - name: create default queue
   tags:
     - gridengine
     - gridengine-master
   shell: |
     bash -lc 'qconf -sq all.q &> /dev/null || qconf -Aq {{SGE_ROOT}}/all.q.conf'
-  register: command_result
-  changed_when: "'added' in command_result.stdout"
+  when: is_debian_compatible

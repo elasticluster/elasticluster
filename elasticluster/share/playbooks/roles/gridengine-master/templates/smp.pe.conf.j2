@@ -1,0 +1,14 @@
+pe_name            smp
+slots              {{ groups.gridengine_worker|map('extract', hostvars, 'ansible_processor_vcpus')|list|sum }}
+user_lists         NONE
+xuser_lists        NONE
+start_proc_args    NONE
+stop_proc_args     NONE
+allocation_rule    $pe_slots
+control_slaves     TRUE
+job_is_first_task  TRUE
+urgency_slots      min
+accounting_summary TRUE
+{% if not is_ubuntu_16_04 -%}
+qsort_args         NONE
+{% endif %}
