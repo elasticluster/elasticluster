@@ -213,9 +213,9 @@ class ElastiCluster(cli.app.CommandLineApp):
             sys.exit(1)
 
 
-def main():
+def main(**kwargs):
     try:
-        app = ElastiCluster()
+        app = ElastiCluster(**kwargs)
         app.run()
     except KeyboardInterrupt:
         sys.stderr.write("""
