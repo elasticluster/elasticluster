@@ -24,14 +24,8 @@ matrix:
   include:
     - python: "2.7"
     - python: "3.5"
-      env:
-        - ELASTICLUSTER_FORCE_INSTALL="yes"
     - python: "3.6"
-      env:
-        - ELASTICLUSTER_FORCE_INSTALL="yes"
     - python: "3.7"
-      env:
-        - ELASTICLUSTER_FORCE_INSTALL="yes"
 
 
 # build Docker image and publish it on hub.docker.com
