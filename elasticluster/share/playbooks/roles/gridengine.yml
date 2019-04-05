@@ -50,9 +50,12 @@
     - gridengine
     - gridengine-master
   tasks:
-      - name: update default queue
-        tags:
-          - gridengine
-          - gridengine-master
-        shell: |
-            bash -lc 'qconf -Mq {{SGE_ROOT}}/all.q.conf'
+    - name: update default queue
+      tags:
+        - gridengine
+        - gridengine-master
+      shell: |
+        bash -lc 'qconf -Mq {{SGE_ROOT}}/all.q.conf'
+      # SoGE packages install a default configuration on RHEL/CentOS
+      # only, so no need to override it on other platforms
+      when: is_rhel_compatible
