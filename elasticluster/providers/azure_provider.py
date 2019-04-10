@@ -188,7 +188,10 @@ class AzureCloudProvider(AbstractCloudProvider):
 
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
-                       username='root', node_name=None, **extra):
+                       username='root',
+                       node_name=None,
+                       boot_disk_size=30,
+                       **extra):
         """
         Start a new VM using the given properties.
 
@@ -208,6 +211,8 @@ class AzureCloudProvider(AbstractCloudProvider):
           (e.g., ``canonical/ubuntuserver/16.04.0-LTS/latest``)
         :param str image_userdata:
           command to execute after startup, **currently unused**
+        :param int boot_disk_size:
+          size of boot disk to use; values are specified in gigabytes.
         :param str username:
           username for the given ssh key
           (default is ``root`` as it's always guaranteed to exist,
@@ -270,6 +275,7 @@ class AzureCloudProvider(AbstractCloudProvider):
                     })
                 oper.wait()
                 self._networks_created.add(net_name)
+        boot_disk_size_gb = int(boot_disk_size)
 
         vm_parameters = {
             'adminUserName':  { 'value': username },
@@ -288,6 +294,7 @@ class AzureCloudProvider(AbstractCloudProvider):
             'subnetName':     { 'value': cluster_name },
             'vmName':         { 'value': node_name },
             'vmSize':         { 'value': flavor },
+            'bootDiskSize':   { 'value': boot_disk_size_gb}
         }
         log.debug(
             "Deploying `%s` VM template to Azure ...",

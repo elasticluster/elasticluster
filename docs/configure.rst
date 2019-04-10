@@ -1032,6 +1032,14 @@ node-level section take precedence over cluster-wide ones.
 
        .. __: https://github.com/gc3-uzh-ch/elasticluster/issues/490
 
+Additional optional configuration keys for Azure
+-----------------------------------------------------
+
+
+``boot_disk_size``
+    Size of the instance's root filesystem volume, in Gibibytes (GiB).
+    The ``/home`` directory of this volume on the first frontend node
+    is shared to compute nodes using NFS. Defaults to 30.
 
 Additional optional configuration keys for Amazon EC2
 -----------------------------------------------------
@@ -1048,7 +1056,7 @@ well, to place nodes on spot instances.
 ``boot_disk_size``
     Size of the instance's root filesystem volume, in Gibibytes (GiB).
     The ``/home`` directory of this volume on the first frontend node
-    is shared to compute nodes using NFS.  Defaults to the original
+    is shared to compute nodes using NFS. Defaults to the original
     size of the base AMI specified by ``image_id``.
 
 ``boot_disk_type``
