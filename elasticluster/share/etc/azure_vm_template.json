@@ -48,7 +48,7 @@
     "storageAccountName": {
       "type": "string",
       "metadata": {
-          "description": "Unique alphanumeric identifier."
+        "description": "Unique alphanumeric identifier."
       }
     },
     "subnetName": {
@@ -76,6 +76,13 @@
       "metadata": {
         "description": "Size of the VM"
       }
+    },
+    "bootDiskSize": {
+      "type": "int",
+      "defaultValue": 30,
+      "metadata": {
+        "description": "Size of boot disk to use; values are specified in gigabytes."
+      }
     }
   },
   "variables": {
@@ -88,23 +95,47 @@
     "nicName": "[concat(parameters('vmName'), '-nic')]",
     "publicIPAddressName": "[concat(parameters('vmName'), '-public-ip')]",
     "publicIPAddressType": "Dynamic",
-    "storageAccountType": "Standard_LRS",
     "networkSecurityGroupName": "[concat(resourceGroup().name, '-secgroup')]",
     "sshKeyPath": "[concat('/home/',parameters('adminUsername'),'/.ssh/authorized_keys')]",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
-    "apiVersion": "2015-06-15"
+    "apiVersion": "2018-10-01"
   },
   "resources": [
     {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[parameters('storageAccountName')]",
-      "apiVersion": "[variables('apiVersion')]",
+      "apiVersion": "2018-07-01",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
       "location": "[variables('location')]",
+      "tags": {},
+      "scale": null,
+      "kind": "Storage",
       "properties": {
-        "accountType": "[variables('storageAccountType')]"
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [],
+          "ipRules": [],
+          "defaultAction": "Allow"
+        },
+        "supportsHttpsTrafficOnly": false,
+        "encryption": {
+          "services": {
+            "file": {
+              "enabled": true
+            },
+            "blob": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        }
       }
     },
+
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/networkSecurityGroups",
@@ -200,9 +231,10 @@
       "name": "[parameters('vmName')]",
       "location": "[variables('location')]",
       "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+        "[resourceId('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
       ],
+      "tags": {},
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
@@ -227,15 +259,16 @@
             "publisher": "[parameters('imagePublisher')]",
             "offer": "[parameters('imageOffer')]",
             "sku": "[parameters('imageSku')]",
-            "version": "latest"
+            "version": "[parameters('imageVersion')]"
           },
           "osDisk": {
-            "name": "osdisk",
-            "vhd": {
-              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/', variables('osDiskName'),'.vhd')]"
-            },
+            "createOption": "FromImage",
+            "name": "[variables('osDiskName')]",
             "caching": "ReadWrite",
-            "createOption": "FromImage"
+            "diskSizeGB": "[parameters('bootDiskSize')]",
+            "managedDisk": {
+              "storageAccountType": "StandardSSD_LRS"
+            }
           }
         },
         "networkProfile": {
