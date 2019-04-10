@@ -356,12 +356,13 @@ class AzureCloudProvider(AbstractCloudProvider):
                 # we must delete resources in a specific order: e.g.,
                 # a public IP address cannot be deleted if it's still
                 # in use by a NIC...
-                (node_name,                '2017-12-01'),
-                (node_name + '-nic',       '2018-03-01'),
-                (node_name + '-public-ip', '2018-03-01'),
-                (self._make_storage_account_name(
+                (node_name,                '2018-06-01'),
+                (node_name + '-nic',       '2018-10-01'),
+                (node_name + '-public-ip', '2018-10-01'),
+                (node_name + '-disk',      '2018-09-30'),
+            (self._make_storage_account_name(
                     cluster_name, node_name),
-                                           '2017-10-01'),
+                                           '2018-07-01'),
         ]:
             rsc_id = self._inventory[name]
             log.debug("Deleting resource %s (`%s`) ...", name, rsc_id)
