@@ -320,8 +320,8 @@ class AzureCloudProvider(AbstractCloudProvider):
     @staticmethod
     def _make_storage_account_name(cluster_name, node_name):
         algo = hashlib.md5()
-        algo.update(cluster_name)
-        algo.update(node_name)
+        algo.update(cluster_name.encode('utf-8'))
+        algo.update(node_name.encode('utf-8'))
         # the `storageAccountName` parameter must be lowercase
         # alphanumeric and between 3 and 24 characters long... We
         # cannot use base64 encoding, and the full MD5 hash is 32
