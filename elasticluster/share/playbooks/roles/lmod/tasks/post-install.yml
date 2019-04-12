@@ -14,58 +14,8 @@
     state: directory
   loop:
     - '/etc/modulefiles'
-    - '/etc/modulefiles/Core'
-    - '/etc/modulefiles/Linux'
+    - '{{ modules_root }}'
 
 
-## automatically load Lmod for profile shells
-
-- name: Check for existence of `/etc/profile.d`
-  command: test -d /etc/profile.d
-  ignore_errors: True
-  register: lmod_check_for__etc_profile_d
-
-- name: Deploy shell profile snippets to load Lmod
-  file:
-    state: link
-    src: "{{ lmod_root }}/lmod/{{ LMOD_VERSION }}/init/{{item.script}}"
-    dest: '/etc/profile.d/modules.{{item.shell}}'
-    mode: 0444
-  loop:
-    - { shell: 'sh',  script: 'profile' }
-    - { shell: 'csh', script: 'cshrc'   }
-  when: lmod_check_for__etc_profile_d is successful
-
-
-- name: Deploy additional initialization scripts (verbatim)
-  copy:
-    dest="/{{item}}"
-    src="{{item}}"
-    mode=0444
-  loop:
-    - "etc/profile.d/000_user_is_root.sh"
-
-
-- name: Deploy additional initialization scripts (templated)
-  template:
-    dest="/{{item}}"
-    src="{{item}}.j2"
-    mode=0444
-  loop:
-    - "etc/profile.d/z80_StdEnv.sh"
-    - "etc/profile.d/z80_StdEnv.csh"
-
-
-## enable bash completion, if installed
-
-- name: Check for existence of `/etc/bash_completion.d`
-  command: test -d /etc/bash_completion.d
-  ignore_errors: True
-  register: lmod_check_for__etc_bash_completion_d
-
-- name: Enable bash completion for Lmod
-  file:
-    path='/etc/bash_completion.d/lmod'
-    state=link
-    src='{{ lmod_root }}/lmod/lmod/init/lmod_bash_completions'
-  when: lmod_check_for__etc_bash_completion_d is successful
+- name: Perform OS-specific post-installation
+  include_tasks: 'postinst-{{ ansible_os_family }}.yml'

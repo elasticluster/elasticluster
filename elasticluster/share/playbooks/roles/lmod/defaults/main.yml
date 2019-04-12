@@ -1,21 +1,23 @@
 ---
 
+lmod_install_from_source: no
+
 # Lmod version >= 5.6.3 is needed by EasyBuild
-LMOD_VERSION: '7.0'
+lmod_default_version: '7.0'
 
 # Lmod's install process creates a top-level container directory named
 # `lmod` with subdirectories for each version
 lmod_root: '/opt'
 
-lmod_install_dir: '{{ lmod_root }}/lmod/{{ LMOD_VERSION }}'
-lmod_source_dir:  '{{ lmod_root }}/lmod/{{ LMOD_VERSION }}/src'
+lmod_install_dir: '{{ lmod_root }}/lmod/{{ lmod_force_version }}'
+lmod_source_dir:  '{{ lmod_root }}/lmod/{{ lmod_force_version }}/src'
 lmod_build_dir:   '{{ lmod_source_dir }}'
 
 # where modulefiles reside
-MODULES_ROOT: '/etc/modulefiles'
+modules_root: '/etc/modulefiles'
 
 # initial set (`:`-separated) of modules to load
-LMOD_DEFAULT_MODULES: []
+lmod_default_modules: []
 
 # path to the Lua interpreter to use
 lua_exe: '/usr/bin/lua'
@@ -24,7 +26,7 @@ lua_exe: '/usr/bin/lua'
 ### No customization should be necessary nor useful below this line ###
 
 # where to download Lmod sources
-lmod_source_url: 'https://github.com/TACC/Lmod/archive/{{LMOD_VERSION}}.tar.gz'
+lmod_source_url: 'https://github.com/TACC/Lmod/archive/{{lmod_force_version}}.tar.gz'
 
 # extra options to pass to Lmod's `./configure` script
 lmod_configure_extra_opts: ''

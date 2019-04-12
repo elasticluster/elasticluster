@@ -1,0 +1,52 @@
+---
+
+#
+# Post-installation configuration for Lmod
+#
+
+- name: Create required directories
+  file:
+    dest: '{{item}}'
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  loop:
+    - '/etc/profile.d'
+    - '/etc/csh'
+    - '/etc/csh/login.d'
+    - '{{modules_root}}'
+
+
+- name: Ensure modulefiles directories are in MODULEPATH
+  lineinfile:
+    path: '/etc/lmod/modulespath'
+    line: '{{ modules_root }}'
+  when: 'is_ubuntu_18_04_or_later or is_debian_9_or_later'
+
+
+# CentOS7' `Lmod` package deploys a `/etc/profile.d/00-modulepath.sh`
+# script to set `$MODULEPATH` to a value that includes the
+# package-defined directories; use name `01-modulepath.sh` to be sure
+# our script runs *after* that
+- name: Ensure modulefiles directories are in MODULEPATH
+  template:
+    dest: "{{ item.dest }}"
+    src: "{{ item.src }}"
+    mode: "0444"
+  loop:
+    - { dest: "/etc/profile.d/01-modulepath.sh",    src: "etc/profile.d/01-modulepath.sh.j2" }
+    - { dest: "/etc/csh/login.d/01-modulepath.csh", src: "etc/profile.d/01-modulepath.csh.j2" }
+  when: 'is_ubuntu_16_04 or is_debian_8'
+
+
+- name: Deploy shell profile snippets to load Lmod
+  template:
+    dest: "{{ item.dest }}"
+    src: "{{ item.src }}"
+    mode: "0444"
+  loop:
+    - { dest: "/etc/profile.d/lmod.sh",          src: "etc/profile.d/lmod.sh.j2" }
+    - { dest: "/etc/profile.d/z80_StdEnv.sh",    src: "etc/profile.d/z80_StdEnv.sh.j2" }
+    - { dest: "/etc/csh/login.d/lmod.csh",       src: "etc/profile.d/lmod.csh.j2" }
+    - { dest: "/etc/csh/login.d/z80_StdEnv.csh", src: "etc/profile.d/z80_StdEnv.csh.j2" }

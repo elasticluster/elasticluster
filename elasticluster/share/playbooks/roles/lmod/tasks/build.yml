@@ -4,6 +4,10 @@
 # Build Lmod from sources
 #
 
+- name: Install Lua (needed by Lmod)
+  include_role:
+    name: lua
+
 - name: Install build-time dependencies (Debian-compatible)
   package:
     name:
@@ -39,25 +43,16 @@
   when: is_rhel_compatible
 
 
-# - name: Install optional dependencies of Lmod
-#   package:
-#     name: '{{ item }}'
-#     state: '{{ pkg_install_state }}'
-#   loop:
-#     - lua-term
-#   ignore_errors: True
-
-
 - name: Create required directories
   file:
-    dest='{{item}}'
-    state=directory
-    mode=0755
+    dest: '{{item}}'
+    state: directory
+    mode: '0755'
   loop:
     - '{{lmod_install_dir}}/'
     - '{{lmod_source_dir}}/'
     - '{{lmod_build_dir}}/'
-    - '{{MODULES_ROOT}}/'
+    - '{{modules_root}}/'
 
 
 - name: Download sources
@@ -76,16 +71,16 @@
 #
 #   - name: Extract sources
 #     unarchive:
-#       src: '{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}.tar.gz'
+#       src: '{{ lmod_build_dir }}/Lmod-{{ lmod_version }}.tar.gz'
 #       dest: '{{ lmod_build_dir }}/'
-#       creates: '{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}/configure'
+#       creates: '{{ lmod_build_dir }}/Lmod-{{ lmod_version }}/configure'
 #       copy: no
 #
 - name: Extract sources
   command:
-    'tar -xzf "{{ lmod_build_dir }}/Lmod-{{LMOD_VERSION}}.tar.gz" -C "{{ lmod_build_dir }}"'
+    'tar -xzf "{{ lmod_build_dir }}/Lmod-{{lmod_version}}.tar.gz" -C "{{ lmod_build_dir }}"'
   args:
-    creates='{{ lmod_build_dir }}/Lmod-{{LMOD_VERSION}}/configure'
+    creates: '{{ lmod_build_dir }}/Lmod-{{lmod_version}}/configure'
 
 
 - name: Run `./configure`
@@ -94,9 +89,9 @@
     if [ -r /etc/profile.d/lua.sh ]; then
       . /etc/profile.d/lua.sh
     fi
-    ./configure --prefix="{{ lmod_root }}" --with-module-root-path="{{ MODULES_ROOT }}" {{ lmod_configure_extra_opts }}
+    ./configure --prefix="{{ lmod_root }}" --with-module-root-path="{{ modules_root }}" {{ lmod_configure_extra_opts }}
   args:
-    chdir:   '{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}'
+    chdir:   '{{ lmod_build_dir }}/Lmod-{{ lmod_version }}'
     creates: 'makefile'
   environment:
     PATH: "{{ lua_exe|dirname or '/usr/bin' }}:{{ansible_env.PATH}}"
@@ -112,7 +107,7 @@
     fi
     make
   args:
-    chdir: '{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}'
+    chdir: '{{ lmod_build_dir }}/Lmod-{{ lmod_version }}'
   environment:
     PATH: "{{ lua_exe|dirname or '/usr/bin' }}:{{ansible_env.PATH}}"
 
@@ -134,7 +129,7 @@
     fi
     make install
   args:
-    chdir:   '{{ lmod_build_dir }}/Lmod-{{ LMOD_VERSION }}'
+    chdir:   '{{ lmod_build_dir }}/Lmod-{{ lmod_version }}'
     creates: '{{lmod_install_dir}}/libexec/lmod'
   environment:
     PATH: "{{ (lua_exe|dirname) or '/usr/bin' }}:{{ansible_env.PATH}}"

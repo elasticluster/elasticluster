@@ -1,0 +1,28 @@
+---
+
+#
+# Post-installation configuration for Lmod on RHEL/CentOS
+#
+
+# CentOS7' `Lmod` package deploys a `/etc/profile.d/00-modulepath.sh`
+# script to set `$MODULEPATH` to a value that includes the
+# package-defined directories; use name `01-modulepath.sh` to be sure
+# our script runs *after* that
+- name: Ensure modulefiles directories are in MODULEPATH
+  template:
+    dest: "{{ item.dest }}"
+    src: "{{ item.src }}"
+    mode: "0444"
+  loop:
+    - { dest: "/etc/profile.d/01-modulepath.sh",  src: "etc/profile.d/01-modulepath.sh.j2" }
+    - { dest: "/etc/profile.d/01-modulepath.csh", src: "etc/profile.d/01-modulepath.csh.j2" }
+
+
+- name: Deploy shell profile snippets to load Lmod's default modules
+  template:
+    dest: "{{ item.dest }}"
+    src: "{{ item.src }}"
+    mode: "0444"
+  loop:
+    - { dest: "/etc/profile.d/z80_StdEnv.sh",  src: "etc/profile.d/z80_StdEnv.sh.j2" }
+    - { dest: "/etc/profile.d/z80_StdEnv.csh", src: "etc/profile.d/z80_StdEnv.csh.j2" }

@@ -5,21 +5,53 @@
 #
 
 
+- name: Set Lmod package name (Debian/Ubuntu)
+  set_fact:
+    _lmod_pkg_name: lmod
+  when: 'is_debian_compatible'
+
+
+- name: Set Lmod package name (RHEL/CentOS)
+  set_fact:
+    _lmod_pkg_name: Lmod
+  when: 'is_rhel_compatible'
+
+
 # try installing from OS packages first...
-- name: Install Lmod from the OS repository (Debian-compatible)
+- name: Install Lmod from the OS repository
   package:
-    name: 'lmod{{__at__}}{{ LMOD_VERSION }}*'
+    name: '{{ _lmod_pkg_name }}'
     state: '{{ pkg_install_state }}'
-  ignore_errors: True
-  register: lmod_pkg_install
+  ignore_errors: yes
+  register: _lmod_pkg_install_any
+  when: '(lmod_force_version is not defined) and not lmod_install_from_source|bool'
+
+
+- name: Install Lmod from the OS repository
+  package:
+    name: '{{ _lmod_pkg_name }}{{__at__}}{{ lmod_force_version }}*'
+    state: '{{ pkg_install_state }}'
+  ignore_errors: yes
+  register: _lmod_pkg_install_force
+  when: '(lmod_force_version is defined) and not lmod_install_from_source|bool'
+
+
+- name: Record Lmod root directory path
+  set_fact:
+    lmod_root: /usr/share
+  when: '_lmod_pkg_install_any is success or _lmod_pkg_install_force is success'
 
 
 # ...if installing from OS packages failed, download and build sources
 - name: Build Lmod from source
-  include_tasks: build.yml
-  when: '(lmod_pkg_install is failed)'
+  import_tasks: build.yml
+  vars:
+    lmod_version: '{{ lmod_force_version|default(lmod_default_version) }}'
+  when: '_lmod_pkg_install_any is not success and _lmod_pkg_install_force is not success'
 
 
 # run post-install regardless of installation method
 - name: Post-installation configuration
   import_tasks: post-install.yml
+  vars:
+    lmod_version: '{{ lmod_force_version|default(lmod_default_version) }}'

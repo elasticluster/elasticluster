@@ -22,15 +22,24 @@ Role Variables
 
 The following variables may be set to alter the role behavior:
 
-``LMOD_VERSION``
-  The version of Lmod to install. Interpolated into the (default)
-  source archive name.
+``lmod_install_from_source``
+  If ``yes``, then download, build, and install Lmod from the source
+  archive.  If ``no`` (default), then try to install Lmod from the OS
+  package and install from source if that fails.
 
-``LMOD_DEFAULT_MODULES``
+``lmod_force_version``
+  If set, require that this version of Lmod be installed; if not
+  available in the OS packages, install from source.  The value of
+  ``lmod_force_version`` is interpolated into the (default) source
+  archive name, so you need to use the exact version number as it
+  appears in the source archive name (see the `Lmod GitHub releases
+  page`_ for a list).
+
+``lmod_default_modules``
   List of modules to load in any new user shell session. Any valid argument of
   ``module list`` can be used as a list item here.
 
-``MODULES_ROOT``
+``modules_root``
   Directory containing system-wide module files. Defaults to
   ``/etc/modulefiles``.
 
@@ -40,17 +49,19 @@ The following variables may be set to alter the role behavior:
 
 ``lmod_install_dir``
   Install Lmod under this directory. (Actually, in a subdirectory named after the
-  version number.)
+  version number.)  Only used when installing from source.
 
 ``lmod_source_dir``
   The directory where to download and extract the source archive.
+  Only used when installing from source.
 
 ``lmod_source_url``
   URL of the ``.tar.bz2`` source archive. The version string is interpolated
-  into the default value.
+  into the default value.  Only used when installing from source.
 
 ``lmod_configure_extra_opts``
   Extra arguments to pass to the ``./configure`` script.
+  Only used when installing from source.
 
 
 Example Playbook
@@ -82,4 +93,5 @@ Author Information and Credits
 
 .. _ElastiCluster: http://elasticluster.readthedocs.io/
 .. _Lmod: http://lmod.readthedocs.io/en/latest/
+.. _`Lmod GitHub releases page`: https://github.com/TACC/Lmod/releases
 .. _Lua: http://www.lua.org/

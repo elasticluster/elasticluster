@@ -1,0 +1,15 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+# the `USER_IS_ROOT` env. var. is used in Lmod's
+# initialization file; see: https://github.com/TACC/Lmod/issues/26
+if ( test `id -u` -eq 0 ) then
+    setenv USER_IS_ROOT 1
+endif
+
+# Note: the `Lmod` package in Ubuntu 16.04 ships with a `profile`
+# script that assumes that a users' shell is always `bash` and will give
+# incorrect results on other shells...
+source {{ lmod_root }}/lmod/lmod/init/cshrc

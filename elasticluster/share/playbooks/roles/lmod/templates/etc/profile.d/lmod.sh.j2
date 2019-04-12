@@ -8,3 +8,8 @@
 if [ $(id -u) -eq 0 ]; then
     export USER_IS_ROOT=1
 fi
+
+# Note: the `Lmod` package in Ubuntu 16.04 ships with a `profile`
+# script that assumes that a users' shell is always `bash` and will give
+# incorrect results on other shells...
+. {{ lmod_root }}/lmod/lmod/init/profile

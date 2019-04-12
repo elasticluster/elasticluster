@@ -7,7 +7,7 @@
 # see: http://lmod.readthedocs.io/en/latest/070_standard_modules.html
 if [ -z "$__Lmod_Init_Default_Modules" -o -z "$LD_LIBRARY_PATH" ]; then
     export __Lmod_Init_Default_Modules=1
-    export LMOD_SYSTEM_DEFAULT_MODULES="{{ LMOD_DEFAULT_MODULES|join(':') }}"
+    export LMOD_SYSTEM_DEFAULT_MODULES="{{ lmod_default_modules|join(':') }}"
     if [ -n "$LMOD_SYSTEM_DEFAULT_MODULES" ]; then
         module --initial_load --no_redirect restore
     fi
