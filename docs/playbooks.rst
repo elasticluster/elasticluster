@@ -115,8 +115,8 @@ SLURM
 
 Supported on:
 
-* Ubuntu 12.04 and later
-* Debian 7 ("wheezy") and 8 ("jessie")
+* Ubuntu 14.04 ("trusty") and later
+* Debian 8 ("jessie") and later
 * RHEL/CentOS 6.x and 7.x
 
 This playbook installs the `SLURM`_ batch-queueing system.
@@ -187,7 +187,7 @@ all compute nodes (but not on the front-end)::
 
 Extra variables can be set by editing the `setup/` section:
 
-.. list-table:: cgroup-related SLURM settings
+.. list-table:: SLURM tunables
    :widths: 30 20 50
    :header-rows: 1
 
@@ -286,7 +286,7 @@ Tested on:
 
 * CentOS 6.x and 7.x
 * Ubuntu 14.04 ("trusty") and 16.04 ("xenial")
-* Debian 8 ("jessie")
+* Debian 8 ("jessie") and later
 
 ======================== =======================================
  ansible groups          role
