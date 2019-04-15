@@ -4,9 +4,16 @@
   set_fact:
     slurmd_packages:
       - slurm
+      - slurm-slurmd
+  when: 'is_rhel_compatible and slurm_version|float >= 17.11'
+
+- name: Set SLURM worker playbook params (RHEL compatible)
+  set_fact:
+    slurmd_packages:
+      - slurm
       - slurm-plugins
       - slurm-sql
-  when: 'is_rhel_compatible'
+  when: 'is_rhel_compatible and slurm_version|float < 17.11'
 
 - name: Set SLURM worker service name (RHEL 7.x compatible)
   set_fact:

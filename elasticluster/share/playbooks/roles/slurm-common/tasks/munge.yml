@@ -28,26 +28,28 @@
     - systemd
 
 
-- name: Install MUNGE (Debian/Ubuntu)
+- name: Install MUNGE (I)
   tags:
     - slurm
     - munge
-    - debian
   package:
+    # package name `munge` applies to Debian/Ubuntu and to @verdurin's SLURM repos >=17.11
     name: munge
     state: '{{ pkg_install_state }}'
-  when: is_debian_compatible
+  ignore_errors: yes
+  register: _munge_install1
 
 
-- name: Install MUNGE (RHEL-compatible)
+- name: Install MUNGE (II)
   tags:
     - slurm
     - munge
-    - rhel
   package:
+    # package name `munge` applies to @verdurin's SLURM repos <=17.02
     name: slurm-munge
     state: '{{ pkg_install_state }}'
-  when: is_rhel_compatible
+  when: '_munge_install1 is not success'
+
 
 # the following three tasks could be condensed in a single `block:
 # ... when: ...` but can actually not because of

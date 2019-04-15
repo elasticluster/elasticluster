@@ -1,17 +1,30 @@
 ---
 
-- name: Set SLURM master playbook params (RHEL 7.x compatible)
+- name: Set SLURM master playbook params (RHEL 7.x compatible, SLURM 17.11 onwards)
   set_fact:
     slurmctld_service_name: slurmctld
     slurmctld_packages:
       - mailx
-      - slurm-plugins
       - slurm
+      - slurm-slurmctld
+    slurmdbd_service_name: slurmdbd
+    slurmdbd_packages:
+      - slurm-slurmdbd
+  when: 'is_rhel7_compatible and slurm_version|float >= 17.11'
+
+
+- name: Set SLURM master playbook params (RHEL 7.x compatible, SLURM before 17.11)
+  set_fact:
+    slurmctld_service_name: slurmctld
+    slurmctld_packages:
+      - mailx
+      - slurm
+      - slurm-plugins
     slurmdbd_service_name: slurmdbd
     slurmdbd_packages:
       - slurm-sql
       - slurm-slurmdbd
-  when: is_rhel7_compatible
+  when: 'is_rhel7_compatible and slurm_version|float < 17.11'
 
 
 - name: Set SLURM playbook params (RHEL 6.x compatible)

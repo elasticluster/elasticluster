@@ -74,4 +74,4 @@
   loop:
     - slurmd
     - slurmctld
-  when: 'is_rhel7_compatible'
+  when: 'is_rhel7_compatible and slurm_version|float < 17.11'

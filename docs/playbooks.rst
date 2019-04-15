@@ -257,6 +257,11 @@ Extra variables can be set by editing the `setup/` section:
    * - ``slurm_taskplugin``
      - ``task/none``
      - Value of ``TaskPlugin`` in ``slurm.conf``
+   * - ``slurm_version``
+     - ``18.08``
+     - Version of SLURM to install; valid values are ``17.02``, ``17.11``, and ``18.08``.
+       **Note: only applicable to RHEL/CentOS 7 clusters,** in all other
+       cases the version of SLURM provided by the Linux distribution is used.
 
 Note that the ``slurm_*`` extra variables need to be set *globally*
 (e.g., ``global_var_slurm_selectype``) because the SLURM configuration
