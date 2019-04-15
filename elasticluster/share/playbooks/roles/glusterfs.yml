@@ -21,6 +21,6 @@
   roles:
     - role: glusterfs-client
       GLUSTERFS_MOUNTS:
-        - fs: '{{groups.glusterfs_server[0]}}:glusterfs'
+        - fs: '{{groups.glusterfs_server|join(",")}}:glusterfs'
           mountpoint: '/glusterfs'
           state: mounted
