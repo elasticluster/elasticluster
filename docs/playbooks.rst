@@ -1362,7 +1362,7 @@ JupyterHub
 
 Supported on:
 
-* Ubuntu 16.04, 14.04
+* Ubuntu 14.04 ("trusty") and later
 * Debian 8 ("jessie"), 9 ("stretch")
 * CentOS 6.x and 7.x
 

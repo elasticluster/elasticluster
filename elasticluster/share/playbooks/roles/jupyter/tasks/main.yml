@@ -30,7 +30,7 @@
 
 # install R kernel
 - include_tasks: irkernel.yml
-
+  when: '"r" in group_names'
 
 # install MATLAB kernel (if MATLAB available)
 - name: Check that MATLAB_EXE can run MATLAB
