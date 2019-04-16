@@ -1,0 +1,34 @@
+---
+
+- name: Ensure installation directories exist
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - '{{ julia_home }}'
+    - '{{ julia_home }}/julia-{{ julia_version }}'
+    - '{{ julia_home }}/julia-{{ julia_version }}/depot'
+
+
+- name: Download and unpack Julia software archive
+  unarchive:
+    dest: '{{ julia_home }}'
+    src: '{{ julia_installer_url }}'
+    remote_src: yes
+    validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
+    owner: root
+    group: root
+    creates: '{{julia_home}}/julia-{{ julia_version }}/bin/julia'
+
+
+- name: add Julia directories to the shell search PATH
+  template:
+    src: 'etc/profile.d/julia.sh.j2'
+    dest: '/etc/profile.d/julia.sh'
+    mode: '0444'
+    owner: root
+    group: root
+  when: julia_in_path

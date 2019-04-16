@@ -1357,6 +1357,65 @@ you are supposed to connect to the controller node via ssh and run
 your code from there.
 
 
+Julia language
+--------------
+
+Supported on:
+
+* Ubuntu 14.04 ("trusty") and later
+* Debian 9 ("stretch")
+* CentOS 6.x and 7.x
+
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``julia``       Install the Julia language environment.
+==============  =======================================================
+
+This playbook installs the `Julia language`_ system.  If the VM is
+also part of the`jupyterhub` group (see `JupyterHub`_ below), then
+support for running Julia-language notebooks in Jupyter is also
+installed.
+
+The following extra variables can be set to control installation of
+the Julia language system:
+
+===================== ========================== ==============================
+Variable name         Default                    Description
+===================== ========================== ==============================
+``julia_version``     ``1.1.0``                  Version of Julia to install
+===================== ========================== ==============================
+
+The following example (incomplete) shows how to install JupyterHub
+with support for interactive Julia notebooks:
+
+    # JupyterHub software to be configured by Ansible
+    #
+    # (There is nothing Google-specific in the "setup" section; in fact, it can be
+    # re-used verbatim with *any* cloud provider or base image)
+    #
+    [setup/jupyterhub]
+    provider=ansible
+    server_groups=jupyterhub,julia
+
+    # Bring all of the elements together to define a cluster called "jupyterhub"
+    [cluster/jupyterhub+julia]
+    security_group=tcp_port_443
+
+    setup=jupyterhub
+    server_nodes=1
+    ssh_to=server
+
+    # ...fill in details about cloud, login, and image_id/flavor
+
+Please read the notes in the `JupyterHub`_ section about how to create
+users to log in to JupyterHub via web.
+
+ A full example of how to install a JupyterHub stand-alone server with
+R and Julia language support can be found at:
+`<https://github.com/gc3-uzh-ch/elasticluster/blob/master/examples/jupyterhub-on-google.conf>`_
+
+
 JupyterHub
 ----------
 

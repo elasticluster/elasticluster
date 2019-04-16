@@ -1,0 +1,45 @@
+---
+
+- name: Install Jupyter kernel for Julia
+  shell: |
+    set -e
+    # load Julia environment; assume it's been installed
+    # by ElastiCluster's julia role
+    . /etc/profile.d/julia.sh
+    # we cannot use the `creates:` condition of Ansible here,
+    # as the path depends on variable `julia_version`
+    # which is not available in this playbook
+    if [ -d "${JULIA_HOME}/depot/packages/IJulia" ]; then
+      exit 0;
+    fi
+    # install kernel for this Jupyter environment
+    export JUPYTER='{{jupyter_python|dirname}}/bin/jupyter'
+    # `Pkg.add` installs to the first writable dir, so
+    # we need the shared ones first
+    export JULIA_DEPOT_PATH="${JULIA_HOME}/depot:$JULIA_DEPOT_PATH"
+    export JULIA_LOAD_PATH="${JULIA_HOME}/depot:$JULIA_LOAD_PATH"
+    julia <<-__EOF__
+      using Pkg;
+      Pkg.add("IJulia");
+      using IJulia;
+      installkernel("Julia",  env=Dict("JULIA_DEPOT_PATH"=>"${JULIA_DEPOT_PATH}", "JULIA_LOAD_PATH"=>"${JULIA_LOAD_PATH}"));
+      exit(0);
+    __EOF__
+    # ensure files in the depot are world-readable
+    chmod -R a+rX "${JULIA_HOME}/depot"
+
+# - name: Ensure files in the depot are world-readable
+#   shell: |
+#     # load Julia environment; assume it's been installed
+#     # by ElastiCluster's julia role
+#     . /etc/profile.d/julia.sh
+
+# Ansible seems not to have a module for easy remote->remote copying,
+# see: https://stackoverflow.com/questions/35488433/ansible-copy-a-directory-content-to-another-directory
+- name: Copy IJulia kernels in a system-wide location
+  shell: |
+    for kernel_dir in $HOME/.local/share/jupyter/kernels/*; do
+      if [ -d "$kernel_dir" ]; then
+        rsync -a "$kernel_dir" /usr/local/share/jupyter/kernels/
+      fi
+    done

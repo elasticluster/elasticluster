@@ -1,0 +1,15 @@
+---
+#
+# Variables for installing the Julia language.
+# All the values are derived from the constants defined in `defaults/main.yml`
+#
+
+# the actual URL to use for downloading the Julia software archive;
+# since it embeds version and architecture information in multiple
+# places and different formats (e.g., `x64` vs `x86_64`), we break
+# constructing the full URL into a number of independent variables
+# for readability
+_julia_version_short: '{{ julia_version.split(".")[:2]|join(".") }}'
+_julia_arch_short: '{% if ansible_architecture in ["x86_64", "amd64"] %}x64{% else %}x86{% endif %}'
+_julia_os: '{{ ansible_system|lower }}'
+julia_installer_url: 'https://julialang-s3.julialang.org/bin/{{ _julia_os }}/{{ _julia_arch_short }}/{{ _julia_version_short }}/julia-{{ julia_version }}-{{ _julia_os }}-{{ ansible_architecture }}.tar.gz'

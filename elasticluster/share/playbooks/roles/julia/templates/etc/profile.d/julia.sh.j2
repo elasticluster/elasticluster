@@ -1,0 +1,13 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+
+JULIA_HOME="{{julia_home}}/julia-{{ julia_version }}"
+
+# search path for Julia packages
+export JULIA_DEPOT_PATH="${JULIA_DEPOT_PATH}:${JULIA_HOME}/depot"
+export JULIA_LOAD_PATH="${JULIA_LOAD_PATH}:${JULIA_HOME}/depot"
+
+# Add the `julia` executable to the shell search PATH
+export JULIA_BINDIR="${JULIA_HOME}/bin"
+export PATH="${JULIA_BINDIR}:${PATH}"

@@ -43,6 +43,7 @@
 .. _`Hive`: http://hive.apache.org/
 .. _`HTCondor`: http://research.cs.wisc.edu/htcondor/
 .. _`IPython cluster`: http://ipython.org/ipython-doc/dev/parallel/
+.. _`Julia language`: https://julialang.org/
 .. _`Jupyter`: http://jupyter.org/
 .. _`JupyterHub`: http://jupyterhub.readthedocs.io/
 .. _Lmod: http://lmod.readthedocs.io/en/latest/

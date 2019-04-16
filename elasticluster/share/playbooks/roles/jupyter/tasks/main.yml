@@ -12,6 +12,10 @@
 # install BASH kernel
 - import_tasks: bash.yml
 
+# install the IJulia kernel
+- include_tasks: julia.yml
+  when: '"julia" in group_names'
+
 # install Python kernels (for Python version 2 and 3)
 - include_tasks: python.yml
   vars:

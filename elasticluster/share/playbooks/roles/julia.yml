@@ -1,0 +1,9 @@
+---
+- name: Install Julia
+  hosts: julia
+  tags:
+    - julia
+    - install
+
+  roles:
+    - julia

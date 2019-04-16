@@ -44,12 +44,22 @@
 
 - name: Create secret tokens
   shell: |
-    openssl rand -hex {{ item.bytes/2 }} | tr -d '\n' > '/var/lib/jupyterhub/{{ item.name }}'
+    umask 077;
+    openssl rand -hex {{ (item.bytes/2)|int }} | tr -d '\n' > '/var/lib/jupyterhub/{{ item.name }}'
   args:
     creates: '/var/lib/jupyterhub/{{ item.name }}'
   loop:
-    - { name: jupyterhub_cookie_secret, bytes: 32 }
+    - { name: jupyterhub_cookie_secret,    bytes: 32 }
     - { name: jupyterhub_proxy_auth_token, bytes: 64 }
+
+
+- name: Ensure secret tokens are not world-readable
+  file:
+    path: '/var/lib/jupyterhub/{{ item }}'
+    mode: '0640'
+  loop:
+    - 'jupyterhub_cookie_secret'
+    - 'jupyterhub_proxy_auth_token'
 
 
 # the following stanzas are needed to determine what exactly is the

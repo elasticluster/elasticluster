@@ -1,0 +1,13 @@
+---
+#
+# Defaults for installing Julia
+#
+
+# version of Julia to install
+julia_version: 1.1.0
+
+# should the `julia` command be added to users' shell $PATH ?
+julia_in_path: yes
+
+# where should the Julia software archive be unpacked?
+julia_home: '/opt/julia'
