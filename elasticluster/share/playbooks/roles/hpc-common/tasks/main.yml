@@ -17,12 +17,11 @@
     state: directory
   loop:
     - '/etc/modulefiles'
-    - '/etc/modulefiles/Core'
-    - '/etc/modulefiles/Core/mpi'
+    - '/etc/modulefiles/mpi'
 
 
 - name: Deploy OpenMPI environment module
   template:
-    dest: '/etc/modulefiles/Core/mpi/openmpi.lua'
-    src: 'etc/modulefiles/Core/mpi/openmpi.lua.j2'
+    dest: '/etc/modulefiles/mpi/openmpi.lua'
+    src: 'etc/modulefiles/mpi/openmpi.lua.j2'
     mode: 0444
