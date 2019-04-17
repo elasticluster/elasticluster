@@ -3,12 +3,6 @@
 # the next time `elasticluster setup` is run!
 #
 
-# the `USER_IS_ROOT` env. var. is used in Lmod's
-# initialization file; see: https://github.com/TACC/Lmod/issues/26
-if [ $(id -u) -eq 0 ]; then
-    export USER_IS_ROOT=1
-fi
-
 # Note: the `Lmod` package in Ubuntu 16.04 ships with a `profile`
 # script that assumes that a users' shell is always `bash` and will give
 # incorrect results on other shells...

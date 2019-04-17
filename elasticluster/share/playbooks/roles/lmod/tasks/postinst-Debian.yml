@@ -46,7 +46,8 @@
     src: "{{ item.src }}"
     mode: "0444"
   loop:
-    - { dest: "/etc/profile.d/lmod.sh",          src: "etc/profile.d/lmod.sh.j2" }
-    - { dest: "/etc/profile.d/z80_StdEnv.sh",    src: "etc/profile.d/z80_StdEnv.sh.j2" }
-    - { dest: "/etc/csh/login.d/lmod.csh",       src: "etc/profile.d/lmod.csh.j2" }
-    - { dest: "/etc/csh/login.d/z80_StdEnv.csh", src: "etc/profile.d/z80_StdEnv.csh.j2" }
+    - { dest: "/etc/profile.d/00-user-is-root.sh", src: "etc/profile.d/00-user-is-root.sh.j2" }
+    - { dest: "/etc/profile.d/lmod.sh",            src: "etc/profile.d/lmod.sh.j2" }
+    - { dest: "/etc/profile.d/z80_StdEnv.sh",      src: "etc/profile.d/z80_StdEnv.sh.j2" }
+    - { dest: "/etc/csh/login.d/lmod.csh",         src: "etc/profile.d/lmod.csh.j2" }
+    - { dest: "/etc/csh/login.d/z80_StdEnv.csh",   src: "etc/profile.d/z80_StdEnv.csh.j2" }
