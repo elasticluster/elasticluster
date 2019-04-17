@@ -85,10 +85,20 @@
 
 
 - name: Build initial set of software
-  shell:
+  shell: |
     set -e
     . /etc/profile.d/easybuild.sh
-    . /etc/profile.d/modules.sh
+    for script in modules.sh lmod.sh z00_lmod.sh; do
+        if [ -r "/etc/profile.d/$script" ]; then
+           . "/etc/profile.d/$script"
+           break
+        fi
+    done
+    . "/etc/profile.d/$script"
+    if ! type module; then
+        # error out if no 'module' command available
+        exit 70
+    fi
     module load EasyBuild
     eb {{ EASYBUILD_INSTALL|join(' ') }}
   when: 'EASYBUILD_INSTALL|length > 0'

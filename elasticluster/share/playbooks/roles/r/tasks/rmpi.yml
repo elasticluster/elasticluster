@@ -11,8 +11,18 @@
 
 - name: Install R MPI library with OpenMPI
   shell: |
+    set -x
     # load the MPI environment
-    . /etc/profile.d/modules.sh
+    for script in modules.sh lmod.sh z00_lmod.sh; do
+        if [ -r "/etc/profile.d/$script" ]; then
+            break
+        fi
+    done
+    . "/etc/profile.d/$script"
+    if ! type module; then
+        # error out if no 'module' command available
+        exit 70
+    fi
     export MODULEPATH=${MODULEPATH:-/etc/modulefiles}
     module load mpi
     # install Rmpi; note it is assumed that env vars MPI_HOME etc. are
@@ -45,7 +55,16 @@
 - name: Install parallel R libraries
   shell: |
     # load the MPI environment (in case Rmpi is a dependency)
-    . /etc/profile.d/modules.sh
+    for script in modules.sh lmod.sh z00_lmod.sh; do
+        if [ -r "/etc/profile.d/$script" ]; then
+            break
+        fi
+    done
+    . "/etc/profile.d/$script"
+    if ! type module; then
+        # error out if no 'module' command available
+        exit 70
+    fi
     export MODULEPATH=${MODULEPATH:-/etc/modulefiles}
     module load mpi
     # install packages
