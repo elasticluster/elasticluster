@@ -1,0 +1,37 @@
+# openmpi/tasks/main.yml
+---
+
+- name: Install OpenMPI (Debian/Ubuntu)
+  package:
+    name:
+      - libopenmpi-dev
+      - openmpi-bin
+    state: '{{ pkg_install_state }}'
+  when: is_debian_compatible
+
+
+- name: Install OpenMPI (RHEL/CentOS)
+  package:
+    name:
+      - openmpi
+      - openmpi-devel
+    state: '{{ pkg_install_state }}'
+  when: is_rhel_compatible
+
+
+- name: Ensure modulefiles directories exist
+  file:
+    dest: '{{item}}'
+    state: directory
+  loop:
+    - '/etc/modulefiles'
+    - '/etc/modulefiles/mpi'
+
+
+# RHEL/CentOS already ship an `openmpi-x86_64` module
+- name: Deploy OpenMPI environment module
+  template:
+    dest: '/etc/modulefiles/mpi/openmpi'
+    src: 'etc/modulefiles/mpi/openmpi.tcl.j2'
+    mode: '0444'
+  when: 'is_debian_compatible'
