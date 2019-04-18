@@ -1,0 +1,4 @@
+---
+
+# choices are: `lmod` or `environment-modules`
+modules_tool: 'environment-modules'

@@ -1,0 +1,25 @@
+---
+#
+# Select which environment modules tool to install (Lmod or TCL-based
+# "environment-modules") based on the value of the `module_tool`
+# variable.
+#
+
+- name: Check for correct setting of variable `modules_tool`
+  fail:
+    msg: |
+      The only valid values of variable `modules_tool` are the strings
+      'lmod' or 'environment-modules'.
+  when: 'modules_tool not in ["lmod", "environment-modules"]'
+
+
+- name: 'Install Lmod'
+  include_role:
+    name: lmod
+  when: 'modules_tool == "lmod"'
+
+
+- name: 'Install "environment-modules"'
+  include_role:
+    name: environment-modules
+  when: 'modules_tool == "environment-modules"'
