@@ -1,0 +1,10 @@
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+if [ -z "$MODULEPATH" ]; then
+    export MODULEPATH='{{ modules_root }}'
+else
+    export MODULEPATH="{{ modules_root }}:$MODULEPATH"
+fi

@@ -1,0 +1,7 @@
+---
+#
+# Defaults for the installation of the "environment modules" tool.
+#
+
+# where modulefiles reside
+modules_root: '/etc/modulefiles'

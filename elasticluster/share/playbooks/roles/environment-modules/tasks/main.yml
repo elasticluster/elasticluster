@@ -1,0 +1,40 @@
+---
+#
+# Install and configure "environment-modules"
+#
+
+
+- name: 'Install "environment-modules" from the OS repository'
+  package:
+    name: 'environment-modules'
+    state: '{{ pkg_install_state }}'
+
+
+# these directories are referenced in modules' default "profile" script;
+# although `modules` runs fine even if they're non-existent, ensuring they
+# are means that we can just drop files in there from other
+# roles/playbooks
+- name: Ensure modulefiles directories exist
+  file:
+    dest: '{{item}}'
+    state: directory
+  loop:
+    - '/etc/modulefiles'
+    - '{{ modules_root }}'
+
+
+- name: Ensure modulefiles directories are in MODULEPATH (Debian/Ubuntu)
+  lineinfile:
+    path: '/etc/environment-modules/modulespath'
+    line: '{{ modules_root }}'
+  when: 'is_ubuntu_16_04_or_later or is_debian_8_or_later'
+
+
+- name: Ensure modulefiles directories are in MODULEPATH (RHEL/CentOS)
+  template:
+    dest: "{{ item.dest }}"
+    src: "{{ item.src }}"
+    mode: "0444"
+  loop:
+    - { dest: "/etc/profile.d/01-modulepath.sh",  src: "etc/profile.d/01-modulepath.sh.j2" }
+    - { dest: "/etc/profile.d/01-modulepath.csh", src: "etc/profile.d/01-modulepath.csh.j2" }
