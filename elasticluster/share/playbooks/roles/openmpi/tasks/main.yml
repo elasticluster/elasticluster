@@ -4,19 +4,30 @@
 - name: Install OpenMPI (Debian/Ubuntu)
   package:
     name:
-      - libopenmpi-dev
+      # on Debian and Ubuntu, `openmpi-bin` pulls in the correct
+      # libopenmpiXXX dependency (`libopenmpi2` on "stretch",
+      # `libopenmpi3` on "bionic" and "buster"; `libopenmpi-1.10` on
+      # "xenial")
       - openmpi-bin
     state: '{{ pkg_install_state }}'
   when: is_debian_compatible
 
 
-- name: Install OpenMPI (RHEL/CentOS)
+- name: Install OpenMPI (RHEL/CentOS 7.x)
   package:
     name:
       - openmpi
-      - openmpi-devel
+      - openmpi3
     state: '{{ pkg_install_state }}'
-  when: is_rhel_compatible
+  when: is_rhel7_compatible
+
+
+- name: Install OpenMPI (RHEL/CentOS 6.x)
+  package:
+    name:
+      - openmpi-1.8
+    state: '{{ pkg_install_state }}'
+  when: is_rhel6_compatible
 
 
 - name: Ensure modulefiles directories exist
