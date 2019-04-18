@@ -3,7 +3,6 @@
 - name: HTCondor common Playbook
   hosts: condor_master:condor_worker
   roles:
-    - role: hpc-common
     - role: 'nis'
       NIS_MASTER: '{{groups.condor_master[0]}}'
       when: 'multiuser_cluster|default("true")|bool'

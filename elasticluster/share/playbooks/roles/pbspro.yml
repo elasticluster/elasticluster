@@ -13,7 +13,6 @@
       - path: '/home'
         clients: '{{groups.pbspro_worker}}'
         options: 'rw,no_root_squash,async'
-    - role: hpc-common
     - role: pbspro
 
 
@@ -30,7 +29,6 @@
       - fs: '{{ pbspro_master_host }}:/home'
         mountpoint: '/home'
         options: 'rw,async'
-    - role: hpc-common
     - role: pbspro
 
 
@@ -47,5 +45,4 @@
       - fs: '{{ pbspro_master_host }}:/home'
         mountpoint: '/home'
         options: 'rw,async'
-    - role: hpc-common
     - role: pbspro

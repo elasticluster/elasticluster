@@ -13,7 +13,6 @@
       - path: '/home'
         clients: '{{groups.torque_worker}}'
         options: 'rw,no_root_squash,async'
-    - role: hpc-common
     - role: torque
 
 
@@ -30,5 +29,4 @@
       - fs: '{{ torque_master_host }}:/home'
         mountpoint: '/home'
         options: 'rw,async'
-    - role: hpc-common
     - role: torque
