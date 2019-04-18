@@ -61,6 +61,7 @@
 - import_playbook: roles/ansible.yml
 - import_playbook: roles/easybuild.yml
 - import_playbook: roles/ganglia.yml
+- import_playbook: roles/hpc-common.yml
 - import_playbook: roles/julia.yml
 - import_playbook: roles/r.yml
 - import_playbook: roles/rstudio.yml

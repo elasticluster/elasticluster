@@ -12,6 +12,7 @@
       - liblapack-dev
       - libnetcdf-dev
       - libopenblas-dev
+      - libopenmpi-dev
       - sqlite3
     state: '{{ pkg_install_state }}'
   when: is_debian_compatible
@@ -21,12 +22,38 @@
   package:
     name:
       - atlas-devel
-      - blas-devel
       - gcc-c++
       - gcc-gfortran
       - hdf5
       - hdf5-openmpi
+      - hdf5-openmpi-devel
       - make
       - netcdf-devel
+      - netcdf-openmpi
+      - netcdf-openmpi-devel
+      - openblas-devel
+      - openmpi-devel
+      - openmpi3-devel
+      - scalapack-openmpi
+      - scalapack-openmpi-devel
     state: '{{ pkg_install_state }}'
-  when: is_rhel_compatible
+  when: is_rhel7_compatible
+
+
+- name: Install common HPC software (RHEL/CentOS 6.x)
+  package:
+    name:
+      - atlas-devel
+      - gcc-c++
+      - gcc-gfortran
+      - hdf5
+      - hdf5-openmpi
+      - hdf5-openmpi-devel
+      - make
+      - netcdf-devel
+      - openblas-devel
+      - openmpi-1.8-devel
+      - scalapack-openmpi
+      - scalapack-openmpi-devel
+    state: '{{ pkg_install_state }}'
+  when: is_rhel6_compatible

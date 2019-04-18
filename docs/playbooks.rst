@@ -1357,6 +1357,40 @@ you are supposed to connect to the controller node via ssh and run
 your code from there.
 
 
+HPC common
+----------
+
+Supported on:
+
+* Ubuntu 14.04 ("trusty") and later
+* Debian 9 ("stretch")
+* CentOS 6.x and 7.x
+
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``hpc``         Install commonly-used HPC libraries and tools
+==============  =======================================================
+
+This playbook installs some libraries and tools commonly found on HPC
+clusters, including the GNU FORTRAN compiler, ATLAS, HDF5, LAPACK,
+NetCDF, OpenBLAS, and the OpenMPI development environment and compiler
+wrappers.
+
+You probably want to install this add-on if you want to be able to
+install scientific software on the cluster by compiling it from
+sources.
+
+For instance, the following configuration snippet requests that
+ElastiCluster and Ansible install the "HPC common" packages on the
+worker nodes of a SLURM cluster::
+
+     [setup/slurm+docker]
+     # ... same as usual SLURM setup, but:
+     master_groups=slurm_master
+     worker_groups=slurm_worker,hpc
+
+
 Julia language
 --------------
 
