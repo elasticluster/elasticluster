@@ -1385,7 +1385,7 @@ For instance, the following configuration snippet requests that
 ElastiCluster and Ansible install the "HPC common" packages on the
 worker nodes of a SLURM cluster::
 
-     [setup/slurm+docker]
+     [setup/slurm+hpc]
      # ... same as usual SLURM setup, but:
      master_groups=slurm_master
      worker_groups=slurm_worker,hpc
