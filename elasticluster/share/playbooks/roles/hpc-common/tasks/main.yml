@@ -1,29 +1,32 @@
 # hpc-common/tasks/main.yml
 ---
 
-- name: Load distribution-specific parameters
-  include_tasks: 'init-{{ansible_os_family}}.yml'
-
-
-- name: Install common HPC software
+- name: Install common HPC software (Debian/Ubuntu)
   package:
-    name: '{{hpc_common_packages}}'
+    name:
+      - build-essential
+      - gfortran
+      - libatlas-base-dev
+      - libhdf5-dev
+      - libhdf5-openmpi-dev
+      - liblapack-dev
+      - libnetcdf-dev
+      - libopenblas-dev
+      - sqlite3
     state: '{{ pkg_install_state }}'
+  when: is_debian_compatible
 
 
-- name: Ensure modulefiles directories exist
-  file:
-    dest: '{{item}}'
-    state: directory
-  loop:
-    - '/etc/modulefiles'
-    - '/etc/modulefiles/mpi'
-
-
-# RHEL/CentOS already ship an `openmpi-x86_64` module
-- name: Deploy OpenMPI environment module
-  template:
-    dest: '/etc/modulefiles/mpi/openmpi'
-    src: 'etc/modulefiles/mpi/openmpi.tcl.j2'
-    mode: '0444'
-  when: 'is_debian_compatible'
+- name: Install common HPC software (RHEL/CentOS)
+  package:
+    name:
+      - atlas-devel
+      - blas-devel
+      - gcc-c++
+      - gcc-gfortran
+      - hdf5
+      - hdf5-openmpi
+      - make
+      - netcdf-devel
+    state: '{{ pkg_install_state }}'
+  when: is_rhel_compatible
