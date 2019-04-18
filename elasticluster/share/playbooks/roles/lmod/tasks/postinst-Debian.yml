@@ -15,7 +15,6 @@
     - '/etc/profile.d'
     - '/etc/csh'
     - '/etc/csh/login.d'
-    - '{{modules_root}}'
 
 
 - name: Ensure modulefiles directories are in MODULEPATH
