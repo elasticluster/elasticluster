@@ -2,5 +2,5 @@
 ---
 
 dependencies:
-  # install `lmod` to manage "environment module" files
-  - role: lmod
+  # install a `module` command to manage "environment module" files
+  - role: modules-tool
