@@ -26,8 +26,9 @@
   block:
     - name: Download `current.ver` file
       get_url:
-        url: http://download2.rstudio.org/current.ver
+        url: https://download2.rstudio.org/current.ver
         dest: '{{ elasticluster.output_dir }}/rstudio_current_version.txt'
+        validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
     - name: Load version number from `current.ver` file
       set_fact:
         rstudio_version: '{{ lookup("file", "{{ elasticluster.output_dir }}/rstudio_current_version.txt") }}'
@@ -42,8 +43,9 @@
 
 - name: Download Rstudio Server
   get_url:
-    url: 'http://download2.rstudio.org/rstudio-server-{{ rstudio_version }}-amd64.deb'
+    url: 'https://download2.rstudio.org/rstudio-server-{{ rstudio_version }}-amd64.deb'
     dest: '{{ rstudio_download_dir }}'
+    validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
 
 
 - name: Install RStudio Server package
