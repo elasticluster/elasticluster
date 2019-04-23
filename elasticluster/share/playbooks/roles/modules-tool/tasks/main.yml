@@ -4,6 +4,22 @@
 # "environment-modules") based on the value of the `module_tool`
 # variable.
 #
+# We want different defaults for Debian/Ubuntu and RHEL/CentOS
+# (`environment-modules` brings in a world of dependencies on Debian,
+# whereas Lmod is lightweight as one would expect) so we cannot use
+# Ansible's `defaults/main.yml` mechanism.
+
+- name: 'Set default value of `modules_tool` (Debian/Ubuntu)'
+  set_fact:
+    modules_tool: 'lmod'
+  when: 'modules_tool is not defined and is_debian_compatible'
+
+
+- name: 'Set default value of `modules_tool` (RHEL-compatible)'
+  set_fact:
+    modules_tool: 'environment-modules'
+  when: 'modules_tool is not defined and is_rhel_compatible'
+
 
 - name: Check for correct setting of variable `modules_tool`
   fail:
