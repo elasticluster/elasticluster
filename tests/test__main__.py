@@ -21,61 +21,60 @@
 from future import standard_library
 standard_library.install_aliases()
 
+from io import StringIO
 import os
-import pytest
+import subprocess
 import sys
 
-from io import StringIO
-from elasticluster import __main__, __version__
+import pytest
 
+from elasticluster.utils import temporary_dir, environment
 
 __author__ = (', '.join([
     'Yaroslav Halchenko <debian@onerussian.com>',
+    'Riccardo Murri <riccardo.murri@gmail.com>',
 ]))
 
 
 # TODO: Could be a parametric fixture I guess
-def _run_command(monkeypatch, argv, exit_code=None):
-    """Helper to run __main__ given a list of argvs and return stdout, stderr, exitcode
-
-    if `exit_code` is not None, we verify that it matches
+def _run_command(argv):
     """
-    fakestdout = StringIO()
-    fakestderr = StringIO()
-    monkeypatch.setattr(sys, "stdout", fakestdout)
-    monkeypatch.setattr(sys, "stderr", fakestderr)
-    monkeypatch.setattr(sys, "argv", ["does not matter"] + argv)
-    with pytest.raises(SystemExit) as cme:
-        __main__.main()
+    Run the `elasticluster` command with additional arguments.
 
-    return fakestdout.getvalue(), fakestderr.getvalue(), cme.value.code
+    Return STDOUT, STDERR, and the process exit status.
+    """
+    with temporary_dir() as tmpdir:
+        with environment(HOME=os.getcwd()) as env:
+            proc = subprocess.Popen(
+                ['elasticluster'] + argv,
+                stdin=None,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                close_fds=True,
+                shell=False)
+            stdout, stderr = proc.communicate()
+            return stdout, stderr, proc.returncode
 
 
-def test_main_help(monkeypatch):
-    out, err, code = _run_command(monkeypatch, argv=["--help"])
-    assert out.startswith("usage: elasticluster [-h] [-v]")
+def test_main_help():
+    out, err, code = _run_command(["--help"])
+    assert out.startswith(b"usage: elasticluster [-h] [-v]")
     assert not err
     assert not code
 
 
-def test_main_version(monkeypatch):
-    out, err, code = _run_command(monkeypatch, argv=["--version"])
+def test_main_version():
+    from elasticluster import __version__ as elasticluster_version
+    out, err, code = _run_command(["--version"])
     assert not err
     assert not code
-    assert out.rstrip() == "elasticluster version %s" % __version__
+    assert out.rstrip() == ("elasticluster version {0}".format(elasticluster_version)).encode('ascii')
 
 
-# most probably would need to be disabled or fixed to be tested on a real box
-# or global fixture should be introduced to set HOME to a fake one globally
-def test_main_list_default(monkeypatch, tmpdir):
-    # unfortunately it is too late since configuration is read already
-    # I guess.  So either code should be RFed to not have config that
-    # persistent and be specific to the app, or just run externally but
-    # that would loose coverage reporting
-    monkeypatch.setitem(os.environ, 'HOME', str(tmpdir))
-    out, err, code = _run_command(monkeypatch, argv=["list"])
-    assert out.rstrip() == "No clusters found."
-    # Default configuration is either broken or insufficient
-    assert "references non-existing login section" in err
-    # Does not result in error
+def test_main_list_default(tmpdir):
+    out, err, code = _run_command(["list"])
+    assert out.rstrip() == b"No clusters found."
+    # default configuration is insufficient
+    assert b"references non-existing login section" in err
+    # does not result in error
     assert not code
