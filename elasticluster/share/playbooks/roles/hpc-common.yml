@@ -1,0 +1,9 @@
+---
+- name: Install commonly-used HPC software
+  hosts: hpc
+  tags:
+    - hpc-common
+    - install
+
+  roles:
+    - hpc-common
