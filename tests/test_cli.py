@@ -56,14 +56,14 @@ def _run_command(argv):
             return stdout, stderr, proc.returncode
 
 
-def test_main_help():
+def test_cli_help():
     out, err, code = _run_command(["--help"])
     assert out.startswith(b"usage: elasticluster [-h] [-v]")
     assert not err
     assert not code
 
 
-def test_main_version():
+def test_cli_version():
     from elasticluster import __version__ as elasticluster_version
     out, err, code = _run_command(["--version"])
     assert not err
@@ -71,7 +71,7 @@ def test_main_version():
     assert out.rstrip() == ("elasticluster version {0}".format(elasticluster_version)).encode('ascii')
 
 
-def test_main_list_default(tmpdir):
+def test_cli_list_default(tmpdir):
     out, err, code = _run_command(["list"])
     assert out.rstrip() == b"No clusters found."
     # default configuration is insufficient
