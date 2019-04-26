@@ -52,6 +52,12 @@
         "description": "Unique alphanumeric identifier."
       }
     },
+    "storageAccountType": {
+      "type": "string",
+      "metadata": {
+        "description": "See: https://docs.microsoft.com/it-it/rest/api/compute/disks/createorupdate#disksku"
+      }
+    },
     "subnetName": {
       "type": "string",
       "defaultValue": "subnet",
@@ -106,7 +112,7 @@
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[parameters('storageAccountName')]",
       "sku": {
-        "name": "Standard_LRS",
+        "name": "[parameters('storageAccountType')]",
         "tier": "Standard"
       },
       "location": "[variables('location')]",
@@ -258,7 +264,7 @@
             "caching": "ReadWrite",
             "diskSizeGB": "[parameters('bootDiskSize')]",
             "managedDisk": {
-              "storageAccountType": "Standard_LRS"
+              "storageAccountType": "[parameters('storageAccountType')]"
             }
           }
         },

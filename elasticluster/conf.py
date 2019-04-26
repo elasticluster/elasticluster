@@ -131,6 +131,8 @@ SCHEMA = {
                 'login': nonempty_str,
                 'num': int,
                 'min_num': int,
+                # only on Azure
+                Optional("storage_account_type", default='Standard_LRS'): Or('Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS'),
                 # only on Google Cloud
                 Optional("accelerator_count", default=0): nonnegative_int,
                 Optional("accelerator_type"): nonempty_str,
@@ -147,6 +149,8 @@ SCHEMA = {
         Optional("ssh_probe_timeout", default=5): positive_int,
         Optional("ssh_proxy_command", default=''): str,
         Optional("start_timeout", default=600): positive_int,
+        # only on Azure
+        Optional("storage_account_type", default='Standard_LRS'): Or('Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS'),
         # only on Google Cloud
         Optional("accelerator_count", default=0): nonnegative_int,
         Optional("accelerator_type"): nonempty_str,
@@ -695,6 +699,8 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'security_group',
             'node_name',
             'ssh_proxy_command',
+            # Azure only
+            'storage_account_type',
             # Google Cloud only
             'accelerator_count',
             'accelerator_type',

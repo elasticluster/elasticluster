@@ -1032,14 +1032,24 @@ node-level section take precedence over cluster-wide ones.
 
        .. __: https://github.com/gc3-uzh-ch/elasticluster/issues/490
 
+
 Additional optional configuration keys for Azure
 -----------------------------------------------------
-
 
 ``boot_disk_size``
     Size of the instance's root filesystem volume, in Gibibytes (GiB).
     The ``/home`` directory of this volume on the first frontend node
     is shared to compute nodes using NFS. Defaults to 30.
+
+``storage_account_type``
+    The type of disks that will be attached to virtual machines,
+    e.g. "standard HDD" or "ultra SSD".  For an explanation of the
+    different disk types, see:
+    `<https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-types>`_.
+    Valid values for ElastiCluster's ``storage_account_type`` configuration
+    option are the ones listed at:
+    `<https://docs.microsoft.com/en-us/rest/api/compute/disks/createorupdate#diskstorageaccounttypes>`_
+
 
 Additional optional configuration keys for Amazon EC2
 -----------------------------------------------------

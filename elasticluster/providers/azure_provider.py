@@ -191,6 +191,7 @@ class AzureCloudProvider(AbstractCloudProvider):
                        username='root',
                        node_name=None,
                        boot_disk_size=30,
+                       storage_account_type='Standard_LRS',
                        **extra):
         """
         Start a new VM using the given properties.
@@ -217,6 +218,9 @@ class AzureCloudProvider(AbstractCloudProvider):
           username for the given ssh key
           (default is ``root`` as it's always guaranteed to exist,
           but you probably don't want to use that)
+        :param str storage_account_type:
+          Type of disks to attach to the VM. For a list of valid values,
+          see: https://docs.microsoft.com/en-us/rest/api/compute/disks/createorupdate#diskstorageaccounttypes
 
         :return: tuple[str, str] -- resource group and node name of the started VM
         """
@@ -291,6 +295,7 @@ class AzureCloudProvider(AbstractCloudProvider):
                 'value': self._make_storage_account_name(
                     cluster_name, node_name)
             },
+            'storageAccountType': { 'value': storage_account_type },
             'subnetName':     { 'value': cluster_name },
             'vmName':         { 'value': node_name },
             'vmSize':         { 'value': flavor },
