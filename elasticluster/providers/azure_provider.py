@@ -96,23 +96,6 @@ from elasticluster.exceptions import (
 )
 
 
-_VM_TEMPLATE = json.loads(resource_string(
-    'elasticluster', 'share/etc/azure_vm_template.json'))
-"""
-Resource Manager template for starting a new VM.
-
-Initially taken from:
-https://github.com/Azure-Samples/resource-manager-python-template-deployment/blob/master/templates/template.json
-Copyright (c) 2015 Microsoft Corporation
-"""
-
-_NET_TEMPLATE = json.loads(resource_string(
-    'elasticluster', 'share/etc/azure_net_template.json'))
-"""
-Resource Manager template for creating a new network.
-"""
-
-
 class AzureCloudProvider(AbstractCloudProvider):
     """
     Use the Azure Python SDK to connect to the Azure clouds and
@@ -127,12 +110,46 @@ class AzureCloudProvider(AbstractCloudProvider):
     Lock used for node startup.
     """
 
-    def __init__(self, subscription_id, tenant_id, client_id, secret, location, **extra):
+    def __init__(self, subscription_id, tenant_id,
+                 client_id, secret, location,
+                 vm_deployment_template=None,
+                 net_deployment_template=None, **extra):
         self.subscription_id = subscription_id
         self.tenant_id = tenant_id
         self.client_id = client_id
         self.secret = secret
         self.location = location
+
+        if vm_deployment_template:
+            try:
+                with open(vm_deployment_template) as template_file:
+                    self.vm_deployment_template = json.load(template_file)
+            except Exception as err:
+                raise ConfigurationError(
+                    "Could not load VM deployment template file `{0}`"
+                    " in provider for Azure cloud: {1}"
+                    .format(vm_deployment_template, err))
+        else:
+            # Azure Resource Manager template for starting a new VM.
+            # Initially taken from:
+            # https://github.com/Azure-Samples/resource-manager-python-template-deployment/blob/master/templates/template.json
+            # Copyright (c) 2015 Microsoft Corporation
+            self.vm_deployment_template = json.loads(resource_string(
+                'elasticluster', 'share/etc/azure_vm_template.json'))
+
+        if net_deployment_template:
+            try:
+                with open(net_deployment_template) as template_file:
+                    self.net_deployment_template = json.load(template_file)
+            except Exception as err:
+                raise ConfigurationError(
+                    "Could not load net deployment template file `{0}`"
+                    " in provider for Azure cloud: {1}"
+                    .format(net_deployment_template, err))
+        else:
+            # Azure Resource Manager template for creating a new network.
+            self.net_deployment_template = json.loads(resource_string(
+                'elasticluster', 'share/etc/azure_net_template.json'))
 
         # these will be initialized later by `_init_az_api()`
         self._compute_client = None
@@ -274,7 +291,7 @@ class AzureCloudProvider(AbstractCloudProvider):
                 oper = self._resource_client.deployments.create_or_update(
                     cluster_name, net_name, {
                         'mode':       DeploymentMode.incremental,
-                        'template':   _NET_TEMPLATE,
+                        'template':   self.net_deployment_template,
                         'parameters': net_parameters,
                     })
                 oper.wait()
@@ -307,7 +324,7 @@ class AzureCloudProvider(AbstractCloudProvider):
         oper = self._resource_client.deployments.create_or_update(
             cluster_name, node_name, {
                 'mode':       DeploymentMode.incremental,
-                'template':   _VM_TEMPLATE,
+                'template':   self.vm_deployment_template,
                 'parameters': vm_parameters,
             })
         oper.wait()
@@ -400,7 +417,7 @@ class AzureCloudProvider(AbstractCloudProvider):
         """
         self._init_az_api()
         cluster_name, node_name = instance_id
-        # XXX: keep in sync with contents of `_VM_TEMPLATE`
+        # XXX: keep in sync with contents of `vm_deployment_template`
         ip_name = ('{node_name}-public-ip'.format(node_name=node_name))
         ip = self._network_client.public_ip_addresses.get(cluster_name, ip_name)
         if (ip.provisioning_state == 'Succeeded' and ip.ip_address):

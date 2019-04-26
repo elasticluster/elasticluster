@@ -200,6 +200,8 @@ CLOUD_PROVIDER_SCHEMAS = {
         Optional("client_id", default=os.getenv('AZURE_CLIENT_ID', '')): nonempty_str,
         Optional("secret", default=os.getenv('AZURE_CLIENT_SECRET', '')): nonempty_str,
         Optional("location", default="westus"): nonempty_str,
+        Optional("vm_deployment_template", default=None): existing_file,
+        Optional("net_deployment_template", default=None): existing_file,
         Optional("certificate"): alert(
             "The `certificate` setting is no longer valid"
             " in the Azure configuration."
