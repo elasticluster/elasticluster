@@ -301,7 +301,7 @@ Valid configuration keys for ``azure``
       well.
 
 .. _`default ARM template`: https://github.com/gc3-uzh-ch/elasticluster/blob/master/elasticluster/share/etc/azure_vm_template.json
-.. _`API profile *2018-03-01-hybrid*`: https://github.com/Azure/azure-rest-api-specs/blob/master/profile/2018-03-01-hybrid.json
+.. _`API profile *2018-03-01-hybrid*`: https://docs.microsoft.com/en-us/azure-stack/user/azure-stack-profiles-azure-resource-manager-versions#overview-of-2018--03-01-hybrid
 
 
 Obtaining Azure authentication credentials
