@@ -264,7 +264,7 @@ class AzureCloudProvider(AbstractCloudProvider):
         # extract it from the node name, which always contains it as
         # the substring before the leftmost dash (see `cluster.py`,
         # line 1182)
-        cluster_name, _ = node_name.split('-', 1)
+        cluster_name, _ = node_name.rsplit('-', 1)
         if not self.__compiled_pattern.match(cluster_name):
             raise ConfigurationError("The cluster name `{0}` does not match the Azure requirement for names. "
                                      "It must conform to the following regular expression: `{1}`"
