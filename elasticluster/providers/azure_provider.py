@@ -28,6 +28,7 @@ from builtins import object
 import hashlib
 import json
 import os
+import re
 import threading
 from warnings import warn
 import sys
@@ -104,6 +105,9 @@ class AzureCloudProvider(AbstractCloudProvider):
     An AzureCloudProvider owns a tree of Azure resources, rooted in one or
     more subscriptions and one or more storage accounts.
     """
+    __pattern_for_name = "^[a-z][a-z0-9-]{1,61}[a-z0-9]$"
+    __compiled_pattern = re.compile(__pattern_for_name)
+
 
     __lock = threading.Lock()
     """
@@ -261,6 +265,15 @@ class AzureCloudProvider(AbstractCloudProvider):
         # the substring before the leftmost dash (see `cluster.py`,
         # line 1182)
         cluster_name, _ = node_name.split('-', 1)
+        if not self.__compiled_pattern.match(cluster_name):
+            raise ConfigurationError("The cluster name {0} does not match the Azure requirement for names. "
+                                     "It must conform to the following regular expression: {1}"
+                                     .format(cluster_name, self.__pattern_for_name))
+
+        if not self.__compiled_pattern.match(node_name):
+            raise ConfigurationError("The node name {0} does not match the Azure requirement for names. "
+                                     "It must conform to the following regular expression: {1}"
+                                     .format(node_name, self.__pattern_for_name))
         with self.__lock:
             if cluster_name not in self._resource_groups_created:
                 self._resource_client.resource_groups.create_or_update(
