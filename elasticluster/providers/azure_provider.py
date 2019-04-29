@@ -266,13 +266,13 @@ class AzureCloudProvider(AbstractCloudProvider):
         # line 1182)
         cluster_name, _ = node_name.split('-', 1)
         if not self.__compiled_pattern.match(cluster_name):
-            raise ConfigurationError("The cluster name {0} does not match the Azure requirement for names. "
-                                     "It must conform to the following regular expression: {1}"
+            raise ConfigurationError("The cluster name `{0}` does not match the Azure requirement for names. "
+                                     "It must conform to the following regular expression: `{1}`"
                                      .format(cluster_name, self.__pattern_for_name))
 
         if not self.__compiled_pattern.match(node_name):
-            raise ConfigurationError("The node name {0} does not match the Azure requirement for names. "
-                                     "It must conform to the following regular expression: {1}"
+            raise ConfigurationError("The node name `{0}` does not match the Azure requirement for names. "
+                                     "It must conform to the following regular expression: `{1}`"
                                      .format(node_name, self.__pattern_for_name))
         with self.__lock:
             if cluster_name not in self._resource_groups_created:
