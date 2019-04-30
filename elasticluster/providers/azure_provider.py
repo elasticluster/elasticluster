@@ -105,8 +105,7 @@ class AzureCloudProvider(AbstractCloudProvider):
     An AzureCloudProvider owns a tree of Azure resources, rooted in one or
     more subscriptions and one or more storage accounts.
     """
-    __pattern_for_name = "^[a-z][a-z0-9-]{1,61}[a-z0-9]$"
-    __compiled_pattern = re.compile(__pattern_for_name)
+    __compiled_pattern_for_names = re.compile("^[a-z][a-z0-9-]{1,61}[a-z0-9]$")
 
 
     __lock = threading.Lock()
@@ -265,15 +264,19 @@ class AzureCloudProvider(AbstractCloudProvider):
         # the substring before the leftmost dash (see `cluster.py`,
         # line 1182)
         cluster_name, _ = node_name.rsplit('-', 1)
-        if not self.__compiled_pattern.match(cluster_name):
+        if not self.__compiled_pattern_for_names.match(cluster_name):
             raise ConfigurationError("The cluster name `{0}` does not match the Azure requirement for names. "
-                                     "It must conform to the following regular expression: `{1}`"
-                                     .format(cluster_name, self.__pattern_for_name))
+                                     "Only numbers, lowercase letters and dashes are allowed, "
+                                     "the value must begin with a lowercase letter and cannot end with a slash, "
+                                     "and must also be less than 63 characters long."
+                                     .format(cluster_name))
 
-        if not self.__compiled_pattern.match(node_name):
+        if not self.__compiled_pattern_for_names.match(node_name):
             raise ConfigurationError("The node name `{0}` does not match the Azure requirement for names. "
-                                     "It must conform to the following regular expression: `{1}`"
-                                     .format(node_name, self.__pattern_for_name))
+                                     "Only numbers, lowercase letters and dashes are allowed, "
+                                     "the value must begin with a lowercase letter and cannot end with a slash, "
+                                     "and must also be less than 63 characters long."
+                                     .format(node_name))
         with self.__lock:
             if cluster_name not in self._resource_groups_created:
                 self._resource_client.resource_groups.create_or_update(
