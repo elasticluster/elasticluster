@@ -16,14 +16,14 @@
   get_url:
     url: '{{ bigtop_mirror }}/bigtop/bigtop-{{bigtop_release}}/repos/{{ansible_distribution|lower}}{{ansible_distribution_version}}/bigtop.list'
     dest: '/etc/apt/sources.list.d/bigtop.list'
-  register: _bigtop_add_apt_repo
+  register: _bigtop_add_apt_repo1
   when: is_ubuntu
 
 - name: add Apache Bigtop repository
   get_url:
     url: '{{ bigtop_mirror }}/bigtop/bigtop-{{bigtop_release}}/repos/{{ansible_distribution|lower}}{{ansible_distribution_major_version}}/bigtop.list'
     dest: '/etc/apt/sources.list.d/bigtop.list'
-  register: _bigtop_add_apt_repo
+  register: _bigtop_add_apt_repo2
   when: not is_ubuntu
 
 # this is run as task and not as a handler, since handlers are all
@@ -34,4 +34,4 @@
   apt:
     update_cache: yes
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  when: '_bigtop_add_apt_repo is changed'
+  when: '_bigtop_add_apt_repo1 is changed or _bigtop_add_apt_repo2 is changed'
