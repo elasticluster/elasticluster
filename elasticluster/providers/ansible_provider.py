@@ -452,9 +452,14 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             if port != 22:
                 extra_vars.append('ansible_port=%s' % port)
 
+            extra_vars.extend('%s=%s' % (k, v) for k, v in
+                              self.extra_conf.items()
+                              if k.startswith('ansible_'))
+
             if node.kind in self.environment:
                 extra_vars.extend('%s=%s' % (k, v) for k, v in
                                   self.environment[node.kind].items())
+
             for group in self.groups[node.kind]:
                 inventory_data[group].append(
                     (node.name, ip_addr, ' '.join(extra_vars)))
