@@ -38,7 +38,6 @@ from time import sleep
 try:
     from azure.common.credentials import ServicePrincipalCredentials
     from azure.mgmt.compute import ComputeManagementClient
-    from azure.mgmt.compute.models import DiskCreateOption
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.resource import ResourceManagementClient
     from azure.mgmt.resource.resources.models import DeploymentMode
@@ -67,7 +66,6 @@ except ImportError:
     ResourceManagementClient = _Unavailable("azure.mgmt.resource")
     NetworkManagementClient = _Unavailable("azure.mgmt.network")
     ComputeManagementClient = _Unavailable("azure.mgmt.compute")
-    DiskCreateOption = _Unavailable("azure.mgmt.compute.models")
     CloudError = _Unavailable("msrestazure.azure_exceptions")
 
 from paramiko import DSSKey, RSAKey, PasswordRequiredException
