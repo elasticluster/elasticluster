@@ -153,9 +153,55 @@ if ! [ -x "$python" ]; then
 
 fi
 
+# eatmydata support
+real_python=$(expr "$python" : '\(.*\)+eatmydata')
+if [ -n "$real_python" ]; then
+    # install `libeatmydata.so` and the `eatmydata` command
+    case "$os" in
+        [Dd]ebian|[Uu]buntu)
+            apt-get install -y eatmydata
+            ;;
+        [Rr]ed[Hh]at)
+            case "$ver" in
+                7*)
+                    sudo yum install -y yum-plugin-copr
+                    sudo yum copr enable -y loveshack/livhpc
+                    ;;
+                6*)
+                    # CentOS 6 does not have YUM's COPR plugin so just create the repo file
+                    mkdir -p /etc/yum.repos.d
+                    cat > /etc/yum.repos.d/copr-livhpc.repo <<__EOF__
+# see: https://copr.fedorainfracloud.org/coprs/loveshack/livhpc/
+[loveshack-livhpc]
+name=Copr repo
+baseurl=https://copr-be.cloud.fedoraproject.org/results/loveshack/livhpc/epel-6-$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://copr-be.cloud.fedoraproject.org/results/loveshack/livhpc/pubkey.gpg
+repo_gpgcheck=0
+enabled=1
+enabled_metadata=1
+__EOF__
+                    ;;
+            esac
+            sudo yum install -y libeatmydata
+            ;;
+    esac
+    # create wrapper script to call Python with libeatmydata preloaded
+    cat > "$python" <<__EOF__
+#! /bin/sh
+
+exec /usr/bin/eatmydata -- '$real_python' "\$@"
+__EOF__
+    chmod a+rx "$python"
+else
+    real_python="$python"
+fi
+
 # cross check that Python exists
-if ! test -x "$python"; then
-    die $EX_SOFTWARE "Python interpreter '$python' not found, even after installation. Aborting."
+if ! test -x "$real_python"; then
+    die $EX_SOFTWARE "Python interpreter '$real_python' not found, even after installation. Aborting."
 fi
 
 # output Python version and exit successfully

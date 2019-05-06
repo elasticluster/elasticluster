@@ -181,7 +181,7 @@ SCHEMA = {
                      'main.yml')): readable_file,
         Optional("ansible_command"): executable_file,
         Optional("ansible_extra_args"): str,
-        #Optional("ansible_ssh_pipelining"): boolean,
+        Optional("safe_but_slower", default=False): boolean,
         # allow other keys w/out restrictions
         str: str,
     },

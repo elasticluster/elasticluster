@@ -721,6 +721,14 @@ General configuration keys
     Type of the setup provider. So far, ``ansible`` is the only valid value
     (and, obviously, the default)
 
+``slow_but_safer``
+    Avoid using ``eatmydata`` to speed up installation of many
+    packages which comprise several smallish files. Defaults to
+    ``False``, i.e., ElastiCluster tries to install and use
+    `*eatmydata*`__, but you might want to disable it in some cases.
+
+    .. __: https://github.com/stewartsmith/libeatmydata
+
 
 Controlling what is installed on the nodes
 ------------------------------------------

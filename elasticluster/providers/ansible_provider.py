@@ -55,7 +55,8 @@ __author__ = ','.join([
 
 
 class AnsibleSetupProvider(AbstractSetupProvider):
-    """This implementation uses ansible to configure and manage the cluster
+    """
+    This implementation uses ansible to configure and manage the cluster
     setup. See https://github.com/ansible/ansible for details.
 
     :param dict groups: dictionary of node kinds with corresponding
@@ -82,6 +83,11 @@ class AnsibleSetupProvider(AbstractSetupProvider):
 
     :param str ansible_module_dir: comma- or colon-separated
                                    path to additional ansible modules
+
+    :param bool slow_but_safer:
+      Avoid using ``eatmydata`` to speed up installation of many
+      packages which comprise several smallish files.
+
     :param extra_conf: tbd.
 
     :ivar groups: node kind and ansible group mapping dictionary
@@ -91,12 +97,18 @@ class AnsibleSetupProvider(AbstractSetupProvider):
     #: to identify this provider type in messages
     HUMAN_READABLE_NAME = 'Ansible'
 
-    def __init__(self, groups, playbook_path=None, environment_vars=None,
-                 storage_path=None, sudo=True, sudo_user='root',
+    def __init__(self, groups,
+                 playbook_path=None,
+                 environment_vars=None,
+                 storage_path=None,
+                 sudo=True,
+                 sudo_user='root',
+                 slow_but_safer=False,
                  **extra_conf):
         self.groups = groups
         self._playbook_path = playbook_path
         self.environment = environment_vars or {}
+        self.use_eatmydata = not slow_but_safer
         self._storage_path = storage_path
         self._sudo_user = sudo_user
         self._sudo = sudo
@@ -452,8 +464,19 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             if port != 22:
                 extra_vars.append('ansible_port=%s' % port)
 
+            # write additional `ansible_*` variables to inventory;
+            # `ansible_python_interpreter` gets special treatment
+            # since we need to tell script `install-py2.sh` that
+            # it should create a wrapper script for running `eatmydata python`
+            extra_conf = self.extra_conf.copy()
+            ansible_python_interpreter = extra_conf.pop(
+                'ansible_python_interpreter', '/usr/bin/python')
+            extra_vars.append('ansible_python_interpreter={python}{eatmydata}'
+                              .format(
+                                  python=ansible_python_interpreter,
+                                  eatmydata=('+eatmydata' if self.use_eatmydata else '')))
             extra_vars.extend('%s=%s' % (k, v) for k, v in
-                              self.extra_conf.items()
+                              extra_conf.items()
                               if k.startswith('ansible_'))
 
             if node.kind in self.environment:
