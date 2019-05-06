@@ -44,7 +44,7 @@ import elasticluster
 from elasticluster import log
 from elasticluster.exceptions import ConfigurationError, ClusterSizeError
 from elasticluster.providers import AbstractSetupProvider
-from elasticluster.utils import parse_ip_address_and_port, temporary_dir
+from elasticluster.utils import get_num_processors, parse_ip_address_and_port, temporary_dir
 
 
 __author__ = ','.join([
@@ -260,7 +260,7 @@ class AnsibleSetupProvider(AbstractSetupProvider):
         #
         # Provide default values for important configuration variables...
         ansible_env = {
-            'ANSIBLE_FORKS':             '10',
+            'ANSIBLE_FORKS':             ('%d' % 4*get_num_processors()),
             'ANSIBLE_HOST_KEY_CHECKING': 'no',
             'ANSIBLE_RETRY_FILES_ENABLED': 'no',
             'ANSIBLE_ROLES_PATH':        ':'.join(reversed(ansible_roles_dirs)),
