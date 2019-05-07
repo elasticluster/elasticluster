@@ -44,6 +44,8 @@
 - import_playbook: roles/glusterfs.yml
 - import_playbook: roles/pvfs2.yml
 - import_playbook: roles/nfs-server.yml
+- import_playbook: roles/azure-files.yml
+
 
 # now install and set up computing infrastructure
 - import_playbook: roles/gridengine.yml
