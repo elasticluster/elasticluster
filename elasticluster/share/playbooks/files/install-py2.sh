@@ -143,7 +143,7 @@ if ! [ -x "$python" ]; then
             apt-get update
             do_or_die apt-get install -y python2.7 python-simplejson
             ;;
-        [Rr]ed[Hh]at)
+        [Rr]ed[Hh]at|[Cc]entos)
             case "$ver" in
                 7*) do_or_die yum install -y python2 python2-simplejson ;;
                 6*) do_or_die yum install -y python2 python-simplejson ;;
@@ -156,12 +156,18 @@ fi
 # eatmydata support
 real_python=$(expr "$python" : '\(.*\)+eatmydata')
 if [ -n "$real_python" ]; then
+    use_eatmydata=yes
+else
+    real_python="$python"
+fi
+
+if [ "$use_eatmydata" = 'yes' ]; then
     # install `libeatmydata.so` and the `eatmydata` command
     case "$os" in
         [Dd]ebian|[Uu]buntu)
             apt-get install -y eatmydata
             ;;
-        [Rr]ed[Hh]at)
+        [Rr]ed[Hh]at|[Cc]entos)
             case "$ver" in
                 7*)
                     sudo yum install -y yum-plugin-copr
@@ -195,13 +201,16 @@ __EOF__
 exec /usr/bin/eatmydata -- '$real_python' "\$@"
 __EOF__
     chmod a+rx "$python"
-else
-    real_python="$python"
 fi
 
 # cross check that Python exists
 if ! test -x "$real_python"; then
     die $EX_SOFTWARE "Python interpreter '$real_python' not found, even after installation. Aborting."
+fi
+if [ "$use_eatmydata" = 'yes' ]; then
+    if ! test -x /usr/bin/eatmydata; then
+        die $EX_SOFTWARE "Binary wrapper '/usr/bin/eatmydata' not found, even after installation. Aborting."
+    fi
 fi
 
 # output Python version and exit successfully
