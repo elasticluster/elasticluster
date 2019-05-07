@@ -1,0 +1,4 @@
+account: "{{ storage_account }}"
+username: "{{ storage_account_username }}"
+password: "{{ storage_account_password }}"
+mount_dir: "{{ mount_dir }}"

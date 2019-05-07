@@ -1,0 +1,28 @@
+# azure-files/tasks/main.yml
+---
+
+- name: Install Common Internet File System packages
+  apt:
+    name:
+      - cifs-utils
+    state: '{{ pkg_install_state }}'
+
+- name: Create Azure files destination directory
+  file:
+    path: "{{ mount_dir }}"
+    state: directory
+    mode: "u=rw,g=rw,o=rw"
+    recurse: yes
+
+- name: Concatenate mount options
+  set_fact:
+    mount_opts_cat: "{{'vers=3.0,username=' + username +',password=' + password +',dir_mode=0777,file_mode=0777,serverino'}}"
+
+- name: Mount Azure Files
+  mount:
+    path: "{{ mount_dir }}"
+    src: "//{{ username }}.file.core.windows.net/{{ account }}"
+    fstype: "cifs"
+    opts: "{{ mount_opts_cat }}"
+    state: mounted
+  become: true
