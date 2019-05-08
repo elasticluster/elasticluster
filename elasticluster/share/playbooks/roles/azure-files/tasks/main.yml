@@ -9,7 +9,7 @@
 
 - name: Create Azure files destination directory
   file:
-    path: "{{ mount_dir }}"
+    path: "{{ mount_point }}"
     state: directory
     mode: "u=rw,g=rw,o=rw"
     recurse: yes
