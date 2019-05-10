@@ -1636,7 +1636,7 @@ SAMBA
 
 Supported on:
 
-* Ubuntu 16.04, 14.04
+* Ubuntu 14.04 and later
 * Debian 8 ("jessie"), 9 ("stretch")
 * CentOS 6.x and 7.x
 
@@ -1668,8 +1668,8 @@ directories over SMB/CIFS.  Additional shares can be defined by adding
 a ``smb_shares`` variable in the ``setup/`` section.  The value of
 this variable should be a list (comma-separated, enclosed in ``[`` and
 ``]``) of share definitions; a share definition is enclosed in ``{``
-and ``}`` and is comprised of comma-separated *key:value* pair; the
-following *key:value* pair will be acted upon:
+and ``}`` and is comprised of comma-separated *key:value* pair; see
+example below.  The following *key:value* pair will be acted upon:
 
 ``name``
   The SMB share name; the string that clients must use to connect to this share
@@ -1695,7 +1695,7 @@ one named ``secret`` which serves files off local path
 
   [setup/samba]
   server_groups=samba
-  server_smb_shares=[
+  server_var_smb_shares=[
     { name: 'public', path: '/data/public',  readonly: yes, public: yes },
     { name: 'secret', path: '/data/secret',  readonly: yes, public: no },
     ]
