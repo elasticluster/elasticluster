@@ -475,12 +475,16 @@ class AnsibleSetupProvider(AbstractSetupProvider):
                               .format(
                                   python=ansible_python_interpreter,
                                   eatmydata=('+eatmydata' if self.use_eatmydata else '')))
-            extra_vars.extend('%s=%s' % (k, v) for k, v in
+            # abuse Python's %r fomat to provide quotes around the
+            # value, and \-escape any embedded quote chars
+            extra_vars.extend('%s=%r' % (k, str(v)) for k, v in
                               extra_conf.items()
                               if k.startswith('ansible_'))
 
             if node.kind in self.environment:
-                extra_vars.extend('%s=%s' % (k, v) for k, v in
+                # abuse Python's %r fomat to provide quotes around the
+                # value, and \-escape any embedded quote chars
+                extra_vars.extend('%s=%r' % (k, str(v)) for k, v in
                                   self.environment[node.kind].items())
 
             for group in self.groups[node.kind]:
