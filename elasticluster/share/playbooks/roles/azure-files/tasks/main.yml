@@ -13,6 +13,7 @@
     state: directory
     mode: "u=rw,g=rw,o=rw"
     recurse: yes
+  become: true
 
 - name: Concatenate mount options
   set_fact:
