@@ -632,13 +632,14 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         return vm.id
 
-    def stop_instance(self, instance_id):
-        """Stops the instance gracefully.
+    def stop_instance(self, node):
+        """
+        Destroy a VM.
 
-        :param str instance_id: instance identifier
+        :param Node node: A `Node`:class: instance.
         """
         self._init_os_api()
-        instance = self._load_instance(instance_id)
+        instance = self._load_instance(node.instance_id)
         instance.delete()
         self._delete_anti_affinity_groups()
         del self._instances[instance_id]

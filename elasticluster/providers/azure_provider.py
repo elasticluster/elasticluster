@@ -377,15 +377,15 @@ class AzureCloudProvider(AbstractCloudProvider):
                 for obj in self._resource_client.resources.list_by_resource_group(cluster_name):
                     self._inventory[obj.name] = obj.id
 
-    def stop_instance(self, instance_id):
+    def stop_instance(self, node):
         """
-        Stops the instance gracefully.
+        Destroy a VM.
 
-        :param str instance_id: instance identifier
+        :param Node node: A `Node`:class: instance
         """
         self._init_az_api()
 
-        cluster_name, node_name = instance_id
+        cluster_name, node_name = node.instance_id
         self._init_inventory(cluster_name)
 
         for name, api_version in [

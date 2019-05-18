@@ -374,11 +374,12 @@ class BotoCloudProvider(AbstractCloudProvider):
         return vm.id
 
     def stop_instance(self, instance_id):
-        """Stops the instance gracefully.
-
-        :param str instance_id: instance identifier
         """
-        instance = self._load_instance(instance_id)
+        Destroy a VM.
+
+        :param Node node: A `Node`:class: instance
+        """
+        instance = self._load_instance(node.instance_id)
         instance.terminate()
         del self._instances[instance_id]
 

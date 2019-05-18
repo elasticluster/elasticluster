@@ -583,12 +583,15 @@ class GoogleCloudProvider(AbstractCloudProvider):
             log.error("Error restarting instance: `%s", e)
             raise InstanceError("Error restarting instance `%s`", e)
 
-    def stop_instance(self, instance_id):
-        """Stops the instance gracefully.
+    def stop_instance(self, node):
+        """
+        Destroy a VM.
 
-        :param str instance_id: instance identifier
+        :param Node node: A `Node`:class: instance
+
         :raises: `InstanceError` if instance can not be stopped
         """
+        instance_id = node.instance_id
         if not instance_id:
             log.info("Instance to stop has no instance id")
             return

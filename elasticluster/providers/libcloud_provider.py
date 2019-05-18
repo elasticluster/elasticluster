@@ -182,8 +182,13 @@ class LibCloudProvider(AbstractCloudProvider):
             return False
         return instance.state == NodeState.RUNNING
 
-    def stop_instance(self, instance_id):
-        instance = self.__get_instance(instance_id)
+    def stop_instance(self, node):
+        """
+        Destroy a VM.
+
+        :param Node node: A `Node`:class: instance
+        """
+        instance = self.__get_instance(node.instance_id)
         if not instance:
             return
         log.info('stopping %s', instance.name)

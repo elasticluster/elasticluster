@@ -1326,7 +1326,7 @@ class Node(Struct):
             log.info("Shutting down node `%s` (VM instance `%s`) ...",
                      self.name, self.instance_id)
 
-            self._cloud_provider.stop_instance(self.instance_id)
+            self._cloud_provider.stop_instance(self)
             if wait:
                 while self.is_alive():
                     time.sleep(1)
