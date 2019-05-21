@@ -2,28 +2,24 @@
 ---
 
 - name: Install Common Internet File System packages
-  apt:
+  package:
     name:
       - cifs-utils
     state: '{{ pkg_install_state }}'
 
 - name: Create Azure files destination directory
   file:
-    path: "{{ mount_point }}"
+    path: "{{ af_mount_point }}"
     state: directory
     mode: "u=rw,g=rw,o=rw"
     recurse: yes
   become: true
 
-- name: Concatenate mount options
-  set_fact:
-    mount_opts_cat: "{{'vers=3.0,username=' + account +',password=' + password +',dir_mode=0777,file_mode=0777,serverino'}}"
-
 - name: Mount Azure Files endpoint
   mount:
-    path: "{{ mount_point }}"
-    src: "//{{ account }}.file.core.windows.net/{{ share_name }}"
+    path: "{{ af_mount_point }}"
+    src: "//{{ af_storage_account_name }}.file.core.windows.net/{{ af_share_name }}"
     fstype: "cifs"
-    opts: "{{ mount_opts_cat }}"
+    opts: "vers=3.0,username={{ af_storage_account_name }},password={{ af_storage_account_key }},dir_mode=0777,file_mode=0777,serverino"
     state: mounted
   become: true

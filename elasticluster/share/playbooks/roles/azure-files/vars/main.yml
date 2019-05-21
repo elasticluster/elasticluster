@@ -1,4 +1,0 @@
-account: "{{ af_storage_account_name }}"
-share_name: "{{ af_share_name }}"
-password: "{{ af_storage_account_key }}"
-mount_point: "{{ af_mount_point }}"
