@@ -545,6 +545,25 @@ Valid configuration keys for ``openstack``
 ``request_floating_ip``
   **See ``request_floating_ip`` in the ``[cluster/...]`` section instead.**
 
+``use_anti_affinity_groups``
+  Whether to spread out nodes of a cluster using OpenStack
+  *anti-affinity* groups: this setting is a boolean value: use ``yes``
+  to place nodes of a cluster in the same anti-affinity group, or
+  ``no`` (default) to let OpenStack allocate VMs freely.
+
+  .. warning::
+
+     Anti-affinity groups are an optional feature of OpenStack; if
+     your cloud does not support them, you *must* set this option to
+     ``no``, or you will not be able to start any node!
+
+  Anti-affinity groups ensure that two VMs do not run on top of the
+  same OpenStack hypervisor node; when the cluster size is larger than
+  the number of eligible hypervisors, groups fill up quickly and we
+  need to use more than one to start a whole cluster. Anyway, use of
+  anti-affinity groups ensures that the same physical resources are
+  shared across the minimum possible amount of VMs.
+
 
 Examples
 --------
