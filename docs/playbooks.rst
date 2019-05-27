@@ -103,6 +103,47 @@ Variable name                      Default             Description
 ================================== =================== =================================================
 
 
+Feature variables
+-----------------
+
+The following customization variables activate special features, which
+may depend on the cloud environment or cluster setup.
+
+Azure files
+~~~~~~~~~~~
+
+ElastiCluster nodes can automatically mount an `Azure files share`__;
+you need to set the following setup variables on all nodes where an Azure
+files share is to be mounted (made visibile):
+
+.. __: https://docs.microsoft.com/en-us/azure/storage/files/storage-files-introduction
+
+.. list-table:: Setup variables for mounting Azure files
+   :widths: 30 20 50
+   :header-rows: 1
+
+   * - Variable
+     - Default value
+     - Description
+   * - ``af_storage_account_name``
+     - *None, a value is mandatory*
+     - Storage account name, as gotten from the the `Storage account access keys`__ view on the Azure portal.
+   * - ``af_storage_account_key``
+     - *None, a value is mandatory*
+     - Storage account key, as gotten from the the `Storage account access keys`__ view on the Azure portal.
+   * - ``af_share_name``
+     - *None, a value is mandatory*
+     - Name given to the Azure files share (see: `Create a file share through the Azure portal <https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share#create-a-file-share-through-the-azure-portal>`_ on the Azure website)
+   * - ``af_mount_point``
+     - ``/net/azfiles``
+     - Local directory where the Azure files will be made visible.
+
+.. __: https://docs.microsoft.com/en-us/azure/storage/common/storage-account-manage#view-and-copy-access-keys
+
+See Section *Setup variables* above for the relevant configuration
+file syntax.
+
+
 Compute clusters
 ================
 
