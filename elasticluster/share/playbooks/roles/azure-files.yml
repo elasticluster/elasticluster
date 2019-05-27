@@ -5,3 +5,4 @@
     - azure-files
   roles:
     - role: 'azure-files'
+      when: 'af_storage_account_name is defined and af_storage_account_key is defined and af_share_name is defined'
