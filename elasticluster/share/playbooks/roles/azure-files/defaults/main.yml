@@ -1,0 +1,5 @@
+# azure-files/defaults/main.yml
+---
+
+# where in the local filesystem should the Azure file share be mounted?
+af_mount_point: '/net/azfiles'
