@@ -21,7 +21,8 @@
     - namenode
   command:
     hdfs namenode -format
-    creates="/var/lib/hadoop-hdfs/cache/hdfs/dfs/name/current/VERSION"
+  args:
+    creates: "/var/lib/hadoop-hdfs/cache/hdfs/dfs/name/current/VERSION"
   become: yes
   become_user: hdfs
 
