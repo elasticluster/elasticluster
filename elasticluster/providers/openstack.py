@@ -130,7 +130,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         or `None` (default, meaning try v3 first and fall-back to v2).
     :param cacert: Path to CA certificate bundle (for verifying HTTPS sessions)
         or ``None`` to use the systems' default.
-    :param str anti_affinity_group_prefix: prefix for creating server groups
+    :param bool use_anti_affinity_groups:
+        Place nodes of the a cluster in the same anti-affinity group.
 
     Parameters *username*, *password*, *user_domain_name*,
     *project_name*, *project_domain_name*, and *region_name* will be
@@ -150,6 +151,16 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     Lock used for node startup.
     """
 
+    _aaf_groups = {}
+    """
+    Provider-wide map of cluster names to Anti-Affinity groups in use.
+    """
+
+    OUT_OF_CAPACITY_ERRMSG = 'There are not enough hosts available.'
+    """
+    Fault message from OpenStack API indicating AAF group full.
+    """
+
     def __init__(self,
                  username=None,
                  password=None,
@@ -166,8 +177,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                  # this is deprecated in favor of `compute_api_version`
                  nova_api_version=None,
                  cacert=None,  # keep in sync w/ default in novaclient.Client()
-                 manage_anti_affinity_groups=False,
-                 anti_affinity_group_prefix=None,
+                 use_anti_affinity_groups=False,
                  request_floating_ip=None,  ## DEPRECATED, will be removed
     ):
         # OpenStack connection params
@@ -208,9 +218,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._instances = {}
         self._cached_instances = {}
 
-        self.anti_affinity_group_prefix = anti_affinity_group_prefix
-        # constant for anti-affinity routines.
-        self._middle_token = ".number."
+        self.use_anti_affinity_groups = use_anti_affinity_groups
 
         if request_floating_ip is not None:
             warn('Deprecated parameter `request_floating_ip` given'
@@ -444,7 +452,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
-                       username=None, node_name=None, **kwargs):
+                       cluster_name, username=None, node_name=None, **kwargs):
         """Starts a new instance on the cloud using the given properties.
         The following tasks are done to start an instance:
 
@@ -550,34 +558,49 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         .format(id=volume.id, delete_on_terminate=1)),
             }
 
-        # create anti-affinity groups for spawning servers to ensure server spread
-        # equally across hosts in the cloud.
-        # This will create a server group, spawn hosts in the group until it's full
-        # and then create a new group.
-        if self.anti_affinity_group_prefix:
-            with OpenStackCloudProvider.__node_start_lock:
-
-                group = self._get_current_anti_affinity_group()
-                vm_start_args['scheduler_hints']={ 'group' : group.id }
-                vm = self.nova_client.servers.create(node_name, image_id, flavor, **vm_start_args)
-                self._wait_for_status(vm, ["ACTIVE", "ERROR"], 30)
-
-                if vm.status == 'ERROR':
-                    log.debug("Deleting instance %s(%s) in group %s", vm.name, vm.id, group.name)
-                    self.nova_client.servers.delete(vm.id)
-
-                    group=self._get_next_anti_affinity_group()
-                    vm_start_args['scheduler_hints']={ 'group' : group.id }
-
-                    vm = self.nova_client.servers.create(node_name, image_id, flavor, **vm_start_args)
-
-                log.debug("Started server %s in group %s", vm.name, group.name)
-        else:
+        retry = 2  # FIXME: should this be configurable?
+        while retry > 0:
+            retry -= 1
+            if self.use_anti_affinity_groups:
+                # create a server anti-affinity group, spawn hosts in the
+                # group until it's full and then create a new group
+                aaf_group = self._get_aaf_group(cluster_name)
+                group_id, group_name, req_handle = aaf_group.get()
+                vm_start_args['scheduler_hints'] = { 'group' : group_id }
             # due to some `nova_client.servers.create()` implementation weirdness,
             # the first three args need to be spelt out explicitly and cannot be
             # conflated into `**vm_start_args`
             vm = self.nova_client.servers.create(node_name, image_id, flavor, **vm_start_args)
+            log.debug("Attempting to start VM instance %s(%s) ...", vm.name, vm.id)
 
+            self._wait_for_status(vm, ["ACTIVE", "ERROR"], 30)
+            if vm.status == 'ACTIVE':
+                log.debug(
+                    "Started VM instance %s(%s) in group %s",
+                    vm.name, vm.id, group_name)
+                break  # out of `while retry > 0:`
+            else:  # vm.status == 'ERROR'
+                if (self.use_anti_affinity_groups
+                    # FIXME: is there a better way to determine the
+                    # cause of the error than parsing the fault
+                    # message?
+                    and vm.fault['message'] == self.OUT_OF_CAPACITY_ERRMSG):
+                    log.debug(
+                        "Got 'not enough hosts available' error message;"
+                        " assuming group %s(%s) is full and retrying"
+                        " with new anti-affinity group.",
+                        group_name, group_id)
+                    aaf_group.full(req_handle)
+                if self.use_anti_affinity_groups:
+                    in_group_msg = (' in group {0}:'.format(group_name))
+                else:
+                    in_group_msg = ''
+                log.warning(
+                    ("Could not start VM instance %s(%s)%s: %s"
+                     " Deleting it."),
+                    vm.name, vm.id, in_group_msg,
+                    vm.fault.get('message', 'unspecified error'))
+                self.nova_client.servers.delete(vm.id)
 
         # allocate and attach a floating IP, if requested
         request_floating_ip = kwargs.get(
@@ -641,7 +664,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._init_os_api()
         instance = self._load_instance(node.instance_id)
         instance.delete()
-        self._delete_anti_affinity_groups()
+        if self.use_anti_affinity_groups:
+            aaf_group.delete_all()
         del self._instances[instance_id]
 
     def resume_instance(self, instance_state):
@@ -680,24 +704,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
     # Protected methods
 
-    def _delete_anti_affinity_groups(self):
-        for group in self._list_anti_affinity_groups():
-            self.nova_client.server_groups.delete(group.id)
-
-    def _get_next_anti_affinity_group(self):
-        group_name=self._make_next_group_name(self._get_current_anti_affinity_group().name)
-        return self.nova_client.server_groups.create(name=group_name, policies='anti-affinity')
-
-    def _get_current_anti_affinity_group(self):
-        groups=self._list_anti_affinity_groups()
-
-        if groups:
-            group = sorted(groups, key=lambda g: g.name)[-1]
-        else:
-            group = self.nova_client.server_groups.create(name=self.anti_affinity_group_prefix + self._middle_token + "1", policies='anti-affinity')
-
-        return group
-
     def _wait_for_status(self, vm, accepted_statuses, attempts):
         for i in range(attempts):
             vm.get()
@@ -705,13 +711,161 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 break
             sleep(1)
 
-    def _make_next_group_name(self, current_name):
-            split_name=current_name.split('.')
-            split_name[-1]=str(int(split_name[-1])+1)
-            return '.'.join(split_name)
+    def _get_aaf_group(self, cluster):
+        with self.__node_start_lock:
+            if cluster not in self._aaf_groups:
+                self._aaf_groups[cluster] = self.AntiAffinityGroup(
+                    self.nova_client, ('elasticluster.{}'.format(cluster)))
+        return self._aaf_groups[cluster]
 
-    def _list_anti_affinity_groups(self):
-        return [  group for group in self.nova_client.server_groups.list() if self.anti_affinity_group_prefix + self._middle_token in group.name ]
+    class AntiAffinityGroup(object):
+        """
+        Interface to OpenStack's Anti-Affinity Groups.
+
+        A single instance of this class should manage all the AAf
+        groups for a cluster.  Use like this:
+
+        1. Initialise class with a unique string; as the list of AAF
+           groups used by a cluster is not persisted, the unique
+           string is used as a marker for recovering the managed
+           groups from OpenStack's list.
+
+        2. Prior to starting a node ("creating a server" in
+           OpenStack's language), call :method:`get` which returns the
+           group ID and a a *request handle*.
+
+        3. If node creation fails because the AAF group has no more
+           slots available, then call :method:`full` passing the
+           request handle and try again.
+
+        This approach is needed because we cannot probe for 'available
+        slots' in a AAF group: the only way to find out if a server
+        can be added to an AAF group is to actually try to start it.
+
+        The code is thread-safe and can be
+        called concurrently; requests handles are the mechanism used
+        to make sure that new groups are created only when actually
+        needed.
+        """
+
+        _lock = threading.RLock()
+        """
+        Class-shared re-entrant lock to ensure only one thread uses the
+        `server_groups.create()` call.
+        """
+
+        def __init__(self, nova_client, prefix):
+            self._do = nova_client.server_groups
+            self._prefix = prefix
+            self._req_token = 0
+            self._reset_token = 0
+            groups = self.__list()
+            if not groups:
+                self._index = 0
+                self.__new()
+            else:
+                # determine highest-numbered AAf group
+                self._index = 0
+                for group in groups:
+                    tail = group.name.split('.')[-1]
+                    try:
+                        i = int(tail)
+                        if i > self._index:
+                            self._index = i
+                            self._group = group
+                    except ValueError:
+                        log.warning(
+                            "Ignoring server group `%s` (%s),"
+                            " as it does not seem to have been created by ElastiCluster:"
+                            " tail part `%s` is not a number.",
+                            group.name, group.id, tail)
+
+        def delete_all(self):
+            """
+            Delete all anti-affinity groups with the given prefix.
+            """
+            group_ids = { group.name:group.id for group in self.__list() }
+            # in principle, `self._list()` can return groups that
+            # start with the given prefix but were not created by
+            # ElastiCluster (see above) -- so delete only the groups
+            # that match our `prefix.index` pattern (even in this case
+            # we could be deleting too much, but there's no notion of
+            # the "creator" of a group)
+            for index in range(self._index):
+                name = self.__name(index)
+                try:
+                    group_id = group_ids[name]
+                    self._do.delete(group_id)
+                except KeyError:
+                    continue
+                except Exception as err:  # pylint: disable=broad-except
+                    log.info(
+                        "Ignoring error deleting group `%s` (%s): %s",
+                        name, group_id, err)
+                    continue
+
+        def full(self, req_handle):
+            """
+            Signal that the group associated to the given request cannot
+
+            If the group is still in active use, force next call to
+            `.get()` to create a new group; otherwise, this is a no-op.
+            """
+            if req_handle >= self._reset_token:
+                with self._lock:
+                    self._req_token += 1
+                    self.__new()
+                    self._reset_token = self._req_token
+
+        def get(self):
+            """
+            Return current AAF group ID and name.
+            """
+            with self._lock:
+                self._req_token += 1
+            return self._group.id, self._group.name, self._req_token
+
+        def __list(self):
+            """
+            Return list of anti-affinity groups matching the given prefix.
+            """
+            return [
+                group for group in self._do.list()
+                if (group.name.startswith(self._prefix)
+                    # ensure `group.name.split('.')` has >0 elements
+                    and '.' in group.name
+                    and
+                    # depending on the Nova API version, we might
+                    # get a response with `group.policy` (a string)
+                    # or `group.policies` (list of str) attributes
+                    ('anti-affinity' in getattr(group, 'policies', [])
+                     or ('anti-affinity' == getattr(group, 'policy', ''))))
+            ]
+
+        def __name(self, index=None):
+            """
+            Return name of group with the given prefix and index.
+
+            If optional argument *index* is not given, the current
+            value of `self._index` is used. Value for the prefix
+            always comes from the prefix specified at construction time.
+            """
+            return (
+                '{prefix}.{index}'
+                .format(
+                    prefix=self._prefix,
+                    index=(index if index is not None else self._index),
+                    ))
+
+        def __new(self):
+            """
+            Create new anti-affinity group.
+            """
+            # needs re-entrant lock because of use in `self.full()`
+            with self._lock:
+                self._index += 1
+                self._group = self._do.create(
+                    name=self.__name(), policies='anti-affinity')
 
     def _check_keypair(self, name, public_key_path, private_key_path):
         """First checks if the keypair is valid, then checks if the keypair

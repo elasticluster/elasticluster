@@ -1313,6 +1313,7 @@ class Node(Struct):
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
             self.flavor, self.image_id, self.image_userdata,
+            self.cluster_name,
             username=self.image_user,
             node_name=("%s-%s" % (self.cluster_name, self.name)),
             **self.extra)
