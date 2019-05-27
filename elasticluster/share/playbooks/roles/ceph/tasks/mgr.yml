@@ -36,8 +36,10 @@
     keyname: '{{_ceph_daemon_name}}'
     capabilities: "--cap mon 'allow profile mgr' --cap osd 'allow *' --cap mds 'allow *'"
     keyring: '{{_ceph_daemon_dir}}/keyring'
-  become: yes
-  become_user: 'ceph'
+  args:
+    apply:
+      become: yes
+      become_user: 'ceph'
 
 
 - name: Register the MGR authentication key
