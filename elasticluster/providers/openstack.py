@@ -283,7 +283,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                       self._os_username, self._os_user_domain_name,
                       self._os_tenant_name, self._os_project_domain_name,
                       self._os_region_name,
-                      self._os_cacert)
+                      (self._os_cacert or ''))
             sess = self.__init_keystone_session()
             log.debug("Creating OpenStack Compute API (Nova) v%s client ...", self._compute_api_version)
             self.nova_client = nova_client.Client(
