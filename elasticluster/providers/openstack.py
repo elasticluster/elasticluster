@@ -558,6 +558,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         .format(id=volume.id, delete_on_terminate=1)),
             }
 
+        result = None
         retry = 2  # FIXME: should this be configurable?
         while retry > 0:
             retry -= 1
@@ -578,6 +579,9 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 log.debug(
                     "Started VM instance %s(%s) in group %s",
                     vm.name, vm.id, group_name)
+                result = { 'instance_id': vm.id }
+                if self.use_anti_affinity_groups:
+                    result['anti_affinity_group_id'] = group_id
                 break  # out of `while retry > 0:`
             else:  # vm.status == 'ERROR'
                 if (self.use_anti_affinity_groups
@@ -653,7 +657,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         self._instances[vm.id] = vm
 
-        return { 'instance_id': vm.id }
+        return result
 
     def stop_instance(self, node):
         """
@@ -664,9 +668,18 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._init_os_api()
         instance = self._load_instance(node.instance_id)
         instance.delete()
-        if self.use_anti_affinity_groups:
-            aaf_group.delete_all()
-        del self._instances[instance_id]
+        anti_affinity_group = node['extra'].get('anti_affinity_group_id', None)
+        if anti_affinity_group:
+            # FIXME: OpenStack happily deletes a server group even if
+            # there are servers in it, so the current code has a flaw
+            # in that we can delete an entire server group by removing
+            # only one node -- so resizing down then up may result in
+            # nodes being incorrectly distributed w.r.t. to affinity.
+            try:
+                self.nova_client.server_groups.delete(anti_affinity_group)
+            except NotFound:
+                pass
+        return self._instances.pop(instance, None)
 
     def resume_instance(self, instance_state):
         raise NotImplementedError("This provider does not (yet) support pause / resume logic.")
