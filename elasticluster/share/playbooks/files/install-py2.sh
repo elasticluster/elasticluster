@@ -168,15 +168,9 @@ if [ "$use_eatmydata" = 'yes' ]; then
             apt-get install -y eatmydata
             ;;
         [Rr]ed[Hh]at|[Cc]entos)
-            case "$ver" in
-                7*)
-                    sudo yum install -y yum-plugin-copr
-                    sudo yum copr enable -y loveshack/livhpc
-                    ;;
-                6*)
-                    # CentOS 6 does not have YUM's COPR plugin so just create the repo file
-                    mkdir -p /etc/yum.repos.d
-                    cat > /etc/yum.repos.d/copr-livhpc.repo <<__EOF__
+            # CentOS 6 does not have YUM's COPR plugin so just create the repo file
+            mkdir -p /etc/yum.repos.d
+            cat > /etc/yum.repos.d/copr-livhpc.repo <<__EOF__
 # see: https://copr.fedorainfracloud.org/coprs/loveshack/livhpc/
 [loveshack-livhpc]
 name=Copr repo
@@ -189,8 +183,6 @@ repo_gpgcheck=0
 enabled=1
 enabled_metadata=1
 __EOF__
-                    ;;
-            esac
             sudo yum install -y libeatmydata
             ;;
     esac
