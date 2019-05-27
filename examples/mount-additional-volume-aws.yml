@@ -1,0 +1,78 @@
+---
+#
+# Provision a storage volume on AWS, attach it to the cluster's
+# master/front-end node, and make it available under directory
+# `/data`.  You need to edit this playbook to plug the correct values
+# into the `vars:` section.
+#
+# This playbook should be run *after* ElastiCluster has set up the
+# cluster, for instance using::
+#
+#         elasticluster setup mycluster -- /path/to/this/playbook.yml
+#
+- name: Mount volume on head node
+  tags:
+    - after
+    - local
+  # change this with `gridengine_master` if you're using GridEngine
+  # instead of SLURM
+  hosts: slurm_master
+
+  vars:
+    # mount point for the filesystem
+    mountpoint: '/data'
+    # size of the volume/filesystem to attach (in GB)
+    volume_size: 500
+    # Type of EBS volume; standard (magnetic), gp2 (SSD), io1
+    # (Provisioned IOPS), st1 (Throughput Optimized HDD), sc1 (Cold HDD).
+    volume_type: standard
+    # replace `vdb` with the actual device name you want/need to use:
+    # `sdb`, `xdb`, etc. (depends on OS image and -ultimately- on the
+    # Linux kernel used)
+    blockdev: vdb
+
+  tasks:
+
+    - name: Find head node ID
+      ec2_instance_facts:
+        filters:
+          'ip-address': '{{ ansible_default_ipv4.address }}'
+      # run this on the host where ElastiCluster is installed --
+      # AWS/Boto libraries may be missing on target cluster nodes
+      delegate_to: localhost
+      become: no
+
+    - name: Create and attach volume to head node
+      ec2_vol:
+        instance: '{{ instances[0].instance_id }}'
+        volume_size: '{{ volume_size }}'
+        volume_type: '{{ volume_type }}'
+        device_name: '{{ blockdev }}'
+      # run this on the host where ElastiCluster is installed --
+      # AWS/Boto libraries may be missing on target cluster nodes
+      delegate_to: localhost
+      become: no
+
+    - name: Format volume
+      filesystem:
+        dev: '{{ blockdev }}'
+        fstype: ext4
+        opts: '-m 0 -L {{ mountpoint }}'
+
+    - name: Ensure mountpoint directory exists
+      file:
+        dest: '{{ mountpoint }}'
+        state: directory
+
+    - name: Mount filesystem
+      mount:
+        path: '{{ mountpoint }}'
+        src: '{{ blockdev }}'
+        state: mounted
+
+    - name: Export filesystem
+      nfsexport:
+        path: '{{ mountpoint }}'
+        state: exported
+        # you might want to change these
+        options: 'rw'

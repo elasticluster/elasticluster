@@ -1,0 +1,93 @@
+---
+#
+# Provision a storage volume on an OpenStack cloud, attach it to the
+# cluster's master/front-end node, and make it available under
+# directory `/data`.  You need to edit this playbook to plug the
+# correct values into the `vars:` section.
+#
+# This playbook should be run *after* ElastiCluster has set up the
+# cluster, for instance using::
+#
+#         elasticluster setup mycluster -- /path/to/this/playbook.yml
+#
+
+- name: Mount volume on head node
+  tags:
+    - after
+    - local
+  # change this with `gridengine_master` if you're using GridEngine
+  # instead of SLURM
+  hosts: slurm_master
+
+  vars:
+    # mount point for the filesystem
+    mountpoint: '/data'
+    # size of the volume/filesystem to attach (in GB)
+    volume_size: 500
+    # replace `vdb` with the actual device name you want/need to use:
+    # `sdb`, `xdb`, etc. (depends on OS image and -ultimately- on the
+    # Linux kernel used)
+    blockdev: vdb
+
+  tasks:
+
+    - name: Create storage volume
+      os_volume:
+        state: present
+        size: '{{ volume_size }}'
+        display_name: '{{ ansible_nodename }}-storage'
+        wait: yes
+      register: _volinfo
+      # run this on the host where ElastiCluster is installed --
+      # OpenStack libraries may be missing on target cluster nodes
+      delegate_to: localhost
+      register: volume
+
+    # the name of a node, as seen by OpenStack, may be different from
+    # the name of the same node as seen by Ansible (e.g.,
+    # `mycluster-master001` vs simply `master001`); so we need to use
+    # globbing/wildcard characters
+    - name: Find head node ID
+      os_server_facts:
+        server: '*{{ ansible_nodename }}'
+      # run this on the host where ElastiCluster is installed --
+      # OpenStack libraries may be missing on target cluster nodes
+      delegate_to: localhost
+      become: no
+
+    - name: Attach the volume to head node
+      os_server_volume:
+        state: present
+        server: '{{ openstack_servers[0].id }}'
+        volume: '{{ _volinfo.volume.id }}'
+        device: '/dev/{{ blockdev }}'
+        wait: yes
+      # run this on the host where ElastiCluster is installed --
+      # OpenStack libraries may be missing on target cluster nodes
+      delegate_to: localhost
+
+    - name: Format volume
+      filesystem:
+        dev: '/dev/{{ blockdev }}'
+        fstype: ext4
+        opts: '-m 0 -L {{ mountpoint }}'
+
+    - name: Ensure mountpoint directory exists
+      file:
+        dest: '{{ mountpoint }}'
+        state: directory
+
+    - name: Mount filesystem
+      mount:
+        path: '{{ mountpoint }}'
+        src: '/dev/{{ blockdev }}'
+        fstype: ext4
+        state: mounted
+
+    # This is only useful on a cluster's head node:
+    # - name: Export filesystem
+    #   nfsexport:
+    #     path: '{{ mountpoint }}'
+    #     state: exported
+    #     # you might want to change these
+    #     options: 'rw'
