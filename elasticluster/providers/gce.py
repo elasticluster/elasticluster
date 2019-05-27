@@ -524,7 +524,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
             response = self._execute_request(request)
             response = self._wait_until_done(response)
             self._check_response(response)
-            return instance_id
+            return { 'instance_id': instance_id }
         except (HttpError, CloudProviderError) as e:
             log.error("Error creating instance `%s`" % e)
             raise InstanceError("Error creating instance `%s`" % e)

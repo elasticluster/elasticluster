@@ -1309,14 +1309,19 @@ class Node(Struct):
         """
         log.info("Starting node `%s` from image `%s` with flavor %s ...",
                  self.name, self.image_id, self.flavor)
-        self.instance_id = self._cloud_provider.start_instance(
+        vm_data = self._cloud_provider.start_instance(
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
             self.flavor, self.image_id, self.image_userdata,
             username=self.image_user,
             node_name=("%s-%s" % (self.cluster_name, self.name)),
             **self.extra)
-        log.debug("Node `%s` has instance ID `%s`", self.name, self.instance_id)
+        if vm_data:
+            assert 'instance_id' in vm_data
+            self.update(vm_data)
+            log.debug("Node `%s` has instance ID `%s`", self.name, self.instance_id)
+        else:
+            raise InstanceError("Could not start node `{0}`" .format(self.name))
 
     def stop(self, wait=False):
         """

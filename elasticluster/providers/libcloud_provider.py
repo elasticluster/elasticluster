@@ -157,8 +157,12 @@ class LibCloudProvider(AbstractCloudProvider):
 
         node = self.driver.create_node(**options)
         if node:
-            return node.id
-        return None
+            return { 'instance_id': node.id }
+        else:
+            raise InstanceError(
+                "Error creating node `{0}`"
+                .format(node_name))
+
 
     def _get_flavor_by_name(self, name):
         flavors = [

@@ -345,7 +345,7 @@ class AzureCloudProvider(AbstractCloudProvider):
 
         # the `instance_id` is a composite type since we need both the
         # resource group name and the vm name to uniquely identify a VM
-        return [cluster_name, node_name]
+        return { 'instance_id': [cluster_name, node_name] }
 
     @staticmethod
     def _split_image_id(image_id):

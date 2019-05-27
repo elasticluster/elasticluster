@@ -67,7 +67,7 @@ class AbstractCloudProvider(with_metaclass(ABCMeta, object)):
         :param str image_userdata: command to execute after startup
         :param str username: username for the given ssh key, default None
 
-        :return: str - instance id of the started instance
+        :return: Dictionary of instance attributes to record.
         """
         pass
 

@@ -630,7 +630,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         self._instances[vm.id] = vm
 
-        return vm.id
+        return { 'instance_id': vm.id }
 
     def stop_instance(self, node):
         """
