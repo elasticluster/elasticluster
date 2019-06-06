@@ -11,8 +11,8 @@
       GLUSTERFS_VOLUMES:
         - name: 'glusterfs'
           path: '/srv/glusterfs'
-          replicas: '{{glusterfs_stripes|default(1)}}'
-          stripes: '{{glusterfs_replicas|default(1)}}'
+          stripes: '{{glusterfs_stripes|default(1)}}'
+          replicas: '{{glusterfs_replicas|default(1)}}'
           transport: 'tcp'
 
 
