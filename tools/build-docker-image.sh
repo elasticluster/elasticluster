@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# Copyright (c) 2018 Riccardo Murri <riccardo.murri@gmail.com>
+# Copyright (c) 2018, 2019 Riccardo Murri <riccardo.murri@gmail.com>
 #
 # This file is part of ElastiCluster.  It can be distributed and
 # modified under the same conditions as ElastiCluster.
@@ -183,7 +183,9 @@ $maybe git clone "$PWD" "$build_dir"
 $maybe cd "$build_dir"
 if [ -z "$maybe" ]; then
     docker build --iidfile id.txt $opt_tag . | tee build.log
-    docker tag $(cat id.txt) riccardomurri/elasticluster:latest
+    if [ -z "$opt_tag" ]; then
+        docker tag $(cat id.txt) riccardomurri/elasticluster:latest
+    fi
 else
     $maybe docker build .
 fi
