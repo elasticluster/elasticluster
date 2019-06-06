@@ -2,8 +2,8 @@
 
 - name: Ensure brick directory '{{item.path}}' exists
   file:
-    path='{{item.path}}'
-    state=directory
+    path: '{{item.path}}'
+    state: directory
 
 - name: Build list of bricks
   set_fact:
