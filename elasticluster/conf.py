@@ -246,6 +246,7 @@ CLOUD_PROVIDER_SCHEMAS = {
         Optional("project_name"): nonempty_str,
         Optional("request_floating_ip"): boolean,  ## DEPRECATED, place in cluster or node config
         Optional("region_name"): nonempty_str,
+        Optional("availability_zone"): nonempty_str,
         Optional("compute_api_version"): Or('1.1', '2'),
         Optional("image_api_version"): Or('1', '2'),
         Optional("network_api_version"): Or('2.0'),

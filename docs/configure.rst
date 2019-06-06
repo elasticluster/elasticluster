@@ -495,6 +495,11 @@ Valid configuration keys for ``openstack``
   is set, this option is ignored and the value of the environment
   variable is used instead.
 
+``availability_zone``
+  If this is given, all cluster nodes will be started in this
+  availability zone. Otherwise (default), no request w.r.t. AZ will be
+  made to the OpenStack APIs.
+
 ``identity_api_version``
   Force use of the OpenStack Identity ("Keystone") API v2 or v3.  (Use
   the values ``2`` or ``3`` respectively.)  If this configuration item
