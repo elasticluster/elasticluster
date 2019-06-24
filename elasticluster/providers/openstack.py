@@ -568,7 +568,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 aaf_group = self._get_aaf_group(cluster_name)
                 group_id, group_name, req_handle = aaf_group.get()
                 vm_start_args['scheduler_hints'] = { 'group' : group_id }
-                in_group_msg = (' in group {0}:'.format(group_name))
+                in_group_msg = (' in group {0}'.format(group_name))
             else:
                 # still need to define this for logging
                 in_group_msg = ''
