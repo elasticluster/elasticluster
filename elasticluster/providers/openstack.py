@@ -568,17 +568,21 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 aaf_group = self._get_aaf_group(cluster_name)
                 group_id, group_name, req_handle = aaf_group.get()
                 vm_start_args['scheduler_hints'] = { 'group' : group_id }
+                in_group_msg = (' in group {0}:'.format(group_name))
+            else:
+                # still need to define this for logging
+                in_group_msg = ''
             # due to some `nova_client.servers.create()` implementation weirdness,
             # the first three args need to be spelt out explicitly and cannot be
             # conflated into `**vm_start_args`
             vm = self.nova_client.servers.create(node_name, image_id, flavor, **vm_start_args)
-            log.debug("Attempting to start VM instance %s(%s) ...", vm.name, vm.id)
+            log.debug(
+                "Attempting to start VM instance %s(%s)%s ...",
+                vm.name, vm.id, in_group_msg)
 
             self._wait_for_status(vm, ["ACTIVE", "ERROR"], 30)
             if vm.status == 'ACTIVE':
-                log.debug(
-                    "Started VM instance %s(%s) in group %s",
-                    vm.name, vm.id, group_name)
+                log.debug("Started VM instance %s(%s)", vm.name, vm.id)
                 result = { 'instance_id': vm.id }
                 if self.use_anti_affinity_groups:
                     result['anti_affinity_group_id'] = group_id
@@ -595,10 +599,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         " with new anti-affinity group.",
                         group_name, group_id)
                     aaf_group.full(req_handle)
-                if self.use_anti_affinity_groups:
-                    in_group_msg = (' in group {0}:'.format(group_name))
-                else:
-                    in_group_msg = ''
                 log.warning(
                     ("Could not start VM instance %s(%s)%s: %s"
                      " Deleting it."),
