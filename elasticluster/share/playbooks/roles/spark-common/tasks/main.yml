@@ -1,7 +1,7 @@
 # spark-common/tasks/main.yml
 ---
 
-- name: Install Spark packages (common)
+- name: Install common Spark packages, I
   tags:
     - hadoop
     - spark
@@ -10,11 +10,22 @@
     name:
       - spark-core # Lightning-Fast Cluster Computing
       - spark-datanucleus # DataNucleus libraries for Apache Spark
-      - spark-extras # External/extra libraries for Apache Spark
       - spark-python # Python client for Spark
       - spark-thriftserver # Thrift server for Spark SQL
       - spark-yarn-shuffle # Spark YARN Shuffle Service
     state: '{{ pkg_install_state }}'
+
+
+- name: Install common Spark packages, II
+  tags:
+    - hadoop
+    - spark
+    - common
+  package:
+    name:
+      - spark-extras # External/extra libraries for Apache Spark
+    state: '{{ pkg_install_state }}'
+  when: 'bigtop_release in ["1.1.0", "1.2.0", "1.2.1", "1.3.0"]'
 
 
 - name: Check if Py4J version-independent `.zip` archive exist

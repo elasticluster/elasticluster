@@ -497,10 +497,14 @@ installed software:
      - Default value
      - Description
    * - ``bigtop_release``          1
-     - ``1.3.0``
+     - ``1.4.0``
      - Release of Apache BigTop_ to use for installing Spark/Hadoop
-       packages.  As of Nov. 2018, ElastiCluster supports BigTop
-       1.3.0 (default), 1.2.1, and 1.2.0.
+       packages.  As of June 2019, ElastiCluster supports BigTop
+       1.4.0 (default), 1.3.0, 1.2.1, and 1.2.0.
+
+       BigTop release 1.4.0 installs Hadoop 2.8.5, Hive 2.3.3, and
+       Spark 2.2.3; it supports CentOS 7, Debian 9 ("stretch") and
+       Ubuntu 16.04 ("xenial") as base operating systems.
 
        BigTop release 1.3.0 installs Hadoop 2.8.4, Hive 2.3.3, and
        Spark 2.2.1; it supports CentOS 7, Debian 9 ("stretch") and
