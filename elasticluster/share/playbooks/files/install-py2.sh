@@ -180,7 +180,7 @@ if [ "$use_eatmydata" = 'yes' ]; then
 # see: https://copr.fedorainfracloud.org/coprs/loveshack/livhpc/
 [loveshack-livhpc]
 name=Copr repo
-baseurl=https://copr-be.cloud.fedoraproject.org/results/loveshack/livhpc/epel-6-$basearch/
+baseurl=https://copr-be.cloud.fedoraproject.org/results/loveshack/livhpc/epel-6-\$basearch/
 type=rpm-md
 skip_if_unavailable=True
 gpgcheck=1
