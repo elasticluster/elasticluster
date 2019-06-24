@@ -577,12 +577,12 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             # conflated into `**vm_start_args`
             vm = self.nova_client.servers.create(node_name, image_id, flavor, **vm_start_args)
             log.debug(
-                "Attempting to start VM instance %s(%s)%s ...",
+                "Attempting to start VM instance `%s` (%s)%s ...",
                 vm.name, vm.id, in_group_msg)
 
             self._wait_for_status(vm, ["ACTIVE", "ERROR"], 30)
             if vm.status == 'ACTIVE':
-                log.debug("Started VM instance %s(%s)", vm.name, vm.id)
+                log.debug("Started VM instance `%s` (%s)", vm.name, vm.id)
                 result = { 'instance_id': vm.id }
                 if self.use_anti_affinity_groups:
                     result['anti_affinity_group_id'] = group_id
@@ -600,7 +600,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                         group_name, group_id)
                     aaf_group.full(req_handle)
                 log.warning(
-                    ("Could not start VM instance %s(%s)%s: %s"
+                    ("Could not start VM instance `%s` (%s)%s: %s"
                      " Deleting it."),
                     vm.name, vm.id, in_group_msg,
                     vm.fault.get('message', 'unspecified error'))
@@ -614,7 +614,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         if request_floating_ip:
 
             # wait for server to come up (otherwise floating IP can't be associated)
-            log.info("Waiting for instance `%s` (%s) to come up ...", node_name, vm.id)
+            log.info("Waiting for VM instance `%s` (%s) to come up ...", node_name, vm.id)
             max_wait = int(kwargs.get('max_wait', 300))
             waited = 0
             while waited < max_wait:
