@@ -4,7 +4,7 @@
 Test the `Node` class from the `elasticluster.cluster` module.
 """
 #
-#   Copyright (C) 2017 University of Zurich
+#   Copyright (C) 2017, 2019 University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ def test_start(node):
     INSTANCE_ID = 'test-id'
 
     cloud_provider = node._cloud_provider
-    cloud_provider.start_instance.return_value = INSTANCE_ID
+    cloud_provider.start_instance.return_value = {'instance_id':INSTANCE_ID}
 
     node.start()
 
@@ -88,6 +88,7 @@ def test_start(node):
         node.flavor,
         node.image_id,
         node.image_userdata,
+        node.cluster_name,
         username=node.image_user,
         node_name=("{0}-{1}".format(node.cluster_name, node.name)))
     assert node.instance_id == INSTANCE_ID
@@ -98,11 +99,11 @@ def test_stop(node):
     Test `Node.stop()`
     """
     INSTANCE_ID = 'test-id'
-    node.instance_id = INSTANCE_ID
+    node.instance_id = {'instance_id':INSTANCE_ID}
 
     node.stop()
 
-    node._cloud_provider.stop_instance.assert_called_once_with(INSTANCE_ID)
+    node._cloud_provider.stop_instance.assert_called_once_with(node)
 
 
 def test_stop_with_no_id(node):

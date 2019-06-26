@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013, 2016, 2018  University of Zurich
+#   Copyright (C) 2013, 2016, 2018, 2019  University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -146,12 +146,12 @@ class TestBotoCloudProvider(unittest.TestCase):
         BotoCloudProvider: stop instance
         """
         instance = MagicMock()
-        instance_id = "test-id"
+        instance.instance_id = "test-id"
 
         provider = self._create_provider()
-        provider._instances[instance_id] = instance
+        provider._instances[instance.instance_id] = instance
 
-        provider.stop_instance(instance_id)
+        provider.stop_instance(instance)
 
         instance.terminate.assert_called_once_with()
 

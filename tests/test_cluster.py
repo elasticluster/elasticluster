@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   Copyright (C) 2013-2018 University of Zurich
+#   Copyright (C) 2013-2019 University of Zurich
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import logging
 logging.basicConfig()
 
 # 3rd-party imports
-from mock import MagicMock, patch
+from mock import MagicMock, call, patch
 import pytest
 from pytest import raises
 
@@ -98,7 +98,7 @@ def test_start(tmpdir):
     Start cluster
     """
     cloud_provider = MagicMock()
-    cloud_provider.start_instance.return_value = u'test-id'
+    cloud_provider.start_instance.return_value = {'instance_id': 'test-id'}
     cloud_provider.get_ips.return_value = ['127.0.0.1']
     cloud_provider.is_instance_running.return_value = True
 
@@ -156,7 +156,7 @@ def test_stop(tmpdir):
     Test `Cluster.stop()`
     """
     cloud_provider = MagicMock()
-    cloud_provider.start_instance.return_value = u'test-id'
+    cloud_provider.start_instance.return_value = {'instance_id': 'test-id'}
     cloud_provider.get_ips.return_value = ('127.0.0.1', '127.0.0.1')
     states = [
         # pylint: disable=bad-whitespace
@@ -168,16 +168,16 @@ def test_stop(tmpdir):
     cloud_provider.is_instance_running.side_effect = is_running
 
     cluster = make_cluster(tmpdir, cloud=cloud_provider)
-
-    for node in cluster.get_all_nodes():
-        node.instance_id = u'test-id'
+    nodes = cluster.get_all_nodes()
+    for node in nodes:
+        node.instance_id = 'test-id'
 
     cluster.repository = MagicMock()
     cluster.repository.storage_path = '/unused/path'
-
+    expected_stop_calls = [call(node) for node in nodes]
     cluster.stop()
 
-    cloud_provider.stop_instance.assert_called_with(u'test-id')
+    cloud_provider.stop_instance.assert_has_calls(expected_stop_calls, any_order=True)
     cluster.repository.delete.assert_called_once_with(cluster)
 
 
