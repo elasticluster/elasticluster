@@ -43,9 +43,9 @@ hosts::
 
     <groupname>_var_<varname>=<value>
 
-For example::
+For example, to allow reboot of "worker" nodes only::
 
-  slurm_worker_allow_reboot=yes
+    worker_var_allow_reboot=yes
 
 
 General setup variables
