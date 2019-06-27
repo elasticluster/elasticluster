@@ -230,7 +230,7 @@ Valid configuration keys for ``azure``
       Since the Azure Python API refers to resources by name, the
       template and ElastiCluster must agree on names given to
       resources. In particulat, ElastiCluster assumes that a node's
-      public IP address is called *nodename*`-public-ip (e.g., the
+      public IP address is called *nodename*-public-ip (e.g., the
       public IP address of node ``ge16z-master001`` is named
       ``ge16z-master001-public-ip``).
 
@@ -238,7 +238,7 @@ Valid configuration keys for ``azure``
    instanciation time:
 
    .. list-table:: ARM template parameters
-      :widths: 30 20 50
+      :widths: 30 70
       :header-rows: 1
 
       * - Parameter name
@@ -772,7 +772,7 @@ Controlling what is installed on the nodes
     SLURM executors and Ganglia ``gmond`` sources.
 
     Ansible group names supported by ElastiCluster can be found in the
-    Playbooks_ section of this manual.  You can combine more groups
+    `Playbooks`:ref: section of this manual.  You can combine more groups
     together, separating the names with a comma (``,``) -- but of
     course not all combinations make sense.
 
@@ -783,12 +783,12 @@ Controlling what is installed on the nodes
 
 ``<class>_var_<varname>``
     Define an variable called ``<varname>`` that applies only to the
-    given node ``<class>``. See the Playbooks_ section to know which
+    given node ``<class>``. See the `Playbooks`:ref: section to know which
     variables can be set and their meaning.
 
 ``global_var_<varname>``
     Define a variable called ``<varname>`` that applies to all the
-    nodes in the cluster.  See the Playbooks_ section to know which
+    nodes in the cluster.  See the `Playbooks`:ref: section to know which
     variables can be set and their meaning.
 
 ``playbook_path``
@@ -875,7 +875,7 @@ easily re-used across multiple clouds and base OS images -- that's the
 whole point of ElastiCluster!
 
 The following shows how to set up a simple SoGE_ cluster using the
-Playbooks_ distributed with ElastiCluster::
+`Playbooks`:ref: distributed with ElastiCluster::
 
   [setup/gridengine]
   provider=ansible

@@ -128,17 +128,21 @@ files share is to be mounted (made visibile):
    * - ``af_storage_account_name``
      - *None, a value is mandatory*
      - Storage account name, as gotten from the the `Storage account access keys`__ view on the Azure portal.
+
+       .. __: https://docs.microsoft.com/en-us/azure/storage/common/storage-account-manage#view-and-copy-access-keys
+
    * - ``af_storage_account_key``
      - *None, a value is mandatory*
      - Storage account key, as gotten from the the `Storage account access keys`__ view on the Azure portal.
+
+       .. __: https://docs.microsoft.com/en-us/azure/storage/common/storage-account-manage#view-and-copy-access-keys
+
    * - ``af_share_name``
      - *None, a value is mandatory*
      - Name given to the Azure files share (see: `Create a file share through the Azure portal <https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share#create-a-file-share-through-the-azure-portal>`_ on the Azure website)
    * - ``af_mount_point``
      - ``/net/azfiles``
      - Local directory where the Azure files will be made visible.
-
-.. __: https://docs.microsoft.com/en-us/azure/storage/common/storage-account-manage#view-and-copy-access-keys
 
 See Section *Setup variables* above for the relevant configuration
 file syntax.
@@ -1490,7 +1494,7 @@ with support for interactive Julia notebooks:
 Please read the notes in the `JupyterHub`_ section about how to create
 users to log in to JupyterHub via web.
 
- A full example of how to install a JupyterHub stand-alone server with
+A full example of how to install a JupyterHub stand-alone server with
 R and Julia language support can be found at:
 `<https://github.com/gc3-uzh-ch/elasticluster/blob/master/examples/jupyterhub-on-google.conf>`_
 

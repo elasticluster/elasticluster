@@ -85,8 +85,8 @@ class AbstractCloudProvider(with_metaclass(ABCMeta, object)):
     def resume_instance(self, instance_config):
         """Restart an instance from a dictionary of configuration.
 
-        :param dict instance_config - Dictionary of configuration returned
-                                      from pause_instance
+        :param dict instance_config:
+          Dictionary of configuration returned from `pause_instance`:meth:
         :return: str - instance_id
         """
         pass

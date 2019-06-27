@@ -744,11 +744,11 @@ class OpenStackCloudProvider(AbstractCloudProvider):
            groups from OpenStack's list.
 
         2. Prior to starting a node ("creating a server" in
-           OpenStack's language), call :method:`get` which returns the
+           OpenStack's language), call :meth:`get` which returns the
            group ID and a a *request handle*.
 
         3. If node creation fails because the AAF group has no more
-           slots available, then call :method:`full` passing the
+           slots available, then call :meth:`full` passing the
            request handle and try again.
 
         This approach is needed because we cannot probe for 'available
