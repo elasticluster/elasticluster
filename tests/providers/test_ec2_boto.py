@@ -118,7 +118,7 @@ class TestBotoCloudProvider(unittest.TestCase):
 
             provider.start_instance(key_name, key_pub, key_prv,
                                     security_group, flavor, image_id,
-                                    image_userdata)
+                                    image_userdata, 'test')
 
             con.run_instances.assert_called_once_with(
                 image_id,
