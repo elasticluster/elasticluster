@@ -435,14 +435,20 @@ The ``resize`` command
 ----------------------
 
 The **resize** command allow you to add or remove nodes from a started
-cluster. Please, be warned that **this feature is still experimental**,
-and while adding nodes is usually safe, removing nodes can be
-desruptive and can leave the cluster in an unknwonw state.
+cluster.
 
-Moreover, there is currently no way to decide *which nodes* can be
-removed from a cluster, therefore if you shrink a cluster **you must
-ensure** that any node of that type can be removed safely and no job
-is running on it.
+.. warning::
+
+   Please, be warned that, while adding nodes is usually safe, there
+   is currently no way to decide *which nodes* can be removed from a
+   cluster, therefore, before shrinking a cluster, **you must ensure**
+   that *any* node of that type can be removed safely and no job is
+   running on it.
+
+   `The ``remove-node`` command`:ref: can remove a specific node from
+   a cluster, which is in many cases a better option for downsizing.
+   (As you can ensure that a single node --or a smal set of nodes--
+   are safe to remove.)
 
 When adding nodes, you have to specify the *type* of the node and the
 number of node you want to add. Then, elasticluster will basically
@@ -504,12 +510,15 @@ The following options are available:
 
 ``--no-setup``
 
-    By default elasticluster will automatically run the **setup**
-    command after starting and/or stopping the virtual machines. This
-    option prevent the `setup` step to be run. **WARNING**: use this
-    option wisely: depending on the cluster configuration it is
-    impossible to know in advance what the status of the cluster will
-    be after resizing it and NOT running the `setup` step.
+    By default ElastiCluster will automatically run the **setup**
+    command after resizing the cluster. This option prevents this
+    `setup` step to be run; you should manually run ``elasticluster
+    setup`` afterwards.
+
+    .. warning::
+
+       The cluster configuration will quite surely be inconsistent
+       until you run ``elasticluster setup``.
 
 ``--yes``
 
@@ -517,6 +526,46 @@ The following options are available:
     desruptive action and is not supported by all the distributed
     playbooks, elasticluster will always ask for confirmation before
     doing any modification, unless this option is given.
+
+
+The ``remove-node`` command
+---------------------------
+
+The **remove-node** command removes a specific node from a started
+cluster.
+
+Basic usage of the command is::
+
+  usage: elasticluster remove-node [-h] [--no-setup] [--yes] cluster node
+
+where:
+
+* ``cluster`` is the name of a cluster that has been *started* previously.
+* ``node`` is the name of a node in the cluster (e.g., ``worker001``).
+
+The following options are available:
+
+``-h, --help``
+    Show an help message and exits.
+
+``--no-setup``
+
+    By default ElastiCluster will automatically run the **setup**
+    command after resizing the cluster. This option prevents this
+    `setup` step to be run; you should manually run ``elasticluster
+    setup`` afterwards.
+
+    .. warning::
+
+       The cluster configuration will quite surely be inconsistent
+       until you run ``elasticluster setup``.
+
+``--yes``
+
+    Since removing a node is a possibly disruptive action which may
+    lead to data or job loss, ElastiCluster will always ask for
+    confirmation before doing any modification, unless this option is
+    given.
 
 
 The ``ssh`` command
@@ -558,6 +607,7 @@ options are passed to `ssh` command line:
 
 ``-o StrictHostKeyChecking=yes``
     Enable check of the host key of the remote machine.
+
 
 The ``sftp`` command
 --------------------
