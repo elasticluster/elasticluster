@@ -292,6 +292,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        # CloudProvider.start_instance() call
                        key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
+                       cluster_name,
                        username=None,
                        # these params are specific to the
                        # GoogleCloudProvider

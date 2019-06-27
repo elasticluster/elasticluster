@@ -235,6 +235,7 @@ class BotoCloudProvider(AbstractCloudProvider):
 
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
+                       cluster_name,
                        username=None, node_name=None, network_ids=None,
                        price=None, timeout=None,
                        boot_disk_device=None,

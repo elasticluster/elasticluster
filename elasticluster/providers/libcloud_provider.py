@@ -119,7 +119,7 @@ class LibCloudProvider(AbstractCloudProvider):
 
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
-                       username=None, node_name=None, **options):
+                       cluster_name, username=None, node_name=None, **options):
         self.__prepare_key_pair(key_name,
                                 private_key_path,
                                 public_key_path,

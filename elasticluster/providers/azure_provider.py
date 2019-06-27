@@ -206,6 +206,7 @@ class AzureCloudProvider(AbstractCloudProvider):
 
     def start_instance(self, key_name, public_key_path, private_key_path,
                        security_group, flavor, image_id, image_userdata,
+                       cluster_name,
                        username='root',
                        node_name=None,
                        boot_disk_size=30,
