@@ -8,6 +8,22 @@
   include_tasks: 'deps-{{ansible_os_family}}.yml'
 
 
+- name: Find out location of the `lmod` command
+  shell: |
+    set -e
+    for script in modules.sh lmod.sh z00_lmod.sh; do
+        if [ -r "/etc/profile.d/$script" ]; then
+           . "/etc/profile.d/$script"
+           break
+        fi
+    done
+    if ! type module >/dev/null 2>/dev/null; then
+        # error out if no 'module' command available
+        exit 70
+    fi
+    echo -n $LMOD_DIR
+  register: _eb_lmod_dir
+
 - name: Download bootstrap script
   get_url:
     url: '{{ easybuild_bootstrap_url }}'
@@ -61,7 +77,7 @@
     - EASYBUILD_MODULES_TOOL: Lmod
     - EASYBUILD_PREFIX: '{{EASYBUILD_PREFIX}}'
     # ensure Lmod is available
-    - PATH: '{{lmod_install_dir}}/libexec:{{ansible_env.PATH}}'
+    - PATH: '{{ _eb_lmod_dir.stdout|default("/usr/share/lmod/libexec") }}:{{ansible_env.PATH}}'
 
 
 # If this is installed, `eb -l` can colorize output

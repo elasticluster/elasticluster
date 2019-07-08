@@ -3,8 +3,5 @@
 dependencies:
 
   - role: lmod
-    LMOD_DEFAULT_MODULES:
+    lmod_default_modules:
       - 'EasyBuild'
-    # download and install Lmod in the same locations that EB would use
-    lmod_install_dir: '{{EASYBUILD_PREFIX}}/software/Lmod'
-    lmod_source_dir:  '{{EASYBUILD_PREFIX}}/sources/l/Lmod'
