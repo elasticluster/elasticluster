@@ -24,31 +24,30 @@
 
 - name: Create `easybuild` group
   group:
-    name='easybuild'
-    state=present
+    name: 'easybuild'
+    state: present
 
 
 - name: Populate `easybuild` group
   user:
-    name='{{easybuild_user}}'
-    groups='easybuild'
-    append=yes
+    name: '{{easybuild_user}}'
+    groups: 'easybuild'
+    append: yes
 
 
 - name: Create required directories
   file:
-    dest='{{item}}'
-    state=directory
-    mode='ug+rwx,g+s'
-    owner='{{easybuild_user}}'
-    group='easybuild'
+    dest: '{{item}}'
+    state: directory
+    mode: 'ug+rwx,g+s'
+    owner: '{{easybuild_user}}'
+    group: 'easybuild'
   loop:
     - "{{ EASYBUILD_PREFIX }}/"
     - "{{ EASYBUILD_PREFIX }}/modules/all/EasyBuild/"
     - "{{ EASYBUILD_PREFIX }}/modules/tools/EasyBuild/"
     - "{{ EASYBUILD_PREFIX }}/software/"
     - "{{ EASYBUILD_PREFIX }}/sources/"
-    - "{{ EASYBUILD_PREFIX }}/sources/l"  # already existing due to `lua` and `lmod`
 
 
 - name: Run the bootstrap script
@@ -76,9 +75,9 @@
 
 - name: Deploy configuration files
   template:
-    src='{{item}}.j2'
-    dest='/{{item}}'
-    mode=0444
+    src: '{{item}}.j2'
+    dest: '/{{item}}'
+    mode: 0444
   loop:
     - 'etc/easybuild.cfg'
     - 'etc/profile.d/easybuild.sh'
