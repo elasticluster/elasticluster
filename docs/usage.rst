@@ -22,11 +22,12 @@ The following options are general and are accepted by any subcommand:
     Show an help message and exits.
 
 ``-v, --verbose``
-    Adding one or more `-v` will increase the verbosity. Usually
-    elasticluster creates new VMs in parallel, to speedup the process,
-    but if you run it with at least *four* `-v` options, elasticluster
-    will not fork and will start the VMs sequentially. Useful for
-    debugging.
+    Repeat this option to have ElastiCluster report more verbosely
+    about its actions on the standard error stream.
+
+    With *four* ``-v`` options or more, debug messages from dependent
+    modules are included in the logged output; this may be useful for
+    debugging ElastiCluster's interaction with a cloud provider.
 
 ``-s PATH, --storage PATH``
 

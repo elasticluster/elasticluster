@@ -83,8 +83,7 @@ class ElastiCluster(cli.app.CommandLineApp):
         # Global parameters
         self.add_param('-v', '--verbose', action='count', default=0,
                        help="Increase verbosity. If at least four `-v` option "
-                       "are given, elasticluster will create new VMs "
-                       "sequentially instead of doing it in parallel.")
+                       "are given, log messages from all used Python modules.")
         self.add_param('-s', '--storage', metavar="PATH",
                        help="Path to the storage folder. (Default: `%(default)s`",
                        default=Creator.DEFAULT_STORAGE_PATH)
@@ -145,13 +144,20 @@ class ElastiCluster(cli.app.CommandLineApp):
         utils.redirect_warnings(logger='gc3.elasticluster')
 
         # Set verbosity level
+        if self.params.verbose < 4:
+            logger = log  # 'gc3.elasticluster'
+        else:
+            # when *very* verbose, print *all* log messages
+            # (including ones from dependent modules)
+            logger = logging.getLogger()
+
         loglevel = max(logging.DEBUG, logging.WARNING - 10 * max(0, self.params.verbose))
-        coloredlogs.install(logger=log, level=loglevel)
-        log.setLevel(loglevel)
+        coloredlogs.install(logger=logger, level=loglevel)
+        logger.setLevel(loglevel)
 
         # ensure we print tracebacks in DEBUG mode
         if self.params.verbose > 3:
-            log.raiseExceptions = True
+            logger.raiseExceptions = True
 
         if not os.path.isdir(self.params.storage):
             # We do not create *all* the parents, but we do create the
