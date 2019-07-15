@@ -35,7 +35,7 @@ try:
     # Python 2
     from UserDict import DictMixin
 except ImportError:
-    from collections import MutableMapping as DictMixin
+    from collections.abc import MutableMapping as DictMixin
 
 # 3rd party imports
 import click
