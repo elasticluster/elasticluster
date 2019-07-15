@@ -16,7 +16,7 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 __author__ = 'Nicolas Baer <nicolas.baer@uzh.ch>'
-__version__ = '1.3.dev18'
+__version__ = '1.3.dev19'
 
 
 # stdlib imports
