@@ -590,9 +590,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             else:  # vm.status == 'ERROR'
                 if (self.use_anti_affinity_groups
                     # FIXME: is there a better way to determine the
-                    # cause of the error than parsing the fault
-                    # message?
-                    and vm.fault['message'] == self.OUT_OF_CAPACITY_ERRMSG):
+                    # cause of the error than parsing the fault message?
+                    and self._get_fault_message(vm) == self.OUT_OF_CAPACITY_ERRMSG):
                     log.debug(
                         "Got 'not enough hosts available' error message;"
                         " assuming group %s(%s) is full and retrying"
@@ -603,7 +602,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                     ("Could not start VM instance `%s` (%s)%s: %s"
                      " Deleting it."),
                     vm.name, vm.id, in_group_msg,
-                    vm.fault.get('message', 'unspecified error'))
+                    self._get_fault_message(vm) or 'unspecified error')
                 self.nova_client.servers.delete(vm.id)
 
         # allocate and attach a floating IP, if requested
@@ -992,6 +991,19 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             # ``glance_client.images.list()`` returns a generator, but callers
             # of `._get_images()` expect a Python list
             return list(self.glance_client.images.list())
+
+    @staticmethod
+    def _get_fault_message(vm):
+        """
+        Given a novaclient's `server` object, return the error message
+        associated with a fault, or ``None`` if there is no fault or
+        no error message was returned by the OS API.
+        """
+        try:
+            return vm.fault['message']
+        except (AttributeError, KeyError):
+            # no fault, or fault message unspecified
+            return None
 
     def _get_volumes(self):
         """Return list of available volumes."""
