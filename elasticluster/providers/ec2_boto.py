@@ -57,20 +57,7 @@ from elasticluster.exceptions import (
     SubnetError,
     VpcError,
 )
-
-
-# Paramiko's `PKey.get_fingerprint()` returns a `str` object
-# in Python 2, and a `bytes` object in Python 3; iterating
-# over the former gives characters (i.e., `str` of length 1),
-# whereas iterating over the latter gives small integers.  I
-# could find no simple incantation that works on both, so
-# here's a conditional definition...
-if sys.version_info[0] == 2:
-    def byte_to_hex(byte):
-        return byte.encode('hex')
-else:
-    def byte_to_hex(byte):
-        return '{:02x}'.format(byte)
+from elasticluster.utils import fingerprint_str
 
 
 class BotoCloudProvider(AbstractCloudProvider):
@@ -593,8 +580,7 @@ class BotoCloudProvider(AbstractCloudProvider):
                     fingerprint = ':'.join(digest[i:(i + 2)]
                                            for i in range(0, len(digest), 2))
                 else:
-                    fingerprint = ':'.join(byte_to_hex(byte)
-                                           for byte in pkey.get_fingerprint())
+                    fingerprint = fingerprint_str(pkey)
 
 
                 if fingerprint != cloud_keypair.fingerprint:

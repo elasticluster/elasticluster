@@ -134,6 +134,17 @@ def expand_ssh_proxy_command(command, user, addr, port=22):
     return ''.join(translated)
 
 
+def fingerprint_str(key):
+    """
+    Return a printable string representation of an SSH key fingerprint.
+    """
+    from binascii import hexlify
+    from codecs import decode
+    return str(
+        insert_char_every_n_chars(2, ':',
+            decode(hexlify(key.get_fingerprint()), 'ascii')))
+
+
 def get_num_processors():
     """
     Return number of online processor cores.
@@ -211,6 +222,12 @@ def has_nested_keys(mapping, k1, *more):
             return True
     else:
         return False
+
+
+# original source: https://gist.github.com/jtriley/7270594
+def insert_char_every_n_chars(every, char, string):
+    return char.join(
+        string[i:i + every] for i in range(0, len(string), every))
 
 
 class memoize(object):

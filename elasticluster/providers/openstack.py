@@ -80,7 +80,7 @@ from paramiko.ssh_exception import SSHException
 
 # Elasticluster imports
 from elasticluster import log
-from elasticluster.utils import memoize
+from elasticluster.utils import fingerprint_str, memoize
 from elasticluster.providers import AbstractCloudProvider
 from elasticluster.exceptions import (
     ConfigurationError,
@@ -922,8 +922,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
             # Check if it has the correct keypair, but only if we can read the local key
             if pkey:
-                fingerprint = ':'.join(i.encode('hex') for i in pkey.get_fingerprint())
-                if fingerprint != keypair.fingerprint:
+                pkey_fingerprint = fingerprint_str(pkey)
+                if pkey_fingerprint != keypair.fingerprint:
                     raise KeypairError(
                         "Keypair `%s` is present but has "
                         "different fingerprint. Aborting!" % name)
