@@ -75,7 +75,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="elasticluster",
-    version='1.3.dev19',
+    version='1.3.dev20',
     description="A command line tool to create, manage and setup computing clusters hosted on a public or private cloud infrastructure.",
     long_description=read_whole_file('README.rst'),
     author=", ".join([
