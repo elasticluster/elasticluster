@@ -24,7 +24,7 @@ import logging
 
 
 # public API
-log = logging.getLogger("gc3.elasticluster")
+log = logging.getLogger("elasticluster")
 
 from elasticluster.cluster import Cluster
 from elasticluster.repository import AbstractClusterRepository, MultiDiskRepository

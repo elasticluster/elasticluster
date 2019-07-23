@@ -141,11 +141,11 @@ class ElastiCluster(cli.app.CommandLineApp):
         # print *all* Python warnings through the logging subsystem
         warnings.resetwarnings()
         warnings.simplefilter('once')
-        utils.redirect_warnings(logger='gc3.elasticluster')
+        utils.redirect_warnings(logger='elasticluster')
 
         # Set verbosity level
         if self.params.verbose < 4:
-            logger = log  # 'gc3.elasticluster'
+            logger = log  # 'elasticluster'
         else:
             # when *very* verbose, print *all* log messages
             # (including ones from dependent modules)
