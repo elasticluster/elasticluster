@@ -126,24 +126,27 @@ if ! [ -x "$python" ]; then
         ver=$DISTRIB_RELEASE
     elif [ -f /etc/debian_version ]; then
         # Older Debian/Ubuntu/etc.
-        os='Debian'
+        os='debian'
         ver=$(cat /etc/debian_version)
     elif [ -f /etc/redhat-release ]; then
         # Older Red Hat, CentOS, etc.
-        os='RedHat'
+        os='redhat'
     else
         die $EX_UNAVAILABLE "Unsupported OS - cannot install Python 2.7"
     fi
 
+    # normalize case (avoid, e.g., `CentOS` vs `Centos`)
+    os=$(echo $os | tr '[[:upper:]]' '[[:lower:]]')
+
     # try to install Python 2.7 (or 2.6 + simplejson)
     case "$os" in
-        [Dd]ebian|[Uu]buntu)
+        debian|ubuntu)
             # need to update otherwise the following `apt-get install`
             # may fail as the local DB of package versions is outdated
             apt-get update
             do_or_die apt-get install -y python2.7 python-simplejson
             ;;
-        [Rr]ed[Hh]at|[Cc]entos)
+        redhat|centos)
             case "$ver" in
                 7*) do_or_die yum install -y python2 python2-simplejson ;;
                 6*) do_or_die yum install -y python2 python-simplejson ;;
@@ -164,10 +167,10 @@ fi
 if [ "$use_eatmydata" = 'yes' ]; then
     # install `libeatmydata.so` and the `eatmydata` command
     case "$os" in
-        [Dd]ebian|[Uu]buntu)
+        debian|ubuntu)
             apt-get install -y eatmydata
             ;;
-        [Rr]ed[Hh]at|[Cc]entos)
+        redhat|centos)
             case "$ver" in
                 7*)
                     sudo yum install -y yum-plugin-copr
