@@ -7,7 +7,7 @@
 anaconda_mirror : 'http://repo.continuum.io/archive'
 
 # Version of the Anaconda distribution to install
-anaconda_version : '2019.03'
+anaconda_version : '2019.07'
 
 # Anaconda comes with either a Python2 or a Python3 interpreter
 # -- choose which one you want here.
