@@ -15,6 +15,7 @@
       - libzmq3-dev
       # more dependencies, as appear in R pkg compile logs
       - libssh2-1-dev
+      - libxml2-dev
       # more dependency packages, notes from CSCS' workshop on Spark
       - libssl-dev
       - libcurl4-openssl-dev
@@ -35,6 +36,7 @@
       - libzmq3-dev
       # more dependencies, as appear in R pkg compile logs
       - libssh2-1-dev
+      - libxml2-dev
       # more dependency packages, notes from CSCS' workshop on Spark
       - libssl-dev
       - libcurl4-openssl-dev
