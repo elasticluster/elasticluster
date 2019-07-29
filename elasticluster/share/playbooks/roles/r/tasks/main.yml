@@ -34,7 +34,7 @@
     R --slave --no-save --no-restore-history <<-__EOF__
         if (! ('{{item}}' %in% installed.packages()[,'Package']))
           install.packages(pkgs='{{item}}', repos=c('https://cloud.r-project.org/'))
-          # `install.packages` may fail but does not throw an error condition
+          # 'install.packages' may fail but does not throw an error condition
           # so check whether the package was actually installed and exit accordingly
           tryCatch({
               library({{item}})
