@@ -10,6 +10,7 @@
       - czmq-devel
       # more dependencies, as appear in R pkg compile logs
       - libssh2-devel
+      - libxml2-devel
       # more dependency packages, notes from CSCS' workshop on Spark
       - openssl-devel
       - libcurl-devel
