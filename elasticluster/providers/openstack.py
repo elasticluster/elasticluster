@@ -678,7 +678,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 self.nova_client.server_groups.delete(anti_affinity_group)
             except NotFound:
                 pass
-        return self._instances.pop(instance, None)
+        return self._instances.pop(node.instance_id, None)
 
     def resume_instance(self, instance_state):
         raise NotImplementedError("This provider does not (yet) support pause / resume logic.")
