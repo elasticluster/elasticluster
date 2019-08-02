@@ -30,6 +30,43 @@
     - slurm
 
 
+# It can happen that, if SLURM is already installed (for instance when
+# starting from a snapshot, or when reconfiguring a cluster),
+# directories `.../slurm-llnl` already exist (because they're created
+# by Debian's `slurm-*` packages.  Try to fix it by *moving* these
+# directories where ElastiCluster expects to create them, clearing the
+# way for symlinks.
+#
+# FIXME: This does not really fix the issue; it's possible that system
+# upgrades will re-create the directory and we're not able to solve it
+# automatically.  It would be better to use the `.../slurm`
+# directories on RHEL/CentOS and `.../slurm-llnl` on Debian/Ubuntu
+# (i.e., make the directory name a distribution-dependent parameter)
+# but doing so will break existing installations.  So, fix this once
+# and for all once 1.3.0 is out and we're working on 1.4.devNNN
+#
+- name: Ensure we can create compatibility symlinks
+  shell: |
+    if test -d '{{ item.old }}'; then
+      if ! test -e '{{ item.new }}'; then
+        mv -v '{{ item.old }}' '{{ item.new }}'
+      else
+        echo 1>&2 "Both '{{ item.old }}' and '{{ item.new }}' exist -- cannot resolve automatically."
+        exit 73
+      fi
+    fi
+    exit 0
+  loop:
+    - { new: '/etc/slurm',     old: '/etc/slurm-llnl' }
+    - { new: '/var/lib/slurm', old: '/var/lib/slurm-llnl' }
+    - { new: '/var/log/slurm', old: '/var/log/slurm-llnl' }
+    - { new: '/var/run/slurm', old: '/var/run/slurm-llnl' }
+  when: is_debian_compatible
+  tags:
+    - slurm
+    - debian
+
+
 - name: Create work directory {{item}}
   file:
     path: '{{item}}'
