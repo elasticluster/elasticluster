@@ -47,7 +47,16 @@
 #
 - name: Ensure we can create compatibility symlinks
   shell: |
-    if test -d '{{ item.old }}'; then
+    if test -L '{{ item.old }}'; then
+      dest=$(readlink -n -f '{{ item.old }}')
+      if [ "$dest" = $(realpath '{{ item.new }}') ]; then
+        # all OK
+        exit 0
+      else
+        # link to wrong directory, remove
+        rm -f -v '{{ item.old }}'
+      fi
+    elif test -d '{{ item.old }}'; then
       if ! test -e '{{ item.new }}'; then
         mv -v '{{ item.old }}' '{{ item.new }}'
       else
