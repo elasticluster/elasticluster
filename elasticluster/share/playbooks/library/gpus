@@ -50,7 +50,9 @@ Example output::
       "changed": false
   }
 """
+from __future__ import (absolute_import, division, print_function)
 
+from codecs import decode
 from collections import defaultdict
 import json
 import os
@@ -58,7 +60,12 @@ import re
 import shlex
 from subprocess import check_output
 import sys
-from urllib import urlopen
+try:
+    # Python 2
+    from urllib import urlopen
+except ImportError:
+    # Python 3+
+    from urllib.request import urlopen
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -114,10 +121,15 @@ def _get_pci_device_name_lspci(parts):
     model_name_short = None
     model_name_long = None
     lspci_output = check_output(['lspci', '-vmm', '-s', parts[0]])
-    for line in lspci_output.split('\n'):
+    for line in lspci_output.split(b'\n'):
         # skip blank lines
         line = line.strip()
         if not line:
+            continue
+        try:
+            line = decode(line, 'ascii')
+        except UnicodeDecodeError as err:
+            # FIXME: log unexpected input!
             continue
         key, value = line.split(':', 1)
         key = key.strip()
@@ -141,7 +153,8 @@ _DB_ENTRY_NAME_RE = re.compile(r'<p>Name: (?P<short>[^ ]+) \[(?P<long>.+)\]</')
 def _get_pci_device_name_http(parts):
     db_entry_url = ('http://pci-ids.ucw.cz/read/PC/{vendor_id}/{model_id}'
                     .format(vendor_id=parts[2], model_id=parts[3]))
-    db_entry_html = urlopen(db_entry_url).read()
+    with urlopen(db_entry_url) as url:
+        db_entry_html = url.read()
     match = _DB_ENTRY_NAME_RE.search(db_entry_html)
     if match:
         return match.group('short'), match.group('long')
@@ -154,10 +167,15 @@ def get_pci_gpu_info():
 
     # gather info on NVidia "3D controllers" on the system.
     lspci_output = check_output(['lspci', '-n', '-m'])
-    for line in lspci_output.split('\n'):
+    for line in lspci_output.split(b'\n'):
         # skip blank lines
         line = line.strip()
         if not line:
+            continue
+        try:
+            line = decode(line, 'ascii')
+        except UnicodeDecodeError as err:
+            # FIXME: log unexpected input!
             continue
         parts = shlex.split(line)
         if len(parts) < 3:
@@ -203,7 +221,11 @@ def main():
     }
     ansible_facts = output['ansible_facts']
 
-    gpu_info = get_pci_gpu_info()
+    try:
+        gpu_info = get_pci_gpu_info()
+    except Exception:
+        from traceback import format_exception
+        raise RuntimeError(format_exception(*sys.exc_info()))
     ansible_facts['gpu_count_total'] = len(gpu_info)
     ansible_facts['gpus'] = gpu_info
     # compute counts by model (for SLURM's `gres.conf`)
@@ -212,14 +234,18 @@ def main():
         counts[gpu['model_name']] += 1
     ansible_facts['gpu_count'] = counts
 
-    print json.dumps(output)
+    try:
+        print(json.dumps(output))
+    except:
+        from pprint import pformat
+        raise RuntimeError("Bad output value: " + pformat(output))
 
 try:
     main()
     sys.exit(os.EX_OK)
 except Exception as err:
-    print json.dumps({
+    print(json.dumps({
         'failed': True,
         'msg': ('{0}: {1}'.format(err.__class__.__name__, err)),
-    })
+    }))
     sys.exit(os.EX_SOFTWARE)
