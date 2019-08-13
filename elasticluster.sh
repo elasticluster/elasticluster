@@ -3,7 +3,7 @@
 # Seamless interface to Run ElastiCluster in a Docker image.
 # Tries to install Docker if it cannot be found.
 #
-# Copyright (c) 2018 Riccardo Murri <riccardo.murri@gmail.com>
+# Copyright (c) 2018, 2019 Riccardo Murri <riccardo.murri@gmail.com>
 #
 # This file is part of ElastiCluster.  It can be distributed and
 # modified under the same conditions as ElastiCluster.
@@ -175,6 +175,9 @@ require_command readlink
 volumes="-v $HOME/.ssh:/home/.ssh -v $HOME/.elasticluster:/home/.elasticluster"
 if [ -n "$SSH_AUTH_SOCK" ]; then
     volumes="${volumes} -v $SSH_AUTH_SOCK:/home/.ssh-agent.sock"
+fi
+if [ -d "$HOME/.config" ]; then
+    volumes="${volumes} -v $HOME/.config:/home/.config"
 fi
 
 usage () {
