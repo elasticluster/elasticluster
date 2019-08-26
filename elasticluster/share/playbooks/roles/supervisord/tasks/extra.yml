@@ -9,14 +9,14 @@
     dest: '{{ supervisor_conf_dir }}/{{ svd_program }}{{ supervisor_conf_suffix }}'
     content: '{{ svd_config }}'
     mode: 0444
-  register: '_supervisor_conf_for_{{ svd_program }}'
+  register: '_supervisor_conf_added'
 
 
 - name: Ensure supervisord re-reads config
   shell: |
     supervisorctl reread;
     supervisorctl update;
-  when: '_supervisor_conf_for_{{ svd_program }} is changed'
+  when: '_supervisor_conf_added is changed'
 
 
 - name: Ensure program has been started by supervisord
