@@ -35,6 +35,15 @@
   when: 'is_rhel_compatible and not is_centos'
 
 
+- name: Install Ansible `pip` module dependencies
+  yum:
+    name:
+      # Python 2
+      - python2-pip
+      - python-setuptools
+      - python-virtualenv
+
+
 - name: Upgrade all installed packages to latest version
   yum:
     name: '*'

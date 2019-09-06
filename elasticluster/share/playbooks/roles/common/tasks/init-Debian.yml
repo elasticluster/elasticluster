@@ -50,6 +50,20 @@
     warn: no
   become: yes
 
+- name: Install Ansible `pip` module dependencies
+  apt:
+    name:
+      # Python 2
+      - python-pip
+      - python-pip-whl
+      - python-setuptools
+      - python-virtualenv
+      - virtualenv
+      # Python 3
+      - python3-pip
+      - python3-virtualenv
+      - python3-setuptools
+
 - name: Upgrade all installed packages to latest version
   apt:
     upgrade: safe
