@@ -755,20 +755,25 @@ class _SshCommand(AbstractCommand):
         # XXX: the default value of `self.params.ssh_to` should = the
         # default value for `ssh_to` in `Cluster.get_ssh_to_node()`
         frontend = cluster.get_ssh_to_node(self.params.ssh_to)
-        log.debug("Updating the ip addresses of `%s`.", frontend.name)
-        frontend.update_ips()
 
         # ensure we can connect to the host
         try:
-            if not frontend.preferred_ip:
+            if not frontend.connection_ip():
+                log.info(
+                    "No connection address known for node `%s`,"
+                    " updating list of IP addresses ...", frontend.name)
+                frontend.update_ips()
+                log.debug(
+                    "Checking that SSH connection to node `%s` works..",
+                    frontend.name)
                 # Ensure we can connect to the node, and save the value of `preferred_ip`
                 ssh = frontend.connect(keyfile=cluster.known_hosts_file)
                 if ssh:
                     ssh.close()
                 cluster.repository.save_or_update(cluster)
-        except NodeNotFound as ex:
-            log.error("Unable to connect to the frontend node: %s", ex)
-            sys.exit(1)
+        except Exception as err:
+            log.error("Unable to connect to the frontend node: %s", err)
+            sys.exit(os.EX_TEMPFAIL)
 
         # now delegate real connection to `ssh`
         host = frontend.connection_ip()
