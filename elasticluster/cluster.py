@@ -977,7 +977,7 @@ class Cluster(Struct):
                 return self.nodes[kind][0]
 
         # Uh-oh, no nodes in this cluster!
-        raise NodeNotFound("Unable to find a valid frontend:"
+        raise NodeNotFound("Unable to find a valid SSH node:"
                            " cluster has no nodes!")
 
 
