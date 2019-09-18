@@ -147,13 +147,11 @@
   tags:
     - slurm
   template:
-    src: '{{item}}.j2'
-    dest: '/etc/slurm/{{item}}'
+    src: '{{ slurm_conf_file|default("slurm.conf.j2") }}'
+    dest: '/etc/slurm/slurm.conf'
     owner: root
     group: root
     mode: 0444
-  loop:
-    - slurm.conf
 
 
 - name: Install support packages (Debian/Ubuntu)

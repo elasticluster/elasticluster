@@ -265,6 +265,30 @@ Extra variables can be set by editing the `setup/` section:
        memory* usage.  You might want to set this limit to a much
        higher value when using GPUs, as GPU memory might be accounted
        in the job's virtual memory.
+   * - ``slurm_conf_file``
+     - *use ElastiCluster's built-in template*
+     - Filesystem path to a file that is deployed as ``slurm.conf`` on
+       every node in the cluster.  The file can use `Jinja2 template
+       syntax <https://jinja.palletsprojects.com/en/2.10.x/templates/>`_.
+       By default, ElastiCluster's built-in `slurm.conf template
+       <https://github.com/elasticluster/elasticluster/blob/master/elasticluster/share/playbooks/roles/slurm-common/templates/slurm.conf.j2>`_
+       is used; it is probably a good idea to use it as a starting point.
+
+       .. note::
+
+          The value of this variable should be an **absolute**
+          filesystem path.  In other words, you should use a path
+          starting with ``/`` like ``/home/me/conf/slurm.conf.j2``
+          instead of a relative path like ``my-slurm-config.j2``.
+
+       .. warning::
+
+          SLURM will log a warning if configuration files on worker
+          nodes do not have the *exact same* content (byte by byte) as
+          the configuration file on the master node.  It is therefore
+          recommended to set ``slurm_conf_file`` as a cluster-global
+          variable.
+
    * - ``slurm_constrainramspace``
      - yes
      - **Only used if ``slurm_taskplugin`` is set to ``task/cgroup``.**
