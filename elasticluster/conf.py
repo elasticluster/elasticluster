@@ -712,7 +712,7 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'boot_disk_type',
             'min_cpu_platform',
             'scheduling',
-            'tags'
+            'tags',
             # OpenStack only
             'floating_network_id',
             'request_floating_ip',
