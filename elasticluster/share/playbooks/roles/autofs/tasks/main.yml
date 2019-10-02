@@ -39,7 +39,7 @@
     owner: root
     group: root
   # keep this in sync with `templates/auto.master`
-  when: "if  'glusterfs_client' in group_names"
+  when: "'glusterfs_client' in group_names"
 
 
 - name: Deploy support for Google Storage
