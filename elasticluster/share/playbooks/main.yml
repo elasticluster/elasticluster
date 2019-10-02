@@ -2,6 +2,9 @@
 - name: Prepare VM for running Ansible
   hosts: all
   gather_facts: no
+  # this task is not compatible with Mitogen's enhanced strategies, so
+  # be sure that we run it with the most conservative setting possible
+  strategy: linear
   tasks:
     - name: Ensure Python is installed
       script: |

@@ -280,6 +280,19 @@ class AnsibleSetupProvider(AbstractSetupProvider):
             'ANSIBLE_TIMEOUT':           '120',
         }
         try:
+            import mitogen
+            ansible_env['ANSIBLE_STRATEGY'] = 'mitogen_linear'
+            ansible_env['ANSIBLE_STRATEGY_PLUGINS'] = resource_filename('ansible_mitogen', 'plugins/strategy')
+            elasticluster.log.warning(
+                "The `mitogen` module is installed,"
+                " and will be used for connections to remote hosts."
+                " If you want to revert to the slower but safer"
+                " plain SSH, please execute command"
+                " 'export ANSIBLE_STRATEGY=linear'"
+                " before running ElastiCluster.")
+        except ImportError:
+            pass
+        try:
             import ara
             ara_location = os.path.dirname(ara.__file__)
             ansible_env['ANSIBLE_CALLBACK_PLUGINS'] = (
