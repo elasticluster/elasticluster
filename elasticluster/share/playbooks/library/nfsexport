@@ -19,12 +19,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-__docformat__ = 'reStructuredText'
-
-import subprocess
-
-DOCUMENTATION = """
+"""
 ---
 module: nfsexport
 short_description: This module will configure a nfs exports
@@ -61,7 +56,14 @@ options:
 examples:
     - code: nfsexport path=/home clients=10.0.0.1 options=rw
 """
+from __future__ import (absolute_import, division, print_function)
+
+import json
 import os
+import subprocess
+
+from ansible.module_utils.basic import AnsibleModule
+
 
 def reload_nfs_exports(path=None):
     cmd = ["showmount", "-e", "--no-headers"]
@@ -80,6 +82,7 @@ def reload_nfs_exports(path=None):
 
 
 def main():
+    global module
     module = AnsibleModule(
         argument_spec = dict(
             path      = dict(required=True),
@@ -141,6 +144,12 @@ def main():
     # fd.close()
     # module.exit_json(changed=True)
 
-# include magic from lib/ansible/module_common.py
-#<<INCLUDE_ANSIBLE_MODULE_COMMON>>
-main()
+try:
+    main()
+    sys.exit(os.EX_OK)
+except Exception as err:
+    print(json.dumps({
+        'failed': True,
+        'msg': ('{0}: {1}'.format(err.__class__.__name__, err)),
+    }))
+    sys.exit(os.EX_SOFTWARE)
