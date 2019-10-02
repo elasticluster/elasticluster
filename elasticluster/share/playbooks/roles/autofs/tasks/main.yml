@@ -31,8 +31,20 @@
   when: is_debian_compatible
 
 
+- name: Deploy autofs mount script for GlusterFS
+  copy:
+    dest: '/etc/auto.glusterfs'
+    src: 'etc/auto.glusterfs'
+    mode: 0555
+    owner: root
+    group: root
+  # keep this in sync with `templates/auto.master`
+  when: "if  'glusterfs_client' in group_names"
+
+
 - name: Deploy support for Google Storage
   include_tasks: 'gcs.yml'
+  # keep this in sync with `templates/auto.master`
   when: 'elasticluster.cloud.gcloud_project_id is defined'
 
 

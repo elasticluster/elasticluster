@@ -19,6 +19,10 @@
 # allow automounting by syminks into the `/net` hierarchy
 /net/nfs3  -hosts
 /net/nfs4  program:/etc/auto.nfs4  hard,intr,nosuid,nodev
+{# keep the following `if`'s in sync with `tasks/main.yml` #}
+{% if  'glusterfs_client' in group_names -%}
+/net/glusterfs  program:/etc/auto.glusterfs     rw,nosuid,nodev
+{%- endif %}
 {% if elasticluster.cloud.gcloud_project_id is defined -%}
 /net/gcs   program:/etc/auto.gcs   nosuid,nodev
 {%- endif %}

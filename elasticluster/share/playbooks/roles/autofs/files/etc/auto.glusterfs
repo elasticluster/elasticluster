@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# THIS FILE IS CONTROLLED BY ELASTICLUSTER
+# local modifications will be overwritten
+# the next time `elasticluster setup` is run!
+#
+
+# add "nosymlink" here if you want to suppress symlinking local filesystems
+# add "nonstrict" to make it OK for some filesystems to not mount
+# other GlusterFS mount options can be specified as options to the map in auto.master
+opts="-fstype=glusterfs"
+
+location="${1}"
+
+servers=${location%%:*}
+volume=${location##*:}
+
+case "$servers" in
+    '@'*)
+        # translate netgroup name into comma-separated list of servers
+        netgroup=$(echo "$servers" | cut -c2-)
+        servers=$(\
+            getent netgroup "$netgroup" \
+                | sed -re 's/\(([0-9a-z-]+),,[^)]*\) */\1,/gi;s/,$//' \
+                | (read _ lst; echo "$lst") \
+         )
+        ;;
+    *)
+        # no changes
+        ;;
+esac
+
+# as of version 5.1.1-1ubuntu3.1, automount seems to *require* that
+# host and path are separated by `:/` and not by `:` -- fortunately,
+# GlusterFS does not care if the volume name is preceded by a slash
+# `/` character...
+echo "${opts} ${servers}:/$volume"
