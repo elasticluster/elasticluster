@@ -163,25 +163,27 @@ def get_num_processors():
         # multiprocessing cannot determine CPU count
         pass
     try:
-        from subprocess32 import check_output
-        ncpus = check_output('nproc')
-        return int(ncpus)
-    except CalledProcessError:  # no `/usr/bin/nproc`
-        pass
-    except (ValueError, TypeError):
-        # unexpected output from `nproc`
-        pass
+        import subprocess32
+        try:
+            ncpus = check_output('nproc')
+            return int(ncpus)
+        except subprocess32.CalledProcessError:  # no `/usr/bin/nproc`
+            pass
+        except (ValueError, TypeError):
+            # unexpected output from `nproc`
+            pass
     except ImportError:  # no subprocess32?
         pass
     try:
-        from subprocess import check_output
-        ncpus = check_output('nproc')
-        return int(ncpus)
-    except CalledProcessError:  # no `/usr/bin/nproc`
-        pass
-    except (ValueError, TypeError):
-        # unexpected output from `nproc`
-        pass
+        import subprocess
+        try:
+            ncpus = subprocess.check_output('nproc')
+            return int(ncpus)
+        except subprocess.CalledProcessError:  # no `/usr/bin/nproc`
+            pass
+        except (ValueError, TypeError):
+            # unexpected output from `nproc`
+            pass
     except ImportError:  # no subprocess.check_call (Py 2.6)
         pass
     raise RuntimeError("Cannot determine number of processors")
