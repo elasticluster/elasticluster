@@ -22,9 +22,9 @@ __version__ = '1.3.dev21'
 # stdlib imports
 import logging
 
-
 # public API
 log = logging.getLogger("elasticluster")
+
 
 from elasticluster.cluster import Cluster
 from elasticluster.repository import AbstractClusterRepository, MultiDiskRepository
