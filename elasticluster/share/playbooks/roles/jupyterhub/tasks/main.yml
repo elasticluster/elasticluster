@@ -37,9 +37,11 @@
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
 
+
 - name: Install JupyterHub
-  command: |
-    /opt/anaconda3/bin/conda install jupyterhub -c conda-forge
+  # redirect STDIN from `/dev/null` to avoid `conda` going interactive
+  shell: |
+    /opt/anaconda3/bin/conda install jupyterhub -c conda-forge < /dev/null
 
 
 - name: Create secret tokens
