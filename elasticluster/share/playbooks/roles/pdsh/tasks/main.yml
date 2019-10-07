@@ -25,10 +25,18 @@
     owner: root
     group: root
 
-- name: Make SSH the default exec method for PDSH
+- name: Make SSH the default exec method for PDSH (env vars)
   copy:
     src: etc/profile.d/pdsh.sh
     dest: /etc/profile.d/pdsh.sh
+    mode: 0444
+    owner: root
+    group: root
+
+- name: Make SSH the default exec method for PDSH (config file)
+  copy:
+    src: etc/pdsh/rcmd_default
+    dest: /etc/pdsh/rcmd_default
     mode: 0444
     owner: root
     group: root
