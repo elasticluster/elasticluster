@@ -341,7 +341,7 @@ CONFIG_TREE = ({
             'boot_disk_type': 'pd-standard',
             'node_name': 'my-node',
             'scheduling': 'preemptible',
-            'tags': 'tag1,tag2,tag3'
+            'tags': 'tag1,tag2,tag3',
         },
         'wrong_example_google': {
             'cloud': 'wrongle',
@@ -444,7 +444,7 @@ CONFIG_TREE_WITH_RENAMES = ({
             'boot_disk_type': 'pd-standard',
             'node_name': 'my-node',
             'scheduling': 'preemptible',
-            'tags': 'tag1,tag2,tag3'
+            'tags': 'tag1,tag2,tag3',
         },
         'wrong_example_google': {
             'cloud': 'wrongle',
@@ -549,4 +549,4 @@ def test_build_node_section_google():
     assert nodes_cfg['misc']['boot_disk_type'] == 'pd-standard'
     assert nodes_cfg['misc']['scheduling'] == "preemptible"
     assert nodes_cfg['misc']['node_name'] == "my-node"
-    assert 'tags' not in nodes_cfg['misc']
+    assert nodes_cfg['misc']['tags'] == "tag1,tag2,tag3"
