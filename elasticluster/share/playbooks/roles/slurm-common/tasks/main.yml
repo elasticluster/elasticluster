@@ -109,6 +109,20 @@
     - { from: '/etc/slurm',     to: '/etc/slurm-llnl' }
     - { from: '/var/lib/slurm', to: '/var/lib/slurm-llnl' }
     - { from: '/var/log/slurm', to: '/var/log/slurm-llnl' }
+  when: is_debian_compatible
+  tags:
+    - slurm
+    - debian
+
+
+- name: Make compatibility symlinks (optional)
+  file:
+    path: '{{ item.to }}'
+    src: '{{ item.from }}'
+    state: link
+    force: yes
+  ignore_errors: yes
+  loop:
     - { from: '/var/run/slurm', to: '/var/run/slurm-llnl' }
   when: is_debian_compatible
   tags:
