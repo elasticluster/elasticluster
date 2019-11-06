@@ -35,12 +35,14 @@
   tags:
     - nfs
     - nfs-server
-  nfsexport:
-    path: '{{item.path}}'
-    clients: '{{item.clients}}'
-    options: '{{item.options|default("rw,no_root_squash,async,no_subtree_check,crossmnt")}}'
+  lineinfile:
     dest: '/etc/exports'
-    state: exported
+    create: yes
+    backup: yes
+    line: '{{item.path}} {% for client in item.clients %}{{client}}({{item.options|default("async,rw,no_root_squash,no_subtree_check,crossmnt")}}) {% endfor %}'
+    # replace clients+options on the given path
+    regexp: '^ *{{item.path}} +'
+    state: present
   loop: '{{NFS_EXPORTS}}'
 
 

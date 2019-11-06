@@ -70,9 +70,15 @@
         src: '{{ blockdev }}'
         state: mounted
 
-    - name: Export filesystem
-      nfsexport:
-        path: '{{ mountpoint }}'
-        state: exported
-        # you might want to change these
-        options: 'rw'
+    - name: Export filesystem (I)
+      lineinfile:
+        path: /etc/exports
+        # you might want to change the options (rw,async)
+        line: '{{ mountpoint }} {% for host in groups.all %}{{host}}(rw,async) {% endfor %}'
+        state: present
+      register: _export_fs
+
+    - name: Export filesystem (II)
+      command: |
+        exportfs -ra
+      when: _export_fs is changed
