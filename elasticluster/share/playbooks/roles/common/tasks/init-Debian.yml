@@ -84,9 +84,9 @@
     dpkg-query --show --showformat '${Version}\n' linux-image-$(uname -r)
   register: debian_installed_kernel_package_version
 
-- name: Record that kernel was upgraded
+- name: Record if kernel was upgraded
   set_fact:
-    debian_kernel_upgraded: '{{ debian_running_kernel_package_version != debian_installed_kernel_package_version }}'
+    debian_kernel_upgraded: '{{ debian_running_kernel_package_version.stdout != debian_installed_kernel_package_version.stdout }}'
 
 - name: Reboot if kernel was upgraded
   # the initial `sleep` command is there to give Ansible time to
