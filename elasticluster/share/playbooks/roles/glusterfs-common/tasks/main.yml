@@ -1,7 +1,4 @@
 ---
 
-- include_tasks: debian.yml
-  when: is_debian_compatible
-
-- include_tasks: rhel.yml
-  when: is_rhel_compatible
+- name: Run distribution-specific tasks
+  include_tasks: '{{ansible_os_family}}.yml'

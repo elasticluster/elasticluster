@@ -26,9 +26,9 @@
     become_user: root
   - name: add GlusterFS package repository (Debian)
     apt_repository:
-      repo='deb http://download.gluster.org/pub/gluster/glusterfs/{{glusterfs_version}}/LATEST/Debian/{{ansible_lsb.codename}}/apt {{ansible_lsb.codename}} main'
-      mode=0444
-      update_cache=yes
+      repo: 'deb http://download.gluster.org/pub/gluster/glusterfs/{{glusterfs_version}}/LATEST/Debian/{{ansible_lsb.codename}}/apt {{ansible_lsb.codename}} main'
+      mode: 0444
+      update_cache: yes
   when: is_debian
   tags:
     - gluster
@@ -37,9 +37,9 @@
 
 - name: add GlusterFS package repository (Ubuntu)
   apt_repository:
-    repo='ppa:gluster/glusterfs-{{glusterfs_version}}'
-    mode=0444
-    update_cache=yes
+    repo: 'ppa:gluster/glusterfs-{{glusterfs_version}}'
+    mode: 0444
+    update_cache: yes
   when: is_ubuntu
   tags:
     - gluster
