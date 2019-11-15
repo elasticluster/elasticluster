@@ -44,15 +44,3 @@
   tags:
     - gluster
     - glusterfs-common
-
-
-- name: Install GlusterFS packages (Debian/Ubuntu)
-  apt:
-    name:
-      - attr
-    state: '{{ pkg_install_state }}'
-    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  when: is_debian_or_ubuntu
-  tags:
-    - gluster
-    - glusterfs-common
