@@ -35,9 +35,9 @@ The following variables may be set to alter the role behavior:
 Example Playbook
 ----------------
 
-The following example installs EasyBuild_, configures it to write all software
-into directory ``/apps``, and uses it to build the GCC-based "foss/2016b"
-toolchain::
+The following example installs NTPd_ and configures it to use
+``master001`` as a upstream time server, and the two nodes
+``worker001`` and ``worker002`` as peers::
 
   - hosts: servers
     roles:
