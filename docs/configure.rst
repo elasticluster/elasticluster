@@ -495,6 +495,17 @@ Valid configuration keys for ``openstack``
   is set, this option is ignored and the value of the environment
   variable is used instead.
 
+``availability_zone``
+  If this is given, all cluster nodes will be started in this
+  availability zone. Otherwise (default), no request w.r.t. AZ will be
+  made to the OpenStack APIs.
+
+  .. warning::
+
+     ElastiCluster will *not* check if the availability zone name is
+     correct.  Any mis-spellings or other errors in the name will
+     result in cluster nodes not starting with an error.
+
 ``identity_api_version``
   Force use of the OpenStack Identity ("Keystone") API v2 or v3.  (Use
   the values ``2`` or ``3`` respectively.)  If this configuration item

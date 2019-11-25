@@ -167,7 +167,9 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                  project_name=None,
                  auth_url=None,
                  user_domain_name="default", project_domain_name="default",
-                 region_name=None, storage_path=None,
+                 region_name=None,
+                 availability_zone=None,
+                 storage_path=None,
                  compute_api_version=DEFAULT_OS_COMPUTE_API_VERSION,
                  image_api_version=DEFAULT_OS_IMAGE_API_VERSION,
                  network_api_version=DEFAULT_OS_NETWORK_API_VERSION,
@@ -189,6 +191,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._os_tenant_name = self._get_os_config_value('project name', project_name, ['OS_PROJECT_NAME', 'OS_TENANT_NAME'])
         self._os_project_domain_name = self._get_os_config_value('project domain name', project_domain_name, ['OS_PROJECT_DOMAIN_NAME'], 'default')
         self._os_region_name = self._get_os_config_value('region_name', region_name, ['OS_REGION_NAME'], '')
+        self.availability_zone = availability_zone
 
         # the OpenStack versioning mess
         if nova_api_version is not None:
@@ -478,6 +481,11 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._init_os_api()
 
         vm_start_args = {}
+
+        if self.availability_zone:
+            log.debug("Starting node `%s` in availability zone `%s`.",
+                      node_name, self.availability_zone)
+            vm_start_args['availability_zone'] = self.availability_zone
 
         log.debug("Checking keypair `%s` ...", key_name)
         with OpenStackCloudProvider.__node_start_lock:
