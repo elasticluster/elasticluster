@@ -373,6 +373,71 @@ def parse_ip_address_and_port(addr, default_port=22):
         .format(addr))
 
 
+def setitem_nested(mapping, path, value, cls=None):
+    """
+    Set a leaf key to a value in a nested mapping.
+
+    Argument *path* is a list of keys: *setitem_nested* will
+    recursively descend *mapping* and set the last key in *path* to
+    the given *value*.
+
+    Example::
+
+    >>> D = { 'a': 1, 'b': {'c': {'d': 2}}}
+    >>> setitem_nested(D, ['b', 'c', 'd'], 3)
+    {'a': 1, 'b': {'c': {'d': 3}}}
+    >>> assert D['b']['c']['d'] == 3
+    >>> assert D['a'] == 1
+
+    Argument *value* can be any valid Python value::
+
+    >>> setitem_nested(D, ['b', 'c', 'd'], [1, 2])
+    {'a': 1, 'b': {'c': {'d': [1, 2]}}}
+    >>> assert D['b']['c']['d'] == [1, 2]
+
+    Argument *path* need not lead to a leaf key; any nested key can be
+    overwritten::
+
+    >>> setitem_nested(D, ['b', 'c'], {'e': 4})
+    {'a': 1, 'b': {'c': {'e': 4}}}
+    >>> assert D['b']['c']['e'] == 4
+
+    As a degenerate case, if *path* is a list of one element,
+    ``setitem_nested`` works exactly like dictionary key assignment::
+
+    >>> setitem_nested(D, ['a'], {'f': 5})
+    {'a': {'f': 5}, 'b': {'c': {'e': 4}}}
+    >>> assert D['a']['f'] == 5
+
+    If, at any point during the descent (except at the end of *path*),
+    a non-existing key is found, it will be bound to a new mapping of
+    type *cls* (default: the same class as first argument `mapping`
+    itself)::
+
+    >>> setitem_nested(D, ['a', 'g', 'h'], 6)
+    {'a': {'g': {'h': 6}, 'f': 5}, 'b': {'c': {'e': 4}}}
+    >>> assert D['a']['g'] == {'h': 6}
+
+    The type of such constructed mappings can be set with optional
+    last argument *cls*.
+    """
+    assert len(path) > 0, (
+        "Argument `path` to `setitem_nested` cannot be empty!")
+    key = path[0]
+    if cls is None:
+        # use same class as `mapping`
+        cls = mapping.__class__
+    if len(path) > 1:
+        if key in mapping:
+            branch = mapping[key]
+        else:
+            branch = cls()
+        mapping[key] = setitem_nested(branch, path[1:], value)
+    else:
+        mapping[key] = value
+    return mapping
+
+
 # copied over from GC3Pie's `utils.py`
 def string_to_boolean(word):
     """
