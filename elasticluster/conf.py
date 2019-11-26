@@ -110,7 +110,7 @@ KEY_RENAMES = [
 
 SCHEMA = {
     'cloud': {
-        'provider': Or('azure', 'ec2_boto', 'google', 'openstack', 'libcloud'),
+        'provider': Or('azure', 'ec2_boto', 'google', 'opennebula', 'openstack', 'libcloud'),
         # allow other keys w/out restrictions; each cloud provider has its own
         # set of keys, which are handled separately
         Optional(str): str,
@@ -235,6 +235,13 @@ CLOUD_PROVIDER_SCHEMAS = {
         Optional("zone", default="us-central1-a"): nonempty_str,
     },
 
+    'opennebula': {
+        "provider": 'opennebula',
+        Optional("endpoint", default=os.getenv('ONE_URL', 'http://localhost:2633/RPC2')): url,
+        Optional("username", default=os.getenv('ONE_USERNAME', '')): nonempty_str,
+        Optional("password", default=os.getenv('ONE_PASSWORD', '')): nonempty_str,
+    },
+
     'openstack': {
         "provider": 'openstack',
         Optional("auth_url"): url,
@@ -267,6 +274,7 @@ CLOUD_PROVIDER_SCHEMAS = {
 CLOUD_PROVIDERS = {
     # pylint: disable=bad-whitespace
     'ec2_boto':  ('elasticluster.providers.ec2_boto',       'BotoCloudProvider'),
+    'opennebula':('elasticluster.providers.opennebula',     'OpenNebulaCloudProvider'),
     'openstack': ('elasticluster.providers.openstack',      'OpenStackCloudProvider'),
     'google':    ('elasticluster.providers.gce',            'GoogleCloudProvider'),
     'azure':     ('elasticluster.providers.azure_provider', 'AzureCloudProvider'),

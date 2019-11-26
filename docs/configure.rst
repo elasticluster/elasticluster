@@ -148,6 +148,7 @@ Currently these cloud providers are available:
 - ``ec2_boto``: supports Amazon EC2 and compatible clouds
 - ``google``: supports Google Compute Engine
 - ``libcloud``: support `many cloud providers`__ through `Apache LibCloud`_
+- ``opennebula``: supports clouds with an OpenNebula_ interface
 - ``openstack``: supports OpenStack-based clouds
 
 .. __: https://libcloud.readthedocs.io/en/latest/supported_providers.html
@@ -157,8 +158,9 @@ section:
 
 ``provider``
 
-    the driver to use to connect to the cloud provider:
-    ``azure``, ``ec2_boto``, ``openstack``, ``google`` or ``libcloud``.
+    the driver to use to connect to the cloud provider: ``azure``,
+    ``ec2_boto``, ``opennebula``, ``openstack``, ``google`` or
+    ``libcloud``.
 
     .. note::
 
@@ -574,6 +576,44 @@ Valid configuration keys for ``openstack``
   need to use more than one to start a whole cluster. Anyway, use of
   anti-affinity groups ensures that the same physical resources are
   shared across the minimum possible amount of VMs.
+
+
+Valid configuration keys for ``opennebula``
+-------------------------------------------
+
+All configuration keys are optional for the OpenNebula provider;
+values are taken from environmental variables if not written in the
+ElastiCluster configuration file.
+
+``endpoint``
+  URL of the OpenNebula XML-RPC server, starting with ``http://`` or
+  ``https://``.  If not given, the value of the environment variable
+  ``ONE_URL`` is used instead; if this environmental variable is
+  unset, the default value ``http://localhost:2633/RPC2`` is used (as
+  of ONE version 5.6.1 this is the default used by command-line
+  utilities like ``onevm``).
+
+``username``
+  User name to use for authenticating to the OpenNebula server.  If
+  not given, the value of the environment variable ``ONE_USERNAME`` is
+  used instead.  If that enviromental variable is unset or the empty
+  string, then read the *username:password* pair from the file pointed
+  to by env. var. ``ONE_AUTH`` or from OpenNebula's default
+  ``~/.one/one_auth``.
+
+``password``
+  Password to use for authenticating to the OpenNebula server.  If
+  not given, the value of the environment variable ``ONE_PASSWORD`` is
+  used instead.
+
+Since all keys are optional, the minimal useful configuration for
+using OpenNebula is the following::
+
+  [cloud/one]
+  provider=opennebula
+
+All the actual settings (URL endpoint, username, password) will be
+taken from the environment.
 
 
 Examples
@@ -1099,6 +1139,47 @@ node-level section take precedence over cluster-wide ones.
    e.g. to use fewer resources on the frontend nodes than on the
    compute nodes.
 
+   In *OpenNebula*, the ``flavor=`` line allows specifying the
+   characteristics of a VM in detail -- in fact, ``flavor=`` can
+   override almost any setting of a VM template.
+
+   In the simplest case, you can use an OpenNebula template ID or name
+   as specification of the flavor: ``flavor=20`` and
+   ``flavor=Ubuntu18.04`` are both valid ways of telling ElastiCluster
+   that VMs should be created from a VM template (with no additional
+   modification).
+
+   .. note::
+
+      ElastiCluster will still override the ONE template settings
+      regarding network and disk image with what is specified in the
+      configuration file.  In other words, e.g. if you're using a
+      template named *Ubuntu18.04* but specify an ``image_id``
+      corresponding to a CentOS boot disk, ElastiCluster will start a
+      CentOS VM.
+
+   You can then override any setting in the chosen OpenNebula VM
+   template by appending *key:value* pairs to the template identifier,
+   separated by a comma.  For example,
+   ``flavor=20,cpu:2.0,memory:4096`` will use the template with ID 20
+   as a base but override OpenNebula's CPU and MEMORY options with the
+   values ``2.0`` and ``4096`` respectively.  It is possible to
+   override one value in a vector-value template key (e.g., ``DISK``)
+   by using a dot ``.`` to separate the container name from the
+   attribute name: e.g., ``flavor=Ubuntu18.04,disk.size:8000`` will
+   start a VM off the template named ``Ubuntu18.04`` but ensure that
+   the boot disk is 8000MB large. Consult `OpenNebula VM templates
+   documentation`__ to know what key:value pairs can be specified and
+   what their effect is.
+
+   .. __: http://docs.opennebula.org/5.6/operation/references/template.html
+
+   Finally, you can omit the template specification altogether and
+   just give the minimal set of keys to fully specify a VM.  For
+   instance, ``flavor=cpu:1,vcpu:4,memory:8192,disk.size:20000`` will
+   try to start a VM with 4 virtual CPU slots (mapped to 1 physical
+   CPU), 8GiB of RAM, and 20000MB of disk.
+
 ``image_id``
    Disk image ID to use as a base for all VMs in this cluster
    (unless later overridden for a class of nodes, see below).  Actual
@@ -1114,6 +1195,13 @@ node-level section take precedence over cluster-wide ones.
    * For Google Compute Engine you can also use a URL of a private
      image; run ``gcloud compute images describe
      <your_image_name>``:file: to show the selfLink URL to use.
+
+   * For OpenNebula, you can use either numerical IDs
+     (e.g. ``image_id=20`` to use the image with ID 20), or specify an
+     image name as *username*/*image name* (e.g.,
+     ``image_id=oneadmin/Ubuntu16.04``).  You can omit the
+     ``username/`` prefix in case the image is owned by the user
+     you're connecting to ONE as.
 
    * OpenStack uses UUIDs
      (e.g. `2bf3baba-35c8-4e20-9cc9-b36808720c9b`); use command

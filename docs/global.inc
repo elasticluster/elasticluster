@@ -49,6 +49,7 @@
 .. _Lmod: http://lmod.readthedocs.io/en/latest/
 .. _Lua: http://www.lua.org/
 .. _`mailing-list`: https://groups.google.com/forum/#!forum/elasticluster
+.. _`OpenNebula`: https://opennebula.org/
 .. _`OpenStack`: http://www.openstack.org/
 .. _`OrangeFS`: http://orangefs.org/
 .. _`PBSPro`: https://www.pbspro.org/
