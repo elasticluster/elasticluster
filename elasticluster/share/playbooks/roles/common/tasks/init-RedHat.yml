@@ -51,6 +51,7 @@
     update_cache: yes
     # Very slow, especially with dkms/nvidia, and not useful for first boot.
     exclude: "kernel*"
+  when: 'upgrade_packages|default(True)|bool'
 
 
 - name: Provide workaround for https://github.com/ansible/ansible-modules-core/issues/4472
