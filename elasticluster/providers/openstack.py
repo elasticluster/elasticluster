@@ -480,6 +480,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         """
         self._init_os_api()
 
+        max_wait = int(kwargs.get('max_wait', 300))
+
         vm_start_args = {}
 
         if self.availability_zone:
@@ -549,13 +551,18 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 volume_type=kwargs.pop('boot_disk_type'))
 
             # wait for volume to come up
-            volume_available = False
-            while not volume_available:
+            waited = 0
+            while waited < max_wait:
                 volumes = self._get_volumes()
                 if (volume_name in volumes
                     and volumes[volume_name].status == 'available'):
                         break
                 sleep(1)  # FIXME: hard-coded waiting time
+                waited += 1
+            if waited >= max_wait:
+                raise RuntimeError(
+                    "Volume `{0}` (ID: {1}) didn't come up in {2:d} seconds"
+                    .format(volume_name, volume.id, max_wait))
 
             # ok, use volume as VM disk
             vm_start_args['block_device_mapping'] = {
@@ -622,7 +629,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
             # wait for server to come up (otherwise floating IP can't be associated)
             log.info("Waiting for VM instance `%s` (%s) to come up ...", node_name, vm.id)
-            max_wait = int(kwargs.get('max_wait', 300))
             waited = 0
             while waited < max_wait:
                 if vm.status == 'ACTIVE':
@@ -636,7 +642,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 # FIXME: Configurable poll interval
                 sleep(3)
                 waited += 3
-            else:
+            if waited >= max_wait:
                 raise RuntimeError(
                     "VM {0} didn't come up in {1:d} seconds"
                     .format(vm.id, max_wait))
