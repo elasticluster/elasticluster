@@ -529,7 +529,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         if 'boot_disk_size' in kwargs:
             # check if the backing volume is already there
             volume_name = '{name}-{id}'.format(name=node_name, id=image_id)
-            if volume_name in [v.name for v in self._get_volumes()]:
+            if volume_name in self._get_volumes():
                 raise ImageError(
                     "Volume `{0}` already exists in project `{1}` of cloud {2}"
                     .format(volume_name, self._os_tenant_name, self._os_auth_url))
@@ -551,9 +551,9 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             # wait for volume to come up
             volume_available = False
             while not volume_available:
-                for v in self._get_volumes():
-                    if v.name == volume_name and v.status == 'available':
-                        volume_available = True
+                volumes = self._get_volumes()
+                if (volume_name in volumes
+                    and volumes[volume_name].status == 'available'):
                         break
                 sleep(1)  # FIXME: hard-coded waiting time
 
@@ -1016,7 +1016,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     def _get_volumes(self):
         """Return list of available volumes."""
         self._init_os_api()
-        return self.cinder_client.volumes.list()
+        return dict((volume.name, volume)
+                    for volume in self.cinder_client.volumes.list())
 
     @memoize(120)
     def _get_flavors(self):
