@@ -128,7 +128,7 @@ setup(
         'click>=4.0',  ## click.prompt() added in 4.0
         'coloredlogs',
         'netaddr',
-        'paramiko',
+        'paramiko>=2.7',  ## see issue #647
         'schema',
         'subprocess32',  ## stdlib subprocess but correct under multithreading
         # Azure cloud
