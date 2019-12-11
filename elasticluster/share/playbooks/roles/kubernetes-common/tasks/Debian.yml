@@ -1,15 +1,25 @@
 ---
 
-- name: Add Google key to apt
+- name: Add Google key to APT
   apt_key:
     url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
     state: present
 
-- name: Add Kubernetes apt repo
+- name: Add Kubernetes APT repo
   apt_repository:
     repo: 'deb http://apt.kubernetes.io/ kubernetes-{{ansible_distribution_release|lower}} main'
     filename: kubernetes
     state: present
+  when: not is_ubuntu_bionic
+
+# as of 2019-12-11, Ubuntu 18.04 "bionic" does not yet have its own
+# K8s package repository, so use the ones from Ubuntu 16.04 "xenial"
+- name: Add Kubernetes APT repo (Ubuntu 18.04)
+  apt_repository:
+    repo: 'deb http://apt.kubernetes.io/ kubernetes-xenial main'
+    filename: kubernetes
+    state: present
+  when: is_ubuntu_bionic
 
 - name: Install packages (latest version)
   apt:
