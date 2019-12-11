@@ -35,8 +35,9 @@
 
 - name: Enable and start kubeadm services
   service:
-    name:
-      - docker
-      - kubelet
+    name: '{{ item }}'
     enabled: true
     state: started
+  loop:
+    - docker
+    - kubelet
