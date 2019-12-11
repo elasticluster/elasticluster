@@ -15,7 +15,6 @@
 - name: Install kubeadm packages
   yum:
     name:
-      - docker
       - kubelet
       - kubeadm
       - kubectl
