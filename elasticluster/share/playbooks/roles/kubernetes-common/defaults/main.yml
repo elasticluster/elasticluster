@@ -1,4 +1,4 @@
-kubernetes_version:
-  apt:
-    label: 1.10.2-00
-    install: false
+---
+
+# what version of K8s to actually install
+kubernetes_version: latest

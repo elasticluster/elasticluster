@@ -11,7 +11,7 @@
     filename: kubernetes
     state: present
 
-- name: Install packages
+- name: Install packages (latest version)
   apt:
     name:
       - docker.io
@@ -21,17 +21,18 @@
       - kubernetes-cni
     state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
-  when: not kubernetes_version.apt.install
+  when: 'kubernetes_version == "latest"'
 
-- name: Install packages - fixed version
+- name: Install packages (specific version)
   apt:
     name:
       - docker.io
-      - kubelet={{ kubernetes_version.apt.label }}
-      - kubeadm={{ kubernetes_version.apt.label }}
-      - kubectl={{ kubernetes_version.apt.label }}
+      - kubelet={{ kubernetes_version }}
+      - kubeadm={{ kubernetes_version }}
+      - kubectl={{ kubernetes_version }}
+    state: '{{ pkg_install_state }}'
     allow_unauthenticated: '{{ insecure_https_downloads|default("no")|bool }}'
-  when: kubernetes_version.apt.install
+  when: 'kubernetes_version != "latest"'
 
 - name: Enable and start kubeadm services
   service:
