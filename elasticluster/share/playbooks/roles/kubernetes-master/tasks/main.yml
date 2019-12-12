@@ -6,7 +6,8 @@
   ignore_errors: True
 
 - name: Initialize Kubernetes master
-  command: kubeadm init --pod-network-cidr={{kubernetes_network}}
+  command: |
+    kubeadm init --pod-network-cidr={{kubernetes_network}} --service-cidr={{kubernetes_service_network}}
   when: "'failed' in token_list_result.stderr"
 
 - name: Waiting for configuration to become available

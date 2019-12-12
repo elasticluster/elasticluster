@@ -2,6 +2,7 @@
 
 kubernetes_default_networking: flannel
 kubernetes_network: 10.244.0.0/16
+kubernetes_service_network: 10.96.0.0/12
 
 # Flannel network works on amd64, arm, arm64 and ppc64le platform
 # see https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/#instructions
