@@ -24,7 +24,6 @@
 - name: Install packages (latest version)
   apt:
     name:
-      - docker.io
       - kubelet
       - kubeadm
       - kubectl
@@ -36,7 +35,6 @@
 - name: Install packages (specific version)
   apt:
     name:
-      - docker.io
       - kubelet={{ kubernetes_version }}
       - kubeadm={{ kubernetes_version }}
       - kubectl={{ kubernetes_version }}
