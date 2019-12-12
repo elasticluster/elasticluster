@@ -29,6 +29,7 @@
 .. _EasyBuild: http://easybuild.readthedocs.io/
 .. _`elasticluster`: http://gc3-uzh-ch.github.io/elasticluster/
 .. _`EPEL`: https://fedoraproject.org/wiki/EPEL
+.. _`flannel`: https://github.com/coreos/flannel
 .. _`example configuration file`: https://github.com/gc3-uzh-ch/elasticluster/raw/master/elasticluster/share/etc/config.template
 .. _`Ganglia`: http://ganglia.info
 .. _`github elasticluster page`: https://github.com/gc3-uzh-ch/elasticluster

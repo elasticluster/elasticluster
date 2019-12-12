@@ -574,21 +574,30 @@ Kubernetes
 
 Supported on:
 
-* Ubuntu 16.04
+* Ubuntu 16.04, 18.04
 * RHEL/CentOS 7.x
 
-This playbook installs the `Kubernetes`_ container management system on each host.
-It is configured using kubeadm. Currently only 1 master node is supported.
+This playbook installs the `Kubernetes`_ container management system
+on each host.  It is configured using ``kubeadm``; `flannel`_ is used
+for networking.  Currently only 1 node is supported in the control
+plane.
+
++-----------------------+------------------------------+
+| ansible groups        | role                         |
++=======================+==============================+
+|``kubernetes_master``  | Host in control plane.       |
+|                       | (Only 1 allowed.)            |
++-----------------------+------------------------------+
+|``kubernetes_worker``  | Act as execution host only.  |
++-----------------------+------------------------------+
 
 To force the playbook to run, add the Ansible group ``kubernetes``. The
-following example configuration sets up a kubernetes cluster using 1
-master and 2 worker nodes, and additionally installs flannel for the networking
-(canal is also available)::
+following example configuration example sets up a kubernetes cluster using 1
+master and 2 worker nodes::
 
     [cluster/kubernetes]
     master_nodes=1
-    worker_nodes=2
-    ssh_to=master
+    worker_nodes=4
     setup_provider=kubernetes
     # ...
 
@@ -597,8 +606,26 @@ master and 2 worker nodes, and additionally installs flannel for the networking
     worker_groups=kubernetes_worker
     # ...
 
-SSH into the cluster and execute 'sudo kubectl --kubeconfig
-/etc/kubernetes/admin.conf get nodes' to view the cluster.
+SSH into the cluster and execute ``sudo kubectl --kubeconfig
+/etc/kubernetes/admin.conf get nodes`` to view the cluster.
+
+The following variables can be used to change the version of the
+installed software:
+
+.. list-table:: Kubernetes optional settings
+   :widths: 30 20 50
+   :header-rows: 1
+
+   * - Variable
+     - Default value
+     - Description
+   * - ``kubernetes_version``
+     - ``latest``
+     - Version of the Kubernetes packages to install; packages are
+       always installed from ``apt.kubernetes.io``.  The version
+       string should either match the version of a set of packages in
+       the repository, or be the special string ``latest`` (default),
+       which installs the latest version available on the repository.
 
 
 PBSPro
