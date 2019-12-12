@@ -23,6 +23,29 @@
     dest: '/etc/docker/daemon.json'
 
 
+- name: 'Check if a default system environment file exists'
+  stat:
+    path: '/etc/environment'
+  register: _etc_environment
+  ignore_errors: yes
+
+
+- name: 'Create systemd override directory for `docker.service`'
+  file:
+    path: '/etc/systemd/system/docker.service.d'
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+
+- name: 'Ensure Docker daemon loads the default system environment'
+  copy:
+    src: 'etc/systemd/system/docker.service.d/override.conf'
+    dest: '/etc/systemd/system/docker.service.d/override.conf'
+  when: _etc_environment.stat.exists
+
+
 - name: 'Install Docker Community Edition'
   apt:
     name:
