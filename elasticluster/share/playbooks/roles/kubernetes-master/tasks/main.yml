@@ -22,4 +22,5 @@
   shell: kubeadm token list | awk 'NR==2{print $1}'
   register: token_result
 
-- set_fact: token={{token_result.stdout_lines}}
+- set_fact:
+    token: '{{token_result.stdout_lines}}'
