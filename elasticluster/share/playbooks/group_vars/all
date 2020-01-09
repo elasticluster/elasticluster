@@ -35,10 +35,12 @@ is_debian_10_or_later: "{{ is_debian and ansible_distribution_major_version|int 
 is_rhel5_compatible: "{{ is_rhel_compatible and ansible_distribution_major_version|int == 5 }}"
 is_rhel6_compatible: "{{ is_rhel_compatible and ansible_distribution_major_version|int == 6 }}"
 is_rhel7_compatible: "{{ is_rhel_compatible and ansible_distribution_major_version|int == 7 }}"
+is_rhel8_compatible: "{{ is_rhel_compatible and ansible_distribution_major_version|int == 8 }}"
 
 # RHEL family release ranges
 is_rhel6_or_later_compatible: "{{ is_rhel_compatible and ansible_distribution_major_version|int >= 6 }}"
 is_rhel7_or_later_compatible: "{{ is_rhel_compatible and ansible_distribution_major_version|int >= 7 }}"
+is_rhel8_or_later_compatible: "{{ is_rhel_compatible and ansible_distribution_major_version|int >= 8 }}"
 
 
 # Ubuntu releases by codename
