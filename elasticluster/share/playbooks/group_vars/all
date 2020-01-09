@@ -15,17 +15,20 @@ is_debian_or_ubuntu: "{{ is_debian or is_ubuntu }}"
 is_debian_wheezy:  "{{ is_debian and ansible_distribution_release == 'wheezy' }}"
 is_debian_jessie:  "{{ is_debian and ansible_distribution_release == 'jessie' }}"
 is_debian_stretch: "{{ is_debian and ansible_distribution_release == 'stretch' }}"
+is_debian_buster: "{{ is_debian and ansible_distribution_release == 'buster' }}"
 is_debian_sid:     "{{ is_debian and ansible_distribution_release == 'sid' }}"
 
 # Debian releases by version
 is_debian_7: "{{ is_debian and ansible_distribution_major_version|int == 7 }}"
 is_debian_8: "{{ is_debian and ansible_distribution_major_version|int == 8 }}"
 is_debian_9: "{{ is_debian and ansible_distribution_major_version|int == 9 }}"
+is_debian_10: "{{ is_debian and ansible_distribution_major_version|int == 10 }}"
 
 # Debian release ranges
 is_debian_7_or_later: "{{ is_debian and ansible_distribution_major_version|int >= 7 }}"
 is_debian_8_or_later: "{{ is_debian and ansible_distribution_major_version|int >= 8 }}"
 is_debian_9_or_later: "{{ is_debian and ansible_distribution_major_version|int >= 9 }}"
+is_debian_10_or_later: "{{ is_debian and ansible_distribution_major_version|int >= 10 }}"
 
 
 # RHEL family releases by version
