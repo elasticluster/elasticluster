@@ -1,15 +1,17 @@
 ---
 
-- name: Set R common playbook params (Ubuntu)
+- name: Set R base packages list (Debian/Ubuntu)
   set_fact:
+    # only list core packages here; packages for MPI and parallel
+    # execution are installed in `rmpi.yml` using R's
+    # `install.packages()` because the `r-cran-*` DEB packages in
+    # Debian/Ubuntu may have a dependency on the OS-provided R package
+    # (e.g., `r-api-3.4`) and be incompatible with the DEB packages
+    # provided in the CRAN repositories.
     r_packages:
       - r-base
       - r-base-dev
       - r-recommended
-      # support parallel execution
-      - r-cran-rmpi
-      - r-cran-snow
-      - r-cran-dosnow
       # dependency packages for Jupyter's IRkernel,
       # see: https://irkernel.github.io/installation/#source-panel
       - libzmq3-dev
@@ -19,27 +21,18 @@
       # more dependency packages, notes from CSCS' workshop on Spark
       - libssl-dev
       - libcurl4-openssl-dev
-    r_packages_repo: 'deb {{r_cran_mirror_url}}/bin/linux/ubuntu {{ansible_distribution_release}}/'
+
+
+- name: Set R repository params (Ubuntu)
+  set_fact:
+    r_packages_repo: 'deb {{r_cran_mirror_url}}/bin/linux/ubuntu {{ansible_distribution_release}}-cran35/'
     r_packages_keyserver: keyserver.ubuntu.com
     r_packages_signing_key: 'E298A3A825C0D65DFD57CBB651716619E084DAB9'
   when: is_ubuntu
 
 
-- name: Set R common playbook params (Debian)
+- name: Set R repository params (Debian)
   set_fact:
-    r_packages:
-      - r-base
-      - r-base-dev
-      - r-recommended
-      # dependency packages for Jupyter's IRkernel,
-      # see: https://irkernel.github.io/installation/#source-panel
-      - libzmq3-dev
-      # more dependencies, as appear in R pkg compile logs
-      - libssh2-1-dev
-      - libxml2-dev
-      # more dependency packages, notes from CSCS' workshop on Spark
-      - libssl-dev
-      - libcurl4-openssl-dev
     r_packages_repo: 'deb {{r_cran_mirror_url}}/bin/linux/debian {{ansible_distribution_release}}-cran35/'
     r_packages_keyserver: keys.gnupg.net
     r_packages_signing_key: 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
@@ -63,12 +56,8 @@
   when: use_proxy
 
 
-# this is run as task and not as a handler, since handlers are all
-# executed after *all* tasks in the play have run, and we need the
-# package cache to be up-to-date immediately for subsequent install
-# tasks to succeed...
-- name: update APT cache
-  apt:
+- name: add CRAN repository
+  apt_repository:
+    repo: '{{r_packages_repo}}'
+    state: present
     update_cache: yes
-    cache_valid_time: 86400
-    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'

@@ -1601,8 +1601,8 @@ R language
 
 Supported on:
 
-* Ubuntu 16.04, 14.04
-* Debian 8 ("jessie"), 9 ("stretch")
+* Ubuntu 18.04, 16.04, 14.04
+* Debian 10 ("buster"), 9 ("stretch"), 8 ("jessie")
 * CentOS 6.x and 7.x
 
 ==============  =======================================================
@@ -1612,10 +1612,10 @@ Ansible group   Action
                 for the GNU `R language`_ and statistical system.
 ==============  =======================================================
 
-This playbook installs the `R language`_ interpreter and a few
-additional libraries.  R binaries installed by ElastiCluster come from
-3rd-party repositories which (normally) provide more up-to-date
-releases compared to the OS packages.
+This playbook installs the `R language`_ interpreter (version 3.5) and
+a few additional libraries.  R binaries installed by ElastiCluster
+come from 3rd-party repositories which (normally) provide more
+up-to-date releases compared to the OS packages.
 
 The following extra variables can be set to control installation of
 additional R libraries:
