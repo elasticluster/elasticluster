@@ -1,0 +1,9 @@
+---
+
+# Release number of OpenCPU Server to install.  This is the version
+# number that follows the package repository name (as in
+# `opencpu-2.1`), the actual release of OpenCPU that will be installed
+# depends on the contents of that repository.  As of this writing (Jan
+# 2020), versions available at https://launchpad.net/~opencpu are:
+# 1.6, 2.0, and 2.1
+opencpu_version: '2.1'

@@ -1,0 +1,7 @@
+---
+- name: OpenCPU Server
+  hosts: opencpu
+  roles:
+    - opencpu
+  tags:
+    - opencpu

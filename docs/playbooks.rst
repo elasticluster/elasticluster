@@ -1596,6 +1596,28 @@ JupyterHub stand-alone server can be found at:
 `<https://github.com/gc3-uzh-ch/elasticluster/blob/master/examples/jupyterhub-on-google.conf>`_
 
 
+OpenCPU
+-------
+
+Supported on:
+
+* Ubuntu 16.04, 18.04
+
+==============  =======================================================
+Ansible group   Action
+==============  =======================================================
+``opencpu``     Install `OpenCPU`_ server.
+==============  =======================================================
+
+This playbook installs the `OpenCPU`_ server; OpenCPU "provides a
+reliable and interoperable `HTTP API
+<https://www.opencpu.org/api.html>`_ for data analysis based on R".
+
+The `R language`_ (see below) is installed as a dependency of OpenCPU;
+you can use any of the node variables described below to control and
+customize the installation of R.
+
+
 R language
 ----------
 

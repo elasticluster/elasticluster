@@ -1,0 +1,47 @@
+---
+# Installation instructions from:
+# https://www.opencpu.org/download.html
+
+
+- name: Check playbook compatibility with host platform
+  fail:
+    msg: "OpenCPU installation only works on Ubuntu 16.04+ presently."
+  when: not is_ubuntu_16_04_or_later
+
+
+- name: Add APT repository for OpenCPU
+  apt_repository:
+    repo: 'ppa:opencpu/opencpu-{{ opencpu_version }}'
+    state: present
+  when: not use_proxy
+
+
+# Ansible's `apt_repository` module will automatically download and
+# add the repo's signing key, which doesn't work when access needs to
+# be through a proxy, so use a separate stanza to preload it
+- block:
+    - name: Add signing key for OpenCPU PPA repository (through proxy server)
+      command: |
+        apt-key adv --keyserver-options http-proxy={{ proxy_url }} --keyserver hkp://keyserver.ubuntu.com:80 --recv C7DFE73954AB5F1485B1CDBD4242737E1C226BE8
+    - name: Add sources for OpenCPU PPA repository
+      apt_repository:
+        repo: 'deb http://ppa.launchpad.net/opencpu/opencpu-{{ opencpu_version }}/ubuntu {{ ansible_distribution_release }} main'
+        state: present
+        update_cache: yes
+  when: use_proxy
+
+
+- name: Install OpenCPU package
+  package:
+    name: opencpu-server
+    state: '{{ pkg_install_state }}'
+
+
+- name: Ensure OpenCPU/Apache is (re)started at boot
+  service:
+    name: '{{ item }}'
+    enabled: yes
+    state: started
+  loop:
+    - 'apache2.service'
+    - 'cleanocpu.timer'
