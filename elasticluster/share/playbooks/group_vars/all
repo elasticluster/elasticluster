@@ -96,6 +96,10 @@ init_is_systemd: "{{ ansible_service_mgr == 'systemd' }}"
 init_is_upstart: "{{ ansible_service_mgr == 'upstart' }}"
 
 
+# ElastiCluster global variables
+use_proxy: "{{ proxy_url|default('') != '' }}"
+
+
 # Local variables:
 #   mode: yaml
 # End:

@@ -15,13 +15,14 @@
   - name: Download GlusterFS package signing key
     get_url:
       url: 'https://download.gluster.org/pub/gluster/glusterfs/{{glusterfs_version}}/rsa.pub'
-      dest: '/root/glusterfs.pub'
+      dest: '/root/glusterfs.key'
       validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
     become: yes
     become_user: root
   - name: Add GlusterFS package signing key
-    command:
-      /usr/bin/apt-key add /root/glusterfs.pub
+    apt_key:
+      file: '/root/glusterfs.key'
+      state: present
     become: yes
     become_user: root
   - name: add GlusterFS package repository (Debian)

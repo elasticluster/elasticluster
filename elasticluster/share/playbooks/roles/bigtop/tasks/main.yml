@@ -6,9 +6,16 @@
   when: not is_debian_or_ubuntu
 
 
-- name: add signing key for Apache Bigtop repository
-  apt_key:
+- name: Download signing key for Apache Bigtop repository
+  get_url:
     url: "{{ bigtop_mirror }}/bigtop/bigtop-{{ bigtop_release }}/repos/GPG-KEY-bigtop"
+    dest: /root/bigtop.key
+    validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
+
+
+- name: Add signing key for Apache Bigtop repository
+  apt_key:
+    file: /root/bigtop.key
     state: present
 
 

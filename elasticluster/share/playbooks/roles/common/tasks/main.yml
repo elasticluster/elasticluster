@@ -1,6 +1,9 @@
 ---
 
 - include_tasks: pre.yml
+- include_role:
+    name: use-proxy
+  when: use_proxy
 - include_tasks: 'init-{{ansible_os_family}}.yml'
 - include_tasks: hosts.yml
   vars:

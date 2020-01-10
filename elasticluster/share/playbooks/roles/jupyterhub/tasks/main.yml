@@ -21,12 +21,20 @@
     - /etc/jupyterhub
     - /var/lib/jupyterhub
 
-- name: Nodejs apt signing key
-  apt_key:
+# Ansible's `apt_key` module ignores proxy settings (see issue #31691)
+# so we need to first download the key file and *then* add it
+- name: Download Nodejs APT signing key
+  get_url:
     url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+    dest: /root/nodesource.gpg.key
+    validate_certs: '{{ not insecure_https_downloads|default("no")|bool }}'
+
+- name: Add Nodejs APT signing key
+  apt_key:
+    file: /root/nodesource.gpg.key
     state: present
 
-- name: Nodejs apt repo
+- name: Add Nodejs APT repo
   apt_repository:
     repo: deb https://deb.nodesource.com/node_8.x {{ansible_distribution_release}} main
     state: present

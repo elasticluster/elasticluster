@@ -1,0 +1,26 @@
+---
+
+# see https://askubuntu.com/a/664806/325
+# for how to set proxy system-wide
+- name: Use proxy for HTTP/FTP access
+  lineinfile:
+    path: /etc/environment
+    line: "{{ item }}_proxy={{ proxy_url }}"
+    state: present
+    create: yes
+  loop:
+    - ftp
+    - http
+    - https
+
+
+# NOTE: CIDR syntax for the `no_proxy` variable is an extension; the
+# original specification for `no_proxy` only supports DNS domain names
+# and not IP addresses; however, both `wget`, `curl`, and Go programs
+# seem to support it.
+- name: No proxy for local domains and private networks
+  lineinfile:
+    path: /etc/environment
+    line: "no_proxy=localhost,127.0.0.1,169.254.169.254,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+    state: present
+    create: yes

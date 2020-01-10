@@ -12,6 +12,17 @@
   apt_key:
     keyserver: keyserver.ubuntu.com
     id: '{{cuda_apt_key}}'
+  when: not use_proxy
+
+
+# Ansible's `apt_key` module ignores proxy settings (see issue #31691)
+# so we need to resort to manual invocation of the `apt-key adv` in
+# order to add `--keyserver-options http-proxy=...`; see
+# https://github.com/ansible/ansible/issues/31691#issuecomment-357068590
+- name: Add signing key for CUDA repository (through proxy server)
+  command: |
+    apt-key adv --keyserver-options http-proxy={{ proxy_url }} --keyserver hkp://keyserver.ubuntu.com:80 --recv {{cuda_apt_key}}
+  when: use_proxy
 
 
 - name: Set auxiliary variables

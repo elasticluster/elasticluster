@@ -90,6 +90,16 @@ Variable name                      Default             Description
                                                        class will be assigned the role of the YP master
                                                        server; additional nodes in the "master" class
                                                        (if any) will be YP slave servers.
+``proxy_url``                      none                If this is set to a non-empty value
+                                                       (e.g., ``http://proxy.example.com:3128/``),
+                                                       ElastiCluster configures all VMs to route HTTP(S)
+                                                       and FTP requests through this proxy host.
+                                                       This can be useful when running behind a firewall,
+                                                       or when the VMs have a private IPv4 address,
+                                                       or simply when you have access to a caching proxy
+                                                       (which can speed up downloading the same file from
+                                                       many hosts).  By default, no proxy is used and
+                                                       direct HTTP/FTP connections are attempted.
 ``ssh_password_auth``              yes                 Allow users to log in via SSH by providing a
                                                        password. **Note:** the default in ElastiCluster
                                                        is the opposite of what all major GNU/Linux
