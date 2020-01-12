@@ -1166,7 +1166,7 @@ The following variables may be set to alter the role behavior:
      - ``2019.10``
      - Version of the Anaconda Python distribution to install
    * - ``anaconda_python_version``
-     - ``2``
+     - ``3``
      - Anaconda comes with either a Python2 or a Python3 interpreter
        -- choose which one you want here.
    * - ``anaconda_in_path``
