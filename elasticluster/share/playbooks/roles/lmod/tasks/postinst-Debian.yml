@@ -50,3 +50,13 @@
     - { dest: "/etc/profile.d/z80_StdEnv.sh",      src: "etc/profile.d/z80_StdEnv.sh.j2" }
     - { dest: "/etc/csh/login.d/lmod.csh",         src: "etc/profile.d/lmod.csh.j2" }
     - { dest: "/etc/csh/login.d/z80_StdEnv.csh",   src: "etc/profile.d/z80_StdEnv.csh.j2" }
+
+
+# See: https://bugs.launchpad.net/ubuntu/+source/lua-posix/+bug/1752082
+# and especially comments #3 and and #6
+- name: Fix Ubuntu bug #1752082
+  file:
+    state: link
+    src: '/usr/lib/x86_64-linux-gnu/lua/5.2/posix_c.so'
+    dest: '/usr/lib/x86_64-linux-gnu/lua/5.2/posix.so'
+  when: is_ubuntu_18_04
