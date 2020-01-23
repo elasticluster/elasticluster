@@ -692,7 +692,7 @@ class Cluster(Struct):
         # finding all node groups with an unsatisfied amount of nodes
         unsatisfied = 0
         for kind, required in min_nodes.items():
-            available = len(self.nodes[kind])
+            available = len(self.nodes.get(kind, []))
             if available < required:
                 log.error(
                     "Not enough nodes of kind `%s`:"
