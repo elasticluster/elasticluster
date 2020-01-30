@@ -41,20 +41,20 @@
         {{ localssd_all_devices|join(" ") }}
   args:
     creates: '/dev/md/google-local-ssd'
-  when: 'localssd_all_devices_count > 0'
+  when: 'localssd_all_devices_count|int > 0'
 
 - name: Format RAID0 device
   filesystem:
     dev: '/dev/md/google-local-ssd'
     fstype: ext4
     opts: '-m 0 -L /srv/google-local-ssd'
-  when: 'localssd_all_devices_count > 0'
+  when: 'localssd_all_devices_count|int > 0'
 
 - name: Make mountpoint
   file:
     dest: '/srv/google-local-ssd'
     state: directory
-  when: 'localssd_all_devices_count > 0'
+  when: 'localssd_all_devices_count|int > 0'
 
 - name: Mount local SSD filesystem
   mount:
@@ -63,4 +63,4 @@
     state: mounted
     fstype: ext4
     opts: 'rw,nofail'
-  when: 'localssd_all_devices_count > 0'
+  when: 'localssd_all_devices_count|int > 0'
