@@ -8,7 +8,7 @@
 # modified under the same conditions as ElastiCluster.
 #
 
-FROM python:2.7-slim
+FROM python:2.7-alpine
 
 
 # Prepare the image:
@@ -26,6 +26,7 @@ VOLUME /home/.elasticluster
 # Copy ElastiCluster sources
 COPY ./ /home
 
+# TODO: clean the following comments
 
 # Install ElastiCluster
 #
@@ -39,33 +40,28 @@ COPY ./ /home
 # 3. cleanup and remove software used for installation to get a leaner image
 #
 WORKDIR /home
-RUN : \
-    && apt-get update \
-    && apt-get install --yes --no-install-recommends \
-           ca-certificates \
+
+
+# install ca-certificates so that HTTPS works consistently
+# the other runtime dependencies for Python are installed later
+
+RUN set -ex \
+    && apk update \
+    && apk add --no-cache ca-certificates \
+    && apk update \
+    && apk add --no-cache --virtual .fetch-deps\
            curl \
            g++ \
            gcc \
-           libc6 libc6-dev \
-           libexpat1 libexpat1-dev \
-           libffi6 libffi-dev \
-           libssl1.1 libssl-dev \
+           libc-dev \
+           expat expat-dev \
+           libffi libffi-dev \
+           libssl1.1 openssl-dev \
            make \
            openssh-client \
     && pip install -e . \
     && rm -rf /home/.cache \
-    && apt-get remove --purge -y \
-           make \
-           g++ \
-           gcc \
-           libc6-dev \
-           libexpat1-dev \
-           libffi-dev \
-           libssl-dev \
-    && apt-get autoremove --yes \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /var/cache/apt/* \
-    && rm -rf /var/cache/debconf/*.dat-old \
+    && apk del .fetch-deps \
     ;
 
 
