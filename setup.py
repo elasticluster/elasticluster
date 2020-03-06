@@ -86,7 +86,7 @@ setup(
     author_email="riccardo.murri@gmail.com",
     license="LGPL",
     keywords="cloud openstack amazon ec2 ssh hpc gridengine torque slurm batch job elastic",
-    url="https://github.com/gc3-uzh-ch/elasticluster",
+    url="https://elasticluster.readthedocs.io/",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",

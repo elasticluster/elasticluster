@@ -9,7 +9,7 @@
 # http://elasticluster.readthedocs.io/en/latest/configure.html
 #
 # A set of commented examples can be found at:
-# https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples
+# https://github.com/elasticluster/elasticluster/tree/master/examples
 
 
 # Cloud Section
@@ -33,7 +33,7 @@
 # --------
 #
 # A larger set of commented examples can be found at:
-# https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples
+# https://github.com/elasticluster/elasticluster/tree/master/examples
 #
 
 # The following example should be easy to adapt to any OpenStack-based
@@ -99,7 +99,7 @@ provider=google
 # --------
 #
 # A larger set of commented examples can be found at:
-# https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples
+# https://github.com/elasticluster/elasticluster/tree/master/examples
 #
 
 # For a typical ubuntu machine, both on Amazon and most OpenStack
@@ -148,7 +148,7 @@ user_key_public=~/.ssh/google_compute_engine.pub
 # --------
 #
 # A larger set of commented examples can be found at:
-# https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples
+# https://github.com/elasticluster/elasticluster/tree/master/examples
 #
 
 # a `setup` section is mostly independent of any other
@@ -199,7 +199,7 @@ global_var_multiuser_cluster=yes
 # --------
 #
 # A larger set of commented examples can be found at:
-# https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples
+# https://github.com/elasticluster/elasticluster/tree/master/examples
 #
 
 # a simple example, running a SoGE cluster on GCE

@@ -2,7 +2,7 @@
 #
 # Copyright (c) 2018 Riccardo Murri <riccardo.murri@gmail.com>
 # Originally contributed by Hatef Monajemi, 2017
-# (see https://github.com/gc3-uzh-ch/elasticluster/pull/504#issuecomment-343693251)
+# (see https://github.com/elasticluster/elasticluster/pull/504#issuecomment-343693251)
 #
 # This file is part of ElastiCluster.  It can be distributed and
 # modified under the same conditions as ElastiCluster.

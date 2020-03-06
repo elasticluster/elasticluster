@@ -3,7 +3,7 @@
 # Seamless interface to Run ElastiCluster in a Docker image.
 # Tries to install Docker if it cannot be found.
 #
-# Copyright (c) 2018, 2019 Riccardo Murri <riccardo.murri@gmail.com>
+# Copyright (c) 2018, 2019, 2020 Riccardo Murri <riccardo.murri@gmail.com>
 #
 # This file is part of ElastiCluster.  It can be distributed and
 # modified under the same conditions as ElastiCluster.
@@ -262,7 +262,7 @@ for arg in "$@"; do
     if [ "$arg" = 'sftp' ]; then
         die $EX_SOFTWARE <<__EOF__
 ElastiCluster's 'sftp' command cannot be run in a Docker container.
-Please see https://github.com/gc3-uzh-ch/elasticluster/issues/576
+Please see https://github.com/elasticluster/elasticluster/issues/576
 for an explanation and possible workarounds.
 __EOF__
     fi

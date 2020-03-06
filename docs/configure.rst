@@ -302,7 +302,7 @@ Valid configuration keys for ``azure``
       All the warnings about ``vm_deployment_template`` apply here as
       well.
 
-.. _`default ARM template`: https://github.com/gc3-uzh-ch/elasticluster/blob/master/elasticluster/share/etc/azure_vm_template.json
+.. _`default ARM template`: https://github.com/elasticluster/elasticluster/blob/master/elasticluster/share/etc/azure_vm_template.json
 .. _`API profile *2018-03-01-hybrid*`: https://docs.microsoft.com/en-us/azure-stack/user/azure-stack-profiles-azure-resource-manager-versions#overview-of-2018--03-01-hybrid
 
 
@@ -658,7 +658,7 @@ you can configure the following::
     password=**** YOUR PASSWORD ****
 
 A larger set of commented examples can be found at:
-`<https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples>`_
+`<https://github.com/elasticluster/elasticluster/tree/master/examples>`_
 
 
 Login Section
@@ -765,7 +765,7 @@ VM so you effectively re-use the same `[login/google]` section across
 different VM images.
 
 A larger set of commented examples can be found at:
-`<https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples>`_
+`<https://github.com/elasticluster/elasticluster/tree/master/examples>`_
 
 
 Setup Section
@@ -954,7 +954,7 @@ install NIS/YP to easily manage users across the cluster::
   global_var_multiuser_cluster=yes
 
 A larger set of commented examples can be found at:
-`<https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples>`_
+`<https://github.com/elasticluster/elasticluster/tree/master/examples>`_
 
 
 Cluster Section
@@ -1248,7 +1248,7 @@ node-level section take precedence over cluster-wide ones.
        connections among cluster nodes are allowed -- the "default"
        security group only allows TCP, not UDP.
 
-       .. __: https://github.com/gc3-uzh-ch/elasticluster/issues/490
+       .. __: https://github.com/elasticluster/elasticluster/issues/490
 
 
 Additional optional configuration keys for Azure
@@ -1513,7 +1513,7 @@ cluster setup::
   timeout=600
 
 A larger set of commented examples can be found at:
-`<https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples>`_
+`<https://github.com/elasticluster/elasticluster/tree/master/examples>`_
 
 
 Storage section

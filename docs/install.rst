@@ -234,6 +234,6 @@ the problem.
 .. References:
 
 .. _sphinx: http://sphinx-doc.org/latest/install.html
-.. _`github elasticluster repository`: https://github.com/gc3-uzh-ch/elasticluster
+.. _`github elasticluster repository`: https://github.com/elasticluster/elasticluster
 .. _`Xcode`: https://developer.apple.com/xcode/
 .. _`AppStore`: http://www.apple.com/osx/apps/app-store/

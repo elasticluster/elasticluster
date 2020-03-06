@@ -2,7 +2,7 @@
 #
 # RHEL 7.4 apparently removed the set-UID bit from `ssh-keysign`
 # but forgot to make the corresponding change to the SSH host key files
-# (for more info, see: https://github.com/gc3-uzh-ch/elasticluster/issues/510#issuecomment-351832450)
+# (for more info, see: https://github.com/elasticluster/elasticluster/issues/510#issuecomment-351832450)
 # Try to fix that.
 #
 

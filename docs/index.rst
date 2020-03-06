@@ -127,4 +127,4 @@ other, to allow controlling the same cluster from different places.
 
 
 .. _`video`: http://youtu.be/cR3C7XCSMmA
-.. _`file enhancement requests and ideas`: https://github.com/gc3-uzh-ch/elasticluster/issues
+.. _`file enhancement requests and ideas`: https://github.com/elasticluster/elasticluster/issues

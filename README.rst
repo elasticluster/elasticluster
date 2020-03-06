@@ -109,7 +109,7 @@ to your liking using the `configuration reference`__.
 More example configurations for popular cluster types can be found in
 the `examples/`__ directory.
 
-.. __: https://github.com/gc3-uzh-ch/elasticluster/tree/master/examples
+.. __: https://github.com/elasticluster/elasticluster/tree/master/examples
 
 
 Getting help
@@ -135,11 +135,11 @@ us to identify the problem.
 .. _`Ceph`: http://ceph.com/
 .. _`Debian GNU/Linux`: http://www.debian.org
 .. _`elasticluster`: http://gc3-uzh-ch.github.io/elasticluster/
-.. _`example configuration file`: https://github.com/gc3-uzh-ch/elasticluster/blob/master/elasticluster/share/etc/config.template
-.. _`enhancement requests and ideas`: https://github.com/gc3-uzh-ch/elasticluster/issues
+.. _`example configuration file`: https://github.com/elasticluster/elasticluster/blob/master/elasticluster/share/etc/config.template
+.. _`enhancement requests and ideas`: https://github.com/elasticluster/elasticluster/issues
 .. _`Ganglia`: http://ganglia.info
 .. _`GC3 Hobbes cloud`: http://www.gc3.uzh.ch/infrastructure/hobbes
-.. _`github elasticluster repository`: https://github.com/gc3-uzh-ch/elasticluster
+.. _`github elasticluster repository`: https://github.com/elasticluster/elasticluster
 .. _`github`: https://github.com/
 .. _`GlusterFS`: http://www.gluster.org/
 .. _`GNU General Public License version 3`: http://www.gnu.org/licenses/gpl.html

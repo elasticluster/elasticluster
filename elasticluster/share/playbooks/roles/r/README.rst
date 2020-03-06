@@ -85,4 +85,4 @@ into the ElastiCluster_ playbook collection.
 .. _`0-Cloud mirror autoselect`: http://cloud.r-project.org/
 .. _`CRAN mirror`: https://cran.r-project.org/mirrors.html
 .. _`ETHZ CRAN mirror`: https://stat.ethz.ch/CRAN/
-.. _`hpc-common role`: https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/hpc-common
+.. _`hpc-common role`: https://github.com/elasticluster/elasticluster/tree/master/elasticluster/share/playbooks/roles/hpc-common

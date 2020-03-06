@@ -118,13 +118,13 @@ problem by manually resolving the conflict::
 
   pip install requests==2.12.3
 
-.. _`commit 7bf55b8`: https://github.com/gc3-uzh-ch/elasticluster/commit/7bf55b883db43bbba9802328589ab1dfd4cd85c6
+.. _`commit 7bf55b8`: https://github.com/elasticluster/elasticluster/commit/7bf55b883db43bbba9802328589ab1dfd4cd85c6
 
 Unfortunately, the root cause of this problem does not lie in ElastiCluster;
 instead it stems from the dependency resolution mechanism of the package
 installer `pip`. See `ElastiCluster issue #414`__ for more technical details.
 
-.. __: https://github.com/gc3-uzh-ch/elasticluster/issues/414
+.. __: https://github.com/elasticluster/elasticluster/issues/414
 
 
 Running any ``elasticluster`` command fails with a version conflict about the ``pbr`` package
@@ -502,7 +502,7 @@ To fix the issue install package ``python`` on the Ubuntu VMs:
 * use that snmapshot as the base for ElastiCluster.
 
 Additional support will be required in ElastiCluster to automate these steps,
-see `issue #304 <https://github.com/gc3-uzh-ch/elasticluster/issues/304>`_
+see `issue #304 <https://github.com/elasticluster/elasticluster/issues/304>`_
 
 .. __: http://summit.ubuntu.com/uos-1511/meeting/22568/python3-only-on-the-images/
 

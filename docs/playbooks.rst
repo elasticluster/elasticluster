@@ -75,7 +75,7 @@ Variable name                      Default             Description
                                                        SSL/TLS certificate.  However, it may happen
                                                        that the base OS trusted certificates repository
                                                        is not fully up-to-date and this verification fails.
-                                                       (See, for instance, `issue #539 <https://github.com/gc3-uzh-ch/elasticluster/issues/539>`_).
+                                                       (See, for instance, `issue #539 <https://github.com/elasticluster/elasticluster/issues/539>`_).
                                                        In these cases, setting this option to ``yes``
                                                        allows the playbooks to continue (at the expense
                                                        of some security).
@@ -354,10 +354,10 @@ are NIS slaves) to make it easier to add users to the cluster (just run the
 The "SLURM" playbook depends on the following Ansible roles being
 available:
 
-* `slurm-common <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-common>`_
-* `slurm-client <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-client>`_
-* `slurm-master <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-master>`_
-* `slurm-worker <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-worker>`_
+* `slurm-common <https://github.com/elasticluster/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-common>`_
+* `slurm-client <https://github.com/elasticluster/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-client>`_
+* `slurm-master <https://github.com/elasticluster/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-master>`_
+* `slurm-worker <https://github.com/elasticluster/elasticluster/tree/master/elasticluster/share/playbooks/roles/slurm-worker>`_
 
 In order for the NFS exported home directory to be mountable from the cluster's compute nodes,
 security groups on OpenStack need to permit all UDP traffic between all cluster nodes.
@@ -866,7 +866,7 @@ following variables in the `setup/` section:
 
 More detailed information can be found in the `ceph role README`_.
 
-.. _`ceph role README`: https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/ceph
+.. _`ceph role README`: https://github.com/elasticluster/elasticluster/tree/master/elasticluster/share/playbooks/roles/ceph
 
 .. note::
 
@@ -1076,9 +1076,9 @@ volume over 3 server nodes, installing GlusterFS version 4.1:
 The "GlusterFS" playbook depends on the following Ansible roles being
 available:
 
-* `glusterfs-common <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/glusterfs-common>`_
-* `glusterfs-client <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/glusterfs-client>`_
-* `glusterfs-server <https://github.com/gc3-uzh-ch/elasticluster/tree/master/elasticluster/share/playbooks/roles/glusterfs-server>`_
+* `glusterfs-common <https://github.com/elasticluster/elasticluster/tree/master/elasticluster/share/playbooks/roles/glusterfs-common>`_
+* `glusterfs-client <https://github.com/elasticluster/elasticluster/tree/master/elasticluster/share/playbooks/roles/glusterfs-client>`_
+* `glusterfs-server <https://github.com/elasticluster/elasticluster/tree/master/elasticluster/share/playbooks/roles/glusterfs-server>`_
 
 
 
@@ -1557,7 +1557,7 @@ users to log in to JupyterHub via web.
 
 A full example of how to install a JupyterHub stand-alone server with
 R and Julia language support can be found at:
-`<https://github.com/gc3-uzh-ch/elasticluster/blob/master/examples/jupyterhub-on-google.conf>`_
+`<https://github.com/elasticluster/elasticluster/blob/master/examples/jupyterhub-on-google.conf>`_
 
 
 JupyterHub
@@ -1617,7 +1617,7 @@ The JupyterHub role can be combined with other playbooks (it is
 advised to add it to the frontend/master node), or can be used to
 install a stand-alone server.  A full example of how to install a
 JupyterHub stand-alone server can be found at:
-`<https://github.com/gc3-uzh-ch/elasticluster/blob/master/examples/jupyterhub-on-google.conf>`_
+`<https://github.com/elasticluster/elasticluster/blob/master/examples/jupyterhub-on-google.conf>`_
 
 
 OpenCPU
@@ -1760,7 +1760,7 @@ R apply to R Studio as well.
 The R Studio Server role can be combined with other playbooks, or can
 be used to install a stand-alone server.  A full example of how to
 install a R Studio stand-alone server can be found at:
-`<https://github.com/gc3-uzh-ch/elasticluster/blob/master/examples/rstudio-on-google.conf>`_
+`<https://github.com/elasticluster/elasticluster/blob/master/examples/rstudio-on-google.conf>`_
 
 
 SAMBA

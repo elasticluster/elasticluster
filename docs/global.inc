@@ -30,10 +30,10 @@
 .. _`elasticluster`: http://gc3-uzh-ch.github.io/elasticluster/
 .. _`EPEL`: https://fedoraproject.org/wiki/EPEL
 .. _`flannel`: https://github.com/coreos/flannel
-.. _`example configuration file`: https://github.com/gc3-uzh-ch/elasticluster/raw/master/elasticluster/share/etc/config.template
+.. _`example configuration file`: https://github.com/elasticluster/elasticluster/raw/master/elasticluster/share/etc/config.template
 .. _`Ganglia`: http://ganglia.info
-.. _`github elasticluster page`: https://github.com/gc3-uzh-ch/elasticluster
-.. _`github elasticluster repository`: https://github.com/gc3-uzh-ch/elasticluster
+.. _`github elasticluster page`: https://github.com/elasticluster/elasticluster
+.. _`github elasticluster repository`: https://github.com/elasticluster/elasticluster
 .. _`github`: https://github.com/
 .. _`GlusterFS`: http://www.gluster.org/
 .. _`GNU General Public License version 3`: http://www.gnu.org/licenses/gpl.html
