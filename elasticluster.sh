@@ -168,8 +168,24 @@ __EOF__
 fi
 
 # docker should have been installed by now...
+require_command egrep
+require_command env
 require_command docker
 require_command readlink
+
+# check if `env` supports the `--null` flag
+if (env -0 >/dev/null 2>&1); then
+    env_has_null_termination_opt='y'
+    require_command awk
+else
+    env_has_null_termination_opt='n'
+    warn <<__EOF__
+Command 'env' does not support null-terminated lines;
+$(basename $me) cannot properly sanitize the environment in this case.
+If you get errors later on about Docker being unable to process environment
+variables, you will need to install GNU coreutils' 'env'.
+__EOF__
+fi
 
 # set up mount commands for host directories
 volumes="-v $HOME/.ssh:/home/.ssh -v $HOME/.elasticluster:/home/.elasticluster"
@@ -280,12 +296,27 @@ if [ -z "$envfile" ]; then
     die 1 "Cannot create temporary file."
 fi
 trap "rm -f '$envfile';" EXIT INT QUIT ABRT TERM
-# reset shell prompts to avoid issues with bash/zsh themes with
-# multiline prompts; since the POSIX 1003.1 std does not specify any
-# way to unset a variable in `env` output (the GNU version has
-# `--unset=`), we just reset PS1..PS4 to customary values.
-env HOME="$HOME" PS1='$ ' PS2='> ' PS3='? ' PS4='+ ' \
-    SSH_AUTH_SOCK=/home/.ssh-agent.sock > "$envfile"
+if [ "$env_has_null_termination_opt" = 'y' ]; then
+    # The following incantation requires some explanation:
+    #
+    # * line (1) `env` is to override some environment variables with
+    #   values that are appropriate *within* the container;
+    #
+    # * line (2) is for filtering out multi-line env vars,
+    #   which `docker run --env-file` cannot currently handle;
+    #
+    # * line (3) `egrep -v` is for removing shell customization (e.g.,
+    #   bash/zsh themes with multiline prompts)
+    #
+    env -0 HOME="$HOME"  SHELL=/bin/sh SSH_AUTH_SOCK=/home/.ssh-agent.sock \
+        | awk 'BEGIN { RS="\0"; FS="="; }; { if ($2 !~ /\n/) print; };' \
+        | egrep -v '^(BASH_ENV|ENV|PROMPT_COMMAND|PS[1234])=' \
+                > "$envfile"
+else
+    env HOME="$HOME"  SHELL=/bin/sh SSH_AUTH_SOCK=/home/.ssh-agent.sock \
+        | egrep -v '^(BASH_ENV|ENV|PROMPT_COMMAND|PS[1234])=' \
+                > "$envfile"
+fi
 
 # go!
 exec docker run --rm --interactive --tty --env-file "$envfile" $volumes $elasticluster_docker_image "$@"
