@@ -78,11 +78,14 @@ normally have ``wget``; MacOSX normally uses ``curl``).
 Prepare the environment for installation
 ----------------------------------------
 
-*Note:* this section is only relevant if you are installing
- ElastiCluster from source code (see `Installing development code from
- GitHub`_) or from the PyPI_ package (see `Installing released code
- from PyPI`_).  None of these instructions are needed when running
- ElastiCluster from the Docker image.
+.. note::
+
+   This section is only relevant if you are installing ElastiCluster
+   from source code (see `Installing development code from GitHub`_)
+   or from the PyPI_ package (see `Installing released code from
+   PyPI`_).  None of these instructions are needed when running
+   ElastiCluster from the Docker image. (See section :ref:`Quickstart`
+   for how to run ElastiCluster with Docker.)
 
 The following sections document preliminary steps that need to be carried out in
 order to install ElastiCluster on a GNU/Linux or MacOSX computer.
