@@ -303,13 +303,15 @@ if [ "$env_has_null_termination_opt" = 'y' ]; then
     #   values that are appropriate *within* the container;
     #
     # * line (2) is for filtering out multi-line env vars,
-    #   which `docker run --env-file` cannot currently handle;
+    #   which `docker run --env-file` cannot currently handle
+    #   (see https://stackoverflow.com/a/19156442/459543 and
+    #   issue #675 if the `awk` code looks overcomplicated);
     #
     # * line (3) `egrep -v` is for removing shell customization (e.g.,
     #   bash/zsh themes with multiline prompts)
     #
     env -0 HOME="$HOME"  SHELL=/bin/sh SSH_AUTH_SOCK=/home/.ssh-agent.sock \
-        | awk 'BEGIN { RS="\0"; FS="="; }; { if ($2 !~ /\n/) print; };' \
+        | awk 'BEGIN { RS="\0"; FS="="; OFS="="; }; { n=index($0, "="); $2=substr($0, n+1); NF=2; if ($2 !~ /\n/) print; };' \
         | egrep -v '^(BASH_ENV|ENV|PROMPT_COMMAND|PS[1234])=' \
                 > "$envfile"
 else
