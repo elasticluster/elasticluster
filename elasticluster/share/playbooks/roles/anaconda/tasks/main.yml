@@ -1,5 +1,9 @@
 ---
-# tasks file for anaconda
+- name: Version compatibility check
+  fail:
+    msg: "Python 2 is only available in Anaconda version 2019.10 or less, but Anaconda {{ anaconda_version }} was requested.  To proceed, please set `anaconda_version` to version 2019.10 or earlier, or set `anaconda_python_version=3` and then retry."
+  when: 'anaconda_python_version|int == 2 and anaconda_version.split(".")[0]|int >= 2020'
+
 - name: Download Anaconda installer script
   get_url:
     url: '{{anaconda_installer_url}}'

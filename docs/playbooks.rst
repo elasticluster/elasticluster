@@ -1153,6 +1153,12 @@ customization variables you can choose whether to install the Python
 2.7 or Python 3 version, and whether to make the Anaconda Python
 interpreter the default Python interpreter for logged-in users.
 
+.. note::
+
+   Starting release 2020.02, Anaconda only supports Python 3.  If you
+   want to use Python 2 from the Anaconda distribution, set
+   ``anaconda_version`` (see below) to 2019.10 or an earlier version.
+
 The following variables may be set to alter the role behavior:
 
 .. list-table:: Anaconda role variables in ElastiCluster
@@ -1168,7 +1174,8 @@ The following variables may be set to alter the role behavior:
    * - ``anaconda_python_version``
      - ``3``
      - Anaconda comes with either a Python2 or a Python3 interpreter
-       -- choose which one you want here.
+       -- choose which one you want here. (**Note:** Py2 is only
+       available in Anaconda 2019.10 or earlier.)
    * - ``anaconda_in_path``
      - ``yes``
      - whether the Python interpreter from Anaconda should be made the
