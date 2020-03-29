@@ -102,7 +102,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'ElastiCluster'
-copyright = u'2013-2019, University of Zurich'
+copyright = u'2013-2019, University of Zurich; 2020, ETH Zurich'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -255,10 +255,12 @@ latex_elements = {
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'elasticluster.tex', u'ElastiCluster Manual',
-   u'Services and Support for Science IT, University of Zurich', 'manual'),
+  ('index',                  # source start file
+   'elasticluster.tex',      # target name
+   u'ElastiCluster Manual',  # title
+   u'Riccardo Murri',        # author
+   'manual'),                # documentclass (howto/manual)
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -285,10 +287,12 @@ latex_documents = [
 # -- Options for manual page output --------------------------------------------
 
 # One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
 man_pages = [
-  ('index', 'elasticluster', u'ElastiCluster Manual',
-   [u'Services and Support for Science IT, University of Zurich'], 1),
+  ('index',                  # source start file
+   'elasticluster',          # name
+   u'ElastiCluster Manual',  # description
+   [u'Riccardo Murri'],      # author(s)
+   1),                       # man section
 ]
 
 # If true, show URL addresses after external links.
