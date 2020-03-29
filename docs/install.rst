@@ -23,6 +23,18 @@ There are three ways to install ElastiCluster:
   ElastiCluster.  See section `Installing development code from
   GitHub`_ for instructions.
 
+  .. warning::
+
+     As of April 2020, `Python 2.7 has seen its final maintenance
+     release`__ and support for Python 2.x is being phased out of
+     major libraries.  ElastiCluster's own code is still compatible
+     with Python 2, but libraries it depends upon will increasingly
+     not be.  Therefore, installation instructions assume you are
+     using Python 3; if this is not the case, please see ask for help
+     on the `mailing-list`_.
+
+     .. __: https://www.python.org/dev/peps/pep-0373/#maintenance-releases
+
 * Install the ``elasticluster`` Python package from PyPI_.  See
   section `Installing released code from PyPI`_ for instructions.
 
@@ -90,11 +102,11 @@ Prepare the environment for installation
 The following sections document preliminary steps that need to be carried out in
 order to install ElastiCluster on a GNU/Linux or MacOSX computer.
 
-We strongly recommend that `elasticluster` is installed in a `python
+We strongly recommend that ``elasticluster`` is installed in a `python
 virtualenv`_, in order to create a controlled environment where ElastiCluster
 can run without conflicting with system files or Python libraries. Installing in
 a `python virtualenv`_ makes it also easier to uninstall or upgrade
-`elasticluster`.
+``elasticluster``.
 
 
 .. _`install required dependencies`:
@@ -102,13 +114,25 @@ a `python virtualenv`_ makes it also easier to uninstall or upgrade
 Install required dependencies
 +++++++++++++++++++++++++++++
 
+.. warning::
+
+   As of April 2020, `Python 2.7 has seen its final maintenance
+   release`__ and support for Python 2.x is being phased out of major
+   libraries.  ElastiCluster's own code is still compatible with
+   Python 2, but libraries it depends upon will increasingly not be.
+   Therefore, the following instructions direct you to installing
+   Python 3; if this is might be a problem on your system, please see
+   ask for help on the `mailing-list`_.
+
+   .. __: https://www.python.org/dev/peps/pep-0373/#maintenance-releases
+
 CentOS/RHEL
 ~~~~~~~~~~~
 
 To install software prerequisites for building and running ElastiCluster, run
 the following commands as the ``root`` admin user::
 
-    yum install gcc gcc-c++ git libffi-devel openssl-devel python-devel python-virtualenv
+  sudo yum install gcc gcc-c++ git libffi-devel openssl-devel python3 python3-devel python3 python3-virtualenv
 
 Debian/Ubuntu
 ~~~~~~~~~~~~~
@@ -117,7 +141,7 @@ To install software prerequisites for building and running ElastiCluster, run
 the following commands (omit the ``sudo`` word if running as the ``root`` admin
 user)::
 
-    sudo apt-get install gcc g++ git libc6-dev libffi-dev libssl-dev python-dev virtualenv
+    sudo apt-get install gcc g++ git libc6-dev libffi-dev libssl-dev python3 python3-dev virtualenv
 
 MacOSX
 ~~~~~~
@@ -140,13 +164,13 @@ Assuming you already have ``virtualenv`` installed on your machine (see section
 `Install required dependencies`_ if not), create a virtualenv and activate one
 with the following commands::
 
-    virtualenv elasticluster
+    virtualenv --python python3 elasticluster
     . elasticluster/bin/activate
 
 Now upgrade the `pip`_ command to the latest version (to ensure that it can
 correctly resolve the many dependencies of the ElastiCluster code)::
 
-    pip install --upgrade 'pip>=9.0.0'
+    pip3 install --upgrade 'pip>=9.0.0'
 
 
 Installing released code from PyPI
@@ -169,7 +193,7 @@ created and activated a virtualenv in directory ``elasticluster``.
 It's quite easy to install `elasticluster` using `pip`_; the command
 below is all you need to install `elasticluster` on your system::
 
-    pip install elasticluster
+    pip3 install elasticluster
 
 If you run into any problems, please have a look at the
 `troubleshooting`:ref: section; the `mailing-list`_ is also a good
