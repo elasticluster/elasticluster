@@ -1,6 +1,6 @@
 # Dockerfile for ElastiCluster
 #
-# Copyright (c) 2018 Riccardo Murri <riccardo.murri@gmail.com>
+# Copyright (c) 2018, 2020 Riccardo Murri <riccardo.murri@gmail.com>
 # Originally contributed by Hatef Monajemi, 2017
 # (see https://github.com/elasticluster/elasticluster/pull/504#issuecomment-343693251)
 #
@@ -8,7 +8,7 @@
 # modified under the same conditions as ElastiCluster.
 #
 
-FROM python:2.7-slim
+FROM python:3.7-slim
 
 
 # Prepare the image:
@@ -71,7 +71,7 @@ RUN : \
 
 # Deploy adapter script (needs to be done last, otherwise it fails
 # when running Python commands above)
-COPY ./etc/docker/sitecustomize.py /usr/local/lib/python2.7/site-packages/sitecustomize.py
+COPY ./etc/docker/sitecustomize.py /usr/local/lib/python3.7/site-packages/sitecustomize.py
 
 
 # Run this command by default
