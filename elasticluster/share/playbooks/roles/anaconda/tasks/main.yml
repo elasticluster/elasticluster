@@ -1,8 +1,14 @@
 ---
-- name: Version compatibility check
+
+- name: Version compatibility check (1)
   fail:
     msg: "Python 2 is only available in Anaconda version 2019.10 or less, but Anaconda {{ anaconda_version }} was requested.  To proceed, please set `anaconda_version` to version 2019.10 or earlier, or set `anaconda_python_version=3` and then retry."
   when: 'anaconda_python_version|int == 2 and anaconda_version.split(".")[0]|int >= 2020'
+
+- name: Version compatibility check (2)
+  fail:
+    msg: "Anaconda 2019.10 has a bug and cannot be installed on machines with one vCPU only; see https://github.com/ContinuumIO/anaconda-issues/issues/11466. To proceed, please set `anaconda_version` to version 2019.07, and then retry."
+  when: 'ansible_processor_vcpus|int == 2 and anaconda_version == "2019.10"'
 
 - name: Download Anaconda installer script
   get_url:
