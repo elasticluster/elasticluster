@@ -144,7 +144,7 @@ if ! [ -x "$python" ]; then
             # need to update otherwise the following `apt-get install`
             # may fail as the local DB of package versions is outdated
             apt-get update
-            do_or_die apt-get install -y python2.7 python-simplejson
+            do_or_die env DEBIAN_FRONTEND=noninteractive apt-get install -yq python2.7 python-simplejson
             ;;
         redhat|centos)
             case "$ver" in
@@ -168,7 +168,7 @@ if [ "$use_eatmydata" = 'yes' ]; then
     # install `libeatmydata.so` and the `eatmydata` command
     case "$os" in
         debian|ubuntu)
-            apt-get install -y eatmydata
+            env DEBIAN_FRONTEND=noninteractive apt-get install -yq eatmydata
             ;;
         redhat|centos)
             case "$ver" in
