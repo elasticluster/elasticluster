@@ -64,7 +64,7 @@ else:
 # 3rd-party modules
 from pkg_resources import resource_filename
 
-from schema import Schema, SchemaError, Optional, Or, Regex, Use
+from schema import Schema, SchemaError, Optional, Or, Regex
 
 # ElastiCluster imports
 from elasticluster import log
@@ -129,8 +129,8 @@ SCHEMA = {
                 # these are auto-generated but already there by the time
                 # validation is run
                 'login': nonempty_str,
-                'num': int,
-                'min_num': int,
+                'num': positive_int,
+                'min_num': nonnegative_int,
                 # only on Azure
                 Optional("storage_account_type", default='Standard_LRS'): Or('Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS'),
                 # only on Google Cloud
@@ -220,8 +220,8 @@ CLOUD_PROVIDER_SCHEMAS = {
         "ec2_region": nonempty_str,
         Optional("request_floating_ip", default=False): boolean,
         Optional("vpc"): nonempty_str,
-        Optional("price", default=0): int,
-        Optional("timeout", default=0): int,
+        Optional("price", default=0): nonnegative_int,
+        Optional("timeout", default=0): nonnegative_int,
         Optional("instance_profile"): nonempty_str,
     },
 
