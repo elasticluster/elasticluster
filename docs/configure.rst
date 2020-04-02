@@ -508,6 +508,11 @@ Valid configuration keys for ``openstack``
      correct.  Any mis-spellings or other errors in the name will
      result in cluster nodes not starting with an error.
 
+``build_timeout``
+  If a VM does is not reported as being in ACTIVE state within this number of
+  seconds, then delete it and try again.  By default, the timeout is 30
+  seconds.
+
 ``identity_api_version``
   Force use of the OpenStack Identity ("Keystone") API v2 or v3.  (Use
   the values ``2`` or ``3`` respectively.)  If this configuration item

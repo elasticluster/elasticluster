@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-#
 #
-# Copyright (C) 2013, 2015, 2018-2019 University of Zurich. All rights reserved.
+# Copyright (C) 2013, 2015, 2018-2019 University of Zurich.
+# Copyright (C) 2020 ETH Zurich.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -181,6 +182,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                  cacert=None,  # keep in sync w/ default in novaclient.Client()
                  use_anti_affinity_groups=False,
                  request_floating_ip=None,  ## DEPRECATED, will be removed
+                 build_timeout=30,
     ):
         # OpenStack connection params
         self._os_auth_url = self._get_os_config_value('auth URL', auth_url, ['OS_AUTH_URL']).rstrip('/')
@@ -192,6 +194,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._os_project_domain_name = self._get_os_config_value('project domain name', project_domain_name, ['OS_PROJECT_DOMAIN_NAME'], 'default')
         self._os_region_name = self._get_os_config_value('region_name', region_name, ['OS_REGION_NAME'], '')
         self.availability_zone = availability_zone
+        self.build_timeout = build_timeout
 
         # the OpenStack versioning mess
         if nova_api_version is not None:
@@ -595,7 +598,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 "Attempting to start VM instance `%s` (%s)%s ...",
                 vm.name, vm.id, in_group_msg)
 
-            self._wait_for_status(vm, ["ACTIVE", "ERROR"], 30)
+            self._wait_for_status(vm, ["ACTIVE", "ERROR"], self.build_timeout)
             if vm.status == 'ACTIVE':
                 log.debug("Started VM instance `%s` (%s)", vm.name, vm.id)
                 result = { 'instance_id': vm.id }

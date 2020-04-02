@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2013-2016, 2018, 2019 University of Zurich.
+# Copyright (C) 2013-2016, 2018, 2019, University of Zurich.
+# Copyright (C) 2020 ETH Zurich.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -261,6 +262,7 @@ CLOUD_PROVIDER_SCHEMAS = {
         Optional("identity_api_version"): Or('3', '2'),  # no default, can auto-detect
         Optional("use_anti_affinity_groups"): boolean,
         Optional("nova_api_version"): nova_api_version,  ## DEPRECATED, use `compute_api_version` instead
+        Optional("build_timeout", default=30): nonnegative_int,
     },
 
     'libcloud': {
