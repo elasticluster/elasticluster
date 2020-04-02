@@ -605,7 +605,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 if self.use_anti_affinity_groups:
                     result['anti_affinity_group_id'] = group_id
                 break  # out of `while retry > 0:`
-            else:  # vm.status == 'ERROR'
+            elif vm.status == 'ERROR':
                 if (self.use_anti_affinity_groups
                     # FIXME: is there a better way to determine the
                     # cause of the error than parsing the fault message?
@@ -621,6 +621,12 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                      " Deleting it."),
                     vm.name, vm.id, in_group_msg,
                     self._get_fault_message(vm) or 'unspecified error')
+                self.nova_client.servers.delete(vm.id)
+            else: # VM still building?
+                log.warning(
+                    ("VM instance `%s` (%s) not yet ACTIVE after %d-seconds timeout."
+                     " Deleting it."),
+                    vm.name, vm.id, self.build_timeout)
                 self.nova_client.servers.delete(vm.id)
 
         # allocate and attach a floating IP, if requested
