@@ -3,7 +3,7 @@
 - name: 'Fail if base OS not supported'
   fail:
     msg: 'Docker CE installation only supported on RHEL/CentOS 7.x or later'
-  when: 'not is_rhel7_or_later'
+  when: 'not is_rhel7_or_later_compatible'
 
 
 - name: 'Uninstall old versions'
