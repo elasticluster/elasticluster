@@ -46,13 +46,21 @@
   when: _etc_environment.stat.exists
 
 
-- name: 'Install Docker Community Edition'
-  apt:
+- name: 'Install Docker Engine - Community Edition'
+  package:
     name:
       - docker-ce
       - docker-ce-cli
     state: '{{ pkg_install_state }}'
 
+
+- name: 'Install Docker Compose'
+  get_url:
+    url: 'https://github.com/docker/compose/releases/download/{{ docker_compose_release }}/docker-compose-Linux-{{ ansible_userspace_architecture }}'
+    dest: '/usr/local/bin/docker-compose'
+    group: 'docker'
+    mode: 'u+rwx,g+rx'
+  when: 'docker_compose_release|bool'
 
 - name: 'Enable Docker service and ensure it (re)starts at boot'
   service:

@@ -12,3 +12,7 @@ docker_group_members:
 # Specify how often we want to prune
 docker_prune_frequency: 'daily'
 
+# What release of `docker-compose` to install;
+# set it to `null` to skip installing `docker-compose`
+docker_compose_release: '1.25.5'
+

@@ -1307,6 +1307,12 @@ The following variables may be set to alter the role behavior:
        from; choose among ``stable``, ``test``, or ``nightly``.  (See
        `Docker CE`_ about page for an explanation of the different
        policies in each channel.)
+   * - ``docker_compose_release``
+     - ``1.25.5``
+     - What `release of *docker-compose*`__ to install;
+       set it to 0 or the empty string to skip installing ``docker-compose``.
+
+       .. __: https://github.com/docker/compose/releases
    * - ``docker_group_members``
      - ``[]``
      - List of users that are authorized to call the ``docker``
