@@ -4,7 +4,7 @@
 #
 
 # version of Julia to install
-julia_version: 1.4.0
+julia_version: 1.4.1
 
 # should the `julia` command be added to users' shell $PATH ?
 julia_in_path: yes
