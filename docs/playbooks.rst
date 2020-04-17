@@ -1313,6 +1313,13 @@ The following variables may be set to alter the role behavior:
        set it to 0 or the empty string to skip installing ``docker-compose``.
 
        .. __: https://github.com/docker/compose/releases
+   * - ``docker_credential_helpers_release``
+     - ``v0.6.3``
+     - What `release of *Docker credential helpers*`__ to install;
+       set it to 0 or the empty string to skip installing them.  Note that
+       all release tags start with the letter ``v`` (as of April 2020).
+
+       .. __: https://github.com/docker/docker-credential-helpers/releases/
    * - ``docker_group_members``
      - ``[]``
      - List of users that are authorized to call the ``docker``

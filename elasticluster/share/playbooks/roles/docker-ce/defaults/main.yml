@@ -16,3 +16,6 @@ docker_prune_frequency: 'daily'
 # set it to `null` to skip installing `docker-compose`
 docker_compose_release: '1.25.5'
 
+# What release of the Docker credential helpers to install;
+# set it to `null` to skip installing them
+docker_credential_helpers_release: 'v0.6.3'

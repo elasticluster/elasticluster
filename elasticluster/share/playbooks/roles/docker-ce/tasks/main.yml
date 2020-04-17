@@ -62,6 +62,29 @@
     mode: 'u+rwx,g+rx'
   when: 'docker_compose_release|bool'
 
+
+- name: 'Install Docker credential helpers'
+  unarchive:
+    src: 'https://github.com/docker/docker-credential-helpers/releases/download/{{ docker_credential_helpers_release }}/docker-credential-{{ item }}-{{ docker_credential_helpers_release }}-amd64.tar.gz'
+    dest: '/usr/local/bin/'
+    remote_src: yes
+    group: 'docker'
+    mode: 'u+rwx,g+rx'
+  loop:
+    - pass
+    - secretservice
+  when: 'docker_credential_helpers_release|bool'
+
+
+- name: 'Install dependencies of Docker credential helpers'
+  package:
+    name:
+      - 'pass'
+      - 'gnupg2'
+    state: '{{ pkg_install_state }}'
+  when: 'docker_credential_helpers_release|bool'
+
+
 - name: 'Enable Docker service and ensure it (re)starts at boot'
   service:
     name: 'docker'
