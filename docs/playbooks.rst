@@ -1313,6 +1313,14 @@ The following variables may be set to alter the role behavior:
        client.  **Note:** the distribution's default user
        (e.g., user ``ubuntu`` on Ubuntu VMs) is *always* authorized
        to run ``docker`` by ElastiCluster.
+   * - ``docker_prune_frequency``
+     - ``daily``
+     - How often should a cron job run, to delete old unused Docker images.
+       Must be a valid string for `Ansible's cron module *special_time*`__;
+       in practice, ``hourly``, ``daily``, ``weekly``, or ``monthly``
+       are likely the only useful settings.
+
+       .. __: https://docs.ansible.com/ansible/latest/modules/cron_module.html#parameter-special_time
 
 For instance, the following configuration snippet requests that
 ElastiCluster and Ansible install Docker CE on the worker nodes of a

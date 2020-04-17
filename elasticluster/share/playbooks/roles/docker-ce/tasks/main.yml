@@ -62,16 +62,12 @@
 
 
 # Prune dangling containers by setting a cron job to clean thing ups
-#
-# FIXME: we should allow a way to customize cron job schedule
-#
 - name: 'set periodic docker system prune'
   cron:
     name: 'docker-prune'
-    minute: '0'
-    hour: '*/2'
+    special_time: '{{ docker_prune_frequency }}'
+    state: present
     job: 'docker container prune -f'
-
 
 
 # always allow default OS user to use `docker`

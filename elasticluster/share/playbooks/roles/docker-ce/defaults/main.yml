@@ -8,3 +8,7 @@ docker_release_channel: 'stable'
 # We add at least the user running ansible and the current username (they may be different)
 docker_group_members:
   - '{{ansible_user}}'
+
+# Specify how often we want to prune
+docker_prune_frequency: 'daily'
+
