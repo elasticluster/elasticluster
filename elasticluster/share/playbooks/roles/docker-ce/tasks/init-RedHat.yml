@@ -21,7 +21,7 @@
   ignore_errors: yes
 
 
-- name: Install missing `container-selinux` dependency for Docker CE
+- name: Install missing `container-selinux` dependency for Docker CE (yum)
   yum:
     # containerd wrongly reports 2:2.74 so yum dependency resolution fails
     name: 'container-selinux>=2.74'
@@ -34,7 +34,7 @@
   yum:
     name: 'http://mirror.centos.org/centos/7/extras/x86_64/Packages/container-selinux-2.107-3.el7.noarch.rpm'
     state: present
-  when: _docker_yum_install_container_selinux
+  when: '_docker_yum_install_container_selinux is failed'
 
 
 - name: Download Docker CE repo definition
