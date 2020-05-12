@@ -11,12 +11,11 @@
 
 - name: Deploy Helm
   command: /tmp/get_helm.sh
-  when: not helm_deployment.stdout.find(label)
+  environment:
+    HELM_INSTALL_DIR: "/usr/bin"
 
 - name: Add Google Stable repo
-  command: helm repo add stable {{ kubernetes_helm_stable_repo }}
-  when: not helm_deployment.stdout.find(label)
+  command: helm repo add stable "{{ kubernetes_helm_stable_repo }}"
 
 - name: Update Helm Repositories
   command: helm repo update
-  when: not helm_deployment.stdout.find(label)

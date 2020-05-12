@@ -29,3 +29,15 @@
   loop:
     - docker
     - kubelet
+
+- name: Make .kube directory
+  command: mkdir -p /home/centos/.kube
+  when: is_centos
+
+- name: Copy Kubernetes config
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/centos/.kube/config
+    owner: ubuntu
+    group: ubuntu
+  when: is_centos

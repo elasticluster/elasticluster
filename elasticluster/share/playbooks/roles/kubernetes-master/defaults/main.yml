@@ -9,7 +9,7 @@ kubernetes_service_network: 10.96.0.0/12
 
 kubernetes_networking:
   calico:
-    manifest: https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml
+    manifest: https://docs.projectcalico.org/manifests/calico.yaml 
   canal:
     rbac: https://raw.githubusercontent.com/projectcalico/canal/master/k8s-install/1.7/rbac.yaml
     manifest: https://raw.githubusercontent.com/projectcalico/canal/master/k8s-install/1.7/canal.yaml

@@ -50,3 +50,15 @@
   loop:
     - docker
     - kubelet
+
+- name: Make .kube directory
+  command: mkdir -p /home/ubuntu/.kube
+  when: is_ubuntu
+
+- name: Copy Kubernetes config
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/ubuntu/.kube/config
+    owner: ubuntu
+    group: ubuntu
+  when: is_ubuntu

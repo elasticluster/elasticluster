@@ -2,10 +2,10 @@
 
 - name: Create k8s namespace for OpenEBS
   shell: kubectl --kubeconfig /etc/kubernetes/admin.conf create ns openebs
+  ignore_errors: yes
   register: openebs_deployment
 
 - set_fact: label="{{ kubernetes_helm_deployment_label }}"
 
 - name: Deploy OpenEBS using Helm
-  shell: helm install openebs stable/openebs --version 1.9.0 --namespace openebs
-  when: not openebs_deployment.stdout.find(label)
+  shell: helm install openebs stable/openebs --version 1.9.0 --namespace openebs --kubeconfig /etc/kubernetes/admin.conf
