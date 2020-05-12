@@ -59,6 +59,7 @@
   copy:
     src: /etc/kubernetes/admin.conf
     dest: /home/ubuntu/.kube/config
+    remote_src: yes
     owner: ubuntu
     group: ubuntu
   when: is_ubuntu

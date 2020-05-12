@@ -38,6 +38,7 @@
   copy:
     src: /etc/kubernetes/admin.conf
     dest: /home/centos/.kube/config
-    owner: ubuntu
-    group: ubuntu
+    remote_src: yes
+    owner: centos
+    group: centos
   when: is_centos
