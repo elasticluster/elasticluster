@@ -1,3 +1,9 @@
 - name: Dashboard
   import_tasks: dashboard.yml
   when: kubernetes_dashboard_deploy
+- name: Helm
+  import_tasks: helm.yml
+  when: kubernetes_helm_deploy
+- name: OpenEBS
+  import_tasks: openebs.yml
+  when: kubernetes_openebs_deploy

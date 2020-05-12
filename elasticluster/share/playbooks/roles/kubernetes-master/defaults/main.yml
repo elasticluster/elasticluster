@@ -1,6 +1,6 @@
 ---
 
-kubernetes_default_networking: flannel
+kubernetes_default_networking: calico
 kubernetes_network: 10.244.0.0/16
 kubernetes_service_network: 10.96.0.0/12
 

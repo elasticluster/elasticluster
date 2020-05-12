@@ -1,0 +1,21 @@
+# See https://helm.sh/docs/intro/install/
+
+- name: Get Helm.sh script
+  get_url: {{ kubernetes_helm_script }}
+  dest: /tmp/get_helm.sh
+  mode: 0700
+  register: helm_deployment
+
+- set_fact: label="{{ kubernetes_helm_deployment_label }}"
+
+- name: Deploy Helm
+  command: /tmp/get_helm.sh
+  when: not helm_deployment.stdout.find(label)
+
+- name: Add Google Stable repo
+  command: helm repo add stable {{ kubernetes_helm_stable_repo }}
+  when: not helm_deployment.stdout.find(label)
+
+- name: Update Helm Repositories
+  command: helm repo update
+  when: not helm_deployment.stdout.find(label)
