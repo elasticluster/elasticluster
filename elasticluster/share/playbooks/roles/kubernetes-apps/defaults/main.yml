@@ -1,10 +1,9 @@
 kubernetes_dashboard_deploy: true
 kubernetes_dashboard_configuration: https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0/aio/deploy/recommended.yaml
 kubernetes_dashboard_create_admin_account: true
-kubernetes_dashboard_deployment_label: kubernetes_dashboard
+kubernetes_dashboard_deployment_label: kubernetes-dashboard
 kubernetes_helm_deploy: true
 kubernetes_helm_script: https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-kubernetes_helm_deployment_label: kubernetes_helm
 kubernetes_helm_stable_repo: https://kubernetes-charts.storage.googleapis.com
 kubernetes_openebs_deploy: true
-kubernetes_openebs_deployment_label: kubernetes_openebs
+kubernetes_openebs_deployment_label: openebs

@@ -5,9 +5,6 @@
     url: "{{ kubernetes_helm_script }}"
     dest: /tmp/get_helm.sh
     mode: 0700
-  register: helm_deployment
-
-- set_fact: label="{{ kubernetes_helm_deployment_label }}"
 
 - name: Deploy Helm
   command: /tmp/get_helm.sh

@@ -52,14 +52,9 @@
     - kubelet
 
 - name: Make .kube directory
-  command: mkdir -p /home/ubuntu/.kube
-  when: is_ubuntu
-
-- name: Copy Kubernetes config
-  copy:
-    src: /etc/kubernetes/admin.conf
-    dest: /home/ubuntu/.kube/config
-    remote_src: yes
+  file: 
+    path: /home/ubuntu/.kube
     owner: ubuntu
     group: ubuntu
+    state: directory
   when: is_ubuntu
