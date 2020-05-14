@@ -101,25 +101,7 @@ require_command () {
   fi
 }
 
-
-## main
-
-if ! have_command docker; then
-    cat <<__EOF__
-${TXT_BOLD}${TXT_YELLOW}${me} requires the 'docker' command,
-which could not be found on \$PATH${TXT_NOCOLOR}${TXT_NORMAL}
-
-I can now try to install Docker; this requires the 'sudo' command with
-unrestricted administrative access.  If you do not have administrative
-access to this machine, please ask your system administrator to
-install Docker.
-
-To know more about Docker, visit http://www.docker.com/
-
-${TXT_BOLD}Press Ctrl+C now to abort, or Enter/Return to try installing Docker.${TXT_NORMAL}
-__EOF__
-    read _
-
+do_install_docker () {
     # work in a temporary directory
     require_command mktemp
     tmpdir=$(mktemp -d -t)
@@ -165,6 +147,42 @@ __EOF__
     fi
 
     cd "$orig_wd"
+}
+
+# misc post-installation tasks
+do_setup_docker () {
+    # add current user to `docker` group
+    require_command usermod
+    sudo usermod -aG docker "$USER"
+
+    # ensure Docker daemon is started
+    if have_command systemctl; then
+        sudo systemctl start docker
+    elif have_command service; then
+        sudo service docker status \
+            || sudo service docker start
+    fi
+}
+
+
+## main
+
+if ! have_command docker; then
+    cat <<__EOF__
+${TXT_BOLD}${TXT_YELLOW}${me} requires the 'docker' command,
+which could not be found on \$PATH${TXT_NOCOLOR}${TXT_NORMAL}
+
+I can now try to install Docker; this requires the 'sudo' command with
+unrestricted administrative access.  If you do not have administrative
+access to this machine, please ask your system administrator to
+install Docker.
+
+To know more about Docker, visit http://www.docker.com/
+
+${TXT_BOLD}Press Ctrl+C now to abort, or Enter/Return to try installing Docker.${TXT_NORMAL}
+__EOF__
+    read _
+    do_install_docker
 fi
 
 # docker should have been installed by now...
