@@ -29,3 +29,13 @@
   loop:
     - docker
     - kubelet
+
+- name: Make .kube directory
+    file:
+      path: /home/centos/.kube
+      state: directory
+      owner: centos
+      group: centos
+    when: is_centos
+
+

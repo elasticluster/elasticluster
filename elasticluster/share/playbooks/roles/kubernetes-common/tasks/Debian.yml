@@ -50,3 +50,11 @@
   loop:
     - docker
     - kubelet
+
+- name: Make .kube directory
+  file: 
+    path: /home/ubuntu/.kube
+    owner: ubuntu
+    group: ubuntu
+    state: directory
+  when: is_ubuntu

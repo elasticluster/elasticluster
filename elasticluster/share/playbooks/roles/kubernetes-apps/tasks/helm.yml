@@ -1,0 +1,18 @@
+# See https://helm.sh/docs/intro/install/
+
+- name: Get Helm.sh script
+  get_url: 
+    url: "{{ kubernetes_helm_script }}"
+    dest: /tmp/get_helm.sh
+    mode: 0700
+
+- name: Deploy Helm
+  command: /tmp/get_helm.sh
+  environment:
+    HELM_INSTALL_DIR: "/usr/bin"
+
+- name: Add Google Stable repo
+  command: helm repo add stable "{{ kubernetes_helm_stable_repo }}"
+
+- name: Update Helm Repositories
+  command: helm repo update

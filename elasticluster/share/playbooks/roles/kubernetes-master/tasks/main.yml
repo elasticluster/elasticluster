@@ -15,6 +15,24 @@
     path: /etc/kubernetes/admin.conf
   when: "'failed' in token_list_result.stderr"
 
+- name: Copy Kubernetes config (Centos)
+    copy:
+      src: /etc/kubernetes/admin.conf
+      dest: /home/centos/.kube/config
+      remote_src: yes
+      owner: centos
+      group: centos
+  when: is_centos
+
+- name: Copy Kubernetes config (Ubuntu)
+    copy:
+      src: /etc/kubernetes/admin.conf
+      dest: /home/ubuntu/.kube/config
+      remote_src: yes
+      owner: ubuntu
+      group: ubuntu
+  when: is_ubuntu
+
 - name: Networking
   include_tasks: "{{ kubernetes_default_networking }}.yml"
 

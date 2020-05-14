@@ -2,14 +2,14 @@
 #     https://github.com/kubernetes/dashboard/wiki/Creating-sample-user
 
 - name: Get kubernetes deployments
-  shell: kubectl --kubeconfig /etc/kubernetes/admin.conf get deployments -n kube-system 
+  shell: kubectl --kubeconfig /etc/kubernetes/admin.conf get deployments -A 
   register: kubernetes_deployments
 
 - set_fact: label="{{ kubernetes_dashboard_deployment_label }}"
 
 - name: Deploy Kubernetes Dashboard
   command: kubectl --kubeconfig /etc/kubernetes/admin.conf  apply -f {{ kubernetes_dashboard_configuration }}
-  when: not kubernetes_deployments.stdout.find(label)
+  when: not label in kubernetes_deployments.stdout
 
 - name: Copy admin user configuration
   copy:
@@ -18,12 +18,12 @@
   loop:
     - create_ServiceAccount.yaml
     - create_ClusterRoleBinding.yaml
-  when: kubernetes_dashboard_create_admin_account and not kubernetes_deployments.stdout.find(label)
+  when: kubernetes_dashboard_create_admin_account and not label in kubernetes_deployments.stdout
 
 - name: Create ServiceAccount
   command: kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f /var/tmp/create_ServiceAccount.yaml
-  when: kubernetes_dashboard_create_admin_account and not kubernetes_deployments.stdout.find(label)
+  when: kubernetes_dashboard_create_admin_account and not label in kubernetes_deployments.stdout
 
 - name: Create ClusterRoleBinding
   command: kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f /var/tmp/create_ClusterRoleBinding.yaml
-  when: kubernetes_dashboard_create_admin_account and not kubernetes_deployments.stdout.find(label)
+  when: kubernetes_dashboard_create_admin_account and not label in kubernetes_deployments.stdout
