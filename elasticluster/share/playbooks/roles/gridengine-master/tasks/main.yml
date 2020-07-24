@@ -208,7 +208,7 @@
     - gridengine
     - gridengine-master
   shell: |
-    bash -lc '(qconf -spl | fgrep -q "{{item}}") || qconf -Ap {{SGE_ROOT}}/{{item}}.pe.conf'
+    bash -lc 'if (qconf -spl | fgrep -q "{{item}}"); then qconf -Mp {{SGE_ROOT}}/{{item}}.pe.conf; else qconf -Ap {{SGE_ROOT}}/{{item}}.pe.conf; fi'
   loop:
     # keep in sync with the contents of `all.q.conf`!
     - make
