@@ -69,7 +69,12 @@ break
 # it's unlikely there's Infiniband on cloud-based VMs,
 # so disable it by default to avoid confusing warning
 # messages from OpenMPI
+{# BTL `sm` was replaced by `vader` in OpenMPI 3+ #}
+{% if is_debian_10_or_later or is_ubuntu_20_or_later or is_rhel8_or_later_compatible %}
+setenv  "OMPI_MCA_btl" "self,vader,tcp"
+{% else %}
 setenv  "OMPI_MCA_btl" "self,sm,tcp"
+{% endif %}
 
 # do not busy-wait while running MPI barriers; has a little impact on
 # performance but saves money and energy on cloud "CPU burstable" instances
