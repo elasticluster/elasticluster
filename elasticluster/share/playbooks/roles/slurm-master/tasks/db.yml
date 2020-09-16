@@ -44,6 +44,25 @@
     state: '{{ pkg_install_state }}'
 
 
+- name: Ensure InnoDB parameters are large enough for SLURM DBD
+  tags:
+    - slurm
+    - slurmdbd
+  blockinfile:
+    # FIXME: Path is correct on Debian/Ubuntu; is it also for CentOS/RHEL?
+    path: '/etc/mysql/my.cnf'
+    state: present
+    backup: yes
+    insertafter: EOF
+    content: |
+
+      # See https://wiki.fysik.dtu.dk/niflheim/Slurm_database#id5
+      [mysqld]
+      innodb_buffer_pool_size=1024M
+      innodb_log_file_size=64M
+      innodb_lock_wait_timeout=900
+
+
 - name: Ensure {{slurm_db_server_name}} daemon is up
   tags:
     - slurm
