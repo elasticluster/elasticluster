@@ -28,9 +28,18 @@
   tags:
     - slurm
   shell: |
-    sacctmgr --immediate --parsable --noheader list user Account=root | grep '^{{item}}|' \
-      || sacctmgr --immediate --quiet add user '{{item}}' DefaultAccount=root
-  loop: '{{slurm_cluster_users}}'
+    set -ex
+    # add a SLURM account for all non-system users; assume a user is a system user
+    # if and only if their home directory is under '/home'
+    getent passwd | \
+      (while IFS=: read name _ uid gid _ home _; do
+        if [ $(expr match "$home" /home) -eq 5 ]; then
+          if (sacctmgr --immediate --parsable --noheader list user Account=root | grep "^$name|"); then
+            continue
+          fi
+          sacctmgr --immediate --quiet add user "$name" DefaultAccount=root
+        fi
+      done)
 
 - name: Deploy user add/delete scripts
   tags:
