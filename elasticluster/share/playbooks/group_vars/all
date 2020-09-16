@@ -57,6 +57,7 @@ is_ubuntu_yakkety: "{{ is_ubuntu and ansible_distribution_release == 'yakkety' }
 is_ubuntu_zesty:   "{{ is_ubuntu and ansible_distribution_release == 'zesty' }}"
 is_ubuntu_artful:  "{{ is_ubuntu and ansible_distribution_release == 'artful' }}"
 is_ubuntu_bionic:  "{{ is_ubuntu and ansible_distribution_release == 'bionic' }}"
+is_ubuntu_focal:  "{{ is_ubuntu and ansible_distribution_release == 'focal' }}"
 
 # Ubuntu releases by version
 is_ubuntu_12_04: "{{ is_ubuntu and ansible_distribution_version == '12.04' }}"
@@ -73,6 +74,10 @@ is_ubuntu_17_04: "{{ is_ubuntu and ansible_distribution_version == '17.04' }}"
 is_ubuntu_17_10: "{{ is_ubuntu and ansible_distribution_version == '17.10' }}"
 is_ubuntu_18_04: "{{ is_ubuntu and ansible_distribution_version == '18.04' }}"
 is_ubuntu_18_10: "{{ is_ubuntu and ansible_distribution_version == '18.10' }}"
+is_ubuntu_19_04: "{{ is_ubuntu and ansible_distribution_version == '19.04' }}"
+is_ubuntu_19_10: "{{ is_ubuntu and ansible_distribution_version == '19.10' }}"
+is_ubuntu_20_04: "{{ is_ubuntu and ansible_distribution_version == '20.04' }}"
+is_ubuntu_20_10: "{{ is_ubuntu and ansible_distribution_version == '20.10' }}"
 
 # Ubuntu release ranges
 is_ubuntu_12_04_or_later: "{{ is_ubuntu and ansible_distribution_major_version|int >= 12 }}"
@@ -81,6 +86,7 @@ is_ubuntu_14_04_or_later: "{{ is_ubuntu and ansible_distribution_major_version|i
 is_ubuntu_15_04_or_later: "{{ is_ubuntu and ansible_distribution_major_version|int >= 15 }}"
 is_ubuntu_16_04_or_later: "{{ is_ubuntu and ansible_distribution_major_version|int >= 16 }}"
 is_ubuntu_18_04_or_later: "{{ is_ubuntu and ansible_distribution_major_version|int >= 18 }}"
+is_ubuntu_20_04_or_later: "{{ is_ubuntu and ansible_distribution_major_version|int >= 20 }}"
 
 is_ubuntu_12_10_or_later: "{{ is_ubuntu and (is_ubuntu_12_10 or ansible_distribution_major_version|int > 12) }}"
 is_ubuntu_13_10_or_later: "{{ is_ubuntu and (is_ubuntu_13_10 or ansible_distribution_major_version|int > 13) }}"
@@ -88,7 +94,8 @@ is_ubuntu_14_10_or_later: "{{ is_ubuntu and (is_ubuntu_14_10 or ansible_distribu
 is_ubuntu_15_10_or_later: "{{ is_ubuntu and (is_ubuntu_15_10 or ansible_distribution_major_version|int > 15) }}"
 is_ubuntu_16_10_or_later: "{{ is_ubuntu and (is_ubuntu_16_10 or ansible_distribution_major_version|int > 16) }}"
 is_ubuntu_17_10_or_later: "{{ is_ubuntu and (is_ubuntu_17_10 or ansible_distribution_major_version|int > 17) }}"
-is_ubuntu_18_10_or_later: "{{ is_ubuntu and (is_ubuntu_18_10 or ansible_distribution_major_version|int > 18) }}"
+is_ubuntu_19_10_or_later: "{{ is_ubuntu and (is_ubuntu_19_10 or ansible_distribution_major_version|int > 19) }}"
+is_ubuntu_20_10_or_later: "{{ is_ubuntu and (is_ubuntu_20_10 or ansible_distribution_major_version|int > 20) }}"
 
 
 # init system features
