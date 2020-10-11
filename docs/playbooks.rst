@@ -1555,7 +1555,7 @@ the Julia language system:
 ===================== ========================== ==============================
 Variable name         Default                    Description
 ===================== ========================== ==============================
-``julia_version``     ``1.4.1``                  Version of Julia to install
+``julia_version``     ``1.5.2``                  Version of Julia to install
 ===================== ========================== ==============================
 
 The following example (incomplete) shows how to install JupyterHub
