@@ -1169,7 +1169,7 @@ The following variables may be set to alter the role behavior:
      - Default value
      - Description
    * - ``anaconda_version``
-     - ``2020.02``
+     - ``2020.07``
      - Version of the Anaconda Python distribution to install
    * - ``anaconda_python_version``
      - ``3``
