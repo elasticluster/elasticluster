@@ -22,7 +22,8 @@ jobs:
           - ubuntu-18.04
           - ubuntu-16.04
           - macos-11.0
-          - macos-10.5
+          # apparently Python is not available on `macosx-10.5`
+          #- macos-10.5
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python }}
