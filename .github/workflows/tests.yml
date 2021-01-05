@@ -99,14 +99,19 @@ jobs:
         env:
           - os: ubuntu-20.04
             prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
+            path: "/home/runner/.local/bin"
           - os: ubuntu-18.04
             prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
+            path: "/home/runner/.local/bin"
           - os: ubuntu-16.04
             prerequisites: "'setuptools<=44.1.1' 'pip==20.3.3'"
+            path: "/home/runner/.local/bin"
           - os: macos-11.0
             prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
+            path: '/Library/Frameworks/Python.framework/Versions/2.7/bin'
           - os: macos-10.15
             prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
+            path: '/Library/Frameworks/Python.framework/Versions/2.7/bin'
       # we want to know which OSes pass and which fail
       fail-fast: false
 
@@ -115,7 +120,7 @@ jobs:
 
     - name: Show Python location and version
       run: |
-        set -e
+        # display data about Python interpreter
         echo "Python executable: $(command -v python)"
         echo "Python version: $(python -V)"
 
@@ -134,8 +139,10 @@ jobs:
     - name: Install ElastiCluster from sources
       run: "pip install ."
 
-    - name: Try running `elasticluster` command
+    - name: Try running `elasticluster` commands
       run: |
+        # different incantations of the `elasticluster` command
+        export PATH="$PATH:${{ matrix.env.path }}"
         elasticluster --version
         elasticluster list-templates
 
