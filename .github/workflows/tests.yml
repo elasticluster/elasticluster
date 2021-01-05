@@ -29,6 +29,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+    - name: Show Python location and version
+      run: |
+        set -e
+        echo "Python executable: $(command -v python)"
+        echo "Python version: $(python -V)"
+
     #
     # Install from sources
     #
@@ -84,6 +90,12 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
+
+    - name: Show Python location and version
+      run: |
+        set -e
+        echo "Python executable: $(command -v python)"
+        echo "Python version: $(python -V)"
 
     #
     # Install from sources
