@@ -1,0 +1,156 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+    types:
+      - opened
+      - ready_for_review
+      - review_request_removed
+      - synchronize
+      - reopened
+
+jobs:
+  unit-tests:
+    name: Run Unit Tests
+    strategy:
+      # we want to know which Python's pass and which fail
+      fail-fast: false
+      matrix:
+        # use the `matrix: include:` trick to build a simple list of
+        # parameters; we only need to override some package versions in
+        # specific cases (e.g., Python 2.7 needs older `setuptools` and `pip`)
+        include:
+
+          - python: "2.7"
+            # as of 2021-01-05, setuptools 51 and pip 21 have dropped support
+            # for Py 2.7 completely, so we need to use earlier versions to
+            # continue testing
+            prerequisites: "'setuptools<=44.1.1' 'pip==20.3.3'"
+
+          - python: "3.5"
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
+
+          - python: "3.6"
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
+
+          - python: "3.7"
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
+
+          - python: "3.8"
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
+
+          - python: "3.9"
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
+
+    env:
+      PYTHON: ${{ matrix.python }}
+
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Show Python location and version
+      run: |
+        # display data about Python interpreter
+        set -e
+        echo "Python executable: $(command -v python)"
+        echo "Python version: $(python -V 2>&1)"
+
+    #
+    # Install from sources
+    #
+    - name: Checkout ElastiCluster sources
+      # see: https://github.com/actions/checkout
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+
+    - name: Install `pip` and `setuptools`
+      run: "pip install --upgrade ${{ matrix.prerequisites }}"
+
+    - name: Install ElastiCluster from sources
+      run: "pip install -e ."
+
+    #
+    # Unit tests
+    #
+    - name: Install test dependencies
+      run: "pip install 'pytest>=2.10' 'pytest-cov' 'mock' 'tox' 'codecov'"
+
+    - name: Run unit tests
+      run: "pytest -v --cov=elasticluster --cov-branch"
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        flags: unittests
+        env_vars: PYTHON
+
+    - name: Success
+      run: |
+        echo "OK: ElastiCluster's unit tests successfully performed."
+        exit 0
+
+
+  install-tests:
+    name: Test installation on different OSes
+    strategy:
+      matrix:
+        env:
+          - os: ubuntu-20.04
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
+            path: "/home/runner/.local/bin"
+          - os: ubuntu-18.04
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
+            path: "/home/runner/.local/bin"
+          - os: ubuntu-16.04
+            prerequisites: "'setuptools<=44.1.1' 'pip==20.3.3'"
+            path: "/home/runner/.local/bin"
+          - os: macos-11.0
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
+            path: '/Library/Frameworks/Python.framework/Versions/2.7/bin'
+          - os: macos-10.15
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
+            path: '/Library/Frameworks/Python.framework/Versions/2.7/bin'
+      # we want to know which OSes pass and which fail
+      fail-fast: false
+
+    runs-on: ${{ matrix.env.os }}
+    steps:
+
+    - name: Show Python location and version
+      run: |
+        # display data about Python interpreter
+        echo "Python executable: $(command -v python)"
+        echo "Python version: $(python -V 2>&1)"
+
+    #
+    # Install from sources
+    #
+    - name: Checkout ElastiCluster sources
+      # see: https://github.com/actions/checkout
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+
+    - name: Install `pip` and `setuptools`
+      run: "pip install --upgrade ${{ matrix.env.prerequisites }}"
+
+    - name: Install ElastiCluster from sources
+      run: "pip install ."
+
+    - name: Try running `elasticluster` commands
+      run: |
+        # different incantations of the `elasticluster` command
+        export PATH="$PATH:${{ matrix.env.path }}"
+        elasticluster --version
+        elasticluster list-templates
+
+    - name: Success
+      run: |
+        echo "OK: ElastiCluster successfully installed."
+        exit 0

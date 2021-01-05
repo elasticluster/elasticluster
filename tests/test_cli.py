@@ -21,12 +21,9 @@
 from future import standard_library
 standard_library.install_aliases()
 
-from io import StringIO
 import os
 import subprocess
 import sys
-
-import pytest
 
 from elasticluster.utils import temporary_dir, environment
 
@@ -37,14 +34,29 @@ __author__ = (', '.join([
 
 
 # TODO: Could be a parametric fixture I guess
-def _run_command(argv):
+def _run_elasticluster_cmd(argv):
     """
     Run the `elasticluster` command with additional arguments.
 
     Return STDOUT, STDERR, and the process exit status.
     """
     with temporary_dir() as tmpdir:
-        with environment(HOME=os.getcwd()) as env:
+        with environment(
+            HOME=os.getcwd(),
+            PYTHONWARNINGS=(
+                # as support for Py2 wanes, we must silence warnings that
+                # Python 2.7 will no longer be supported, as they make the
+                # tests fail unnecessarily (functionality is OK, we just get
+                # some extra lines into STDERR). However,
+                # `cryptography.utils.CryptographyDeprecationWarning` is a
+                # subclass of `UserWarning` exactly because
+                # `DeprecationWarnings` are ignored by default, so we need to
+                # ignore all `UserWarnings` as well (cannot ignore a non-builtin
+                # exception class via an environmental variable)
+                'ignore::DeprecationWarning,ignore::UserWarning' if sys.version_info < (3, 6)
+                # display all warnings on Py3.6+
+                else ''),
+        ) as env:
             proc = subprocess.Popen(
                 ['elasticluster'] + argv,
                 stdin=None,
@@ -57,7 +69,7 @@ def _run_command(argv):
 
 
 def test_cli_help():
-    out, err, code = _run_command(["--help"])
+    out, err, code = _run_elasticluster_cmd(["--help"])
     assert out.startswith(b"usage: elasticluster [-h] [-v]")
     assert not err
     assert not code
@@ -65,14 +77,14 @@ def test_cli_help():
 
 def test_cli_version():
     from elasticluster import __version__ as elasticluster_version
-    out, err, code = _run_command(["--version"])
+    out, err, code = _run_elasticluster_cmd(["--version"])
     assert not err
     assert not code
     assert out.rstrip() == ("elasticluster version {0}".format(elasticluster_version)).encode('ascii')
 
 
 def test_cli_list_default(tmpdir):
-    out, err, code = _run_command(["list"])
+    out, err, code = _run_elasticluster_cmd(["list"])
     assert out.rstrip() == b"No clusters found."
     # default configuration is insufficient
     assert b"references non-existing login section" in err

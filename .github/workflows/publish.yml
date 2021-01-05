@@ -1,0 +1,69 @@
+name: Publish released code
+
+on:
+  workflow_run:
+    workflows: ["Tests"]
+    branches:
+      - master
+    types:
+      - completed
+
+jobs:
+  dockerhub:
+    name: Build and upload Docker image
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Exit early if tests were unsuccessful
+      if: github.event.workflow_run.conclusion != 'success'
+      run: |
+        echo "Tests were unsuccessful, skipping publishing."
+        exit 1
+
+    #
+    # Install from sources
+    #
+    - name: Checkout ElastiCluster sources
+      # see: https://github.com/actions/checkout
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: "3.7"
+
+    - name: Install `pip` and `setuptools`
+      run: "pip install --upgrade 'setuptools' 'pip>=8.1.2'"
+
+    - name: Install ElastiCluster from sources
+      run: "pip install -e ."
+
+    #
+    # Upload Docker image
+    #
+    - name: Publish to DockerHub
+      uses: elgohr/Publish-Docker-Github-Action@master
+      with:
+        name: "riccardomurri/elasticluster"
+        username: ${{ secrets.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_PASS }}
+
+        # FIXME: we occasionally might want to also publish artifacts from PRs,
+        # in which case the `tags:` line should *not* include `latest` and be only
+        # `tags: pr-${{ github.event.number }}`  But it is dangerous to automatically
+        # do this, as contributors could modify these workflows as well, so PR publishing
+        # should always be a manual action.
+        tags: "latest,${{ github.head_ref }}"
+
+        # push tags/release by their git name (e.g. refs/tags/MY_TAG_NAME)
+        tag_names: true
+
+        # push tags using the semver syntax by their git name
+        # (e.g. refs/tags/v1.2.3 will push four docker tags: 1.2.3, 1.2 and 1)
+        tag_semver: true
+
+    - name: Success
+      run: |
+        echo "OK: Docker image successfully pushed."
+        exit 0
