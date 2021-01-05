@@ -26,19 +26,19 @@ jobs:
             # as of 2021-01-05, setuptools 51 and pip 21 have dropped support
             # for Py 2.7 completely, so we need to use earlier versions to
             # continue testing
-            prerequisites: "'setuptools==44.1.1' 'pip==20.3.3'"
+            prerequisites: "'setuptools<=44.1.1' 'pip==20.3.3'"
 
           - python: "3.5"
-            prerequisites: "'setuptools' 'pip>=8.1.2'"
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
 
           - python: "3.6"
-            prerequisites: "'setuptools' 'pip>=8.1.2'"
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
 
           - python: "3.7"
-            prerequisites: "'setuptools' 'pip>=8.1.2'"
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
 
           - python: "3.8"
-            prerequisites: "'setuptools' 'pip>=8.1.2'"
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
 
     env:
       PYTHON: ${{ matrix.python }}
@@ -75,7 +75,7 @@ jobs:
     # Unit tests
     #
     - name: Install test dependencies
-      run: "pip install 'pytest' 'pytest-cov' 'mock' 'tox' 'codecov'"
+      run: "pip install 'pytest>=2.10' 'pytest-cov' 'mock' 'tox' 'codecov'"
 
     - name: Run unit tests
       run: "pytest -v --cov=elasticluster --cov-branch"
@@ -98,15 +98,15 @@ jobs:
       matrix:
         env:
           - os: ubuntu-20.04
-            prerequisites: "'setuptools' 'pip>=8.1.2'"
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
           - os: ubuntu-18.04
-            prerequisites: "'setuptools' 'pip>=8.1.2'"
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
           - os: ubuntu-16.04
-            prerequisites: "'setuptools==44.1.1' 'pip==20.3.3'"
+            prerequisites: "'setuptools<=44.1.1' 'pip==20.3.3'"
           - os: macos-11.0
-            prerequisites: "'setuptools' 'pip>=8.1.2'"
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
           - os: macos-10.15
-            prerequisites: "'setuptools' 'pip>=8.1.2'"
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
       # we want to know which OSes pass and which fail
       fail-fast: false
 
@@ -133,6 +133,11 @@ jobs:
 
     - name: Install ElastiCluster from sources
       run: "pip install ."
+
+    - name: Try running `elasticluster` command
+      run: |
+        elasticluster --version
+        elasticluster list-templates
 
     - name: Success
       run: |
