@@ -46,11 +46,8 @@ def _run_command(argv):
     with temporary_dir() as tmpdir:
         with environment(
             HOME=os.getcwd(),
-            PYTHONWARNINGS=','.join([
-                'ignore::DeprecationWarning::0'
-                # `cryptography.CryptographyDeprecationWarning` does *not*
-                # inherit from `DeprecationWarning` :-(
-                'ignore::cryptography.utils.CryptographyDeprecationWarning::0'])
+            # `cryptography.utils.CryptographyDeprecationWarning` is a subclass of `UserWarning`
+            PYTHONWARNINGS='ignore::DeprecationWarning,ignore::UserWarning',
         ) as env:
             proc = subprocess.Popen(
                 ['elasticluster'] + argv,
