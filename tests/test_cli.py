@@ -44,7 +44,8 @@ def _run_command(argv):
     Return STDOUT, STDERR, and the process exit status.
     """
     with temporary_dir() as tmpdir:
-        with environment(HOME=os.getcwd()) as env:
+        with environment(HOME=os.getcwd(),
+                         PYTHONWARNINGS='ignore::DeprecationWarning::0') as env:
             proc = subprocess.Popen(
                 ['elasticluster'] + argv,
                 stdin=None,
@@ -55,22 +56,18 @@ def _run_command(argv):
             stdout, stderr = proc.communicate()
             return stdout, stderr, proc.returncode
 
-def _assert_empty_except_deprecation_warnings(stderr):
-    errlines = [line for line in stderr.split('\n')
-                if 'DeprecationWarning: ' not in line]
-    assert not errlines
 
 def test_cli_help():
     out, err, code = _run_command(["--help"])
     assert out.startswith(b"usage: elasticluster [-h] [-v]")
-    _assert_empty_except_deprecation_warnings(err)
+    assert not err
     assert not code
 
 
 def test_cli_version():
     from elasticluster import __version__ as elasticluster_version
     out, err, code = _run_command(["--version"])
-    _assert_empty_except_deprecation_warnings(err)
+    assert not err
     assert not code
     assert out.rstrip() == ("elasticluster version {0}".format(elasticluster_version)).encode('ascii')
 
