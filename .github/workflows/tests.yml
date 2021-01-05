@@ -51,9 +51,10 @@ jobs:
 
     - name: Show Python location and version
       run: |
+        # display data about Python interpreter
         set -e
         echo "Python executable: $(command -v python)"
-        echo "Python version: $(python -V)"
+        echo "Python version: $(python -V 2>&1)"
 
     #
     # Install from sources
@@ -125,7 +126,7 @@ jobs:
       run: |
         # display data about Python interpreter
         echo "Python executable: $(command -v python)"
-        echo "Python version: $(python -V)"
+        echo "Python version: $(python -V 2>&1)"
 
     #
     # Install from sources
