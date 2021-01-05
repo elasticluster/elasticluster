@@ -44,8 +44,14 @@ def _run_command(argv):
     Return STDOUT, STDERR, and the process exit status.
     """
     with temporary_dir() as tmpdir:
-        with environment(HOME=os.getcwd(),
-                         PYTHONWARNINGS='ignore::DeprecationWarning::0,ignore::CryptographyDeprecationWarning::0') as env:
+        with environment(
+            HOME=os.getcwd(),
+            PYTHONWARNINGS=','.join([
+                'ignore::DeprecationWarning::0'
+                # `cryptography.CryptographyDeprecationWarning` does *not*
+                # inherit from `DeprecationWarning` :-(
+                'ignore::cryptography.utils.CryptographyDeprecationWarning::0'])
+        ) as env:
             proc = subprocess.Popen(
                 ['elasticluster'] + argv,
                 stdin=None,
