@@ -14,15 +14,32 @@ jobs:
   unit-tests:
     name: Run Unit Tests
     strategy:
-      matrix:
-        python:
-          - "2.7"
-          - "3.5"
-          - "3.6"
-          - "3.7"
-          - "3.8"
       # we want to know which Python's pass and which fail
       fail-fast: false
+      matrix:
+        # use the `matrix: include:` trick to build a simple list of
+        # parameters; we only need to override some package versions in
+        # specific cases (e.g., Python 2.7 needs older `setuptools` and `pip`)
+        include:
+
+          - python: "2.7"
+            # as of 2021-01-05, setuptools 51 and pip 21 have dropped support
+            # for Py 2.7 completely, so we need to use earlier versions to
+            # continue testing
+            prerequisites: "'setuptools==44.1.1' 'pip==20.3.3'"
+
+          - python: "3.5"
+            prerequisites: "'setuptools' 'pip>=8.1.2'"
+
+          - python: "3.6"
+            prerequisites: "'setuptools' 'pip>=8.1.2'"
+
+          - python: "3.7"
+            prerequisites: "'setuptools' 'pip>=8.1.2'"
+
+          - python: "3.8"
+            prerequisites: "'setuptools' 'pip>=8.1.2'"
+
     env:
       PYTHON: ${{ matrix.python }}
 
@@ -49,7 +66,7 @@ jobs:
         python-version: ${{ matrix.python }}
 
     - name: Install `pip` and `setuptools`
-      run: "pip install --upgrade 'setuptools' 'pip>=8.1.2'"
+      run: "pip install --upgrade ${{ matrix.prerequisites }}"
 
     - name: Install ElastiCluster from sources
       run: "pip install -e ."
@@ -79,16 +96,21 @@ jobs:
     name: Test installation on different OSes
     strategy:
       matrix:
-        os:
-          - ubuntu-20.04
-          - ubuntu-18.04
-          - ubuntu-16.04
-          - macos-11.0
-          - macos-10.15
+        env:
+          - os: ubuntu-20.04
+            prerequisites: "'setuptools' 'pip>=8.1.2'"
+          - os: ubuntu-18.04
+            prerequisites: "'setuptools' 'pip>=8.1.2'"
+          - os: ubuntu-16.04
+            prerequisites: "'setuptools==44.1.1' 'pip==20.3.3'"
+          - os: macos-11.0
+            prerequisites: "'setuptools' 'pip>=8.1.2'"
+          - os: macos-10.15
+            prerequisites: "'setuptools' 'pip>=8.1.2'"
       # we want to know which OSes pass and which fail
       fail-fast: false
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.env.os }}
     steps:
 
     - name: Show Python location and version
@@ -107,7 +129,7 @@ jobs:
         persist-credentials: false
 
     - name: Install `pip` and `setuptools`
-      run: "pip install --upgrade 'setuptools' 'pip>=8.1.2'"
+      run: "pip install --upgrade ${{ matrix.env.prerequisites }}"
 
     - name: Install ElastiCluster from sources
       run: "pip install ."
