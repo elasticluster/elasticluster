@@ -21,7 +21,12 @@
 from future import standard_library
 standard_library.install_aliases()
 
-from io import StringIO
+try:
+    from StringIO import StringIO
+    PY2 = True
+except ImportError:
+    from io import StringIO
+    PY2 = False
 import os
 import subprocess
 import sys
@@ -46,8 +51,18 @@ def _run_command(argv):
     with temporary_dir() as tmpdir:
         with environment(
             HOME=os.getcwd(),
-            # `cryptography.utils.CryptographyDeprecationWarning` is a subclass of `UserWarning`
-            PYTHONWARNINGS='ignore::DeprecationWarning,ignore::UserWarning',
+            PYTHONWARNINGS=(
+                # as support for Py2 wanes, we must silence warnings that
+                # Python 2.7 will no longer be supported, as they make the
+                # tests fail unnecessarily (functionality is OK, we just get
+                # some extra lines to STDERR).  Weirdly enough,
+                # `cryptography.utils.CryptographyDeprecationWarning` is a
+                # subclass of `UserWarning` so we need to ignore
+                # `UserWarnings` as well (cannot ignore a non-builtin
+                # exception class via an environmental variable)
+                'ignore::DeprecationWarning,ignore::UserWarning' if PY2
+                # display all warnings on Py3+
+                else ''),
         ) as env:
             proc = subprocess.Popen(
                 ['elasticluster'] + argv,
