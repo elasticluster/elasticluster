@@ -1,35 +1,17 @@
-name: Push to DockerHub
+name: Publish released code
 
 on:
   workflow_run:
-    workflows: ["Unit Tests"]
+    workflows: ["Tests"]
     branches:
       - main
     types:
       - completed
 
 jobs:
-  main:
+  dockerhub:
     name: Build and upload Docker image
-    strategy:
-      matrix:
-        python:
-          - "3.7"
-        os:
-          - ubuntu-latest
-    env:
-      OS: ${{ matrix.os }}
-      PYTHON: ${{ matrix.python }}
-
-      TRAVIS_REPO_SLUG: ${{ github.repository }}
-      TRAVIS_BRANCH: ${{ github.head_ref }}
-      TRAVIS_PULL_REQUEST: ${{ github.event.number }}
-
-      DOCKER_DEST: "riccardomurri/elasticluster"
-      DOCKER_USER: ${{ secrets.DOCKER_USER }}
-      DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
-
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
 
     #
@@ -43,13 +25,13 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python }}
+        python-version: "3.7"
 
     - name: Install `pip` and `setuptools`
       run: "pip install --upgrade 'setuptools' 'pip>=8.1.2'"
 
     - name: Install ElastiCluster from sources
-      run: "pip install ."
+      run: "pip install -e ."
 
     #
     # Upload Docker image
@@ -60,10 +42,22 @@ jobs:
         name: "riccardomurri/elasticluster"
         username: ${{ secrets.DOCKER_USER }}
         password: ${{ secrets.DOCKER_PASS }}
-        # FIXME: should be `latest,master` on the master branch, but `pr#XXX` on other branches
-        #tags: "latest,${TRAVIS_BRANCH}"
+
+        # FIXME: we occasionally might want to also publish artifacts from PRs,
+        # in which case the `tags:` line should *not* include `latest` and be only
+        # `tags: pr-${{ github.event.number }}`  But it is dangerous to automatically
+        # do this, as contributors could modify these workflows as well, so PR publishing
+        # should always be a manual action.
+        tags: "latest,${{ github.head_ref }}"
+
         # push tags/release by their git name (e.g. refs/tags/MY_TAG_NAME)
         tag_names: true
+
         # push tags using the semver syntax by their git name
         # (e.g. refs/tags/v1.2.3 will push four docker tags: 1.2.3, 1.2 and 1)
         tag_semver: true
+
+    - name: Success
+      run: |
+        echo "OK: Docker image successfully pushed."
+        exit 0

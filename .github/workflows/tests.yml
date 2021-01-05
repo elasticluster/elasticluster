@@ -1,0 +1,102 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+    types:
+      - opened
+      - ready_for_review
+      - review_request_removed
+      - synchronize
+      - reopened
+
+jobs:
+  unit-tests:
+    name: Run Unit Tests
+    strategy:
+      matrix:
+        python:
+          - "2.7"
+          - "3.5"
+          - "3.6"
+          - "3.7"
+          - "3.8"
+    env:
+      PYTHON: ${{ matrix.python }}
+
+    runs-on: ubuntu-latest
+    steps:
+
+    #
+    # Install from sources
+    #
+    - name: Checkout ElastiCluster sources
+      # see: https://github.com/actions/checkout
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+
+    - name: Install `pip` and `setuptools`
+      run: "pip install --upgrade 'setuptools' 'pip>=8.1.2'"
+
+    - name: Install ElastiCluster from sources
+      run: "pip install -e ."
+
+    #
+    # Unit tests
+    #
+    - name: Install test dependencies
+      run: "pip install 'pytest' 'pytest-cov' 'mock' 'tox' 'codecov'"
+
+    - name: Run unit tests
+      run: "pytest -v --cov=elasticluster --cov-branch"
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        flags: unittests
+        env_vars: PYTHON
+
+    - name: Success
+      run: |
+        echo "OK: ElastiCluster's unit tests successfully performed."
+        exit 0
+
+
+  install-tests:
+    name: Test installation on different OSes
+    strategy:
+      matrix:
+        os:
+          - ubuntu-20.04
+          - ubuntu-18.04
+          - ubuntu-16.04
+          - macos-11.0
+          - macos-10.5
+
+    runs-on: ${{ matrix.os }}
+    steps:
+
+    #
+    # Install from sources
+    #
+    - name: Checkout ElastiCluster sources
+      # see: https://github.com/actions/checkout
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+
+    - name: Install `pip` and `setuptools`
+      run: "pip install --upgrade 'setuptools' 'pip>=8.1.2'"
+
+    - name: Install ElastiCluster from sources
+      run: "pip install ."
+
+    - name: Success
+      run: |
+        echo "OK: ElastiCluster successfully installed."
+        exit 0
