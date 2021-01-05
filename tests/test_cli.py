@@ -45,7 +45,7 @@ def _run_command(argv):
     """
     with temporary_dir() as tmpdir:
         with environment(HOME=os.getcwd(),
-                         PYTHONWARNINGS='ignore::DeprecationWarning::0') as env:
+                         PYTHONWARNINGS='ignore::DeprecationWarning::0,ignore::CryptographyDeprecationWarning::0') as env:
             proc = subprocess.Popen(
                 ['elasticluster'] + argv,
                 stdin=None,
