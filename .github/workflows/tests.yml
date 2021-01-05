@@ -40,6 +40,9 @@ jobs:
           - python: "3.8"
             prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
 
+          - python: "3.9"
+            prerequisites: "'setuptools>=21' 'pip>=9.0.0'"
+
     env:
       PYTHON: ${{ matrix.python }}
 
