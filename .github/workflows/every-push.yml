@@ -4,15 +4,37 @@ on: [push]
 
 jobs:
   dispatch:
-    name: Dispatch workflows on PR changes
+    name: Dispatch workflows on `git push`
     runs-on: ubuntu-latest
     steps:
+      ### DEBUG ###
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT" | jq -r '.'
+      - name: Dump job context
+        env:
+          JOB_CONTEXT: ${{ toJson(job) }}
+        run: echo "$JOB_CONTEXT" | jq -r '.'
+      - name: Dump steps context
+        env:
+          STEPS_CONTEXT: ${{ toJson(steps) }}
+        run: echo "$STEPS_CONTEXT" | jq -r '.'
+      - name: Dump runner context
+        env:
+          RUNNER_CONTEXT: ${{ toJson(runner) }}
+        run: echo "$RUNNER_CONTEXT" | jq -r '.'
+      - name: Dump strategy context
+        env:
+          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+        run: echo "$STRATEGY_CONTEXT" | jq -r '.'
+
       - name: Start the "Tests" workflow
         run: |
           curl -sSL \
             -X POST \
             -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
             -H "Accept: application/vnd.github.v3+json" \
-            -d '{ "ref":"'"${{ env.GITHUB_REF }}"'" }' \
+            -d '{ "ref":"'"${{ github.ref }}"'" }' \
             https://api.github.com/repos/${{ github.repository }}/actions/workflows/tests.yml/dispatches \
             | jq -r '.'
