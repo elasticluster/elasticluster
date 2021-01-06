@@ -25,5 +25,5 @@ jobs:
             -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
             -H "Accept: application/vnd.github.v3+json" \
             -d '{ "ref":"'"$ref"'" }' \
-            https://api.github.com/repos/${{ github.repository }}/actions/workflows/tests/dispatches \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/tests.yml/dispatches \
             | jq -r '.'
