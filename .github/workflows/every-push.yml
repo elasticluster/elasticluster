@@ -19,11 +19,10 @@ jobs:
               exit 1
               ;;
           esac
-          # trigger
-          set -x
-          curl -v -S -L \
+          # trigger workflow
+          curl -s -S -L \
             -X POST \
-            -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            -H 'Authorization: Bearer ${{ secrets.GH_ACTIONS_TOKEN }}' \
             -H "Accept: application/vnd.github.v3+json" \
             -d '{ "ref":"'"$ref"'" }' \
             https://api.github.com/repos/${{ github.repository }}/actions/workflows/tests.yml/dispatches \
