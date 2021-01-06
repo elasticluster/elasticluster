@@ -1,14 +1,16 @@
 name: Tests
 
 on:
-  push:
-  pull_request:
-    types:
-      - opened
-      - ready_for_review
-      - review_request_removed
-      - synchronize
-      - reopened
+  workflow_dispatch:
+    # inputs:
+    #   name:
+    #     description: 'Person to greet'
+    #     required: true
+    #     default: 'Mona the Octocat'
+    #   home:
+    #     description: 'location'
+    #     required: false
+    #     default: 'The Octoverse'
 
 jobs:
   unit-tests:

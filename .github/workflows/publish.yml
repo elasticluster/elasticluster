@@ -1,12 +1,7 @@
 name: Publish released code
 
 on:
-  workflow_run:
-    workflows: ["Tests"]
-    branches:
-      - master
-    types:
-      - completed
+  workflow_dispatch:
 
 jobs:
   dockerhub:
