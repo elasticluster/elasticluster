@@ -550,13 +550,13 @@ class Cluster(Struct):
                     result.wait(1)
                     # check if Ctrl+C was pressed
                     if not keep_running:
-                        log.error("Aborting upon user interruption ...")
+                        log.error("Aborting upon manual interruption ...")
                         # interrupt node creation as soon as possible
                         thread_pool.terminate()
                         thread_pool.join()
                         self.repository.save_or_update(self)
-                        # FIXME: should raise an exception instead!
-                        sys.exit(1)
+                        raise KeyboardInterrupt(
+                            "User-initiated interruption (Ctrl+C or SIGINT)")
 
                 # keep only nodes that were successfully started
                 return set(node for node, ok
