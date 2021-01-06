@@ -20,7 +20,7 @@ jobs:
               ;;
           esac
           # trigger
-          curl -sSL \
+          curl -v -S -L \
             -X POST \
             -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
             -H "Accept: application/vnd.github.v3+json" \
