@@ -7,34 +7,23 @@ jobs:
     name: Dispatch workflows on `git push`
     runs-on: ubuntu-latest
     steps:
-      ### DEBUG ###
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT" | jq -r '.'
-      - name: Dump job context
-        env:
-          JOB_CONTEXT: ${{ toJson(job) }}
-        run: echo "$JOB_CONTEXT" | jq -r '.'
-      - name: Dump steps context
-        env:
-          STEPS_CONTEXT: ${{ toJson(steps) }}
-        run: echo "$STEPS_CONTEXT" | jq -r '.'
-      - name: Dump runner context
-        env:
-          RUNNER_CONTEXT: ${{ toJson(runner) }}
-        run: echo "$RUNNER_CONTEXT" | jq -r '.'
-      - name: Dump strategy context
-        env:
-          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-        run: echo "$STRATEGY_CONTEXT" | jq -r '.'
-
       - name: Start the "Tests" workflow
         run: |
+          # extract branch/tag name from ref
+          ref="${{ github.ref }}"
+          case "$ref" in
+            refs/heads/*) ref=$(echo "$ref" | cut -c12-) ;;
+            refs/tags/*) ref=$(echo "$ref" | cut -c11-) ;;
+            *)
+              echo "Could not parse ref '$ref'" 1>&2
+              exit 1
+              ;;
+          esac
+          # trigger
           curl -sSL \
             -X POST \
             -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
             -H "Accept: application/vnd.github.v3+json" \
-            -d '{ "ref":"'"${{ github.ref }}"'" }' \
+            -d '{ "ref":"'"$ref"'" }' \
             https://api.github.com/repos/${{ github.repository }}/actions/workflows/tests.yml/dispatches \
             | jq -r '.'
