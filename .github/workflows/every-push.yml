@@ -11,8 +11,8 @@ jobs:
         run: |
           curl -sSL \
             -X POST \
+            -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
             -H "Accept: application/vnd.github.v3+json" \
-            -d "branch=${{ env.GITHUB_REF }}" \
-            -d "event=push" \
+            -d "ref=${{ env.GITHUB_REF }}" \
             https://api.github.com/repos/${{ github.repository }}/actions/workflows/tests.yml/dispatches \
             | jq -r '.'
