@@ -46,8 +46,8 @@ jobs:
       uses: elgohr/Publish-Docker-Github-Action@master
       with:
         name: "riccardomurri/elasticluster"
-        username: ${{ secrets.DOCKER_USER }}
-        password: ${{ secrets.DOCKER_PASS }}
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
         # FIXME: we occasionally might want to also publish artifacts from PRs,
         # in which case the `tags:` line should *not* include `latest` and be only
