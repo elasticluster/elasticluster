@@ -30,7 +30,8 @@ from builtins import range
 import hashlib
 import os
 import sys
-import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error
+from urllib.parse import urlsplit
 import threading
 import time
 from warnings import warn
@@ -104,18 +105,11 @@ class BotoCloudProvider(AbstractCloudProvider):
         self.timeout = timeout
 
         # read all parameters from url
-        proto, opaqueurl = urllib.parse.splittype(ec2_url)
-        self._host, self._ec2path = urllib.parse.splithost(opaqueurl)
-        self._ec2host, port = urllib.parse.splitport(self._host)
-
-        if port:
-            port = int(port)
-        self._ec2port = port
-
-        if proto == "https":
-            self._secure = True
-        else:
-            self._secure = False
+        ec2_url = urlsplit(ec2_url)
+        self._secure = (ec2_url.scheme == 'https')
+        self._ec2host = ec2_url.hostname
+        self._ec2port = ec2_url.port
+        self._ec2path = ec2_url.path
 
         self._region_name = ec2_region
 

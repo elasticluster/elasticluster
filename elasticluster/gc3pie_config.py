@@ -43,19 +43,19 @@ from elasticluster import log
 
 # NODELIST          NODES PARTITION       STATE CPUS    S:C:T MEMORY TMP_DISK WEIGHT FEATURES REASON
 # compute[001-002]      2    cloud*        idle    1    1:1:1    491     5026      1   (null) none
-slurm_sinfo_regexp =  re.compile('^(?P<hostnames>[^ \t]+)\s+'
-                                 '(?P<num>[0-9]+)\s+'
-                                 '(?P<partition>[^ \t]+)\s+'
-                                 '(?P<state>[^ \t]+)\s+'
-                                 '(?P<cpus>[0-9]+)\s+'
-                                 '(?P<S>[0-9]+):(?P<C>[0-9]+):(?P<T>[0-9]+)\s+'
-                                 '(?P<memory>[0-9]+)\s+'
-                                 '(?P<tmp_disk>[0-9]+)\s+'
-                                 '(?P<weight>[0-9]+)\s+'
-                                 '(?P<features>[^ ]+)\s+'
-                                 '(?P<reason>[^ \t]+)')
+slurm_sinfo_regexp =  re.compile(r'^(?P<hostnames>[^ \t]+)\s+'
+                                 r'(?P<num>[0-9]+)\s+'
+                                 r'(?P<partition>[^ \t]+)\s+'
+                                 r'(?P<state>[^ \t]+)\s+'
+                                 r'(?P<cpus>[0-9]+)\s+'
+                                 r'(?P<S>[0-9]+):(?P<C>[0-9]+):(?P<T>[0-9]+)\s+'
+                                 r'(?P<memory>[0-9]+)\s+'
+                                 r'(?P<tmp_disk>[0-9]+)\s+'
+                                 r'(?P<weight>[0-9]+)\s+'
+                                 r'(?P<features>[^ ]+)\s+'
+                                 r'(?P<reason>[^ \t]+)')
 
-slurm_scontrol_maxtime_regexp = re.compile('.*\sMaxTime=(?P<MaxTime>[^ \t]+)\s+')
+slurm_scontrol_maxtime_regexp = re.compile(r'.*\sMaxTime=(?P<MaxTime>[^ \t]+)\s+')
 
 def inspect_slurm_cluster(ssh, node_information):
     (_in, _out, _err) = ssh.exec_command("sinfo -hNel")
@@ -93,11 +93,11 @@ def inspect_pbs_cluster(ssh):
     pass
 
 
-sge_qhost_regexp = re.compile('(?P<hostname>[^\s]+)\s+'
-                              '(?P<arch>[^\s]+)\s+'
-                              '(?P<ncpus>[0-9]+)\s+'
-                              '(?P<load>[^\s]+)\s+'
-                              '(?P<memory>[0-9\.MGT]+)\s+')
+sge_qhost_regexp = re.compile(r'(?P<hostname>[^\s]+)\s+'
+                              r'(?P<arch>[^\s]+)\s+'
+                              r'(?P<ncpus>[0-9]+)\s+'
+                              r'(?P<load>[^\s]+)\s+'
+                              r'(?P<memory>[0-9\.MGT]+)\s+')
 
 # This function is took from GC3Pie, http://code.google.com/p/gc3pie/
 # module gc3pie.gc3libs.utils

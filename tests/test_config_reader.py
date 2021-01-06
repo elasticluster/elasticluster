@@ -25,7 +25,10 @@ from builtins import str
 import logging
 logging.basicConfig()
 
-import collections
+try:
+    from collections.abc import Mapping  # Python 3
+except ImportError:
+    from collections import Mapping  # Python 2
 from copy import copy, deepcopy
 from os.path import join
 
@@ -506,8 +509,7 @@ def test_dereference_config_tree_evict():
             ('example_openstack',    'login', 'ubuntu'),
             ('example_openstack',    'setup', 'example_setup'),
     ]:
-        assert isinstance(deref_tree['cluster'][cluster_name][ref_section],
-                          collections.Mapping)
+        assert isinstance(deref_tree['cluster'][cluster_name][ref_section], Mapping)
         assert (deref_tree['cluster'][cluster_name][ref_section]
                 is deref_tree[ref_section][ref_name])
     # check eviction of clusters w/ wrong config
