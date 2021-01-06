@@ -20,6 +20,7 @@ jobs:
               ;;
           esac
           # trigger
+          set -x
           curl -v -S -L \
             -X POST \
             -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
