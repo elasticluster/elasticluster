@@ -6,6 +6,10 @@ jobs:
   dispatch:
     name: Dispatch workflows on `git push`
     runs-on: ubuntu-latest
+    # NOTE: The crucial step in starting dependent workflows is that a
+    # "personal access token" must be used (with "workflow" scope); the
+    # standard GITHUB_TOKEN is not authorized to create dispatches, yet the
+    # API returns an HTTP 204 response so no error is raised.
     steps:
       - name: Start the "Tests" workflow
         run: |
@@ -25,5 +29,4 @@ jobs:
             -H 'Authorization: Bearer ${{ secrets.GH_ACTIONS_TOKEN }}' \
             -H "Accept: application/vnd.github.v3+json" \
             -d '{ "ref":"'"$ref"'" }' \
-            https://api.github.com/repos/${{ github.repository }}/actions/workflows/tests.yml/dispatches \
-            | jq -r '.'
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/tests.yml/dispatches
