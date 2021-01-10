@@ -1,5 +1,6 @@
 #
 # Copyright (C) 2013-2019 University of Zurich
+# Copyright (C) 2021      Google LLC
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +30,10 @@ __author__ = ', '.join([
 
 # stdlib imports
 from builtins import range
-import collections
+try:
+    from collections.abc import Sequence
+except ImportError:
+    from collections import Sequence  # Python 2.7
 import copy
 import os
 import random
@@ -378,7 +382,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
 
         if isinstance(tags, (str,)):
             tags = tags.split(',')
-        elif isinstance(tags, collections.Sequence):
+        elif isinstance(tags, Sequence):
             # ok, nothing to do
             pass
         elif tags is not None:
