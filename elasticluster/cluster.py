@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 #
+# Copyright (C) 2021      Google LLC
 # Copyright (C) 2013-2019 University of Zurich
 #
 # This program is free software: you can redistribute it and/or modify
@@ -30,6 +31,7 @@ from contextlib import closing
 from copy import copy
 from functools import reduce
 import itertools
+from multiprocessing.dummy import Pool
 import operator
 import os
 import re
@@ -37,7 +39,7 @@ import signal
 import socket
 import sys
 import time
-from multiprocessing.dummy import Pool
+from warnings import warn
 
 # External modules
 import paramiko
@@ -1465,6 +1467,18 @@ class Node(Struct):
                 log.debug(
                     "Ignoring error connecting to %s: %s -- %r",
                     self.name, ex, type(ex))
+            except ValueError as err:
+                msg = str(err)
+                if msg.startswith("q must be exactly") or msg.startswith("p must be exactly"):
+                    # warn and continue, this is just Paramiko mistakenly using an RSA
+                    # key as DSA one, see: https://github.com/paramiko/paramiko/pull/1606
+                    warn(
+                        "The configured SSH private RSA key file `{0}`"
+                        " can also be mistakenly read as a DSA key file."
+                        " If you run into SSH connection problems, use"
+                        " a different key.")
+                else:
+                    raise
 
         return None
 
