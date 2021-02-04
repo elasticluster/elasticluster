@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-#
 #
+# Copyright (C) 2021      Google LLC
 # Copyright (C) 2013-2019 University of Zurich. All rights reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -124,7 +125,7 @@ setup(
         'pip>=9.0.0',  ## see issue #433
         #'ara',  # optional
         'PyCLI',
-        'ansible>=2.7',
+        'ansible>=2.7,<2.10',
         'click>=4.0',  ## click.prompt() added in 4.0
         'coloredlogs',
         'netaddr',
