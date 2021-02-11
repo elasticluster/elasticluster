@@ -1,24 +1,18 @@
 name: Publish released code
 
 on:
-  workflow_run:
-    workflows: ["Tests"]
-    branches:
-      - master
-    types:
-      - completed
+  workflow_dispatch:
+    tags:
+      description: 'Comma-separated list of Docker tags to mark the image with'
+      required: false
+      default: 'latest'
+
 
 jobs:
   dockerhub:
     name: Build and upload Docker image
     runs-on: ubuntu-latest
     steps:
-
-    - name: Exit early if tests were unsuccessful
-      if: github.event.workflow_run.conclusion != 'success'
-      run: |
-        echo "Tests were unsuccessful, skipping publishing."
-        exit 1
 
     #
     # Install from sources
@@ -48,17 +42,9 @@ jobs:
         name: "riccardomurri/elasticluster"
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-        # FIXME: we occasionally might want to also publish artifacts from PRs,
-        # in which case the `tags:` line should *not* include `latest` and be only
-        # `tags: pr-${{ github.event.number }}`  But it is dangerous to automatically
-        # do this, as contributors could modify these workflows as well, so PR publishing
-        # should always be a manual action.
-        tags: "latest,${{ github.head_ref }}"
-
+        tags: "${{ github.event.inputs.tags }}"
         # push tags/release by their git name (e.g. refs/tags/MY_TAG_NAME)
         tag_names: true
-
         # push tags using the semver syntax by their git name
         # (e.g. refs/tags/v1.2.3 will push four docker tags: 1.2.3, 1.2 and 1)
         tag_semver: true
