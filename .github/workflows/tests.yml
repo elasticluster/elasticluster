@@ -137,7 +137,7 @@ jobs:
 
     - name: Try running `elasticluster` commands
       id: try-run
-      continue-on-error: yes
+      continue-on-error: true
       run: |
         set -e
         # different incantations of the `elasticluster` command
