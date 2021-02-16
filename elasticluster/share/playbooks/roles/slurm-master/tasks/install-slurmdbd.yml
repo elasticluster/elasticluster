@@ -8,7 +8,7 @@
     dest: /etc/slurm/slurmdbd.conf
     owner: root
     group: root
-    mode: '0444'
+    mode: '0600'
   notify: restart slurmdbd
   tags:
     - slurm
