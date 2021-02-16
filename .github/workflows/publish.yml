@@ -2,7 +2,7 @@ name: Publish released code
 
 on:
   workflow_dispatch:
-    tags:
+    inputs:
       description: 'Comma-separated list of Docker tags to mark the image with'
       required: false
       default: 'latest'
