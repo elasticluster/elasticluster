@@ -136,13 +136,17 @@ jobs:
       run: "pip install ."
 
     - name: Try running `elasticluster` commands
+      id: try-run
+      continue-on-error: yes
       run: |
+        set -e
         # different incantations of the `elasticluster` command
         export PATH="$PATH:${{ matrix.env.path }}"
         elasticluster --version
         elasticluster list-templates
 
     - name: Success
+      if: steps.try-run.outcome == 'success' && steps.try-run.conclusion == 'success'
       run: |
         echo "OK: ElastiCluster successfully installed."
         exit 0
