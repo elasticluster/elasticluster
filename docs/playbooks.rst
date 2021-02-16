@@ -306,9 +306,6 @@ Extra variables can be set by editing the `setup/` section:
        If set to ``yes`` then SLURM kills jobs whose virtual memory
        usage exceeds allocated memory * ``slurm_allowedswapspace``
        (see below).
-   * - ``slurm_fastschedule``
-     - 1
-     - Value of ``FastSchedule`` in ``slurm.conf``
    * - ``slurm_jobacctgatherfrequency``
      - 60
      - Value of ``JobAcctGatherFrequency`` in ``slurm.conf``

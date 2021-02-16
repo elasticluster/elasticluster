@@ -20,7 +20,6 @@ SLURM_ACCOUNTING_DB_PASS: "ua7diKee"
 
 
 # defaults used in `slurm.conf`
-slurm_fastschedule: 1
 slurm_jobacctgatherfrequency: 60
 slurm_jobacctgathertype: 'jobacct_gather/linux'
 slurm_maxarraysize: 1000

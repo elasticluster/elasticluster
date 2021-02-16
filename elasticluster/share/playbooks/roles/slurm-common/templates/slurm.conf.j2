@@ -35,7 +35,6 @@ SchedulerType=sched/backfill
 SchedulerPort=7321
 SelectType={{slurm_selecttype|default('select/cons_res')}}
 SelectTypeParameters={{slurm_selecttypeparameters|default('CR_Core_Memory')}}
-FastSchedule={{slurm_fastschedule|default('1')}}
 {% if slurm_defmempercpu is defined %}
 DefMemPerCPU={{slurm_defmempercpu|int}}
 {% else %}
