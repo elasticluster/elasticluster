@@ -6,6 +6,7 @@
     slurm_db_server_pkg: mariadb-server
     slurm_db_python_pkg: python-mysqldb
     slurm_db_service_name: mysql
+    mysql_cnf_path: '/etc/mysql/my.cnf'
   when: 'is_debian_or_ubuntu and (is_debian_8_or_later or is_ubuntu_14_04_or_later)'
 
 - name: Set variables (older Debian/Ubuntu)
@@ -14,6 +15,7 @@
     slurm_db_server_pkg: mysql-server
     slurm_db_python_pkg: python-mysqldb
     slurm_db_service_name: mysql
+    mysql_cnf_path: '/etc/mysql/my.cnf'
   when: 'is_debian_or_ubuntu and not (is_debian_8_or_later or is_ubuntu_14_04_or_later)'
 
 - name: Set variables (RHEL 7.x)
@@ -22,6 +24,7 @@
     slurm_db_server_pkg: mariadb-server
     slurm_db_python_pkg: MySQL-python
     slurm_db_service_name: mariadb
+    mysql_cnf_path: '/etc/my.cnf'
   when: 'is_rhel7_compatible'
 
 - name: Set variables (RHEL 6.x)
@@ -30,6 +33,7 @@
     slurm_db_server_pkg: mysql-server
     slurm_db_python_pkg: MySQL-python
     slurm_db_service_name: mysqld
+    mysql_cnf_path: '/etc/my.cnf'
   when: 'is_rhel6_compatible'
 
 
@@ -49,8 +53,7 @@
     - slurm
     - slurmdbd
   blockinfile:
-    # FIXME: Path is correct on Debian/Ubuntu; is it also for CentOS/RHEL?
-    path: '/etc/mysql/my.cnf'
+    path: '{{ mysql_cnf_path }}'
     state: present
     backup: yes
     insertafter: EOF
