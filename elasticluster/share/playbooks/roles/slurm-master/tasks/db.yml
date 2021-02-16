@@ -71,9 +71,9 @@
     - slurm
     - slurmdbd
   service:
-    name='{{slurm_db_service_name}}'
-    enabled=yes
-    state=started
+    name: '{{slurm_db_service_name}}'
+    enabled: yes
+    state: started
 
 
 - name: Create DB for SLURMDBD
@@ -82,8 +82,8 @@
     - slurmdbd
   # NOTE: the `SLURM_ACCOUNTING_*` variables are defined in `roles/slurm-common/defaults`
   mysql_db:
-    name='{{SLURM_ACCOUNTING_DB_NAME}}'
-    state=present
+    name: '{{SLURM_ACCOUNTING_DB_NAME}}'
+    state: present
 
 
 - name: Create DB user for SLURMDBD
@@ -92,11 +92,11 @@
     - slurmdbd
   # NOTE: the `SLURM_ACCOUNTING_*` variables are defined in `roles/slurm-common/defaults`
   mysql_user:
-    name='{{SLURM_ACCOUNTING_DB_USER}}'
-    host='{{item}}'
-    password='{{SLURM_ACCOUNTING_DB_PASS}}'
-    priv='{{SLURM_ACCOUNTING_DB_NAME}}.*:ALL'
-    state=present
+    name: '{{SLURM_ACCOUNTING_DB_USER}}'
+    host: '{{item}}'
+    password: '{{SLURM_ACCOUNTING_DB_PASS}}'
+    priv: '{{SLURM_ACCOUNTING_DB_NAME}}.*:ALL'
+    state: present
   loop:
     - '{{SLURM_ACCOUNTING_HOST}}'
     - 'localhost'

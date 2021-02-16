@@ -4,11 +4,11 @@
 # start with the correct config
 - name: Deploy SLURMDBD configuration
   template:
-    src=slurmdbd.conf.j2
-    dest=/etc/slurm/slurmdbd.conf
-    owner=root
-    group=root
-    mode=0444
+    src: slurmdbd.conf.j2
+    dest: /etc/slurm/slurmdbd.conf
+    owner: root
+    group: root
+    mode: '0444'
   notify: restart slurmdbd
   tags:
     - slurm
@@ -27,8 +27,8 @@
     - slurm
     - slurmdbd
   service:
-    name='{{item}}'
-    enabled=yes
-    state=started
+    name: '{{item}}'
+    enabled: yes
+    state: started
   loop:
     - '{{slurmdbd_service_name}}'
