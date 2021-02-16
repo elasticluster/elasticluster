@@ -109,11 +109,6 @@ MaxArraySize={{slurm_maxarraysize|default(1000)}}
 MaxJobCount={{slurm_maxjobcount|default(10000)}}
 
 
-MpiDefault=openmpi
-# Note: Apparently, the `MpiParams` option is needed also for non-mpi
-# jobs in slurm 2.5.3.
-MpiParams=ports=12000-12999
-
 # track resource usage via Linux /proc tree
 ProctrackType={{slurm_proctracktype|default('proctrack/linuxproc')}}
 
