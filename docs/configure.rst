@@ -539,6 +539,23 @@ Valid configuration keys for ``openstack``
   set, this option is ignored and the value of the environment
   variable is used instead.
 
+``application_credential_id``
+  OpenStack application credential ID, which together with a application
+  credential secret can be used instead of a password. 
+  Equivalent to ``--os-application-credential-id`` of the `*openstack* 
+  command`_.
+  If an environment variable ``OS_APPLICATION_CREDENTIAL_ID`` is set, 
+  this option is ignored and the value of the environment variable 
+  is used instead.
+
+``application_credential_secret``
+  OpenStack application credential secret, same as 
+  ``--os-application-credential-secret`` of the `*openstack* command`_.
+  If an environment variable ``OS_APPLICATION_CREDENTIAL_SECRET`` is set, 
+  this option is ignored and the value of the environment variable 
+  is used instead. Must be paired with a corresponding 
+  ``application_credential_id``.
+
 ``project_name``
   OpenStack project to use (formerly known as "tenant"), same as
   option ``--os-project-name`` of the `*openstack* command`_. If an
