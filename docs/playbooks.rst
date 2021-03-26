@@ -1552,7 +1552,7 @@ the Julia language system:
 ===================== ========================== ==============================
 Variable name         Default                    Description
 ===================== ========================== ==============================
-``julia_version``     ``1.5.2``                  Version of Julia to install
+``julia_version``     ``1.6.0``                  Version of Julia to install
 ``julia_in_path``     ``yes``                    Should the ``julia`` command
                                                  be added to all users' default
                                                  program search path?  If not,
