@@ -1531,9 +1531,9 @@ Julia language
 
 Supported on:
 
-* Ubuntu 14.04 ("trusty") and later
-* Debian 9 ("stretch")
-* CentOS 6.x and 7.x
+* Ubuntu 16.04 ("xenial") and later
+* Debian 9 ("stretch") and later
+* CentOS 7.x and 8.x
 
 ==============  =======================================================
 Ansible group   Action
@@ -1553,6 +1553,14 @@ the Julia language system:
 Variable name         Default                    Description
 ===================== ========================== ==============================
 ``julia_version``     ``1.5.2``                  Version of Julia to install
+``julia_in_path``     ``yes``                    Should the ``julia`` command
+                                                 be added to all users' default
+                                                 program search path?  If not,
+                                                 you will have to invoke Julia
+                                                 by full path name (e.g.,
+                                                 ``/opt/julia/bin/julia``)
+``julia_home``        ``/opt/julia``             Where should the Julia software
+                                                 archive be unpacked?
 ===================== ========================== ==============================
 
 The following example (incomplete) shows how to install JupyterHub
