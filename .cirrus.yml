@@ -19,9 +19,7 @@ checkout_and_setup_task_template: &SETUP_TASK_TEMPLATE
         pip install --upgrade 'setuptools>=21' 'pip>=9.0.0' ;;
     esac
   setup_script: |
-    set -e
-    #git clone https://github.com/elasticluster/elasticluster.git
-    pip install -e ./elasticluster
+    pip install -e .
 
 
 task:
