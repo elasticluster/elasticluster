@@ -9,8 +9,15 @@ checkout_and_setup_task_template: &SETUP_TASK_TEMPLATE
     echo "Python executable: $(command -v python)"
     echo "Python version: $(python -V 2>&1)"
   dependencies_script: |
-    set -e
-    pip install --upgrade 'setuptools>=21' 'pip>=9.0.0'
+    case $(python V 2>&1) in
+      'Python 2.7'*)
+        # as of 2021-01-05, setuptools 51 and pip 21 have dropped support
+        # for Py 2.7 completely, so we need to use earlier versions to
+        # continue testing
+        pip install --upgrade 'setuptools<=44.1.1' 'pip==20.3.3' ;;
+      'Python 3.'*)
+        pip install --upgrade 'setuptools>=21' 'pip>=9.0.0' ;;
+    esac
   setup_script: |
     set -e
     #git clone https://github.com/elasticluster/elasticluster.git
@@ -29,11 +36,6 @@ task:
   matrix:
     - container: python2.7
       allow_failures: true
-      dependencies_script: |
-        # as of 2021-01-05, setuptools 51 and pip 21 have dropped support
-        # for Py 2.7 completely, so we need to use earlier versions to
-        # continue testing
-        pip install --upgrade 'setuptools<=44.1.1' 'pip==20.3.3'
     - container: python3.5
     - container: python3.6
     - container: python3.7
