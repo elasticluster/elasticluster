@@ -1,0 +1,98 @@
+#
+# Configuration for Cirrus CI tests
+#
+
+checkout_and_setup_task_template: &SETUP_TASK_TEMPLATE
+  env_info_script: |
+    # display data about Python interpreter
+    set -e
+    echo "Python executable: $(command -v python)"
+    echo "Python version: $(python -V 2>&1)"
+  dependencies_script: |
+    set -e
+    pip install --upgrade 'setuptools>=21' 'pip>=9.0.0'
+  setup_script: |
+    set -e
+    #git clone https://github.com/elasticluster/elasticluster.git
+    pip install -e ./elasticluster
+
+
+task:
+  <<: *SETUP_TASK_TEMPLATE
+  name: Unit Tests
+  test_script: |
+    set -e
+    pip install 'pytest>=2.10' 'pytest-cov' 'mock' 'tox' 'codecov'
+    pytest -v --cov=elasticluster --cov-branch
+    echo "OK: ElastiCluster's unit tests successfully performed."
+    exit 0
+  matrix:
+    - container: python2.7
+      allow_failures: true
+      dependencies_script: |
+        # as of 2021-01-05, setuptools 51 and pip 21 have dropped support
+        # for Py 2.7 completely, so we need to use earlier versions to
+        # continue testing
+        pip install --upgrade 'setuptools<=44.1.1' 'pip==20.3.3'
+    - container: python3.5
+    - container: python3.6
+    - container: python3.7
+    - container: python3.8
+    - container: python3.9
+
+
+task:
+  <<: *SETUP_TASK_TEMPLATE
+  name: Install Tests
+  # Try running `elasticluster` commands
+  test_script: |
+    set -e
+    # different incantations of the `elasticluster` command
+    export PATH="$PATH:${{ matrix.env.path }}"
+    elasticluster --version
+    elasticluster list-templates
+    echo "OK: ElastiCluster successfully installed."
+    exit 0
+  matrix:
+    - compute_engine_instance:
+        image_project: centos-cloud
+        image: centos-7
+    - compute_engine_instance:
+        image_project: centos-cloud
+        image: centos-8
+    - compute_engine_instance:
+        image_project: debian-cloud
+        image: debian-9
+    - compute_engine_instance:
+        image_project: debian-cloud
+        image: debian-10
+    - compute_engine_instance:
+        image_project: ubuntu-os-cloud
+        image: ubuntu-1604-lts
+    - compute_engine_instance:
+        image_project: ubuntu-os-cloud
+        image: ubuntu-1804-lts
+    - compute_engine_instance:
+        image_project: ubuntu-os-cloud
+        image: ubuntu-2004-lts
+    - compute_engine_instance:
+        image_project: ubuntu-os-cloud
+        image: ubuntu-2010
+    - macos_instance:
+        image: big-sur-base
+    - macos_instance:
+        image: catalina-base
+
+
+docker_builder:
+  name: Publish Docker image
+  depends_on:
+    - Unit Tests
+    - Install Tests
+  only_if: '$BRANCH == "master" && $CIRRUS_TAG != ""'
+  env:
+    DOCKER_USERNAME: ENCRYPTED[!2fe1412a1f9a67f9e6a45ac82ef15c6dbf6703b40271e9d26d1697bdaa0ef547cdc99064e1f4076755d9b776084fc4fc!]
+    DOCKER_PASSWORD: ENCRYPTED[!a40395ebe17f71ab0ec336090f8035c81929167cd4e1dbb53d0130520d7fbc2c9a9f404511045cc6486e522a9ecc3f60!]
+  build_script: docker build --tag riccardomurri/elasticluster:$CIRRUS_TAG .
+  login_script: docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+  push_script: docker push riccardomurri/elasticluster:$CIRRUS_TAG
