@@ -60,30 +60,31 @@ task:
     echo "OK: ElastiCluster successfully installed."
     exit 0
   matrix:
+    # until CirrusCI #826 is implemented, we must specify images by name and version
     - compute_engine_instance:
         image_project: centos-cloud
-        image: centos-7
+        image: centos-7-v20210316
     - compute_engine_instance:
         image_project: centos-cloud
-        image: centos-8
+        image: centos-8-v20210316
     - compute_engine_instance:
         image_project: debian-cloud
-        image: debian-9
+        image: debian-9-stretch-v20210316
     - compute_engine_instance:
         image_project: debian-cloud
-        image: debian-10
+        image: debian-10-buster-v20210316
     - compute_engine_instance:
         image_project: ubuntu-os-cloud
-        image: ubuntu-1604-lts
+        image: ubuntu-1604-xenial-v20210316
     - compute_engine_instance:
         image_project: ubuntu-os-cloud
-        image: ubuntu-1804-lts
+        image: ubuntu-1804-bionic-v20210325
     - compute_engine_instance:
         image_project: ubuntu-os-cloud
-        image: ubuntu-2004-lts
+        image: ubuntu-2004-focal-v20210325
     - compute_engine_instance:
         image_project: ubuntu-os-cloud
-        image: ubuntu-2010
+        image: ubuntu-2010-groovy-v20210325
     - macos_instance:
         image: big-sur-base
     - macos_instance:
