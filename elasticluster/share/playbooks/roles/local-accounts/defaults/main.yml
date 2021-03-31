@@ -1,0 +1,42 @@
+---
+
+accounts_to_create:
+  - teacher
+  - student01
+  - student02
+  - student03
+  - student04
+  - student05
+  - student06
+  - student07
+  - student08
+  - student09
+  - student10
+  - student11
+  - student12
+  - student13
+  - student14
+  - student15
+  - student16
+  - student17
+  - student18
+  - student19
+  - student20
+  - student21
+  - student22
+  - student23
+  - student24
+  - student25
+  - student26
+  - student27
+  - student28
+  - student29
+  - student30
+
+# http://docs.ansible.com/ansible/faq.html#how-do-i-generate-crypted-passwords-for-the-user-module
+
+# SIBtest123
+students_password: "$6$JIWIFgsapZ$PPNJdbPMUbjaiymvVYi1H0E.7N1y5MFQGIT4ejbLFk1/3npMqwp.oVD9PRsB3mbObRJEeQganvb5reTrRJ.Mv/"
+
+# Igotroot!
+teacher_password: "$6$b7ssR4UtQNO$x/qgMaRaLBbrHghGcdidMbQ8rXdw/q9QvCKQH1cbl7oTrxrvegq0CqgzjdA0kls/9RRxlNOKsQ6ubOXG8ur66."
