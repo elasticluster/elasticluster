@@ -1,0 +1,6 @@
+---
+# defaults file for scicore-singularity-install
+
+singularity_install_prefix: '/usr/local'
+
+singularity_version: "latest"

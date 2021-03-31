@@ -1,0 +1,10 @@
+---
+# tasks file for singularity-install
+
+- name: Check if Singularity is already installed
+  stat:
+    path: "{{ singularity_install_prefix }}/bin/singularity"
+  register: singularity_binary
+
+- import_tasks: install_singularity.yml
+  when: singularity_binary.stat.exists == False
