@@ -1,0 +1,39 @@
+---
+# tasks file for scicore-cgroups-limits
+
+- block:
+
+    - name: Install the cgroup packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - libcgroup
+        - libcgroup-tools
+
+    - name: enable and start cgroup services
+      service:
+        name: "{{ item }}"
+        enabled: yes
+        state: started
+      with_items:
+        - cgred
+        - cgconfig
+
+    - name: Copy CGROUPS /etc/cgconfig.conf to limit memory usage in login nodes
+      template:
+        src: etc/cgconfig.conf
+        dest: /etc/cgconfig.conf
+        owner: root
+        mode: 0644
+      notify: restart cgconfig
+
+    - name: Copy CGROUPS /etc/cgrules.conf to limit memory usage in login nodes
+      template:
+        src: etc/cgrules.conf
+        dest: /etc/cgrules.conf
+        owner: root
+        mode: 0644
+      notify: restart cgred
+      
+  when: ansible_hostname  == "frontend001"

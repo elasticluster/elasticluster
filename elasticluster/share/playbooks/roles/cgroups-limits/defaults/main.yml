@@ -1,0 +1,13 @@
+---
+# defaults file for scicore-cgroups-limits
+
+cgroup_memory_limit_in_bytes: '10G'
+
+to_whom_the_limit_applies: '@course'
+#       user can be:
+#           - a user name
+#           - a group name with @group syntax
+#           - the wildcard '*', for any user or group
+#           - '%', which is equivalent to "ditto" (useful for
+#             multi-line rules where different cgroups need to be
+#             specified for various hierarchies for a single user)
