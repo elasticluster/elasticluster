@@ -428,7 +428,7 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         else:
             log.error("Must specify an OpenStack password or application_credential_id + "
                       "application_credential_secret (likely configuration error?)")
-            raise ConfigurationError("No password or application_credential_id + application_credential_secret configured.")
+            raise ConfigurationError("No password nor application credentials ID+Secret configured.")
 
         sess = keystoneauth1.session.Session(auth=auth, verify=self._os_cacert)
         if check:
