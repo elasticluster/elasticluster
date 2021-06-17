@@ -304,7 +304,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        boot_disk_type='pd-standard',
                        boot_disk_size=10,
                        tags=None,
-                       labels=None,
+                       labels=[],
                        scheduling=None,
                        accelerator_count=0,
                        accelerator_type='default',
