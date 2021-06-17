@@ -175,12 +175,16 @@ class Start(AbstractCommand):
         Starts a new cluster.
         """
         labels=self.params.labels
+        print("labels="+str(labels))
+
         cluster_template = self.params.cluster
         if self.params.cluster_name:
             cluster_name = self.params.cluster_name
         else:
             cluster_name = self.params.cluster
 
+        self.params.config['nodes']['labels']=labels
+        self.params.config['cluster']['labels']=labels
         creator = make_creator(self.params.config,
                                storage_path=self.params.storage)
 
@@ -210,7 +214,6 @@ class Start(AbstractCommand):
             except ConfigurationError as err:
                 log.error("Starting cluster %s: %s", cluster_template, err)
                 return
-        print("labels="+str(labels))
         if hasattr(cluster, "extra"):
             print("Cluster has attr extra")
             cluster.extra["labels"] = labels
