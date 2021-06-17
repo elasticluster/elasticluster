@@ -145,6 +145,7 @@ class Start(AbstractCommand):
                                  'N2 of GROUP2 etc...')
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Only start the cluster, do not configure it")
+        parser.add_argument('-l','--labels', default="billing=none,user=none", dest='labels', type=str, help="add a label for billing purposes of the form billing=xy1234,user=none")
         parser.add_argument(
             '-p', '--max-concurrent-requests', default=0,
             dest='max_concurrent_requests', type=int, metavar='NUM',

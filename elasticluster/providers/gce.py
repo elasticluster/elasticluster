@@ -304,6 +304,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
                        boot_disk_type='pd-standard',
                        boot_disk_size=10,
                        tags=None,
+                       labels=None,
                        scheduling=None,
                        accelerator_count=0,
                        accelerator_type='default',
@@ -326,9 +327,12 @@ class GoogleCloudProvider(AbstractCloudProvider):
         :param str image_userdata: command to execute after startup
         :param str username: username for the given ssh key, default None
         :param str node_name: name of the instance
-        :param str|Sequence tags: "Tags" to label the instance.
+        :param str|Sequence tags: "Tags" to tag network of the instance.
           Can be either a single string (individual tags are comma-separated),
           or a sequence of strings (each string being a single tag).
+        :param str|Sequence labels: "labels" to label the instance for billing.
+          Can be either a single string (individual labels are comma-separated),
+          or a sequence of strings (each string being a key=value pair).
         :param str scheduling: scheduling option to use for the instance ("preemptible")
         :param int accelerator_count: Number of accelerators (e.g., GPUs) to make available in instance
         :param str accelerator_type: Type of accelerator to request.  Can be one of:
@@ -391,6 +395,18 @@ class GoogleCloudProvider(AbstractCloudProvider):
                 " should be a string or a list, got {T} instead"
                 .format(T=type(tags)))
 
+        if isinstance(labels, (str,)):
+            labels = [label.split("=") for label in labels.split(',')]
+        elif isinstance(labels, Sequence):
+            # ok, nothing to do
+            labels = [label.split("=") for label in labels]
+        elif labels is not None:
+            raise TypeError(
+                "The `labels` argument to `gce.start_instance`"
+                " should be a string consisting of key=value pairs or a list, got {T} instead"
+                .format(T=type(labels)))
+
+
         with open(public_key_path, 'r') as f:
             public_key_content = f.read()
 
@@ -422,6 +438,9 @@ class GoogleCloudProvider(AbstractCloudProvider):
             'tags': {
               'items': tags,
             },
+            'labels':{
+              'items':labels,
+            }
             'scheduling': scheduling_option,
             'disks': [
                 {

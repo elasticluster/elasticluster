@@ -159,6 +159,7 @@ SCHEMA = {
         Optional("local_ssd_count", default=0): nonnegative_int,
         Optional("local_ssd_interface", default='SCSI'): Or('NVME', 'SCSI'),
         Optional("min_cpu_platform"): nonempty_str,
+        Optional("labels"): nonempty_str,
         # only on OpenStack
         Optional('floating_network_id'): str,
         Optional("request_floating_ip"): boolean,
@@ -724,6 +725,7 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'min_cpu_platform',
             'scheduling',
             'tags',
+            'labels',
             # OpenStack only
             'floating_network_id',
             'request_floating_ip',
