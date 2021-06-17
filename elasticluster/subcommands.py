@@ -176,7 +176,7 @@ class Start(AbstractCommand):
         """
         labels=self.params.labels
         print("labels="+str(labels))
-
+        print("params"+str(params))
         cluster_template = self.params.cluster
         if self.params.cluster_name:
             cluster_name = self.params.cluster_name
