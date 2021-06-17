@@ -200,7 +200,7 @@ class Start(AbstractCommand):
                     " in cluster template `{template}`"
                     .format(kind=kind, template=cluster_template))
             cluster_nodes_conf[kind]['num'] = num
-            cluster_nodes_conf[king]['labels']=labels
+            cluster_nodes_conf[kind]['labels']=labels
 
         # First, check if the cluster is already created.
         try:
