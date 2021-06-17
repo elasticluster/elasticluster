@@ -568,7 +568,7 @@ class Cluster(Struct):
                            in zip(nodes, result.get()) if ok)
 
     @staticmethod
-    def _start_node(node, labels=labels):
+    def _start_node(node, labels=None):
         """
         Start the given node VM.
 
