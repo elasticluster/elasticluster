@@ -925,6 +925,7 @@ class Creator(object):
 
     def __init__(self, conf, storage_path=None, storage_type=None):
         self.cluster_conf = conf['cluster']
+        self.labels = conf['labels']
 
         self.storage_path = (
             os.path.expandvars(os.path.expanduser(storage_path)) if storage_path
