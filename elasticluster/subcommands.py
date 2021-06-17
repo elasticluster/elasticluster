@@ -174,7 +174,6 @@ class Start(AbstractCommand):
         """
         Starts a new cluster.
         """
-        print(self.params)
         cluster_template = self.params.cluster
         if self.params.cluster_name:
             cluster_name = self.params.cluster_name

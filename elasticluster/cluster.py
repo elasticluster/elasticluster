@@ -358,6 +358,7 @@ class Cluster(Struct):
                 'user_key_name',
                 'user_key_private',
                 'user_key_public',
+                'labels',
         ):
             if attr not in extra:
                 extra[attr] = getattr(self, attr)
