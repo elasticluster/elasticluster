@@ -433,7 +433,7 @@ class Cluster(Struct):
             except ValueError:
                 raise NodeNotFound("Node %s not found in cluster" % node.name)
 
-    def start(self, min_nodes=None, max_concurrent_requests=0):
+    def start(self, min_nodes=None, max_concurrent_requests=0, labels=None):
         """
         Starts up all the instances in the cloud.
 
@@ -475,9 +475,9 @@ class Cluster(Struct):
                     " will start nodes sequentially...")
                 max_concurrent_requests = 1
         if max_concurrent_requests > 1:
-            nodes = self._start_nodes_parallel(nodes, max_concurrent_requests)
+            nodes = self._start_nodes_parallel(nodes, max_concurrent_requests, labels=labels)
         else:
-            nodes = self._start_nodes_sequentially(nodes)
+            nodes = self._start_nodes_sequentially(nodes, labels=labels)
 
         # checkpoint cluster state
         self.repository.save_or_update(self)
@@ -505,7 +505,7 @@ class Cluster(Struct):
         # reachable. Raise `ClusterSizeError()` if not.
         self._check_cluster_size(self._compute_min_nodes(min_nodes))
 
-    def _start_nodes_sequentially(self, nodes):
+    def _start_nodes_sequentially(self, nodes, labels=None):
         """
         Start the nodes sequentially without forking.
 
@@ -514,14 +514,14 @@ class Cluster(Struct):
         log.debug("Note: will *not* issue parallel requests to cloud API.")
         started_nodes = set()
         for node in copy(nodes):
-            started = self._start_node(node)
+            started = self._start_node(node, labels=labels)
             if started:
                 started_nodes.add(node)
             # checkpoint cluster state
             self.repository.save_or_update(self)
         return started_nodes
 
-    def _start_nodes_parallel(self, nodes, max_thread_pool_size):
+    def _start_nodes_parallel(self, nodes, max_thread_pool_size, labels=None):
         """
         Start the nodes using a pool of multiprocessing threads for speed-up.
 
@@ -550,7 +550,7 @@ class Cluster(Struct):
 
             # intercept Ctrl+C
             with sighandler(signal.SIGINT, sigint_handler):
-                result = thread_pool.map_async(self._start_node, nodes)
+                result = thread_pool.map_async(lambda x: self._start_node(x, labels=labels), nodes)
                 while not result.ready():
                     result.wait(1)
                     # check if Ctrl+C was pressed
@@ -568,7 +568,7 @@ class Cluster(Struct):
                            in zip(nodes, result.get()) if ok)
 
     @staticmethod
-    def _start_node(node):
+    def _start_node(node, labels=labels):
         """
         Start the given node VM.
 
@@ -578,6 +578,7 @@ class Cluster(Struct):
         # FIXME: the following check is not optimal yet. When a node is still
         # in a starting state, it will start another node here, since the
         # `is_alive` method will only check for running nodes (see issue #13)
+        node.labels=labels
         if node.is_alive():
             log.info("Not starting node `%s` which is already up.", node.name)
             return True
@@ -1266,7 +1267,7 @@ class Node(Struct):
 
     def __init__(self, name, cluster_name, kind, cloud_provider, user_key_public,
                  user_key_private, user_key_name, image_user, security_group,
-                 image_id, flavor, image_userdata=None, ssh_proxy_command='',
+                 image_id, flavor, image_userdata=None, ssh_proxy_command='',labels=None
                  **extra):
         self.name = name
         self.cluster_name = cluster_name
@@ -1284,6 +1285,7 @@ class Node(Struct):
         self.instance_id = extra.pop('instance_id', None)
         self.preferred_ip = extra.pop('preferred_ip', None)
         self.ips = extra.pop('ips', [])
+        self.labels=labels
         # Remove extra arguments, if defined
         for key in list(extra.keys()):
             if hasattr(self, key):

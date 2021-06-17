@@ -174,6 +174,7 @@ class Start(AbstractCommand):
         """
         Starts a new cluster.
         """
+        labels=self.params.labels
         cluster_template = self.params.cluster
         if self.params.cluster_name:
             cluster_name = self.params.cluster_name
@@ -197,6 +198,7 @@ class Start(AbstractCommand):
                     " in cluster template `{template}`"
                     .format(kind=kind, template=cluster_template))
             cluster_nodes_conf[kind]['num'] = num
+            cluster_nodes_conf[king]['labels']=self.params.labels
 
         # First, check if the cluster is already created.
         try:
@@ -208,7 +210,7 @@ class Start(AbstractCommand):
             except ConfigurationError as err:
                 log.error("Starting cluster %s: %s", cluster_template, err)
                 return
-        cluster.labels = self.params.labels
+        cluster.labels = labels
         try:
             print("Starting cluster `{0}` with:".format(cluster.name))
             for cls in cluster.nodes:
@@ -216,7 +218,7 @@ class Start(AbstractCommand):
             print("(This may take a while...)")
             min_nodes = dict((kind, cluster_nodes_conf[kind]['min_num'])
                              for kind in cluster_nodes_conf)
-            cluster.start(min_nodes, self.params.max_concurrent_requests)
+            cluster.start(min_nodes, self.params.max_concurrent_requests, labels=labels)
             if self.params.no_setup:
                 print("NOT configuring the cluster as requested.")
             else:
