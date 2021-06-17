@@ -183,8 +183,6 @@ class Start(AbstractCommand):
         else:
             cluster_name = self.params.cluster
 
-        self.params.config['nodes']['labels']=labels
-        self.params.config['cluster']['labels']=labels
         creator = make_creator(self.params.config,
                                storage_path=self.params.storage)
 
