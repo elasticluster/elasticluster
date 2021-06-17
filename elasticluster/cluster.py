@@ -1318,6 +1318,7 @@ class Node(Struct):
         `update_ips`:meth: methods should be used to further gather details
         about the state of the node.
         """
+        labels=self.labels
         log.info("Starting node `%s` from image `%s` with flavor %s ...",
                  self.name, self.image_id, self.flavor)
         vm_data = self._cloud_provider.start_instance(
@@ -1327,6 +1328,7 @@ class Node(Struct):
             self.cluster_name,
             username=self.image_user,
             node_name=("%s-%s" % (self.cluster_name, self.name)),
+            labels=labels,
             **self.extra)
         if vm_data:
             assert 'instance_id' in vm_data
