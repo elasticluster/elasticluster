@@ -184,7 +184,7 @@ class Start(AbstractCommand):
             cluster_name = self.params.cluster
 
         creator = make_creator(self.params.config,
-                               storage_path=self.params.storage)
+                               storage_path=self.params.storage, labels=labels)
 
         if cluster_template not in creator.cluster_conf:
             raise ClusterNotFound(

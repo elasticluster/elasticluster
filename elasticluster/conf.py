@@ -330,7 +330,7 @@ def _make_defaults_dict():
 
 ## public API entry point
 
-def make_creator(configfiles, storage_path=None):
+def make_creator(configfiles, storage_path=None, labels=None):
     """
     Return a `Creator` instance initialized from given configuration files.
 
@@ -359,7 +359,7 @@ def make_creator(configfiles, storage_path=None):
 
     config = load_config_files(configfiles)
 
-    return Creator(config, storage_path=storage_path)
+    return Creator(config, storage_path=storage_path,labels=labels)
 
 
 def _expand_config_file_list(paths, ignore_nonexistent=True,
@@ -923,9 +923,9 @@ class Creator(object):
     DEFAULT_STORAGE_PATH = os.path.expanduser("~/.elasticluster/storage")
     DEFAULT_STORAGE_TYPE = 'yaml'
 
-    def __init__(self, conf, storage_path=None, storage_type=None):
+    def __init__(self, conf, storage_path=None, storage_type=None, labels=None):
         self.cluster_conf = conf['cluster']
-        self.labels = conf['labels']
+        self.labels = labels
 
         self.storage_path = (
             os.path.expandvars(os.path.expanduser(storage_path)) if storage_path
