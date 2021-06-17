@@ -1267,7 +1267,7 @@ class Node(Struct):
 
     def __init__(self, name, cluster_name, kind, cloud_provider, user_key_public,
                  user_key_private, user_key_name, image_user, security_group,
-                 image_id, flavor, image_userdata=None, ssh_proxy_command='',labels=None
+                 image_id, flavor, image_userdata=None, ssh_proxy_command='', labels=None,
                  **extra):
         self.name = name
         self.cluster_name = cluster_name
