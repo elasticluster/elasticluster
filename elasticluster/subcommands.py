@@ -210,7 +210,7 @@ class Start(AbstractCommand):
             except ConfigurationError as err:
                 log.error("Starting cluster %s: %s", cluster_template, err)
                 return
-        cluster.extra["labels"] = labels 
+        cluster.extra["labels"] = labels
         try:
             print("Starting cluster `{0}` with:".format(cluster.name))
             for cls in cluster.nodes:
