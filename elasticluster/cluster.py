@@ -141,6 +141,7 @@ class Cluster(Struct):
                  ssh_probe_timeout=5,
                  ssh_proxy_command='',
                  thread_pool_max_size=10,
+                 labels=None,
                  **extra):
         self.name = name
         self.template = extra.pop('template', None)
@@ -152,7 +153,8 @@ class Cluster(Struct):
         self.start_timeout = start_timeout
         self.thread_pool_max_size = thread_pool_max_size
         self.user_key_name = user_key_name
-        
+        self.labels=labels
+
         if repository is not None:
             self.repository = repository
         else:
