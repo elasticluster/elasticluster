@@ -475,9 +475,9 @@ class Cluster(Struct):
                     " will start nodes sequentially...")
                 max_concurrent_requests = 1
         if max_concurrent_requests > 1:
-            nodes = self._start_nodes_parallel(nodes, max_concurrent_requests, labels=labels)
+            nodes = self._start_nodes_parallel(nodes, max_concurrent_requests, labels=self.labels)
         else:
-            nodes = self._start_nodes_sequentially(nodes, labels=labels)
+            nodes = self._start_nodes_sequentially(nodes, labels=self.labels)
 
         # checkpoint cluster state
         self.repository.save_or_update(self)
@@ -1318,9 +1318,8 @@ class Node(Struct):
         `update_ips`:meth: methods should be used to further gather details
         about the state of the node.
         """
-        labels=self.labels
         log.info("Starting node `%s` from image `%s` with flavor %s ...",
-                 self.name, self.image_id, self.flavor)
+                self.name, self.image_id, self.flavor)
         vm_data = self._cloud_provider.start_instance(
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
@@ -1328,7 +1327,6 @@ class Node(Struct):
             self.cluster_name,
             username=self.image_user,
             node_name=("%s-%s" % (self.cluster_name, self.name)),
-            labels=labels,
             **self.extra)
         if vm_data:
             assert 'instance_id' in vm_data
