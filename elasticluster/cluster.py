@@ -152,6 +152,7 @@ class Cluster(Struct):
         self.start_timeout = start_timeout
         self.thread_pool_max_size = thread_pool_max_size
         self.user_key_name = user_key_name
+        self.labels=self.params.labels
         if repository is not None:
             self.repository = repository
         else:
@@ -358,11 +359,10 @@ class Cluster(Struct):
                 'user_key_name',
                 'user_key_private',
                 'user_key_public',
-                'labels',
         ):
             if attr not in extra:
                 extra[attr] = getattr(self, attr)
-
+        extra['labels'] = self.labels
         if not name:
             # `extra` contains key `kind` already
             name = self._naming_policy.new(**extra)
