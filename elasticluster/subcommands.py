@@ -210,7 +210,8 @@ class Start(AbstractCommand):
             except ConfigurationError as err:
                 log.error("Starting cluster %s: %s", cluster_template, err)
                 return
-        if hasattr(cluster,"extra"):
+        print("labels="+str(labels))
+        if hasattr(cluster, "extra"):
             print("Cluster has attr extra")
             cluster.extra["labels"] = labels
         else:
