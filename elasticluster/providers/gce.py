@@ -438,9 +438,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
             'tags': {
               'items': tags,
             },
-            'labels':{
-              'items':labels,
-            },
+            'labels':dict(labels),
             'scheduling': scheduling_option,
             'disks': [
                 {
