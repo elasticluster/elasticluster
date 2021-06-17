@@ -198,7 +198,7 @@ class Start(AbstractCommand):
                     " in cluster template `{template}`"
                     .format(kind=kind, template=cluster_template))
             cluster_nodes_conf[kind]['num'] = num
-            cluster_nodes_conf[king]['labels']=self.params.labels
+            cluster_nodes_conf[king]['labels']=labels
 
         # First, check if the cluster is already created.
         try:
@@ -210,7 +210,11 @@ class Start(AbstractCommand):
             except ConfigurationError as err:
                 log.error("Starting cluster %s: %s", cluster_template, err)
                 return
-        cluster.extra["labels"] = labels
+        if cluster.hasattr(extra):
+            cluster.extra["labels"] = labels
+        else:
+            print("Cluster has no extra attr")
+            cluster.setattr("extra",{'labels':labels})
         try:
             print("Starting cluster `{0}` with:".format(cluster.name))
             for cls in cluster.nodes:
