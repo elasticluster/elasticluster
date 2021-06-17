@@ -152,7 +152,7 @@ class Cluster(Struct):
         self.start_timeout = start_timeout
         self.thread_pool_max_size = thread_pool_max_size
         self.user_key_name = user_key_name
-        self.labels=self.params.labels
+        
         if repository is not None:
             self.repository = repository
         else:
