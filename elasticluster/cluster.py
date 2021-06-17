@@ -153,7 +153,7 @@ class Cluster(Struct):
         self.start_timeout = start_timeout
         self.thread_pool_max_size = thread_pool_max_size
         self.user_key_name = user_key_name
-        self.labels=labels
+        extra["labels"]=labels
 
         if repository is not None:
             self.repository = repository
@@ -1285,7 +1285,6 @@ class Node(Struct):
         self.instance_id = extra.pop('instance_id', None)
         self.preferred_ip = extra.pop('preferred_ip', None)
         self.ips = extra.pop('ips', [])
-        self.labels=labels
         # Remove extra arguments, if defined
         for key in list(extra.keys()):
             if hasattr(self, key):
@@ -1293,6 +1292,7 @@ class Node(Struct):
         self.extra = {}
         self.extra.update(extra.pop('extra', {}))
         self.extra.update(extra)
+        self.extra["labels"]=labels
 
     def __setstate__(self, state):
         self.__dict__.update(state)
