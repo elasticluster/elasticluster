@@ -440,7 +440,7 @@ class GoogleCloudProvider(AbstractCloudProvider):
             },
             'labels':{
               'items':labels,
-            }
+            },
             'scheduling': scheduling_option,
             'disks': [
                 {
