@@ -210,7 +210,7 @@ class Start(AbstractCommand):
             except ConfigurationError as err:
                 log.error("Starting cluster %s: %s", cluster_template, err)
                 return
-        
+        cluster.extra["labels"] = labels 
         try:
             print("Starting cluster `{0}` with:".format(cluster.name))
             for cls in cluster.nodes:
@@ -218,7 +218,7 @@ class Start(AbstractCommand):
             print("(This may take a while...)")
             min_nodes = dict((kind, cluster_nodes_conf[kind]['min_num'])
                              for kind in cluster_nodes_conf)
-            cluster.start(min_nodes, self.params.max_concurrent_requests, labels=labels)
+            cluster.start(min_nodes, self.params.max_concurrent_requests)
             if self.params.no_setup:
                 print("NOT configuring the cluster as requested.")
             else:
