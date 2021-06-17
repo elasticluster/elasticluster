@@ -1060,6 +1060,8 @@ class Creator(object):
         extra.pop('nodes')
         extra.pop('setup')
         extra['template'] = template
+        if hasattr(self, "labels"):
+            extra["labels"]=self.labels
 
         if cloud is None:
             cloud = self.create_cloud_provider(template)
@@ -1081,6 +1083,8 @@ class Creator(object):
         nodes = conf['nodes']
         for group_name in nodes:
             group_conf = nodes[group_name]
+            if hasattr(self,"labels"):
+                group_conf["labels"] = self.labels
             for varname in ['image_user', 'image_userdata']:
                 group_conf.setdefault(varname, conf['login'][varname])
             cluster.add_nodes(group_name, **group_conf)
