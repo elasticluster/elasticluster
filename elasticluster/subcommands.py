@@ -213,11 +213,13 @@ class Start(AbstractCommand):
                 log.error("Starting cluster %s: %s", cluster_template, err)
                 return
         if hasattr(cluster, "extra"):
-            print("Cluster has attr extra")
+            print("Cluster has attr extra+ "+str(cluster.extra))
             cluster.extra["labels"] = labels
+            print(cluster.nodes)
         else:
             print("Cluster has no extra attr")
             setattr(cluster, "extra",{'labels':labels})
+            print(cluster.nodes)
         try:
             print("Starting cluster `{0}` with:".format(cluster.name))
             for cls in cluster.nodes:
