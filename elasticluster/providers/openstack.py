@@ -76,7 +76,7 @@ from cinderclient import client as cinder_client
 from novaclient import client as nova_client
 from novaclient.exceptions import NotFound
 
-from paramiko import DSSKey, RSAKey, PasswordRequiredException
+from paramiko import DSSKey, RSAKey, PasswordRequiredException, PublicBlob
 from paramiko.ssh_exception import SSHException
 
 # Elasticluster imports
@@ -920,24 +920,21 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         # way, to check the fingerprint of the remote keypair if it
         # exists already, or to create a new keypair.
         pkey = None
+        publickey = None
         try:
-            pkey = DSSKey.from_private_key_file(private_key_path)
+            publickey = PublicBlob.from_file(public_key_path)
+            if publickey.key_type == 'ssh-rsa':
+                pkey = RSAKey.from_private_key_file(private_key_path)
+            elif publickey.key_type == 'ssh-dsa':
+                pkey = DSSKey.from_private_key_file(private_key_path)
         except PasswordRequiredException:
             warn("Unable to check key file `{0}` because it is encrypted with a "
                  "password. Please, ensure that you added it to the SSH agent "
                  "with `ssh-add {1}`"
                  .format(private_key_path, private_key_path))
         except SSHException:
-            try:
-                pkey = RSAKey.from_private_key_file(private_key_path)
-            except PasswordRequiredException:
-                warn("Unable to check key file `{0}` because it is encrypted with a "
-                     "password. Please, ensure that you added it to the SSH agent "
-                     "with `ssh-add {1}`"
-                     .format(private_key_path, private_key_path))
-            except SSHException:
-                raise KeypairError('File `%s` is neither a valid DSA key '
-                                   'or RSA key.' % private_key_path)
+            raise KeypairError('File `%s` is neither a valid DSA key '
+                               'or RSA key.' % private_key_path)
 
         try:
             # Check if a keypair `name` exists on the cloud.
