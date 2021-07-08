@@ -487,11 +487,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         vm_start_args = {}
 
-        if self.availability_zone:
-            log.debug("Starting node `%s` in availability zone `%s`.",
-                      node_name, self.availability_zone)
-            vm_start_args['availability_zone'] = self.availability_zone
-
         log.debug("Checking keypair `%s` ...", key_name)
         with OpenStackCloudProvider.__node_start_lock:
             self._check_keypair(key_name, public_key_path, private_key_path)
@@ -517,8 +512,12 @@ class OpenStackCloudProvider(AbstractCloudProvider):
                 .format(flavor, self._os_tenant_name, self._os_auth_url))
         flavor = flavors[0]
 
-        availability_zone = kwargs.pop('availability_zone','')
-        vm_start_args['availability_zone']=availability_zone
+        availability_zone = kwargs.pop('availability_zone', self.availability_zone)
+
+        if availability_zone:
+            log.debug("Starting node `%s` in availability zone `%s`.",
+                      node_name, availability_zone)
+            vm_start_args['availability_zone']=availability_zone
 
         network_ids = [net_id.strip()
                        for net_id in kwargs.pop('network_ids', '').split(',')]
