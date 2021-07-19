@@ -18,6 +18,10 @@
     name: nouveau
     state: present
 
+- name: Install NVIDIA Drivers
+  package:
+    name: nvidia-driver-latest-dkms
+    state: latest
 
 - name: Install CUDA packages
   package:
