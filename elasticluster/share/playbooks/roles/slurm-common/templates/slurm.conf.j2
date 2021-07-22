@@ -176,4 +176,10 @@ SlurmdLogFile=/var/log/slurm/slurmd.log
 AuthType=auth/munge
 CryptoType=crypto/munge
 
+{% if slurm_authalttypes is defined %}
+## Alternative authentication 
+AuthAltTypes={{slurm_authalttypes|default('auth/jwt')}}
+AuthAltParameters={{slurm_authaltparameters|default('jwt_key=/etc/slurm/jwt.key')}}
+{% endif %}
+
 DisableRootJobs=NO
