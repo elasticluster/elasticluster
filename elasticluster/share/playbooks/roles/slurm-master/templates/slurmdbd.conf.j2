@@ -26,6 +26,11 @@ DebugLevel=error
 
 # authentication method between SLURM components
 AuthType=auth/munge
+{% if slurm_authalttypes is defined %}
+## Alternative authentication 
+AuthAltTypes={{slurm_authalttypes|default('auth/jwt')}}
+AuthAltParameters={{slurm_authaltparameters|default('jwt_key=/etc/slurm/jwt.key')}}
+{% endif %}
 
 # socket binding data for the SLURM DBD; must match the values for
 # `AccountingStorageHost` and `AccountingStoragePort` in `slurm.conf`
