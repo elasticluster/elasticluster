@@ -1,0 +1,20 @@
+---
+
+- name: Add Apt signing key for iRODS from the iRODS Consortium
+  ansible.builtin.apt_key:
+    url: https://packages.irods.org/irods-signing-key.asc
+    state: present
+
+- name: add iRODS repository
+  apt_repository:
+    repo: deb [arch=amd64] https://packages.irods.org/apt/ $(lsb_release -sc) main
+    state: present
+    filename: renci-irods
+  register: _irods_add_apt_repo
+
+- name: update APT cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 86400
+    allow_unauthenticated: '{{ not insecure_https_downloads|default("no")|bool }}'
+  when: '_irods_add_apt_repo is changed'

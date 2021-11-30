@@ -1,0 +1,17 @@
+---
+
+- name: Add rpm key for iRODS
+  rpm_key:
+    state: present
+    key: https://packages.irods.org/irods-signing-key.asc
+
+- name: Add iRODS YUM repository
+  yum_repository:
+    name: RENCI iRODS Repository
+    description: iRODS Consortium YUM repo
+    baseurl: https://packages.irods.org/yum/pool/centos$releasever/$basearch
+    enabled: yes
+    gpgcheck: yes
+    gpgcheck: yes
+    gpgkey: https://packages.irods.org/irods-signing-key.asc
+   

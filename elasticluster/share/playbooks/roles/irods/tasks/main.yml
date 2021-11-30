@@ -1,0 +1,9 @@
+---
+
+- name: Perform distribution-dependent steps
+  include_tasks: 'init-{{ansible_os_family}}.yml'
+
+- name: Install iRODS iCommands
+  package:
+    name: irods-icommands
+    state: latest
