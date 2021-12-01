@@ -7,7 +7,7 @@
 
 - name: Add iRODS YUM repository
   yum_repository:
-    name: RENCI iRODS Repository
+    name: renci-irods
     description: iRODS Consortium YUM repo
     baseurl: https://packages.irods.org/yum/pool/centos$releasever/$basearch
     enabled: yes
