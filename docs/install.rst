@@ -214,7 +214,7 @@ Then you have to download the software. We suggest you to download it
 *within* the created virtualenv::
 
     cd elasticluster
-    git clone https://github.com/gc3-uzh-ch/elasticluster.git src
+    git clone https://github.com/elasticluster/elasticluster.git src
     cd src
     pip install -e .
 
