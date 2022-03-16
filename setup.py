@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-#
 #
-# Copyright (C) 2021      Google LLC
-# Copyright (C) 2013-2019 University of Zurich. All rights reserved.
+# Copyright (C) 2021, 2022  Google LLC
+# Copyright (C) 2013-2019   University of Zurich. All rights reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -155,7 +155,7 @@ setup(
         'python-keystoneclient',
         'python-glanceclient',
         'python-neutronclient',
-        'python-cinderclient',
+        'python-cinderclient<=7.4.0',
         'python-novaclient',
         # fix dependency conflict among OpenStack libraries:
         # `osc-lib` has a more strict dependency specifier
