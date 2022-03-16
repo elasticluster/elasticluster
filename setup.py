@@ -155,7 +155,7 @@ setup(
         'python-keystoneclient',
         'python-glanceclient',
         'python-neutronclient',
-        'python-cinderclient<=7.4.0',
+        'python-cinderclient',
         'python-novaclient',
         # fix dependency conflict among OpenStack libraries:
         # `osc-lib` has a more strict dependency specifier

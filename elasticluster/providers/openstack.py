@@ -3,6 +3,7 @@
 #
 # Copyright (C) 2013, 2015, 2018-2019 University of Zurich.
 # Copyright (C) 2020 ETH Zurich.
+# Copyright (C) 2022 Google LLC.
 #
 #
 # This program is free software; you can redistribute it and/or modify it
@@ -98,7 +99,7 @@ DEFAULT_OS_COMPUTE_API_VERSION='2'
 DEFAULT_OS_IDENTITY_API_VERSION='3'
 DEFAULT_OS_IMAGE_API_VERSION='2'
 DEFAULT_OS_NETWORK_API_VERSION='2.0'  # no choice as of Aug. 2017
-DEFAULT_OS_VOLUME_API_VERSION='2'
+DEFAULT_OS_VOLUME_API_VERSION='3'
 
 _NO_DEFAULT = object()
 """
