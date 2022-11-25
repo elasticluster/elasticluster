@@ -411,7 +411,6 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         if self._os_application_credential_id and self._os_application_credential_secret:
             auth = keystone_v3.ApplicationCredential(
                 auth_url=self._os_auth_url,
-                username=self._os_username,
                 application_credential_id=self._os_application_credential_id,
                 application_credential_secret=self._os_application_credential_secret,
                 user_domain_name=self._os_user_domain_name,
