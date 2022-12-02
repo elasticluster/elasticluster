@@ -160,6 +160,7 @@ SCHEMA = {
         Optional("local_ssd_count", default=0): nonnegative_int,
         Optional("local_ssd_interface", default='SCSI'): Or('NVME', 'SCSI'),
         Optional("min_cpu_platform"): nonempty_str,
+        Optional("labels"): (nonempty_str, nonempty_str),
         # only on OpenStack
         Optional('floating_network_id'): str,
         Optional("request_floating_ip"): boolean,
@@ -330,7 +331,7 @@ def _make_defaults_dict():
 
 ## public API entry point
 
-def make_creator(configfiles, storage_path=None):
+def make_creator(configfiles, storage_path=None, labels=None):
     """
     Return a `Creator` instance initialized from given configuration files.
 
@@ -359,7 +360,7 @@ def make_creator(configfiles, storage_path=None):
 
     config = load_config_files(configfiles)
 
-    return Creator(config, storage_path=storage_path)
+    return Creator(config, storage_path=storage_path,labels=labels)
 
 
 def _expand_config_file_list(paths, ignore_nonexistent=True,
@@ -725,6 +726,7 @@ def _gather_node_kind_info(kind_name, cluster_name, cluster_conf):
             'min_cpu_platform',
             'scheduling',
             'tags',
+            'labels',
             # OpenStack only
             'floating_network_id',
             'request_floating_ip',
@@ -922,8 +924,9 @@ class Creator(object):
     DEFAULT_STORAGE_PATH = os.path.expanduser("~/.elasticluster/storage")
     DEFAULT_STORAGE_TYPE = 'yaml'
 
-    def __init__(self, conf, storage_path=None, storage_type=None):
+    def __init__(self, conf, storage_path=None, storage_type=None, labels=None):
         self.cluster_conf = conf['cluster']
+        self.labels = labels
 
         self.storage_path = (
             os.path.expandvars(os.path.expanduser(storage_path)) if storage_path
@@ -1059,6 +1062,8 @@ class Creator(object):
         extra.pop('nodes')
         extra.pop('setup')
         extra['template'] = template
+        if hasattr(self, "labels"):
+            extra["labels"]=self.labels
 
         if cloud is None:
             cloud = self.create_cloud_provider(template)
@@ -1080,6 +1085,8 @@ class Creator(object):
         nodes = conf['nodes']
         for group_name in nodes:
             group_conf = nodes[group_name]
+            if hasattr(self,"labels"):
+                group_conf["labels"] = self.labels
             for varname in ['image_user', 'image_userdata']:
                 group_conf.setdefault(varname, conf['login'][varname])
             cluster.add_nodes(group_name, **group_conf)

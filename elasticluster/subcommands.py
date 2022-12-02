@@ -145,6 +145,7 @@ class Start(AbstractCommand):
                                  'N2 of GROUP2 etc...')
         parser.add_argument('--no-setup', action="store_true", default=False,
                             help="Only start the cluster, do not configure it")
+        parser.add_argument('-l','--labels', default="billing=none,user=none", metavar='labels', dest='labels', type=str, help="add a label for billing purposes of the form billing=xy1234,user=none")
         parser.add_argument(
             '-p', '--max-concurrent-requests', default=0,
             dest='max_concurrent_requests', type=int, metavar='NUM',
@@ -173,7 +174,9 @@ class Start(AbstractCommand):
         """
         Starts a new cluster.
         """
-
+        labels=self.params.labels
+        print("labels="+str(labels))
+        print("params"+str(self.params))
         cluster_template = self.params.cluster
         if self.params.cluster_name:
             cluster_name = self.params.cluster_name
@@ -181,7 +184,7 @@ class Start(AbstractCommand):
             cluster_name = self.params.cluster
 
         creator = make_creator(self.params.config,
-                               storage_path=self.params.storage)
+                               storage_path=self.params.storage, labels=labels)
 
         if cluster_template not in creator.cluster_conf:
             raise ClusterNotFound(
@@ -197,6 +200,7 @@ class Start(AbstractCommand):
                     " in cluster template `{template}`"
                     .format(kind=kind, template=cluster_template))
             cluster_nodes_conf[kind]['num'] = num
+            cluster_nodes_conf[kind]['labels']=labels
 
         # First, check if the cluster is already created.
         try:
@@ -208,7 +212,14 @@ class Start(AbstractCommand):
             except ConfigurationError as err:
                 log.error("Starting cluster %s: %s", cluster_template, err)
                 return
-
+        if hasattr(cluster, "extra"):
+            print("Cluster has attr extra+ "+str(cluster.extra))
+            cluster.extra["labels"] = labels
+            print(cluster.nodes)
+        else:
+            print("Cluster has no extra attr")
+            setattr(cluster, "extra",{'labels':labels})
+            print(cluster.nodes)
         try:
             print("Starting cluster `{0}` with:".format(cluster.name))
             for cls in cluster.nodes:

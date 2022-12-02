@@ -152,6 +152,10 @@ class Cluster(Struct):
         self.start_timeout = start_timeout
         self.thread_pool_max_size = thread_pool_max_size
         self.user_key_name = user_key_name
+        self.extra = {}
+        if 'labels' in extra:
+            self.extra['labels'] = extra['labels']
+
         if repository is not None:
             self.repository = repository
         else:
@@ -181,7 +185,6 @@ class Cluster(Struct):
                 self.add_node(**node)
         self.paused_nodes = dict(extra.pop('paused_nodes', {}))
 
-        self.extra = {}
         # FIXME: ugly fix needed when saving and loading the same
         # cluster using json. The `extra` keywords will become a
         # single, dictionary-valued, `extra` option when calling again
@@ -361,6 +364,9 @@ class Cluster(Struct):
         ):
             if attr not in extra:
                 extra[attr] = getattr(self, attr)
+
+        if 'labels' in self.extra:
+            extra['labels']=self.extra['labels']
 
         if not name:
             # `extra` contains key `kind` already
@@ -1314,7 +1320,7 @@ class Node(Struct):
         about the state of the node.
         """
         log.info("Starting node `%s` from image `%s` with flavor %s ...",
-                 self.name, self.image_id, self.flavor)
+                self.name, self.image_id, self.flavor)
         vm_data = self._cloud_provider.start_instance(
             self.user_key_name, self.user_key_public, self.user_key_private,
             self.security_group,
