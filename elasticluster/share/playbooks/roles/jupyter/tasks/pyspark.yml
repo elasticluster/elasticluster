@@ -9,7 +9,7 @@
   stat:
     path: /usr/bin/pyspark
     get_attributes: no
-    get_checksum: no
+    get_checksum: yes
     get_mime: no
   register: pyspark_exe_path
 
