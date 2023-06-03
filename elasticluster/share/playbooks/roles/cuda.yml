@@ -11,6 +11,18 @@
         name: pciutils
         state: '{{ pkg_install_state }}'
 
+    - name: Update Kernel
+      package: 
+        name: 
+          - kernel
+          - kernel-devel
+        state: latest
+
+    - name: Install python 3
+      package:
+        name: python3
+        state: latest
+
     - name: Gather information about GPUs
       action: gpus
 
