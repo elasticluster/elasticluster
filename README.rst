@@ -26,9 +26,10 @@ on the `elasticluster@googlegroups.com
 <https://groups.google.com/forum/#!forum/elasticluster>`_ mailing-list
 (only subscribers can post).
 
-The ElastiCluster_ project is an effort of the `Services and Support
+The ElastiCluster_ project was initially an effort of the `Services and Support
 for Science IT`_ (S3IT) unit at the `University of Zurich`_, licensed
-under the `GNU General Public License version 3`_.
+under the `GNU General Public License version 3`_.  *Since 2020 it is no longer
+maintained nor supported by S3IT or the University of Zurich.*
 
 
 Features
