@@ -250,6 +250,8 @@ CLOUD_PROVIDER_SCHEMAS = {
         Optional("cacert"): existing_file,
         Optional("username"): nonempty_str,
         Optional("password"): nonempty_str,
+        Optional("application_credential_id"): nonempty_str,  ## FIXME: alphanumeric?
+        Optional("application_credential_secret"): nonempty_str,
         Optional("user_domain_name"): nonempty_str,
         Optional("project_domain_name"): nonempty_str,
         Optional("project_name"): nonempty_str,

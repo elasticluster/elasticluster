@@ -118,6 +118,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
     :param str username: username of the keystone user
     :param str password: password of the keystone user
+    :param str application_credential_id: application credential id
+    :param str application_credential_secret: application credential secret token
     :param str project_name: name of the project to use
     :param str user_domain_name: name of the user domain to use
     :param str project_domain_name: name of the project domain to use
@@ -135,9 +137,10 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     :param bool use_anti_affinity_groups:
         Place nodes of the a cluster in the same anti-affinity group.
 
-    Parameters *username*, *password*, *user_domain_name*,
+    Parameters *username*, *password*, *application_credential_id*, 
+    *application_credential_secret*, *user_domain_name*,
     *project_name*, *project_domain_name*, and *region_name* will be
-    taken from the environment if not provided.  Similarly,
+    taken from the environment if not provided. Similarly,
     environmental variables can be used to set values for the
     preferred version of identity, compute, image, network, and volume
     API to use.
@@ -166,6 +169,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
     def __init__(self,
                  username=None,
                  password=None,
+                 application_credential_id=None,
+                 application_credential_secret=None,
                  project_name=None,
                  auth_url=None,
                  user_domain_name="default", project_domain_name="default",
@@ -190,7 +195,13 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._os_cacert = self._get_os_config_value('cacert', cacert, ['OS_CACERT'], default=None)
         self._os_username = self._get_os_config_value('user name', username, ['OS_USERNAME'])
         self._os_user_domain_name = self._get_os_config_value('user domain name', user_domain_name, ['OS_USER_DOMAIN_NAME'], 'default')
-        self._os_password = self._get_os_config_value('password', password, ['OS_PASSWORD'])
+        self._os_password = self._get_os_config_value('password', password, ['OS_PASSWORD'], default=None)
+        self._os_application_credential_id = self._get_os_config_value('application_credential_id', 
+                                                                       application_credential_id, 
+                                                                       ['OS_APPLICATION_CREDENTIAL_ID'], default=None)
+        self._os_application_credential_secret = self._get_os_config_value('application_credential_secret',
+                                                                           application_credential_secret, 
+                                                                           ['OS_APPLICATION_CREDENTIAL_SECRET'], default=None)
         self._os_tenant_name = self._get_os_config_value('project name', project_name, ['OS_PROJECT_NAME', 'OS_TENANT_NAME'])
         self._os_project_domain_name = self._get_os_config_value('project domain name', project_domain_name, ['OS_PROJECT_DOMAIN_NAME'], 'default')
         self._os_region_name = self._get_os_config_value('region_name', region_name, ['OS_REGION_NAME'], '')
@@ -242,6 +253,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
             'os_auth_url':             self._os_auth_url,
             'os_cacert':               (self._os_cacert or ''),
             'os_password':             self._os_password,
+            'os_application_credential_id': self._os_application_credential_id,
+            'os_application_credential_secret': self._os_application_credential_secret,
             'os_project_domain_name':  self._os_project_domain_name,
             'os_region_name':          self._os_region_name,
             'os_tenant_name':          self._os_tenant_name,
@@ -382,8 +395,9 @@ class OpenStackCloudProvider(AbstractCloudProvider):
 
         .. note::
 
-          Note that the only supported authN method is password authentication;
-          token or other plug-ins are not currently supported.
+          Note that the only supported authN methods are password 
+          or application credentials (application_credential_id 
+          + application_credential_secret tokens).
         """
         try:
             # may fail on Python 2.6?
@@ -391,14 +405,31 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         except ImportError:
             log.warning("Cannot load Keystone API v3 library.")
             return None
-        auth = keystone_v3.Password(
-            auth_url=self._os_auth_url,
-            username=self._os_username,
-            password=self._os_password,
-            user_domain_name=self._os_user_domain_name,
-            project_domain_name=self._os_project_domain_name,
-            project_name=self._os_tenant_name,
-        )
+        if self._os_password and self._os_application_credential_id and self._os_application_credential_secret:
+            log.warning("Both password and application_credential_id/application_credential_secret are set. "
+                        "Ignoring password, using application credentials")
+
+        if self._os_application_credential_id and self._os_application_credential_secret:
+            auth = keystone_v3.ApplicationCredential(
+                auth_url=self._os_auth_url,
+                application_credential_id=self._os_application_credential_id,
+                application_credential_secret=self._os_application_credential_secret,
+                user_domain_name=self._os_user_domain_name,
+            )
+        elif self._os_password:
+            auth = keystone_v3.Password(
+                auth_url=self._os_auth_url,
+                username=self._os_username,
+                password=self._os_password,
+                user_domain_name=self._os_user_domain_name,
+                project_domain_name=self._os_project_domain_name,
+                project_name=self._os_tenant_name,
+            )
+        else:
+            log.error("Must specify an OpenStack password or application_credential_id + "
+                      "application_credential_secret (likely configuration error?)")
+            raise ConfigurationError("No password nor application credentials ID+Secret configured.")
+
         sess = keystoneauth1.session.Session(auth=auth, verify=self._os_cacert)
         if check:
             log.debug("Checking that Keystone API v3 session works...")
@@ -1288,6 +1319,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         return {'auth_url': self._os_auth_url,
                 'username': self._os_username,
                 'password': self._os_password,
+                'application_credential_id': self._os_application_credential_id,
+                'application_credential_secret': self._os_application_credential_secret,
                 'project_name': self._os_tenant_name,
                 'project_domain_name': self._os_project_domain_name,
                 'user_domain_name': self._os_user_domain_name,
@@ -1301,6 +1334,8 @@ class OpenStackCloudProvider(AbstractCloudProvider):
         self._os_auth_url = state['auth_url']
         self._os_username = state['username']
         self._os_password = state['password']
+        self._os_application_credential_id = state['application_credential_id']
+        self._os_application_credential_secret = state['application_credential_secret']
         self._os_tenant_name = state['project_name']
         self._os_user_domain_name = state['user_domain_name']
         self._os_project_domain_name = state['project_domain_name']
