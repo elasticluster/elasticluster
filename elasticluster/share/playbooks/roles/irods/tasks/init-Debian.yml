@@ -1,0 +1,13 @@
+---
+
+- name: Add Apt signing key for iRODS from the iRODS Consortium
+  ansible.builtin.apt_key:
+    url: https://packages.irods.org/irods-signing-key.asc
+    state: present
+
+- name: add iRODS repository
+  ansible.builtin.apt_repository:
+    repo: deb [arch=amd64] https://packages.irods.org/apt/ {{ansible_distribution_release}} main
+    state: present
+    update_cache: true
+    filename: renci-irods

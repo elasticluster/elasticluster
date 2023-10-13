@@ -1,0 +1,9 @@
+---
+
+- name: Install iRODS
+  hosts: irods
+  tags:
+    - irods
+
+  roles:
+    - role: irods
