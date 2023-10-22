@@ -38,7 +38,7 @@ jobs:
     # Upload Docker image
     #
     - name: Publish to DockerHub
-      uses: elgohr/Publish-Docker-Github-Action@master
+      uses: elgohr/Publish-Docker-Github-Action@v5
       with:
         name: "riccardomurri/elasticluster"
         username: ${{ secrets.DOCKERHUB_USERNAME }}
