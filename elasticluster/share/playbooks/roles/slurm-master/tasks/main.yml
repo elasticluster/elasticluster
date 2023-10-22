@@ -10,6 +10,9 @@
 
 - import_tasks: install-slurmctld.yml
 
+- import_tasks: create-jwtkey.yml
+  when: (slurm_authalttypes is defined) and (slurm_authalttypes|lower == "auth/jwt")
+
 - name: Create cluster in accounting database
   tags:
     - slurm

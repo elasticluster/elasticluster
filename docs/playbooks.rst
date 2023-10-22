@@ -338,6 +338,15 @@ Extra variables can be set by editing the `setup/` section:
      - Version of SLURM to install; valid values are ``17.02``, ``17.11``, and ``18.08``.
        **Note: only applicable to RHEL/CentOS 7 clusters,** in all other
        cases the version of SLURM provided by the Linux distribution is used.
+   * - ``slurm_authalttypes``
+     - ``not defined``
+     - Value of ``AuthAltTypes`` in ``slurm.conf``. By setting it to ``auth/jwt`` JSON
+       Web Tokens (JWT) Authentication. *Note* you also need to set ``slurm_authaltparameters``
+       to specify where it is stored.
+   * - ``slurm_authaltparameters``
+     - ``jwt_key=/etc/slurm/jwt.key``
+     - Value for ``ÀuthAltParameters```in ``slurm.conf``. Note the format that is needed, e.g. 
+       for JWTs to work. See `SLURM`_ for details.
 
 Note that the ``slurm_*`` extra variables need to be set *globally*
 (e.g., ``global_var_slurm_selectype``) because the SLURM configuration

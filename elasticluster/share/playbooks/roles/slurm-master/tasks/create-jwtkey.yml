@@ -1,0 +1,15 @@
+# slurm-master/tasks/create-jwtkey.yml
+---
+
+- name: Create JWT key
+  command:
+   cmd: dd if=/dev/random of="{{ slurm_authaltparameters.split('=')[1] }}" bs=32 count=1
+   creates: "{{ slurm_authaltparameters.split('=')[1] }}"
+
+- name: Set correct JWT key rights
+  file:
+   path: "{{ slurm_authaltparameters.split('=')[1] }}"
+   owner: root
+   group: root
+   mode: '0600'
+
